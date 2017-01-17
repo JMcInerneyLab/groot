@@ -26,7 +26,12 @@ class BlastResult:
 
 
 class Target:
+    ___next_id = 1
+
     def __init__( self, sequence: "Sequence", start: int, end: int ):
+        self.id = Target.___next_id
+        Target.___next_id += 1
+
         self.sequence = sequence
         self.start = start
         self.end = end
@@ -67,7 +72,7 @@ class Target:
 
 
     def __repr__( self ):
-        return "Target #{0} ({1}-{2}={3})".format( self.sequence.id, self.start, self.end, self.length )
+        return "Target T{0} (S{1} {2} - {3} = {4})".format( self.id, self.sequence.id, self.start, self.end, self.length )
 
 
 class Cut:
@@ -91,7 +96,7 @@ class Sequence:
 
     @staticmethod
     def quantise( value: int ) -> int:
-        LEVEL = 1
+        LEVEL = 25
         value += (LEVEL // 2)
         return value - (value % LEVEL)
 
@@ -131,7 +136,7 @@ class Sequence:
 
 
     def __repr__( self ):
-        return "Sequence # (length {1})".format( self.id, self.length )
+        return "Sequence S{0} ({1})".format( self.id, self.length )
 
 
 class SequenceMananager:
@@ -160,6 +165,7 @@ class SequenceMananager:
                 if tar not in visited:
                     this_group = tar.all_vias( )
                     assert not any( (x in visited) for x in this_group )
+                    visited.update(this_group)
                     self.groups.append( this_group )
 
         for sequence in sequences.values( ):

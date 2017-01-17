@@ -56,10 +56,49 @@ def next_colour( ) -> QColor:
 
     return COLOURS[ NEXT_COLOUR ]
 
-class GroupSubLayout:
-    def __init__(self, targets: "TargetSubLayout"):
-        self.targets = targets
 
+class GroupSubLayout:
+    def __init__( self, owner: "EdgeLayout", targets: "List[TargetSubLayout]" ):
+        self.owner = owner
+        self.targets = targets
+        self.colour = next_colour( )
+
+        print( "GROUP BEGINS" )
+        for target in targets:
+            target.colour = self.colour
+            print( "    + " + str( target.target ) )
+
+
+    def paint( self, painter: QPainter ):
+
+        previous = None
+
+        for target_ui in sorted( self.targets, key = lambda x: x.window_rect( ).top( ) ):
+
+            if previous:
+                self.draw_connection( previous, target_ui, painter )
+
+            previous = target_ui
+
+
+    def draw_connection( self, a: "TargetSubLayout", b: "TargetSubLayout", painter: QPainter ):
+        ar = a.window_rect( )
+        br = b.window_rect( )
+
+        ca = (ar.top( ) + ar.bottom( )) / 2
+        cb = (br.top( ) + br.bottom( )) / 2
+
+        points = [ QPointF( ar.left( ), ca ),  # a |x...|
+                   QPointF( br.left( ), cb ),  # b |x...|
+                   QPointF( br.right( ), cb ),  # b |...x|
+                   QPointF( ar.right( ), ca ) ]  # a |...x|
+
+        colour = QColor( a.colour )
+        colour.setAlpha( 64 )
+
+        painter.setPen( QPen( a.colour ) )
+        painter.setBrush( QBrush( colour ) )
+        painter.drawPolygon( QPolygonF( points ) )
 
 
 class TargetSubLayout:
@@ -85,33 +124,8 @@ class TargetSubLayout:
         painter.drawRect( self.boundingRect( ) )
 
 
-    def create_edges( self, sequences: "List[SeqLayout]" ):
-        for destination in self.target.edges:
-            ui = TargetSubLayout.find_ui_element( sequences, destination )
-            ui.colour = self.colour
-            self.edges.append( ui )
-
-        if not self.colour:
-            # No colour for my group yet!
-            colour = next_colour()
-
-            for destination in self.target.all_vias():
-                ui = TargetSubLayout.find_ui_element( sequences, destination )
-                ui.colour = colour
-
-
     def window_rect( self ) -> QRectF:
         return self.boundingRect( ).translated( self.owner.scenePos( ) )
-
-
-    @staticmethod
-    def find_ui_element( sequences: "List[SeqLayout]", target: Target ):
-        for sequence_ui in sequences:
-            for target_ui in sequence_ui.targets:
-                if target_ui.target == target:
-                    return target_ui
-
-        raise KeyError( "Missing target UI element." )
 
 
 class SeqLayout( QGraphicsItem ):
@@ -162,41 +176,20 @@ class SeqLayout( QGraphicsItem ):
             target.paint( painter )
 
 
-    def create_edges( self, sequences: "List[ SeqLayout ]" ):
-        for target in self.targets:
-            target.create_edges( sequences )
-
-
 class EdgeLayout( QGraphicsItem ):
-    def __init__( self, sequences: List[ SeqLayout ] ):
+    def __init__( self, owner: "SeqLayoutManager", manager: SequenceMananager ):
         super( ).__init__( )
-        self.sequences = sequences
+        self.manager = manager
+        self.group_uis = [ ]
 
-        for sequence in self.sequences:
-            sequence.create_edges( sequences )
+        for group in manager.groups:
+            group_ui = list( [ owner.find_ui_element( x ) for x in group ] )
+            self.group_uis.append( GroupSubLayout( self, group_ui ) )
 
 
     def paint( self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[ QWidget ] = None ) -> None:
-        for sequence in self.sequences:
-            for a in sequence.targets:
-                for b in a.edges:
-                    ar = a.window_rect( )
-                    br = b.window_rect( )
-
-                    ca = (ar.top( ) + ar.bottom( )) / 2
-                    cb = (br.top( ) + br.bottom( )) / 2
-
-                    points = [ QPointF( ar.left( ), ca ),  # a |x...|
-                               QPointF( br.left( ), cb ),  # b |x...|
-                               QPointF( br.right( ), cb ),  # b |...x|
-                               QPointF( ar.right( ), ca ) ]  # a |...x|
-
-                    colour = QColor( a.colour )
-                    colour.setAlpha( 64 )
-
-                    painter.setPen( QPen( a.colour ) )
-                    painter.setBrush( QBrush( colour ) )
-                    painter.drawPolygon( QPolygonF( points ) )
+        for group in self.group_uis:
+            group.paint( painter )
 
 
 class SeqLayoutManager:
@@ -204,19 +197,27 @@ class SeqLayoutManager:
 
         y = 0
 
-        self.edges = None
-        sequences = [ ]
+        self.sequences = [ ]
 
         for sequence in manager.sequences:
             item = SeqLayout( self, sequence, QPointF( 0, y ) )
-            sequences.append( item )
+            self.sequences.append( item )
             scene.addItem( item )
             y = item.boundingRect( ).bottom( ) + SEQUENCE_MARGIN
 
-        self.edges = EdgeLayout( sequences )
+        self.edges = EdgeLayout( self, manager )
         scene.addItem( self.edges )
 
 
     def update_edges( self ):
         if self.edges:
             self.edges.update( )
+
+
+    def find_ui_element( self, target: Target ):
+        for sequence_ui in self.sequences:
+            for target_ui in sequence_ui.targets:
+                if target_ui.target == target:
+                    return target_ui
+
+        raise KeyError( "Missing target UI element." )
