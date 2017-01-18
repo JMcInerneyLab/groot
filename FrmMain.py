@@ -1,27 +1,17 @@
-from random import randint
+from os import path
 from typing import List
 
-from PyQt5.QtCore import QLineF
-from PyQt5.QtCore import QPointF
+from PyQt5.QtWidgets import QWhatsThis
+
+from LegoModels import LegoModel, LegoModelOptions, LegoBlast
+from LegoViews import LegoModelView
 from PyQt5.QtCore import QRectF, pyqtSlot
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QPen
-from PyQt5.QtGui import QPolygonF
 from PyQt5.QtOpenGL import QGLWidget, QGLFormat, QGL
 from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QGraphicsTextItem
-from os import path
-
-from BlastResult import BlastResult, SequenceMananager
-from BlastResult import Target
-
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QMainWindow
 
 from FrmMain_designer import Ui_MainWindow
-from Layouts import SeqLayoutManager
 
 
 class FrmMain( QMainWindow ):
@@ -51,9 +41,17 @@ class FrmMain( QMainWindow ):
 
         # self.subset_file( "/Users/martinrusilowicz/work/data/plasmids/proteins.blast" )
 
-        file_name = path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" )
 
-        self.read_file( file_name )
+
+        self._options = LegoModelOptions( )
+        self._model = LegoModel( None )
+        self._view = None
+
+        self.ui.NUM_MERGE.setValue( 10 )
+        self.ui.CHK_TRANSITION.setChecked( True )
+        self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
+
+        self.read_file( )
 
 
     @pyqtSlot( )
@@ -61,12 +59,9 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        file_name = QFileDialog.getOpenFileName( self, "Open BLAST", None, "*.blast" )
-
-        if not file_name:
-            return
-
-        self.read_file( file_name )
+        self.on_BTN_FILENAME_clicked( )
+        self.read( )
+        self.read_file( )
 
 
     def subset_file( self, file_name ):
@@ -76,7 +71,7 @@ class FrmMain( QMainWindow ):
 
         with open( file_name, "r" ) as file:
             for line in file.readlines( ):
-                result = BlastResult( line )
+                result = LegoBlast( line )
 
                 if not result.query_accession in interested:
                     if len( interested ) == MAX_BLASTS:
@@ -97,18 +92,6 @@ class FrmMain( QMainWindow ):
                 file.writelines( blasts )
 
 
-    def read_file( self, file_name ):
-        blasts = [ ]
-
-        with open( file_name, "r" ) as file:
-            for line in file.readlines( ):
-                result = BlastResult( line )
-                blasts.append( result )
-
-        scene = self.plot( blasts )
-        self.ui.graphicsView.setScene( scene )
-
-
     @pyqtSlot( )
     def on_actionE_xit_triggered( self ) -> None:
         """
@@ -116,11 +99,41 @@ class FrmMain( QMainWindow ):
         """
         self.close( )
 
+    @pyqtSlot()
+    def on_BTN_WHATS_THIS_clicked(self) -> None:
+        """
+        Signal handler:
+        """
+        QWhatsThis.enterWhatsThisMode()
+    
+    @pyqtSlot( )
+    def on_BTN_FILENAME_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        file_name = QFileDialog.getOpenFileName( self, "Open BLAST", None, "*.blast" )
 
-    def plot( self, blasts: List[ BlastResult ] ) -> QGraphicsScene:
-        scene = QGraphicsScene( )
+        if not file_name:
+            return
 
-        sequences = SequenceMananager( blasts )
-        manager = SeqLayoutManager( sequences, scene )
+        self.ui.TXT_FILENAME.setText( file_name )
 
-        return scene
+
+    @pyqtSlot( )
+    def on_pushButton_clicked( self ) -> None:
+        """
+        Signal handler: Update
+        """
+        self.read_file( )
+
+
+    def read_file( self ):
+
+        self._options.file_name = self.ui.TXT_FILENAME.text( )
+        self._options.ignore_transitions = self.ui.CHK_TRANSITION.isChecked( )
+        self._options.combine_cuts = self.ui.NUM_MERGE.value( )
+
+        self._model = LegoModel( self._options )
+        view = LegoModelView( self._model, None ) # self._view
+        self.ui.graphicsView.setScene( view.scene )
+        self._view = view

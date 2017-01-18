@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1239</width>
-    <height>909</height>
+    <height>755</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,190 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QGraphicsView" name="graphicsView">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="whatsThis">
+        <string>The plot is shown in this area</string>
+       </property>
+      </widget>
+      <widget class="QFrame" name="frame">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="statusTip">
+           <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+          </property>
+          <property name="whatsThis">
+           <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+          </property>
+          <property name="text">
+           <string>Filename</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLineEdit" name="TXT_FILENAME">
+            <property name="statusTip">
+             <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+            </property>
+            <property name="whatsThis">
+             <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="BTN_FILENAME">
+            <property name="statusTip">
+             <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+            </property>
+            <property name="whatsThis">
+             <string>Name of the file to load. This should be BLAST output in TSV format.</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="statusTip">
+           <string>How close two points in a sequence must be to be considered the same.</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How close two points in a sequence must be to be considered the same.&lt;/p&gt;&lt;p&gt;Points are merged using HCA. Sequence starts are always drawn from the lowest of the set of merged points, whilst sequence ends are always drawn from the highest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Merge tolerance</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="NUM_MERGE">
+          <property name="statusTip">
+           <string>How close two points in a sequence must be to be considered the same.</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How close two points in a sequence must be to be considered the same.&lt;/p&gt;&lt;p&gt;Points are merged using HCA. Sequence starts are always drawn from the lowest of the set of merged points, whilst sequence ends are always drawn from the highest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="accelerated">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="statusTip">
+           <string>Controls whether BLAST targets that share a connection are grouped together</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When checked, all BLAST targets that share a connection are grouped together&lt;/p&gt;&lt;p&gt;e.g.&lt;br/&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, A-C, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;/p&gt;&lt;p&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;br/&gt;&lt;br/&gt;When unchecked, only BLAST targets that share a direct connection are grouped.&lt;/p&gt;&lt;p&gt;e.g.&lt;br/&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, A-C, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;/p&gt;&lt;p&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, B-C&lt;/span&gt;} there are two groups, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B&lt;/span&gt;} and {&lt;span style=&quot; font-style:italic;&quot;&gt;B, C&lt;/span&gt;}&lt;br/&gt;This leads to more lines in the plot, which can be confusing, but allows non-transitive regions to be identified.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Transitive</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="CHK_TRANSITION">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="statusTip">
+           <string>Controls whether BLAST targets that share a connection are grouped together</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When checked, all BLAST targets that share a connection are grouped together&lt;/p&gt;&lt;p&gt;e.g.&lt;br/&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, A-C, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;/p&gt;&lt;p&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;br/&gt;&lt;br/&gt;When unchecked, only BLAST targets that share a direct connection are grouped.&lt;/p&gt;&lt;p&gt;e.g.&lt;br/&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, A-C, B-C&lt;/span&gt;} there is one group, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B, C&lt;/span&gt;}&lt;/p&gt;&lt;p&gt;for BLASTs {&lt;span style=&quot; font-style:italic;&quot;&gt;A-B, B-C&lt;/span&gt;} there are two groups, {&lt;span style=&quot; font-style:italic;&quot;&gt;A, B&lt;/span&gt;} and {&lt;span style=&quot; font-style:italic;&quot;&gt;B, C&lt;/span&gt;}&lt;br/&gt;This leads to more lines in the plot, which can be confusing, but allows non-transitive regions to be identified.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Group all connections</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="statusTip">
+           <string>Applys the current settings.</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Applys the current settings.&lt;/p&gt;&lt;p&gt;The file is only reloaded if necessary.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>432</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="BTN_WHATS_THIS">
+          <property name="toolTip">
+           <string>Click to display what's this help.</string>
+          </property>
+          <property name="statusTip">
+           <string>Click to display what's this help.</string>
+          </property>
+          <property name="whatsThis">
+           <string>Once in what's this mode, click somewhere else!</string>
+          </property>
+          <property name="text">
+           <string>WHATS THIS?</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>

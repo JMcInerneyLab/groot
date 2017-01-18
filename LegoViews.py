@@ -1,3 +1,9 @@
+"""
+MVC architecture.
+
+Classes that manage the view of the model.
+"""
+
 from typing import Optional, List, Any
 
 from PyQt5.QtCore import QLineF
@@ -7,15 +13,13 @@ from PyQt5.QtGui import QBrush
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QPen
-from PyQt5.QtGui import QPolygon
 from PyQt5.QtGui import QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem
 from PyQt5.QtWidgets import QWidget
 
-import Monkey
-from BlastResult import SequenceMananager, Sequence, Target
+from LegoModels import LegoSequence, LegoTarget, LegoModel, mprint
 
 
 MULT = 2
@@ -27,7 +31,8 @@ TEXT_MARGIN = MULT * 8
 
 SEQ_OL = QPen( QColor( 0, 0, 0 ) )
 SEQ_BG = QBrush( QColor( 64, 64, 64 ) )
-CUT_OL = QPen( QColor( 0, 0, 0 ) )
+CUTS_OL = QPen( QColor( 255, 255, 255 ) )
+CUTE_OL = QPen( QColor( 0, 0, 0 ) )
 TARGET_OL = QPen( QColor( 255, 0, 0 ) )
 TARGET_BG = QBrush( QColor( 255, 0, 0 ) )
 CON_OL = QPen( QColor( 0, 255, 0 ) )
@@ -57,16 +62,20 @@ def next_colour( ) -> QColor:
     return COLOURS[ NEXT_COLOUR ]
 
 
-class GroupSubLayout:
-    def __init__( self, owner: "EdgeLayout", targets: "List[TargetSubLayout]" ):
+class LegoEdgeView:
+    """
+    Draws the edges
+    """
+
+    def __init__( self, owner: "LegoAllEdgesView", targets: "List[LegoTargetView]" ):
         self.owner = owner
         self.targets = targets
         self.colour = next_colour( )
 
-        print( "GROUP BEGINS" )
+        mprint( "GROUP BEGINS" )
         for target in targets:
             target.colour = self.colour
-            print( "    + " + str( target.target ) )
+            mprint( "    + " + str( target.target ) )
 
 
     def paint( self, painter: QPainter ):
@@ -81,7 +90,8 @@ class GroupSubLayout:
             previous = target_ui
 
 
-    def draw_connection( self, a: "TargetSubLayout", b: "TargetSubLayout", painter: QPainter ):
+    @staticmethod
+    def draw_connection( a: "LegoTargetView", b: "LegoTargetView", painter: QPainter ):
         ar = a.window_rect( )
         br = b.window_rect( )
 
@@ -101,20 +111,20 @@ class GroupSubLayout:
         painter.drawPolygon( QPolygonF( points ) )
 
 
-class TargetSubLayout:
-    def __init__( self, target: Target, owner: "SeqLayout", index: int ):
+class LegoTargetView:
+    def __init__( self, target: LegoTarget, owner_view: "LegoSequenceView", positional_index: int ):
         self.target = target
-        self.owner = owner
-        self.index = index
-        self.edges = [ ]  # type:List[TargetSubLayout]
+        self.owner = owner_view
+        self.index = positional_index
+        self.edges = [ ]  # type:List[LegoTargetView]
         self.colour = None
 
 
     def boundingRect( self ) -> QRectF:
         owner = self.owner
-        return QRectF( owner.rect.x( ) + self.target.start * MULT,
+        return QRectF( owner.rect.x( ) + self.target.start() * MULT,
                        owner.rect.top( ) + TARGET_MARGIN + (TARGET_MARGIN + TARGET_HEIGHT) * self.index,
-                       owner.rect.x( ) + self.target.length * MULT,
+                       owner.rect.x( ) + self.target.length() * MULT,
                        TARGET_HEIGHT )
 
 
@@ -123,12 +133,51 @@ class TargetSubLayout:
         painter.setPen( QPen( self.colour ) )
         painter.drawRect( self.boundingRect( ) )
 
+        painter.setPen( CUTS_OL )
+        for x in self.target.start_cut.positions:
+            assert x >= self.target.start()
+            painter.drawLine( QLineF( MULT * x, self.boundingRect().top( ), MULT * x, self.boundingRect().center().y() ) )
+
+        painter.setPen( CUTE_OL )
+        for x in self.target.end_cut.positions:
+            assert x <= self.target.end( )
+            painter.drawLine( QLineF( MULT * x, self.boundingRect( ).center( ).y(), MULT * x, self.boundingRect( ).bottom( ) ) )
+
 
     def window_rect( self ) -> QRectF:
         return self.boundingRect( ).translated( self.owner.scenePos( ) )
 
 
-class SeqLayout( QGraphicsItem ):
+class LegoSequenceView( QGraphicsItem ):
+    """
+    Views a sequence
+    """
+
+
+
+
+    def __init__( self, owner_view: "LegoModelView", sequence: LegoSequence, pos: QPointF, previous_view: "Optional[LegoSequenceView]" ):
+        super( ).__init__( )
+        self.owner = owner_view
+
+        self.sequence = sequence
+
+        height = max( MIN_SEQUENCE_HEIGHT, (len( sequence.targets ) + 1) * (TARGET_HEIGHT + TARGET_MARGIN) )
+
+        self.rect = QRectF( pos.x( ), pos.y( ), sequence.length * MULT, height )
+
+        self.setFlag( QGraphicsItem.ItemIsMovable, True )
+        self.setFlag( QGraphicsItem.ItemSendsGeometryChanges, True )
+
+        self.targets = [ ]  # type:List[LegoTargetView]
+
+        for target in sequence.targets:
+            self.targets.append( LegoTargetView( target, self, len( self.targets ) ) )
+
+        if previous_view:
+            self.setPos(previous_view.scenePos())
+
+
     def itemChange( self, change: int, value: Any ):  # change is QGraphicsItem.GraphicsItemChange
         result = super( ).itemChange( change, value )
 
@@ -136,24 +185,6 @@ class SeqLayout( QGraphicsItem ):
             self.owner.update_edges( )
 
         return result
-
-
-    def __init__( self, owner: "SeqLayoutManager", sequence: Sequence, pos: QPointF ):
-        super( ).__init__( )
-        self.owner = owner
-        self.sequence = sequence
-
-        height = max( MIN_SEQUENCE_HEIGHT, (len( sequence.targets ) + 1) * (TARGET_HEIGHT + TARGET_MARGIN) )
-
-        self.rect = QRectF( pos.x( ), pos.y( ), self.sequence.length * MULT, height )
-
-        self.setFlag( QGraphicsItem.ItemIsMovable, True )
-        self.setFlag( QGraphicsItem.ItemSendsGeometryChanges, True )
-
-        self.targets = [ ]  # type:List[TargetSubLayout]
-
-        for target in self.sequence.targets:
-            self.targets.append( TargetSubLayout( target, self, len( self.targets ) ) )
 
 
     def boundingRect( self ) -> QRectF:
@@ -164,11 +195,7 @@ class SeqLayout( QGraphicsItem ):
         painter.setBrush( SEQ_BG )
         painter.setPen( SEQ_OL )
         painter.drawRect( self.rect )
-        painter.drawText( QPointF( self.rect.right( ) + TEXT_MARGIN, self.rect.top( ) ), self.sequence.name )
-
-        for cut in self.sequence.cuts:
-            painter.setPen( CUT_OL )
-            painter.drawLine( QLineF( MULT * cut.position, self.rect.top( ), MULT * cut.position, self.rect.bottom( ) ) )
+        painter.drawText( QPointF( self.rect.right( ) + TEXT_MARGIN, self.rect.center().y() ), self.sequence.name )
 
         y = self.rect.top( ) + TARGET_MARGIN
 
@@ -176,15 +203,15 @@ class SeqLayout( QGraphicsItem ):
             target.paint( painter )
 
 
-class EdgeLayout( QGraphicsItem ):
-    def __init__( self, owner: "SeqLayoutManager", manager: SequenceMananager ):
+class LegoAllEdgesView( QGraphicsItem ):
+    def __init__( self, owner_view: "LegoModelView", model: LegoModel ):
         super( ).__init__( )
-        self.manager = manager
+        self.manager = model
         self.group_uis = [ ]
 
-        for group in manager.groups:
-            group_ui = list( [ owner.find_ui_element( x ) for x in group ] )
-            self.group_uis.append( GroupSubLayout( self, group_ui ) )
+        for group in model.groups:
+            group_ui = list( [ owner_view.find_ui_element( x ) for x in group ] )
+            self.group_uis.append( LegoEdgeView( self, group_ui ) )
 
 
     def paint( self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[ QWidget ] = None ) -> None:
@@ -192,30 +219,46 @@ class EdgeLayout( QGraphicsItem ):
             group.paint( painter )
 
 
-class SeqLayoutManager:
-    def __init__( self, manager: SequenceMananager, scene: QGraphicsScene ):
+class LegoModelView:
+    def __init__( self, model: LegoModel, previous : "LegoModelView" ):
 
         y = 0
 
-        self.sequences = [ ]
+        self.scene = QGraphicsScene()
 
-        for sequence in manager.sequences:
-            item = SeqLayout( self, sequence, QPointF( 0, y ) )
-            self.sequences.append( item )
-            scene.addItem( item )
+        self.sequence_views = [ ]
+
+        self.edges = []
+
+        for sequence in model.sequences:
+            if previous:
+                previous_sequence_view = previous.find_sequence_view(sequence.name)
+            else:
+                previous_sequence_view = None
+
+            item = LegoSequenceView( self, sequence, QPointF( 0, y ), previous_sequence_view )
+            self.sequence_views.append( item )
+            self.scene.addItem( item )
             y = item.boundingRect( ).bottom( ) + SEQUENCE_MARGIN
 
-        self.edges = EdgeLayout( self, manager )
-        scene.addItem( self.edges )
+        self.edges = LegoAllEdgesView( self, model )
+        self.scene.addItem( self.edges )
 
 
     def update_edges( self ):
         if self.edges:
             self.edges.update( )
 
+    def find_sequence_view(self, name:str)-> Optional[LegoSequenceView]:
+        for sequence_ui in self.sequence_views:
+            if sequence_ui.sequence.name == name:
+                return sequence_ui
 
-    def find_ui_element( self, target: Target ):
-        for sequence_ui in self.sequences:
+        return None
+
+
+    def find_ui_element( self, target: LegoTarget ):
+        for sequence_ui in self.sequence_views:
             for target_ui in sequence_ui.targets:
                 if target_ui.target == target:
                     return target_ui
