@@ -30,6 +30,7 @@ class FrmMain( QMainWindow ):
         self.ui = Ui_MainWindow( )
         self.ui.setupUi( self )
 
+        # Open GL rendering
         self.ui.graphicsView.setViewport( QGLWidget( QGLFormat( QGL.SampleBuffers ) ) )
         # self.ui.graphicsView.scale( 2, 2 )
 
@@ -50,6 +51,7 @@ class FrmMain( QMainWindow ):
         self.ui.NUM_MERGE.setValue( 10 )
         self.ui.CHK_TRANSITION.setChecked( True )
         self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
+        self.ui.RAD_OPT_NONE.setChecked( True )
 
         self.read_file( )
 
@@ -99,13 +101,15 @@ class FrmMain( QMainWindow ):
         """
         self.close( )
 
-    @pyqtSlot()
-    def on_BTN_WHATS_THIS_clicked(self) -> None:
+
+    @pyqtSlot( )
+    def on_BTN_WHATS_THIS_clicked( self ) -> None:
         """
         Signal handler:
         """
-        QWhatsThis.enterWhatsThisMode()
-    
+        QWhatsThis.enterWhatsThisMode( )
+
+
     @pyqtSlot( )
     def on_BTN_FILENAME_clicked( self ) -> None:
         """
@@ -133,7 +137,18 @@ class FrmMain( QMainWindow ):
         self._options.ignore_transitions = self.ui.CHK_TRANSITION.isChecked( )
         self._options.combine_cuts = self.ui.NUM_MERGE.value( )
 
+        if self.ui.RAD_OPT_ALL.isChecked( ):
+            self._options.pack = "all"
+
+        if self.ui.RAD_OPT_MC.isChecked( ):
+            self._options.pack = "montecarlo"
+
+        if self.ui.RAD_OPT_NONE.isChecked( ):
+            self._options.pack = "none"
+
         self._model = LegoModel( self._options )
-        view = LegoModelView( self._model, None ) # self._view
+        view = LegoModelView( self._model, None )  # self._view
         self.ui.graphicsView.setScene( view.scene )
         self._view = view
+
+        self.setWindowTitle( "Lego - " + path.split( self._options.file_name )[ 1 ] )

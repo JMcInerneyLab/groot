@@ -3,6 +3,7 @@ MVC architecture.
 
 Classes that manage the data (model) behind the UI.
 """
+from itertools import permutations
 from typing import Optional, List, Dict, Set, Tuple, Iterable
 
 import numpy
@@ -406,6 +407,7 @@ class LegoModelOptions:
         self.file_name = None
         self.ignore_transitions = True
         self.combine_cuts = 25
+        self.pack = "none"
 
 
 class LegoList:
@@ -420,8 +422,9 @@ class LegoList:
         self._contents.clear( )
         self._contents += new_list
 
-    def __len__(self):
-        return self._contents.__len__()
+
+    def __len__( self ):
+        return self._contents.__len__( )
 
 
     def __iter__( self ):
@@ -521,35 +524,49 @@ class LegoModel:
         self.groups.replace( groups )
 
         # Find best permutation
-        bestp = None
-        bests = -999999
+        if options.pack == "none":
+            bestp = sorted( self.sequences._contents, key = lambda x: x.length )
+        elif options.pack == "montecarlo":
+            bestp = None
+            bests = -999999
 
-        for n in range(5000):
-            p = numpy.random.permutation( self.sequences._contents )
-            s = self.score_perm( p )
-            print( "PERMUTATION {0} {1} = {2}".format( n, p, s ) )
-            if s > bests:
-                bests = s
-                bestp = p
+            for n in range( 5000 ):
+                p = numpy.random.permutation( self.sequences._contents )
+                s = self.score_perm( p )
+                if s > bests:
+                    bests = s
+                    bestp = p
 
-        self.sequences._contents = list( p )
+        elif options.pack == "all":
+            bestp = None
+            bests = -999999
+
+            for p in permutations( self.sequences._contents ):
+                s = self.score_perm( p )
+                if s > bests:
+                    bests = s
+                    bestp = p
+
+        else:
+            raise ValueError( "\"{0}\" is not a valid value for \"pack\".".format( options.pack ) )
+
+        self.sequences._contents = list( bestp )
 
 
     def score_perm( self, p: List[ LegoSequence ] ) -> float:
         score = 0
 
-        for i in range( 1, len( p ) - 1 ):
-            prev = p[ i - 1 ]  # type:LegoSequence
-            current = p[ i ]  # type:LegoSequence
-            next = p[ i + 1 ]  # type:LegoSequence
-
-            for t in current.targets:  # type: LegoTarget
+        for ai, a in enumerate( p ):
+            for t in a.targets:
                 for tt in t.edge_targets:
-                    if tt in prev.targets:
-                        score += 1
+                    for bi, b in enumerate( p ):
+                        d = abs( bi - ai )
 
-                    if tt in next.targets:
-                        score += 1
+                        if d <= 1:
+                            continue
+
+                        if tt in b.targets:
+                            score -= d
 
         return score
 

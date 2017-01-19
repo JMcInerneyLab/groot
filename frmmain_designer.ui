@@ -46,6 +46,58 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="BTN_WHATS_THIS">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Click to display &quot;what's this&quot; style popup help.</string>
+            </property>
+            <property name="statusTip">
+             <string>Click to display &quot;what's this&quot; style popup help.</string>
+            </property>
+            <property name="whatsThis">
+             <string>Once in what's this mode, click somewhere else!</string>
+            </property>
+            <property name="icon">
+             <iconset resource="Resources.qrc">
+              <normaloff>:/Images/help-cursor.svg</normaloff>:/Images/help-cursor.svg</iconset>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QLabel" name="label_3">
           <property name="statusTip">
            <string>Name of the file to load. This should be BLAST output in TSV format.</string>
@@ -156,6 +208,61 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="label_4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the optimisation method.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Don't optimise, sequences will be sorted by length.&lt;/p&gt;&lt;p&gt;This is the fastest option.&lt;/p&gt;&lt;p&gt;Takes less than a second with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Monte carlo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Quick and dirty optimisation over a subset of random permutaions.&lt;/p&gt;&lt;p&gt;Takes a few seconds with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;All&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Optimise over all permutations. May take an excessively long time.&lt;/p&gt;&lt;p&gt;Takes overnight with the sample data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Optimise over</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="RAD_OPT_NONE">
+          <property name="statusTip">
+           <string>Sort sequences by length</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the optimisation method.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Don't optimise, sequences will be sorted by length.&lt;/p&gt;&lt;p&gt;This is the fastest option.&lt;/p&gt;&lt;p&gt;Takes less than a second with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Monte carlo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Quick and dirty optimisation over a subset of random permutaions.&lt;/p&gt;&lt;p&gt;Takes a few seconds with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;All&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Optimise over all permutations. May take an excessively long time.&lt;/p&gt;&lt;p&gt;Takes overnight with the sample data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>None</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="RAD_OPT_MC">
+          <property name="statusTip">
+           <string>Run a quick Montecarlo simulation to optimise the order</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the optimisation method.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Don't optimise, sequences will be sorted by length.&lt;/p&gt;&lt;p&gt;This is the fastest option.&lt;/p&gt;&lt;p&gt;Takes less than a second with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Monte carlo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Quick and dirty optimisation over a subset of random permutaions.&lt;/p&gt;&lt;p&gt;Takes a few seconds with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;All&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Optimise over all permutations. May take an excessively long time.&lt;/p&gt;&lt;p&gt;Takes overnight with the sample data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Monte carlo</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="RAD_OPT_ALL">
+          <property name="statusTip">
+           <string>Optimise the order over all permutaions **very slow**</string>
+          </property>
+          <property name="whatsThis">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the optimisation method.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Don't optimise, sequences will be sorted by length.&lt;/p&gt;&lt;p&gt;This is the fastest option.&lt;/p&gt;&lt;p&gt;Takes less than a second with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Monte carlo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Quick and dirty optimisation over a subset of random permutaions.&lt;/p&gt;&lt;p&gt;Takes a few seconds with the sample data.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;All&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Optimise over all permutations. May take an excessively long time.&lt;/p&gt;&lt;p&gt;Takes overnight with the sample data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>All (slow)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButton">
           <property name="statusTip">
            <string>Applys the current settings.</string>
@@ -182,18 +289,32 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="BTN_WHATS_THIS">
-          <property name="toolTip">
-           <string>Click to display what's this help.</string>
+         <widget class="QLabel" name="label_5">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <property name="statusTip">
-           <string>Click to display what's this help.</string>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
           </property>
-          <property name="whatsThis">
-           <string>Once in what's this mode, click somewhere else!</string>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
           </property>
           <property name="text">
-           <string>WHATS THIS?</string>
+           <string>This application is still in early development</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -233,6 +354,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="Resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
