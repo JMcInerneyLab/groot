@@ -47,11 +47,11 @@ class FrmMain( QMainWindow ):
 
         self.ui.NUM_MERGE.setValue( 10 )
         self.ui.CHK_TRANSITION.setChecked( True )
-        self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
-        self.ui.TXT_FILENAME.setText( "/Users/martinrusilowicz/Desktop/Composites.composites" )
+        # self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
+        # self.ui.TXT_FILENAME.setText( "/Users/martinrusilowicz/Desktop/Composites.composites" )
         self.ui.RAD_OPT_NONE.setChecked( True )
 
-        self.read_file( )
+        # self.read_file( )
 
 
     @pyqtSlot( )

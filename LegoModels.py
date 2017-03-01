@@ -468,6 +468,7 @@ class LegoModel:
             reading = False
             targets = [ ]
             seq_len = 0
+            comp_name = None
             
             with open( file_name, "r" ) as file:
                 for line in file.readlines( ):
@@ -478,11 +479,12 @@ class LegoModel:
                             break
                         
                         if line.startswith( "F" ):
-                            target = self.__comp_line( line, seq_len )
+                            target = self.__comp_line( line, seq_len, comp_name )
                             targets.append( target )
                     elif line.startswith( ">C" ):
                         # Composite begins
                         reading = True
+                        comp_name = line[ 1: ]
                     elif not line.startswith( ">" ) and len( line ) != 0:
                         # FASTA sequence
                         seq_len += len( line )
@@ -494,7 +496,7 @@ class LegoModel:
     
     
     @staticmethod
-    def __comp_line( line, seq_len ) -> LegoBlastTarget:
+    def __comp_line( line, seq_len, comp_name ) -> LegoBlastTarget:
         # 0 F<comp family id>
         # 1 <mean align>
         # 2 <mean align>
@@ -506,7 +508,7 @@ class LegoModel:
         e = line.split( "\t" )
         
         result = LegoBlastTarget( )
-        result.accession = "COMPOSITE"
+        result.accession = comp_name
         result.start = float( e[ 1 ] )
         result.end = float( e[ 2 ] )
         result.length = seq_len
