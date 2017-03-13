@@ -42,16 +42,15 @@ class FrmMain( QMainWindow ):
 
 
         self._options = LegoModelOptions( )
-        self._model = LegoModel( None )
+        self._model = LegoModel( self._options )
         self._view = None
 
         self.ui.NUM_MERGE.setValue( 10 )
         self.ui.CHK_TRANSITION.setChecked( True )
-        # self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
-        # self.ui.TXT_FILENAME.setText( "/Users/martinrusilowicz/Desktop/Composites.composites" )
+        self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
         self.ui.RAD_OPT_NONE.setChecked( True )
 
-        # self.read_file( )
+        self.read_file( )
 
 
     @pyqtSlot( )
@@ -62,34 +61,6 @@ class FrmMain( QMainWindow ):
         self.on_BTN_FILENAME_clicked( )
         self.read( )
         self.read_file( )
-
-
-    def subset_file( self, file_name ):
-        MAX_BLASTS = 10
-        interested = set( )
-        blasts = [ ]
-
-        with open( file_name, "r" ) as file:
-            for line in file.readlines( ):
-                result = LegoBlast( line )
-
-                if not result.query_accession in interested:
-                    if len( interested ) == MAX_BLASTS:
-                        continue
-
-                    interested.add( result.query_accession )
-
-                if not result.subject_accession in interested:
-                    if len( interested ) == MAX_BLASTS:
-                        continue
-
-                    interested.add( result.subject_accession )
-
-                blasts.append( line )
-
-        with open( file_name + ".small_subset", "w" ) as file:
-            for blast in blasts:
-                file.writelines( blasts )
 
 
     @pyqtSlot( )

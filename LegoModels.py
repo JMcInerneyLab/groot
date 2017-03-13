@@ -102,7 +102,7 @@ class LegoCut:
         return self.minimum
 
 
-class LegoTarget:
+class LegoSubsequence:
     """
     BLAST target
     """
@@ -110,8 +110,8 @@ class LegoTarget:
     
     
     def __init__( self, sequence: "LegoSequence", start: LegoCut, end: LegoCut ):
-        self.id = LegoTarget.___next_id
-        LegoTarget.___next_id += 1
+        self.id = LegoSubsequence.___next_id
+        LegoSubsequence.___next_id += 1
         
         self.sequence = sequence
         self.original_start = start.only( )
@@ -121,7 +121,7 @@ class LegoTarget:
         self.merged_into = None
         self.merges = [ ]
         
-        self.edge_targets = [ ]  # type:List[LegoTarget]
+        self.edge_targets = [ ]  # type:List[LegoSubsequence]
     
     
     def start( self ) -> int:
@@ -154,7 +154,7 @@ class LegoTarget:
         return self.merges + [ self ]
     
     
-    def path_targets( self ) -> "Set[LegoTarget]":
+    def path_targets( self ) -> "Set[LegoSubsequence]":
         """
         Everything this is connected to through a series of edges
         """
@@ -171,7 +171,7 @@ class LegoTarget:
                 x._path_targets( results )
     
     
-    def merge_into( self, b: "LegoTarget" ):
+    def merge_into( self, b: "LegoSubsequence" ):
         """
         Merges this into another target
 
@@ -182,7 +182,7 @@ class LegoTarget:
         assert not self.merged_into
         
         # All the other targets pointing to us need updating
-        for x in self.edge_targets:  # type: LegoTarget
+        for x in self.edge_targets:  # type: LegoSubsequence
             mprint( "{0} now has an edge to {1} instead of {2}".format( x, b, self ) )
             x.edge_targets.remove( self )
             x.edge_targets.append( b )
@@ -200,7 +200,7 @@ class LegoTarget:
         b.merges.append( self )
         
         # We get removed from our owner
-        self.sequence.targets.remove( self )
+        self.sequence.subsequences.remove( self )
         
         self.merged_into = b
     
@@ -233,7 +233,7 @@ class LegoSequence:
             self.name = accession
         
         self.length = 0
-        self.targets = [ ]  # List[LegoTarget]
+        self.subsequences = [ ]  # List[LegoSubsequence]
         self.cuts = [ ]
     
     
@@ -244,7 +244,7 @@ class LegoSequence:
         return value - (value % LEVEL)
     
     
-    def get_target( self, target: LegoBlastTarget ) -> LegoTarget:
+    def get_subsequence( self, target: LegoBlastTarget ) -> LegoSubsequence:
         # start = self.quantise( start )
         # end = self.quantise( end )
         
@@ -254,14 +254,14 @@ class LegoSequence:
         
         result = None
         
-        for target in self.targets:
+        for target in self.subsequences:
             if target.start_cut == start_cut and target.end_cut == end_cut:
                 # Already exists
                 result = target
         
         if not result:
-            result = LegoTarget( self, start_cut, end_cut )
-            self.targets.append( result )
+            result = LegoSubsequence( self, start_cut, end_cut )
+            self.subsequences.append( result )
         
         if not result in start_cut.targets:
             start_cut.targets.append( result )
@@ -292,13 +292,16 @@ class LegoSequence:
         return "{0}".format( self.name )
     
     
-    def simplify( self, min_separation: int ) -> bool:
+    def simplify( self, min_separation: int, no_overlap: bool ) -> bool:
         """
         1. Use HCA to combine similar cuts
         2. Combine identical targets
         """
         mprint( "*** SIMPLIFYING SEQUENCE {0}".format( self ) )
         
+        #
+        # Use HCA to combine similar cuts
+        #
         while True:
             a, b, d = self.closest_cut( )
             
@@ -316,16 +319,18 @@ class LegoSequence:
             
             mprint( "Merge cuts with distance {0} < {1}: {2} and {3} --> {4}".format( round( d, 2 ), min_separation, a, b, c ) )
         
-        # Cuts are combined, but now we probably have identical targets
+        #
+        # Cuts are combined, but now we probably have identical subsequences
+        #
         to_merge = [ ]
         
         i = 0
-        while i < len( self.targets ):
-            a = self.targets[ i ]
+        while i < len( self.subsequences ):
+            a = self.subsequences[ i ]
             matches = [ ]
             
-            for j in range( i + 1, len( self.targets ) ):
-                b = self.targets[ j ]
+            for j in range( i + 1, len( self.subsequences ) ):
+                b = self.subsequences[ j ]
                 if a.start_cut == b.start_cut and a.end_cut == b.end_cut:
                     matches.append( b )
             
@@ -334,6 +339,15 @@ class LegoSequence:
                 match.merge_into( a )  # this modifies self.targets
             
             i += 1
+            
+        #
+        # Pull apart our subsequences such that they never overlap
+        #
+        if no_overlap:
+            new_subsequences = []
+            
+            for cut in self.cuts:
+                
         
         return bool( to_merge )
     
@@ -362,7 +376,7 @@ class LegoEdge:
     """
     
     
-    def __init__( self, blast: LegoBlast, query: LegoTarget, subject: LegoTarget ):
+    def __init__( self, blast: LegoBlast, query: LegoSubsequence, subject: LegoSubsequence ):
         self.query = query
         self.subject = subject
         self.blast = blast
@@ -377,7 +391,7 @@ class LegoEdge:
 
 
 class LegoGroup:
-    def __init__( self, targets: List[ LegoTarget ] ):
+    def __init__( self, targets: List[ LegoSubsequence ] ):
         self.targets = targets
     
     
@@ -385,7 +399,7 @@ class LegoGroup:
         return self.targets.__iter__( )
     
     
-    def matches( self, targets: List[ LegoTarget ] ):
+    def matches( self, targets: List[ LegoSubsequence ] ):
         if len( targets ) != len( self.targets ):
             return False
         
@@ -412,28 +426,28 @@ class LegoModelOptions:
         self.file_name = None
         self.ignore_transitions = True
         self.combine_cuts = 25
-        self.pack = "none"
+        self.no_overlap = True
 
 
 class LegoList:
     def __init__( self, type ):
-        self._contents = [ ]
+        self.contents = [ ]
     
     
     def replace( self, new_list ):
-        for x in self._contents:
+        for x in self.contents:
             x.kill( )
         
-        self._contents.clear( )
-        self._contents += new_list
+        self.contents.clear( )
+        self.contents += new_list
     
     
     def __len__( self ):
-        return self._contents.__len__( )
+        return self.contents.__len__( )
     
     
     def __iter__( self ):
-        return self._contents.__iter__( )
+        return self.contents.__iter__( )
 
 
 class LegoModel:
@@ -443,10 +457,10 @@ class LegoModel:
     
     
     def __init__( self, options: LegoModelOptions ):
-        self.file_name = None
+        self.__file_name = None
         self.edges = LegoList( LegoEdge )
         self.blasts = LegoList( LegoBlast )
-        self.xtargets = LegoList( LegoBlastTarget )
+        self.other_subsequences = LegoList( LegoBlastTarget )
         self.sequences = LegoList( LegoSequence )
         self.groups = LegoList( Set[ LegoGroup ] )
         
@@ -454,13 +468,13 @@ class LegoModel:
             self.update( options )
     
     
-    def read_blasts( self, file_name ) -> List[ LegoBlast ]:
+    def __read_file( self, file_name ):
         if file_name.endswith( ".blast" ):
             blasts = [ ]
             
             with open( file_name, "r" ) as file:
                 for line in file.readlines( ):
-                    result = self.__blast_line( line )
+                    result = self.__read_line_from_blast( line )
                     blasts.append( result )
             
             self.blasts = blasts
@@ -479,7 +493,7 @@ class LegoModel:
                             break
                         
                         if line.startswith( "F" ):
-                            target = self.__comp_line( line, seq_len, comp_name )
+                            target = self.__read_line_from_composites( line, seq_len, comp_name )
                             targets.append( target )
                     elif line.startswith( ">C" ):
                         # Composite begins
@@ -492,11 +506,11 @@ class LegoModel:
                         # FASTA begins
                         seq_len = 0
             
-            self.xtargets = targets
+            self.other_subsequences = targets
     
     
     @staticmethod
-    def __comp_line( line, seq_len, comp_name ) -> LegoBlastTarget:
+    def __read_line_from_composites( line, seq_len, comp_name ) -> LegoBlastTarget:
         # 0 F<comp family id>
         # 1 <mean align>
         # 2 <mean align>
@@ -517,7 +531,7 @@ class LegoModel:
     
     
     @staticmethod
-    def __blast_line( line ) -> LegoBlast:
+    def __read_line_from_blast( line ) -> LegoBlast:
         # Fields: query acc., subject acc., % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
         e = line.split( "\t" )
         
@@ -539,25 +553,29 @@ class LegoModel:
     
     
     def update( self, options: LegoModelOptions ):
-        # Blasts need updating?
-        if self.file_name != options.file_name:
-            self.read_blasts( options.file_name )
-            self.file_name = options.file_name
+        #
+        # Load data
+        #
+        if self.__file_name != options.file_name:
+            self.__read_file( options.file_name )
+            self.__file_name = options.file_name
         
-        # Convert BLAST to sequences
+        #
+        # Create subsequences
+        #
         sequences = { }  # type:Dict[str, LegoSequence]
         self.edges = [ ]
         
-        for xtarget in self.xtargets:
-            target = self.create_target( sequences, xtarget )
+        for subsequence in self.other_subsequences:
+            self.create_subsequence( sequences, subsequence )
         
         for blast in self.blasts:
             if blast.query.accession == blast.subject.accession:
                 # Ignore self references, they mess merging up
                 continue
             
-            query = self.create_target( sequences, blast.query )
-            subject = self.create_target( sequences, blast.subject )
+            query = self.create_subsequence( sequences, blast.query )
+            subject = self.create_subsequence( sequences, blast.subject )
             
             if any( [ x.query == query and x.subject == subject for x in self.edges ] ):
                 # Ignore duplicates
@@ -581,25 +599,29 @@ class LegoModel:
         
         self.sequences.replace( sequences.values( ) )
         
+        #
         # Compact our cuts
+        #
         for sequence in self.sequences:
-            sequence.simplify( options.combine_cuts )
+            sequence.simplify( options.combine_cuts, options.no_overlap )
         
-        # Create our groups
+        #
+        # Create our families (islands, groups of connected subsequences, etc) 
+        #
         groups = [ ]
         
         if options.ignore_transitions:
-            visited = set( )  # type: Set[LegoTarget]
+            visited = set( )  # type: Set[LegoSubsequence]
             
-            for target in self.targets( ):
-                if target not in visited:
-                    this_group = target.path_targets( )
+            for subsequence in self.subsequences( ):
+                if subsequence not in visited:
+                    this_group = subsequence.path_targets( )
                     assert not any( (x in visited) for x in this_group )
                     visited.update( this_group )
                     groups.append( LegoGroup( this_group ) )
         else:
-            for target in self.targets( ):
-                this_group = target.edge_targets
+            for subsequence in self.subsequences( ):
+                this_group = subsequence.edge_targets
                 
                 if not any( [ x.matches( this_group ) for x in groups ] ):
                     groups.append( LegoGroup( this_group ) )
@@ -607,56 +629,12 @@ class LegoModel:
         self.groups.replace( groups )
         
         # Find best permutation
-        if options.pack == "none":
-            bestp = sorted( self.sequences._contents, key = lambda x: x.length )
-        elif options.pack == "montecarlo":
-            bestp = None
-            bests = -999999
-            
-            for n in range( 5000 ):
-                p = numpy.random.permutation( self.sequences._contents )
-                s = self.score_perm( p )
-                if s > bests:
-                    bests = s
-                    bestp = p
-        
-        elif options.pack == "all":
-            bestp = None
-            bests = -999999
-            
-            for p in permutations( self.sequences._contents ):
-                s = self.score_perm( p )
-                if s > bests:
-                    bests = s
-                    bestp = p
-        
-        else:
-            raise ValueError( "\"{0}\" is not a valid value for \"pack\".".format( options.pack ) )
-        
-        self.sequences._contents = list( bestp )
+        self.sequences.contents = sorted( self.sequences.contents, key = lambda x: x.length )
     
     
-    def score_perm( self, p: List[ LegoSequence ] ) -> float:
-        score = 0
-        
-        for ai, a in enumerate( p ):
-            for t in a.targets:
-                for tt in t.edge_targets:
-                    for bi, b in enumerate( p ):
-                        d = abs( bi - ai )
-                        
-                        if d <= 1:
-                            continue
-                        
-                        if tt in b.targets:
-                            score -= d
-        
-        return score
-    
-    
-    def targets( self ):
+    def subsequences( self ):
         for sequence in self.sequences:
-            yield from sequence.targets
+            yield from sequence.subsequences
     
     
     def __iter__( self ):
@@ -667,12 +645,12 @@ class LegoModel:
         return "Model"
     
     
-    def create_target( self, sequences: Dict[ str, LegoSequence ], target: LegoBlastTarget ) -> LegoTarget:
+    def create_subsequence( self, sequences: Dict[ str, LegoSequence ], target: LegoBlastTarget ) -> LegoSubsequence:
         if target.accession in sequences:
             sequence = sequences[ target.accession ]
         else:
             sequence = LegoSequence( self, target.accession )
             sequences[ target.accession ] = sequence
         
-        result = sequence.get_target( target )
+        result = sequence.get_subsequence( target )
         return result

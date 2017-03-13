@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem
 from PyQt5.QtWidgets import QWidget
 
-from LegoModels import LegoSequence, LegoTarget, LegoModel, mprint
+from LegoModels import LegoSequence, LegoSubsequence, LegoModel, mprint
 
 
 MULT = 2
@@ -112,7 +112,7 @@ class LegoEdgeView:
 
 
 class LegoTargetView:
-    def __init__( self, target: LegoTarget, owner_view: "LegoSequenceView", positional_index: int ):
+    def __init__( self, target: LegoSubsequence, owner_view: "LegoSequenceView", positional_index: int ):
         self.target = target
         self.owner = owner_view
         self.index = positional_index
@@ -162,7 +162,7 @@ class LegoSequenceView( QGraphicsItem ):
 
         self.sequence = sequence
 
-        height = max( MIN_SEQUENCE_HEIGHT, (len( sequence.targets ) + 1) * (TARGET_HEIGHT + TARGET_MARGIN) )
+        height = max( MIN_SEQUENCE_HEIGHT, (len( sequence.subsequences ) + 1) * (TARGET_HEIGHT + TARGET_MARGIN) )
 
         self.rect = QRectF( pos.x( ), pos.y( ), sequence.length * MULT, height )
 
@@ -171,7 +171,7 @@ class LegoSequenceView( QGraphicsItem ):
 
         self.targets = [ ]  # type:List[LegoTargetView]
 
-        for target in sequence.targets:
+        for target in sequence.subsequences:
             self.targets.append( LegoTargetView( target, self, len( self.targets ) ) )
 
         if previous_view:
@@ -257,9 +257,9 @@ class LegoModelView:
         return None
 
 
-    def find_ui_element( self, target: LegoTarget ):
+    def find_ui_element( self, target: LegoSubsequence ):
         for sequence_ui in self.sequence_views:
-            for target_ui in sequence_ui.targets:
+            for target_ui in sequence_ui.subsequences:
                 if target_ui.target == target:
                     return target_ui
 
