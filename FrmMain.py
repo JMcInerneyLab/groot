@@ -1,17 +1,15 @@
 from os import path
-from typing import List
 
-from PyQt5.QtWidgets import QWhatsThis
-
-from LegoModels import LegoModel, LegoModelOptions, LegoBlast
-from LegoViews import LegoModelView
+from Designer.FrmMain_designer import Ui_MainWindow
 from PyQt5.QtCore import QRectF, pyqtSlot
 from PyQt5.QtOpenGL import QGLWidget, QGLFormat, QGL
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QWhatsThis
 
-from FrmMain_designer import Ui_MainWindow
+from LegoModels import LegoModel
+from LegoViews import LegoViewModel
 
 
 class FrmMain( QMainWindow ):
@@ -19,6 +17,8 @@ class FrmMain( QMainWindow ):
     Main window
     """
 
+    def closeEvent( self, *args, **kwargs ):
+        exit() # fixes crash on exit on Windows
 
     def __init__( self ) -> None:
         """
@@ -41,16 +41,14 @@ class FrmMain( QMainWindow ):
         self.ui.graphicsView.setScene( scene )
 
 
-        self._options = LegoModelOptions( )
-        self._model = LegoModel( self._options )
-        self._view = None
 
-        self.ui.NUM_MERGE.setValue( 10 )
-        self.ui.CHK_TRANSITION.setChecked( True )
-        self.ui.TXT_FILENAME.setText( path.join( path.split( path.abspath( __file__ ) )[ 0 ], "sample-data.blast" ) )
-        self.ui.RAD_OPT_NONE.setChecked( True )
+        self._model = LegoModel(  )
+        self._model.read_blast("C:\\MJR\\Apps\\legodiagram\\sample-data.blast")
+        self._view = LegoViewModel( self._model )
+        self.ui.graphicsView.setScene( self._view.scene )
 
-        self.read_file( )
+
+        self.setWindowTitle( "Lego Model Creator" )
 
 
     @pyqtSlot( )
@@ -100,24 +98,38 @@ class FrmMain( QMainWindow ):
         self.read_file( )
 
 
-    def read_file( self ):
+    @pyqtSlot()
+    def on_action_New_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
 
-        self._options.file_name = self.ui.TXT_FILENAME.text( )
-        self._options.ignore_transitions = self.ui.CHK_TRANSITION.isChecked( )
-        self._options.combine_cuts = self.ui.NUM_MERGE.value( )
+    @pyqtSlot()
+    def on_action_Import_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
 
-        if self.ui.RAD_OPT_ALL.isChecked( ):
-            self._options.pack = "all"
+    @pyqtSlot()
+    def on_action_Exit_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self.close()
 
-        if self.ui.RAD_OPT_MC.isChecked( ):
-            self._options.pack = "montecarlo"
+    @pyqtSlot()
+    def on_action_Preferences_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
 
-        if self.ui.RAD_OPT_NONE.isChecked( ):
-            self._options.pack = "none"
-
-        self._model = LegoModel( self._options )
-        view = LegoModelView( self._model, None )  # self._view
-        self.ui.graphicsView.setScene( view.scene )
-        self._view = view
-
-        self.setWindowTitle( "Lego - " + path.split( self._options.file_name )[ 1 ] )
+    @pyqtSlot()
+    def on_action_Simplify_layout_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    

@@ -3,10 +3,8 @@ MVC architecture.
 
 Classes that manage the view of the model.
 """
-
-from typing import Optional, List, Any
-
-from PyQt5.QtCore import QLineF
+from MHelper.CommentHelper import override
+from typing import Optional, List, Any, Set
 from PyQt5.QtCore import QPointF
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QBrush
@@ -19,13 +17,13 @@ from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem
 from PyQt5.QtWidgets import QWidget
 
-from LegoModels import LegoSequence, LegoSubsequence, LegoModel, mprint
-
+from LegoModels import LegoSequence, LegoSubsequence, LegoModel
 
 MULT = 2
+ESIZE = 2
 MIN_SEQUENCE_HEIGHT = MULT * 16
 SEQUENCE_MARGIN = MULT * 8
-TARGET_HEIGHT = MULT * 2
+SEQUENCE_HEIGHT = 32
 TARGET_MARGIN = MULT * 2
 TEXT_MARGIN = MULT * 8
 
@@ -62,36 +60,39 @@ def next_colour( ) -> QColor:
     return COLOURS[ NEXT_COLOUR ]
 
 
-class LegoEdgeView:
+class LegoComponentView:
     """
-    Draws the edges
+    Connected component view
     """
 
-    def __init__( self, owner: "LegoAllEdgesView", targets: "List[LegoTargetView]" ):
+    def __init__( self, owner: "LegoViewAllEdges", targets: "List[LegoViewSubsequence]" ):
         self.owner = owner
         self.targets = targets
-        self.colour = next_colour( )
 
-        mprint( "GROUP BEGINS" )
+        opaque_colour = next_colour( )
+
+        target_brush = QBrush( )
+
         for target in targets:
-            target.colour = self.colour
-            mprint( "    + " + str( target.target ) )
+            target.brush = target_brush
 
+        transparent_colour = QColor( opaque_colour )
+        transparent_colour.setAlpha( 64 )
+
+        self.pen = QPen( opaque_colour )
+        self.brush = QBrush( transparent_colour )
 
     def paint( self, painter: QPainter ):
-
         previous = None
 
-        for target_ui in sorted( self.targets, key = lambda x: x.window_rect( ).top( ) ):
+        for target_ui in sorted( self.targets, key=lambda x: x.window_rect( ).top( ) ):
 
             if previous:
                 self.draw_connection( previous, target_ui, painter )
 
             previous = target_ui
 
-
-    @staticmethod
-    def draw_connection( a: "LegoTargetView", b: "LegoTargetView", painter: QPainter ):
+    def draw_connection( self, a: "LegoViewSubsequence", b: "LegoViewSubsequence", painter: QPainter ):
         ar = a.window_rect( )
         br = b.window_rect( )
 
@@ -103,164 +104,155 @@ class LegoEdgeView:
                    QPointF( br.right( ), cb ),  # b |...x|
                    QPointF( ar.right( ), ca ) ]  # a |...x|
 
-        colour = QColor( a.colour )
-        colour.setAlpha( 64 )
-
-        painter.setPen( QPen( a.colour ) )
-        painter.setBrush( QBrush( colour ) )
+        painter.setPen( self.pen )
+        painter.setBrush( self.brush )
         painter.drawPolygon( QPolygonF( points ) )
 
 
-class LegoTargetView:
-    def __init__( self, target: LegoSubsequence, owner_view: "LegoSequenceView", positional_index: int ):
-        self.target = target
-        self.owner = owner_view
-        self.index = positional_index
-        self.edges = [ ]  # type:List[LegoTargetView]
-        self.colour = None
-
-
-    def boundingRect( self ) -> QRectF:
-        owner = self.owner
-        return QRectF( owner.rect.x( ) + self.target.start() * MULT,
-                       owner.rect.top( ) + TARGET_MARGIN + (TARGET_MARGIN + TARGET_HEIGHT) * self.index,
-                       owner.rect.x( ) + self.target.length() * MULT,
-                       TARGET_HEIGHT )
-
-
-    def paint( self, painter: QPainter ):
-        painter.setBrush( QBrush( self.colour ) )
-        painter.setPen( QPen( self.colour ) )
-        painter.drawRect( self.boundingRect( ) )
-
-        painter.setPen( CUTS_OL )
-        for x in self.target.start_cut.positions:
-            assert x >= self.target.start()
-            painter.drawLine( QLineF( MULT * x, self.boundingRect().top( ), MULT * x, self.boundingRect().center().y() ) )
-
-        painter.setPen( CUTE_OL )
-        for x in self.target.end_cut.positions:
-            assert x <= self.target.end( )
-            painter.drawLine( QLineF( MULT * x, self.boundingRect( ).center( ).y(), MULT * x, self.boundingRect( ).bottom( ) ) )
-
-
-    def window_rect( self ) -> QRectF:
-        return self.boundingRect( ).translated( self.owner.scenePos( ) )
-
-
-class LegoSequenceView( QGraphicsItem ):
-    """
-    Views a sequence
-    """
-
-
-
-
-    def __init__( self, owner_view: "LegoModelView", sequence: LegoSequence, pos: QPointF, previous_view: "Optional[LegoSequenceView]" ):
+class LegoViewSubsequence( QGraphicsItem ):
+    def __init__( self, subsequence: LegoSubsequence, owner_view: "LegoViewSequence", positional_index: int,
+                  pos: QPointF ):
         super( ).__init__( )
-        self.owner = owner_view
 
-        self.sequence = sequence
-
-        height = max( MIN_SEQUENCE_HEIGHT, (len( sequence.subsequences ) + 1) * (TARGET_HEIGHT + TARGET_MARGIN) )
-
-        self.rect = QRectF( pos.x( ), pos.y( ), sequence.length * MULT, height )
-
+        self.rect = QRectF( pos.x( ) + subsequence.start * ESIZE, pos.y( ), subsequence.length * ESIZE,
+                            SEQUENCE_HEIGHT )
         self.setFlag( QGraphicsItem.ItemIsMovable, True )
         self.setFlag( QGraphicsItem.ItemSendsGeometryChanges, True )
 
-        self.targets = [ ]  # type:List[LegoTargetView]
+        self.subsequence = subsequence
+        self.owner_view = owner_view
+        self.index = positional_index
+        self.edges = [ ]  # type:List[LegoViewSubsequence]
+        self.brush = None
 
-        for target in sequence.subsequences:
-            self.targets.append( LegoTargetView( target, self, len( self.targets ) ) )
+    @override
+    def boundingRect( self ) -> QRectF:
+        return self.rect
 
-        if previous_view:
-            self.setPos(previous_view.scenePos())
+    @override
+    def paint( self, painter: QPainter, **kwargs ):
+        painter.setBrush( SEQ_BG )
+        painter.setPen( SEQ_OL )
+        painter.drawRect( self.rect )
 
+        if self.index == 0:
+            text = self.subsequence.sequence.accession
+        else:
+            text = str( self.index )
 
+        painter.drawText( QPointF( self.rect.right( ) + TEXT_MARGIN, self.rect.center( ).y( ) ), text )
+
+    def window_rect( self ) -> QRectF:
+        return self.boundingRect( ).translated( self.scenePos( ) )
+
+    @override
     def itemChange( self, change: int, value: Any ):  # change is QGraphicsItem.GraphicsItemChange
         result = super( ).itemChange( change, value )
 
         if change == QGraphicsItem.ItemPositionChange:
-            self.owner.update_edges( )
+            self.owner_view.owner.update_edges( )
 
         return result
 
 
-    def boundingRect( self ) -> QRectF:
-        return self.rect
+class LegoViewSequence:
+    """
+    Views a sequence
+    """
+
+    def __init__( self, owner_view: "LegoViewModel", sequence: LegoSequence, pos: QPointF ):
+        """
+        :param owner_view: Owning view
+        :param sequence: The sequence we are viewing
+        :param pos: Position in the view
+        """
+
+        self.owner = owner_view
+        self.sequence = sequence
+        self.subsequence_views = [ ]  # type:List[LegoViewSubsequence]
+
+        for target in sequence.subsequences:
+            self.subsequence_views.append( LegoViewSubsequence( target, self, len( self.subsequence_views ), pos ) )
 
 
-    def paint( self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[ QWidget ] = None ) -> None:
-        painter.setBrush( SEQ_BG )
-        painter.setPen( SEQ_OL )
-        painter.drawRect( self.rect )
-        painter.drawText( QPointF( self.rect.right( ) + TEXT_MARGIN, self.rect.center().y() ), self.sequence.name )
-
-        y = self.rect.top( ) + TARGET_MARGIN
-
-        for target in self.targets:
-            target.paint( painter )
-
-
-class LegoAllEdgesView( QGraphicsItem ):
-    def __init__( self, owner_view: "LegoModelView", model: LegoModel ):
+class LegoViewAllEdges( QGraphicsItem ):
+    def __init__( self, view_model: "LegoViewModel" ):
         super( ).__init__( )
-        self.manager = model
-        self.group_uis = [ ]
+        self.view_model = view_model
+        self.component_views = [ ]  # type: List[LegoComponentView]
 
-        for group in model.groups:
-            group_ui = list( [ owner_view.find_ui_element( x ) for x in group ] )
-            self.group_uis.append( LegoEdgeView( self, group_ui ) )
-
+        for connected_component in self.__create_components( ):
+            self.component_views.append( LegoComponentView( self, connected_component ) )
 
     def paint( self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[ QWidget ] = None ) -> None:
-        for group in self.group_uis:
+        for group in self.component_views:
             group.paint( painter )
 
+    def __create_components( self ):
+        the_list = [ ]
+        for s in self.view_model.model.sequences.values( ):  # type: LegoSequence
+            for ss in s.subsequences:
+                self.__connect_components( ss, the_list )
 
-class LegoModelView:
-    def __init__( self, model: LegoModel, previous : "LegoModelView" ):
+        result = [ ]
 
+        for set_ in the_list:
+            set_2 = [ ]
+            result.append( set_2 )
+
+            for subsequence in set_:
+                set_2.append( self.find_ui_element( subsequence ) )
+
+        return result
+
+    def find_ui_element( self, target: LegoSubsequence ):
+        for sequence_view in self.view_model.sequence_views:
+            for subsequence_view in sequence_view.subsequence_views:
+                if subsequence_view.subsequence == target:
+                    return subsequence_view
+
+        raise KeyError( "Missing target UI element." )
+
+    @classmethod
+    def __connect_components( cls, subsequence: LegoSubsequence, set_list: List[ Set[ LegoViewSubsequence ] ] ):
+        for set_ in set_list:
+            if subsequence in set_:
+                return
+
+        set_ = set( )
+        set_list.append( set_ )
+        cls.__connect_to( subsequence, set_ )
+
+    @classmethod
+    def __connect_to( cls, subsequence: LegoSubsequence, target: set ):
+        if subsequence in target:
+            return  # Already visited
+
+        target.add( subsequence )
+
+        for friend in subsequence.edges:
+            cls.__connect_to( friend, target )
+
+
+class LegoViewModel:
+    def __init__( self, model: LegoModel ):
+        self.model = model
+        self.scene = QGraphicsScene( )
+        self.sequence_views = [ ]  # type: List[LegoViewSequence]
+        self.edges = None #type: Optional[LegoViewAllEdges]
+
+    def update( self ):
         y = 0
 
-        self.scene = QGraphicsScene()
-
-        self.sequence_views = [ ]
-
-        self.edges = []
-
-        for sequence in model.sequences:
-            if previous:
-                previous_sequence_view = previous.find_sequence_view(sequence.name)
-            else:
-                previous_sequence_view = None
-
-            item = LegoSequenceView( self, sequence, QPointF( 0, y ), previous_sequence_view )
+        for sequence in self.model.sequences:
+            item = LegoViewSequence( self, sequence, QPointF( 0, y ) )
             self.sequence_views.append( item )
             self.scene.addItem( item )
-            y = item.boundingRect( ).bottom( ) + SEQUENCE_MARGIN
+            y = item.subsequence_views[ 0 ].boundingRect( ).bottom( ) + SEQUENCE_MARGIN
 
-        self.edges = LegoAllEdgesView( self, model )
+        self.edges = LegoViewAllEdges( self )
         self.scene.addItem( self.edges )
-
 
     def update_edges( self ):
         if self.edges:
             self.edges.update( )
-
-    def find_sequence_view(self, name:str)-> Optional[LegoSequenceView]:
-        for sequence_ui in self.sequence_views:
-            if sequence_ui.sequence.name == name:
-                return sequence_ui
-
-        return None
-
-
-    def find_ui_element( self, target: LegoSubsequence ):
-        for sequence_ui in self.sequence_views:
-            for target_ui in sequence_ui.subsequences:
-                if target_ui.target == target:
-                    return target_ui
-
-        raise KeyError( "Missing target UI element." )
