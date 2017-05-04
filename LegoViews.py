@@ -279,6 +279,8 @@ class LegoViewSubsequence( QGraphicsItem ):
         
         self.setZValue(Z_SEQUENCE)
         
+    
+        
     @property
     def owner_model_view(self):
         return self.owner_sequence_view.owner_model_view
@@ -343,27 +345,53 @@ class LegoViewSubsequence( QGraphicsItem ):
         elif self.mousemove_label:
             painter.drawText( QPointF( self.rect.left() + TEXT_MARGIN, self.rect.top() - TEXT_MARGIN ), self.mousemove_label )
         else:
-            draw_position = self.options.view_positions
             
-            if draw_position is None:
-                draw_position = self.isSelected()
                 
-            if draw_position:
+            if self.__draw_position(): 
                 painter.setPen( POSITION_TEXT )
                 
                 text = str( self.subsequence.start )
                 x = self.rect.left() - QFontMetrics( painter.font() ).width( text ) / 2
                 painter.drawText( QPointF( x, self.rect.top() - TEXT_MARGIN ), text )
                 
-                text = str( self.subsequence.end )
-                x = self.rect.right() - QFontMetrics( painter.font() ).width( text ) / 2
-                painter.drawText( QPointF( x, self.rect.top() - TEXT_MARGIN ), text )
+                if not self.__draw_next_sibling_position():
+                    text = str( self.subsequence.end )
+                    x = self.rect.right() - QFontMetrics( painter.font() ).width( text ) / 2
+                    painter.drawText( QPointF( x, self.rect.top() - TEXT_MARGIN ), text )
                 
         if self.hasFocus():
             r =  self.rect.adjusted(1,1,-1,-1)
             painter.setPen( FOCUS_LINE )
             painter.setBrush( 0)
             painter.drawRect( r )
+            
+    def __draw_position( self ):
+        result = self.options.view_positions
+            
+        if result is None:
+            result = self.isSelected()
+            
+        return result
+    
+    def __draw_next_sibling_position(self):
+        ns = self.next_sibling()
+        
+        if ns is None:
+            return False
+        
+        if not ns.__draw_position():
+            return False
+        
+        return ns.pos().x() == self.window_rect().right()
+        
+    def next_sibling(self):
+        ssvs=self.owner_sequence_view.subsequence_views
+        i = ssvs.index(self)
+        
+        if  i== len(ssvs)-1:
+            return None
+        
+        return ssvs[i+1]
     
     
     def window_rect( self ) -> QRectF:
@@ -413,6 +441,7 @@ class LegoViewSubsequence( QGraphicsItem ):
             
     def focusInEvent(self, QFocusEvent):
         self.setZValue(Z_FOCUS)
+        self.owner_model_view.focus_notification(self)
     
     def focusOutEvent(self, QFocusEvent):
         self.setZValue(Z_SEQUENCE)
@@ -679,11 +708,12 @@ class LegoViewAllEdges( QGraphicsItem ):
 
 
 class LegoViewModel:
-    def __init__( self, model: LegoModel ):
+    def __init__( self, focus_notification, model: LegoModel ):
         self.model = model
         self.scene = QGraphicsScene()
         self.sequence_views = [ ]  # type: List[LegoViewSequence]
         self.edges_view = None  # type: Optional[LegoViewAllEdges]
+        self.focus_notification=focus_notification
         
         y = 0
         

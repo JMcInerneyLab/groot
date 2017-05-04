@@ -3,10 +3,10 @@ from random import randint
 from PyQt5.QtCore import QRectF, pyqtSlot, QCoreApplication, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QFileDialog, QGraphicsScene, QMainWindow, QWhatsThis, QColorDialog
+from PyQt5.QtWidgets import QFileDialog, QGraphicsScene, QMainWindow, QWhatsThis, QColorDialog, QMessageBox
 
 from Designer.FrmMain_designer import Ui_MainWindow
-from LegoModels import LegoModel
+from LegoModels import LegoModel, LegoSequence, LegoSubsequence, LegoEdge
 from LegoViews import LegoViewModel, LegoViewSubsequence, EApply, ESequenceColour
 from MHelper import QtGuiHelper, IoHelper
 from MHelper.QtColourHelper import Colours
@@ -56,12 +56,17 @@ class FrmMain( QMainWindow ):
         self.statusBar().showMessage( "LMB = Select | LMB+Drag = Move sequence; Shift = Move subsequence; Ctrl = No X-snap; Alt = No Y-snap | 0-9 RGB CYMK W = Change colour; Shift = Bright colour; Ctrl = Recursive | X = Restore all colours", 0 )
         
     
+    def subsequence_view_focus(self, subsequence_view:LegoViewSubsequence):
+        ss = subsequence_view.subsequence
+        self.ui.LST_SEQUENCES.setCurrentIndex(self._model.sequences.index(ss.sequence) )
+        self.ui.LST_SUBSEQUENCES.setCurrentIndex(ss.sequence.subsequences.index(ss))
+        
     
     def refresh_model( self ):
         self.no_update_options=True
         
         self._model.deoverlap()
-        self._view = LegoViewModel( self._model )
+        self._view = LegoViewModel( self.subsequence_view_focus, self._model )
         self.ui.graphicsView.setScene( self._view.scene )
         
         self.ui.LST_SEQUENCES.clear()
@@ -336,12 +341,7 @@ class FrmMain( QMainWindow ):
                 QtGuiHelper.show_exception( self, "Could not load the file. Perhaps it is from a different version?", ex )
     
     
-    @pyqtSlot()
-    def on_BTN_SEQUENCE_DETAILS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
+    
     
     
     @pyqtSlot( int )
@@ -354,26 +354,19 @@ class FrmMain( QMainWindow ):
             self.ui.LST_SUBSEQUENCES.addItems( "{0} - {1}".format( x.start, x.end ) for x in seq.subsequences )
     
     
-    def selected_sequence( self ):
-        text = self.ui.LST_SEQUENCES.currentText()
-        return self._model.find( text )
+    def selected_sequence( self ) -> LegoSequence:
+        return self._model.sequences[self.ui.LST_SEQUENCES.currentIndex()]
     
     
-    def selected_subsequence( self ):
-        seq = self.selected_sequence()
+    def selected_subsequence( self ) -> LegoSubsequence:
+        s = self.selected_sequence()
         
-        if not seq:
-            return
+        return s.subsequences[self.ui.LST_SUBSEQUENCES.currentIndex()]
+    
+    def selected_edge( self ) -> LegoEdge:
+        ss = self.selected_subsequence()
         
-        text = self.ui.LST_SUBSEQUENCES.currentText()
-        
-        if not text:
-            return None
-        
-        s, e = text.split( "-" )
-        sss = int( s )
-        sse = int( e )
-        return seq.find( sss, sse )
+        return ss.edges[self.ui.LST_EDGES.currentIndex()]
     
     
     @pyqtSlot( int )
@@ -387,13 +380,45 @@ class FrmMain( QMainWindow ):
                 self.ui.LST_EDGES.addItems( "--> {0} ({1} - {2})".format( x.sequence.accession, x.start, x.end ) for x in edge.source )
                 self.ui.LST_EDGES.addItems( "<-- {0} ({1} - {2})".format( x.sequence.accession, x.start, x.end ) for x in edge.destination )
     
+    @pyqtSlot()
+    def on_BTN_SEQUENCE_DETAILS_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        s = self.selected_sequence()
+        
+        details = []
+        details.append("accession = {}".format(s.accession))
+        details.append("subsequences = {}".format(s.subsequences))
+        details.append("length = {}".format(s.length))
+        details.append("array = {}".format(s.array))
+        details.append("meta = {}".format(s.meta))
+        
+        b = QMessageBox()
+        b.setText(str(s))
+        b.setInformativeText("\n".join(details))
+        b.exec_()
     
     @pyqtSlot()
     def on_BTN_SUBSEQUENCE_DETAILS_clicked( self ) -> None:
         """
         Signal handler:
         """
-        pass
+        s = self.selected_subsequence()
+        
+        details = []
+        details.append("sequence = {}".format(s.sequence.accession))
+        details.append("start = {}".format(s.start))
+        details.append("end = {}".format(s.end))
+        details.append("edges = {}".format(s.edges))
+        details.append("ui position = {}".format(s.ui_position))
+        details.append("ui colour = {}".format(s.ui_colour))
+        details.append("array = {}".format(s.array))
+        
+        b = QMessageBox()
+        b.setText(str(s))
+        b.setInformativeText("\n".join(details))
+        b.exec_()
     
     
     @pyqtSlot()
@@ -401,4 +426,15 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        pass
+        s = self.selected_edge()
+        
+        details = []
+        details.append("source = {}[{}:{}]".format(s.source_sequence, s.source_start, s.source_end))
+        details.append("destination = {}[{}:{}]".format(s.destination_sequence, s.destination_start, s.destination_end))
+        details.append("sources = {}".format(s.source))
+        details.append("destinations = {}".format(s.destination))
+        
+        b = QMessageBox()
+        b.setText(str(s))
+        b.setInformativeText("\n".join(details))
+        b.exec_()

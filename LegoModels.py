@@ -1,6 +1,7 @@
 from typing import Iterable, List, Optional
 
 from ExceptionHelper import SwitchError
+from MHelper import StringHelper
 
 
 class LegoQueuedFile:
@@ -16,34 +17,53 @@ class LegoQueuedFile:
         
 class LegoEdge:
     def __init__(self, source:"List[LegoSubsequence]", destination:"List[LegoSubsequence]"):
-        assert all(x not in destination for x in source) , "{0} AAA {1}".format(self.source, self.destination)
-        assert all(x not in source for x in destination)
+        assert all(x not in destination for x in source) , "{0} / {1}".format(self.source, self.destination)
+        assert all(x not in source for x in destination)  , "{0} / {1}".format(self.source, self.destination)
         
-        self.__source=source        #type:List[LegoSubsequence]
-        self.__destination=destination#type:List[LegoSubsequence]
-        
-        
+        self.source=source        #type:List[LegoSubsequence]
+        self.destination=destination#type:List[LegoSubsequence]
         
     @property
-    def source(self):
-        return tuple(self.__source)
+    def source_sequence(self):
+        return self.source[0].sequence
+    
+    @property
+    def destination_sequence(self):
+        return self.destination[0].sequence
+        
+    @property
+    def source_start(self):
+        return min(x.start for x in self.source)
+    
+    @property
+    def source_end(self):
+        return max(x.end for x in self.source)
+    
+    @property
+    def destination_start(self):
+        return min(x.start for x in self.destination)
+    
+    @property
+    def destination_end(self):
+        return max(x.end for x in self.destination)
+        
+    def __repr__(self):
+        return "{}[{}:{}] --> {}[{}:{}]".format(self.source_sequence, self.source_start, self.source_end, self.destination_sequence, self.destination_start, self.destination_end)
+        
     
     def opposite(self, subsequence):
-        if subsequence in self.__source:
+        if subsequence in self.source:
             return self.destination
     
-        if subsequence in self.__destination:
+        if subsequence in self.destination:
             return self.source
         
         raise KeyError("Not found: '{0}'".format(subsequence))
     
-    @property
-    def destination(self):
-        return tuple(self.__destination)
         
     def complete(self):
-        self.__source = sorted(self.source, key = lambda x: x.start)
-        self.__destination = sorted(self.destination, key = lambda x: x.start)
+        self.source = sorted( self.source, key = lambda x: x.start )
+        self.destination = sorted( self.destination, key = lambda x: x.start )
         
         assert all(x not in self.destination for x in self.source)
         assert all(x not in self.source for x in self.destination)
@@ -55,24 +75,24 @@ class LegoEdge:
 
     def inherit( self, original, replacement ):
         if original in self.source:
-            assert replacement not in self.destination
-            self.__source.append(replacement)
+            if replacement not in self.source:
+                self.source.append( replacement )
         elif original in self.destination:
-            assert replacement not in self.source
-            self.__destination.append(replacement)
+            if replacement not in self.destination:
+                self.destination.append( replacement )
         else:
             raise KeyError("Edge cannot inherit because the edge never owned this.")
         
     def remove(self, item):
         if item in self.source:
-            self.__source.remove(item)
+            self.source.remove( item )
         elif item in self.destination:
-            self.__destination.remove(item)
+            self.destination.remove( item )
         else:
             raise KeyError("Edge cannot remove because the edge never owned this.")
         
-        assert item not in self.source
-        assert item not in self.destination
+        assert item not in self.source , "{0}: {1}".format( item, self.source )
+        assert item not in self.destination , "{0}: {1}".format( item, self.destination )
 
 
 class LegoSubsequence:
@@ -84,7 +104,7 @@ class LegoSubsequence:
     def __init__( self, sequence: "LegoSequence", start: int, end: int ):
         assert start >= 1
         assert end >= 1
-        assert start != end
+        assert start <= end
         self.sequence = sequence  # Sequence itself
         self.start = start  # Start position
         self.end = end  # End position
@@ -93,6 +113,8 @@ class LegoSubsequence:
         self.ui_position = None
         self.ui_colour = None
         
+        print("-- NEW {}".format(self))
+        
     @property
     def array(self):
         return self.sequence.array[self.start:self.end+1]
@@ -100,7 +122,7 @@ class LegoSubsequence:
     
     @property
     def length( self ):
-        return self.end - self.start
+        return self.end - self.start + 1
     
     
     def add_edge( self, edge: "LegoEdge" ):
@@ -115,11 +137,13 @@ class LegoSubsequence:
         self.edges = None
     
     
-    def __str__( self ):
-        return "{0} {1} {2}".format( self.sequence.accession, self.start, self.end )
+    def __repr__(self):
+        return "{0}[{1}:{2}]".format( self.sequence.accession, self.start, self.end )
 
 
     def inherit( self, original :"LegoSubsequence"):
+        assert original != self
+        
         for edge in original.edges:
             edge.inherit(original, self)
             self.add_edge(edge)
@@ -138,22 +162,24 @@ class LegoSequence:
         self.model=model
         self.array = None
         self.meta = {}
+        
+    def __repr__(self):
+        return self.accession
     
     
-    def make_subsequence( self, start, end, obtain_only ) -> Optional[LegoSubsequence]:
-        assert start != end
-        start = start + 10
-        start = max(start - start % 20,1)
-        
-        end= end+ 10
-        end= max(end-end% 20,1)
-        
-        for subsequence in self.subsequences:
-            if subsequence.start == start and subsequence.end == end:
-                return subsequence
+    def make_subsequence( self, start, end, obtain_only, quantise ) -> Optional[LegoSubsequence]:
+        assert start <= end , "{0} {1}".format(start,end)
+        if quantise and False:
+            start = start + 10
+            start = max(start - start % 20,1)
+            
+            end= end+ 10
+            end= max(end-end% 20-1,1)
             
         if obtain_only:
             return None
+        
+        print ("NEW SS {} {}".format(start, end))
         
         result = LegoSubsequence( self, start, end )
         self.subsequences.append( result )
@@ -174,15 +200,17 @@ class LegoSequence:
             
             if v.start != prev_end:
                 # Insert new!
+                print("PADDING WITH NEW {} {}".format(prev_end, v.start))
                 to_add.append( LegoSubsequence( self, prev_end, v.start ) )
             
-            prev_end = v.end
+            prev_end = v.end + 1
         
-        if self.length != prev_end:
+        if self.length + 1 != prev_end:
+            print("PADDING WITH FINAL {} {}".format(prev_end, self.length))
             to_add.append( LegoSubsequence( self, prev_end, self.length ) )
         
         self.subsequences.extend( to_add )
-        self.subsequences = list( sorted( self.subsequences, key = lambda x: x.start ) )
+        self.subsequences = sorted( self.subsequences, key = lambda x: x.start )
         
         if self.array is None:
             self.array="X"*self.length
@@ -199,8 +227,10 @@ class LegoSequence:
                 if a is b:
                     continue
                 
-                if not (b.start < a.end and b.end > a.start):
+                if not (b.start <= a.end and b.end >= a.start):
                     continue
+                    
+                print ("{} overlaps {}".format(a,b))
                 
                 # They overlap
                 if a.start < b.start:
@@ -225,20 +255,24 @@ class LegoSequence:
                 self.subsequences.remove( b )
                 
                 if pos_1 != pos_2:
-                    new_1 = self.make_subsequence( pos_1, pos_2, False )
+                    print ("CREATE L {} {}".format(pos_1, pos_2-1))
+                    new_1 = self.make_subsequence( pos_1, pos_2-1, False, False )
                     new_1.inherit( own_1 )
-                    
-                new_2 = self.make_subsequence( pos_2, pos_3, False )
+                
+                print ("CREATE M {} {}".format(pos_2, pos_3))
+                new_2 = self.make_subsequence( pos_2, pos_3, False , False)
                 new_2.inherit( a )
                 new_2.inherit( b )
                 
                 if pos_3!=pos_4:
-                    new_3 = self.make_subsequence( pos_3, pos_4, False )
+                    print ("CREATE R {} {}".format(pos_3+1, pos_4))
+                    new_3 = self.make_subsequence( pos_3+1, pos_4, False, False )
                     new_3.inherit( own_3 )
                 
                 
                 
-                
+                print ("DESTROY F {}".format(a))
+                print ("DESTROY S {}".format(b))
                 a.destroy()
                 b.destroy()
                 
@@ -266,8 +300,8 @@ class LegoModel:
     
     
     @property
-    def sequences( self ) -> Iterable[ LegoSequence ]:
-        return self.__sequences.values()
+    def sequences( self ) -> List[ LegoSequence ]:
+        return sorted( self.__sequences.values(), key = lambda x: x.accession)
     
     
     def make_sequence( self, accession: str, obtain_only ) -> LegoSequence:
@@ -276,6 +310,8 @@ class LegoModel:
         
         if "." in accession:
             accession = accession.split( ".", 1 )[ 0 ]
+            
+        accession=accession.strip()
             
         
         result = self.__sequences.get( accession )
@@ -347,9 +383,9 @@ class LegoModel:
                     e = line.split( "\t" )
                     
                     query_s = self.make_sequence( e[ 0 ], obtain_only )
-                    query = query_s.make_subsequence( int( e[ 6 ] ), int( e[ 7 ] ), obtain_only )   if query_s else None
+                    query = query_s.make_subsequence( int( e[ 6 ] ), int( e[ 7 ] ), obtain_only, True )   if query_s else None
                     subject_s = self.make_sequence( e[ 1 ], obtain_only )
-                    subject = subject_s.make_subsequence( int( e[ 8 ] ), int( e[ 9 ] ), obtain_only ) if subject_s else None
+                    subject = subject_s.make_subsequence( int( e[ 8 ] ), int( e[ 9 ] ), obtain_only, True ) if subject_s else None
                     self.make_edge(query,subject)
     
     
@@ -395,10 +431,10 @@ class LegoModel:
                             
                             composite = self.make_sequence( comp_name,False )
                             composite.array = seq_len
-                            ss = composite.make_subsequence( mean_start, mean_end,False )
+                            ss = composite.make_subsequence( mean_start, mean_end,False , True)
                             target = self.make_sequence( fam_name,False )
                             target.length = mean_length
-                            ssb = target.make_subsequence( 1, target.length,False )
+                            ssb = target.make_subsequence( 1, target.length,False, True )
                             assert ss is not ssb
                             self.make_edge( ss, ssb )
                     else:
