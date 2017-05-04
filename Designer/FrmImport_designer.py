@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\MJR\Apps\legodiagram\Designer\FrmImport_designer.ui'
+# Form implementation generated from reading ui file './Designer/FrmImport_designer.ui'
 #
 # Created by: PyQt5 UI code generator 5.7
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(473, 205)
+        Dialog.resize(884, 386)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.label_3 = QtWidgets.QLabel(Dialog)
@@ -35,8 +35,23 @@ class Ui_Dialog(object):
         self.RAD_COMPOSITES = QtWidgets.QRadioButton(Dialog)
         self.RAD_COMPOSITES.setObjectName("RAD_COMPOSITES")
         self.verticalLayout.addWidget(self.RAD_COMPOSITES)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.BTN_LOAD = QtWidgets.QPushButton(Dialog)
+        self.BTN_LOAD.setObjectName("BTN_LOAD")
+        self.horizontalLayout_2.addWidget(self.BTN_LOAD)
+        self.BTN_CLEAR = QtWidgets.QPushButton(Dialog)
+        self.BTN_CLEAR.setObjectName("BTN_CLEAR")
+        self.horizontalLayout_2.addWidget(self.BTN_CLEAR)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.TVW_FILES = QtWidgets.QTreeWidget(Dialog)
+        self.TVW_FILES.setObjectName("TVW_FILES")
+        self.TVW_FILES.headerItem().setText(0, "1")
+        self.verticalLayout.addWidget(self.TVW_FILES)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem1)
         self.BTNBOX_MAIN = QtWidgets.QDialogButtonBox(Dialog)
         self.BTNBOX_MAIN.setOrientation(QtCore.Qt.Horizontal)
         self.BTNBOX_MAIN.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -60,4 +75,6 @@ class Ui_Dialog(object):
         self.RAD_FASTA.setText(_translate("Dialog", "FASTA"))
         self.RAD_BLAST.setText(_translate("Dialog", "BLAST"))
         self.RAD_COMPOSITES.setText(_translate("Dialog", "Composite finder"))
+        self.BTN_LOAD.setText(_translate("Dialog", "Load"))
+        self.BTN_CLEAR.setText(_translate("Dialog", "Clear"))
 

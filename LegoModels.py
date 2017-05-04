@@ -1,70 +1,207 @@
-from collections import defaultdict
-from typing import List
+from typing import Iterable, List, Optional
+
+from ExceptionHelper import SwitchError
+
+
+class LegoQueuedFile:
+    BLAST = "Blast"
+    COMPOSITES = "Composites"
+    FASTA = "Fasta"
+    
+    
+    def __init__( self, filename, filetype ):
+        self.filename = filename
+        self.filetype = filetype
+        
+        
+class LegoEdge:
+    def __init__(self, source:"List[LegoSubsequence]", destination:"List[LegoSubsequence]"):
+        assert all(x not in destination for x in source) , "{0} AAA {1}".format(self.source, self.destination)
+        assert all(x not in source for x in destination)
+        
+        self.__source=source        #type:List[LegoSubsequence]
+        self.__destination=destination#type:List[LegoSubsequence]
+        
+        
+        
+    @property
+    def source(self):
+        return tuple(self.__source)
+    
+    def opposite(self, subsequence):
+        if subsequence in self.__source:
+            return self.destination
+    
+        if subsequence in self.__destination:
+            return self.source
+        
+        raise KeyError("Not found: '{0}'".format(subsequence))
+    
+    @property
+    def destination(self):
+        return tuple(self.__destination)
+        
+    def complete(self):
+        self.__source = sorted(self.source, key = lambda x: x.start)
+        self.__destination = sorted(self.destination, key = lambda x: x.start)
+        
+        assert all(x not in self.destination for x in self.source)
+        assert all(x not in self.source for x in self.destination)
+        assert all(self.source[0].sequence is not x.sequence for x in self.destination)
+        assert all(self.destination[0].sequence is not x.sequence for x in self.source)
+        assert all(self.source[0].sequence is x.sequence for x in self.source)
+        assert all(self.destination[0].sequence is x.sequence for x in self.destination)
+
+
+    def inherit( self, original, replacement ):
+        if original in self.source:
+            assert replacement not in self.destination
+            self.__source.append(replacement)
+        elif original in self.destination:
+            assert replacement not in self.source
+            self.__destination.append(replacement)
+        else:
+            raise KeyError("Edge cannot inherit because the edge never owned this.")
+        
+    def remove(self, item):
+        if item in self.source:
+            self.__source.remove(item)
+        elif item in self.destination:
+            self.__destination.remove(item)
+        else:
+            raise KeyError("Edge cannot remove because the edge never owned this.")
+        
+        assert item not in self.source
+        assert item not in self.destination
 
 
 class LegoSubsequence:
+    """
+    Portion of a sequence
+    """
+    
+    
     def __init__( self, sequence: "LegoSequence", start: int, end: int ):
-        self.sequence = sequence
-        self.start = start
-        self.end = end
-        self.edges = [ ]# type:List[LegoSubsequence]
-
+        assert start >= 1
+        assert end >= 1
+        assert start != end
+        self.sequence = sequence  # Sequence itself
+        self.start = start  # Start position
+        self.end = end  # End position
+        self.edges = [ ]  # type:List[LegoEdge]        # Edge list
+        
+        self.ui_position = None
+        self.ui_colour = None
+        
+    @property
+    def array(self):
+        return self.sequence.array[self.start:self.end+1]
+    
+    
     @property
     def length( self ):
         return self.end - self.start
-
-    def make_edge( self, target: "LegoSubsequence" ):
-        if target not in self.edges:
-            self.edges.append( target )
-
-        if self not in target.edges:
-            target.edges.append( self )
-
-    def inherit( self, source: "LegoSubsequence" ):
-        for edge in source.edges:
-            self.make_edge(edge)
-            edge.make_edge(self)
-
-    def destroy(self):
+    
+    
+    def add_edge( self, edge: "LegoEdge" ):
+        if edge not in self.edges:
+            self.edges.append( edge )
+    
+    
+    def destroy( self ):
         for edge in self.edges:
-            edge.edges.remove(self)
-
+            edge.remove(self)
+        
         self.edges = None
+    
+    
+    def __str__( self ):
+        return "{0} {1} {2}".format( self.sequence.accession, self.start, self.end )
 
 
+    def inherit( self, original :"LegoSubsequence"):
+        for edge in original.edges:
+            edge.inherit(original, self)
+            self.add_edge(edge)
 
 
 class LegoSequence:
-    def __init__( self, accession: str ):
-        self.accession = accession
-        self.subsequences = [ ]  # type: List[LegoSubsequence]
-        self.length = 1
-
-    def make_subsequence( self, start, end ) -> LegoSubsequence:
+    """
+    Protein sequence
+    """
+    
+    
+    def __init__( self, model:"LegoModel", accession: str ):
+        self.accession = accession  # Database accession (ID)
+        self.subsequences = [ ]  # type: List[LegoSubsequence]         
+        self.length = 1  # Sequence length
+        self.model=model
+        self.array = None
+        self.meta = {}
+    
+    
+    def make_subsequence( self, start, end, obtain_only ) -> Optional[LegoSubsequence]:
+        assert start != end
+        start = start + 10
+        start = max(start - start % 20,1)
+        
+        end= end+ 10
+        end= max(end-end% 20,1)
+        
         for subsequence in self.subsequences:
-            if subsequence.start == subsequence.start and subsequence.end == subsequence.end:
+            if subsequence.start == start and subsequence.end == end:
                 return subsequence
-
+            
+        if obtain_only:
+            return None
+        
         result = LegoSubsequence( self, start, end )
         self.subsequences.append( result )
-
-        self.length = max(self.length, result.end)
-
+        
+        self.length = max( self.length, result.end )
+        
         return result
-
+    
+    
+    def complete_subsequences( self ):
+        self.subsequences = list( sorted( self.subsequences, key = lambda x: x.start ) )
+        to_add = [ ]
+        
+        prev_end = 1
+        
+        for i, v in enumerate( self.subsequences ):
+            assert isinstance( v, LegoSubsequence )
+            
+            if v.start != prev_end:
+                # Insert new!
+                to_add.append( LegoSubsequence( self, prev_end, v.start ) )
+            
+            prev_end = v.end
+        
+        if self.length != prev_end:
+            to_add.append( LegoSubsequence( self, prev_end, self.length ) )
+        
+        self.subsequences.extend( to_add )
+        self.subsequences = list( sorted( self.subsequences, key = lambda x: x.start ) )
+        
+        if self.array is None:
+            self.array="X"*self.length
+    
+    
     def deoverlap_subsequences( self ):
-        while self.__deoverlap_subsequence( ):
+        while self.__deoverlap_subsequence():
             pass
-
+    
+    
     def __deoverlap_subsequence( self ):
         for a in self.subsequences:
             for b in self.subsequences:
                 if a is b:
                     continue
-
+                
                 if not (b.start < a.end and b.end > a.start):
                     continue
-
+                
                 # They overlap
                 if a.start < b.start:
                     pos_1 = a.start
@@ -74,7 +211,7 @@ class LegoSequence:
                     pos_1 = b.start
                     pos_2 = a.start
                     own_1 = b
-
+                
                 if a.end < b.end:
                     pos_3 = a.end
                     pos_4 = b.end
@@ -83,79 +220,209 @@ class LegoSequence:
                     pos_3 = b.end
                     pos_4 = a.end
                     own_3 = a
-
+                
                 self.subsequences.remove( a )
                 self.subsequences.remove( b )
-
-                new_1 = self.make_subsequence( pos_1, pos_2 )
-                new_2 = self.make_subsequence( pos_2, pos_3 )
-                new_3 = self.make_subsequence( pos_3, pos_4 )
-
-                new_1.inherit( own_1 )
+                
+                if pos_1 != pos_2:
+                    new_1 = self.make_subsequence( pos_1, pos_2, False )
+                    new_1.inherit( own_1 )
+                    
+                new_2 = self.make_subsequence( pos_2, pos_3, False )
                 new_2.inherit( a )
                 new_2.inherit( b )
-                new_3.inherit( own_3 )
-
+                
+                if pos_3!=pos_4:
+                    new_3 = self.make_subsequence( pos_3, pos_4, False )
+                    new_3.inherit( own_3 )
+                
+                
+                
+                
                 a.destroy()
                 b.destroy()
-
+                
                 return True
         return False
+    
+    
+    def find( self, start, end ):
+        for x in self.subsequences:
+            if x.start == start and x.end == end:
+                return x
+        
+        raise KeyError( "No such subsequence as {0}-{1}".format( start, end ) )
 
 
 class LegoModel:
+    """
+    Model (collection of sequences)
+    """
+    
+    
     def __init__( self ):
-        self.sequences = { } #type: Dict[str, LegoSequence]
-
-    def make_sequence( self, accession ):
-        result = self.sequences.get( accession )
-
-        if result is None:
-            result = LegoSequence( accession )
-            self.sequences[ accession ] = result
-
+        self.__sequences = { }  # type: Dict[str, LegoSequence]  # Sequences (by accession)
+        self.edges = [] #type:List[LegoEdge]
+    
+    
+    @property
+    def sequences( self ) -> Iterable[ LegoSequence ]:
+        return self.__sequences.values()
+    
+    
+    def make_sequence( self, accession: str, obtain_only ) -> LegoSequence:
+        if "|" in accession:
+            accession = accession.split( "|" )[ 3 ]
+        
+        if "." in accession:
+            accession = accession.split( ".", 1 )[ 0 ]
+            
+        
+        result = self.__sequences.get( accession )
+        
+        if result is None and not obtain_only:
+            result = LegoSequence( self, accession )
+            self.__sequences[ accession ] = result
+        
         return result
-
-    def clear(self):
-        self.sequences.clear()
-
-    def read_fasta( self, file_name ):
-        pass
-
-    def read_blast( self, file_name ):
+    
+    
+    def clear( self ):
+        self.__sequences.clear()
+    
+    
+    def dump( self ):
+        for seq in self.__sequences.values():
+            seq.dump()
+    
+    
+    def deoverlap( self ):
+        for x in self.sequences:
+            x.deoverlap_subsequences()
+        
+        for x in self.sequences:
+            x.complete_subsequences()
+            
+        for x in self.edges:
+            x.complete()
+        
+    
+    
+    def read_file( self, file: LegoQueuedFile ):
+        if file.filetype == LegoQueuedFile.BLAST:
+            self.read_blast( file.filename )
+        elif file.filetype == LegoQueuedFile.COMPOSITES:
+            self.read_composites( file.filename )
+        elif file.filetype == LegoQueuedFile.FASTA:
+            self.read_fasta( file.filename )
+        else:
+            raise SwitchError( "file.filetype", file.filetype )
+    
+    
+    def read_fasta( self, file_name: str ):
+        from Bio import SeqIO
+        
+        obtain_only = self.has_data()
+        
+        for record in SeqIO.parse( file_name, "fasta" ):
+            sequence = self.make_sequence( str( record.id ), obtain_only )
+            
+            if sequence:
+                sequence.data = str( record.seq )
+                sequence.length = len( record.seq )
+                
+    def has_data(self):
+        return len(self.__sequences)!=0
+    
+    
+    def read_blast( self, file_name: str ):
+        obtain_only = self.has_data()
+        
         with open( file_name, "r" ) as file:
-            for line in file.readlines( ):
-                # Fields: query acc., subject acc., % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
-                e = line.split( "\t" )
-
-                query = self.make_sequence( e[ 0 ] ).make_subsequence( int( e[ 6 ] ), int( e[ 7 ] ) )
-                subject = self.make_sequence( e[ 1 ] ).make_subsequence( int( e[ 8 ] ), int( e[ 9 ] ) )
-                query.make_edge( subject )
-
-    def read_composites( self, file_name ):
-        reading = False
-        seq_len = 0
+            for line in file.readlines():
+                line = line.strip()
+                
+                if line and not line.startswith( "#" ):
+                    # Fields: query acc., subject acc., % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
+                    e = line.split( "\t" )
+                    
+                    query_s = self.make_sequence( e[ 0 ], obtain_only )
+                    query = query_s.make_subsequence( int( e[ 6 ] ), int( e[ 7 ] ), obtain_only )   if query_s else None
+                    subject_s = self.make_sequence( e[ 1 ], obtain_only )
+                    subject = subject_s.make_subsequence( int( e[ 8 ] ), int( e[ 9 ] ), obtain_only ) if subject_s else None
+                    self.make_edge(query,subject)
+    
+    
+    def read_composites( self, file_name: str ):
+        COMPOSITE = 1
+        FASTA = 2
+        NONE = 3
+        
+        reading = NONE
+        seq_len = ""
         comp_name = None
-
+        
         with open( file_name, "r" ) as file:
-            for line in file.readlines( ):
-                if line.startswith( ">C" ):
-                    # Composite begins
-                    reading = True
-                    comp_name = line[ 1: ]
-                elif line.startswith( ">" ):
-                    # FASTA begins
-                    seq_len = 0
+            for line in file.readlines():
+                if line.startswith( ">" ):
+                    if reading == FASTA:
+                        # Composite begins
+                        reading = COMPOSITE
+                        comp_name = line[ 1: ]
+                    elif reading == NONE:
+                        # FASTA begins
+                        seq_len = ""
+                        reading = FASTA
+                    elif reading == COMPOSITE:
+                        return
                 elif len( line ) != 0:
-                    if reading:
+                    if reading == COMPOSITE:
                         if line.startswith( "F" ):
                             # Fields: F<comp family id> <mean align> <mean align> <no sequences as component> <no sequences in family> <mean pident> <mean length>
-
+                            
                             e = line.split( "\t" )
-
-                            target = self.make_sequence( comp_name ).make_subsequence( float( e[ 1 ] ),
-                                                                                       float( e[ 2 ] ) )
-
-                            # TODO: We actually need to join the target to the original sequence
+                            
+                            fam_name = e[ 0 ]
+                            mean_start = int( e[ 1 ] )
+                            mean_end = int( e[ 2 ] )
+                            # num_seq_as_component = int(e[3])
+                            # num_seq_in_family = int(e[3])
+                            # mean_pident = float(e[4])
+                            mean_length = int( float( e[ 5 ] ) )
+                            
+                            if (mean_end - mean_start) < 30:
+                                continue
+                            
+                            composite = self.make_sequence( comp_name,False )
+                            composite.array = seq_len
+                            ss = composite.make_subsequence( mean_start, mean_end,False )
+                            target = self.make_sequence( fam_name,False )
+                            target.length = mean_length
+                            ssb = target.make_subsequence( 1, target.length,False )
+                            assert ss is not ssb
+                            self.make_edge( ss, ssb )
                     else:
-                        seq_len += len( line )
+                        seq_len +=  line.strip()
+    
+    
+    def find( self, text ) -> LegoSequence:
+        return self.__sequences.get( text )
+
+
+    def make_edge( self, source:LegoSubsequence, destination:LegoSubsequence):
+        assert source!=destination
+        source = [source]
+        destination =[destination]
+        
+        for edge in self.edges:
+            if (edge.source==source and edge.destination==destination) or (edge.destination == source and edge.source == destination):
+                return edge
+        
+        result=LegoEdge(source, destination)
+        self.edges.append(result)
+        source[0].add_edge(result)
+        destination[0].add_edge(result)
+        return result
+
+
+    

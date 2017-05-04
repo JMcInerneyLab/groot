@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\MJR\Apps\legodiagram\Designer\FrmOptions_designer.ui'
+# Form implementation generated from reading ui file './Designer/FrmOptions_designer.ui'
 #
 # Created by: PyQt5 UI code generator 5.7
 #
