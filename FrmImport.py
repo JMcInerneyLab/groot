@@ -5,9 +5,18 @@ from PyQt5.QtWidgets import QDialog, QTreeWidgetItem
 from os import path
 
 from Designer.FrmImport_designer import Ui_Dialog
-from LegoModels import LegoQueuedFile
 from MHelper import FileHelper, QtGuiHelper
 
+
+class LegoQueuedFile:
+    BLAST = "Blast"
+    COMPOSITES = "Composites"
+    FASTA = "Fasta"
+    
+    
+    def __init__( self, filename, filetype ):
+        self.filename = filename
+        self.filetype = filetype
 
 class FrmImport( QDialog ):
     def __init__(self, parent):
@@ -33,7 +42,7 @@ class FrmImport( QDialog ):
         """
         Signal handler:
         """
-        if QtGuiHelper.browse_file_on_textbox(self.ui.TXT_FILENAME):
+        if QtGuiHelper.browse_open_on_textbox(self.ui.TXT_FILENAME):
             ext = FileHelper.get_extension( self.ui.TXT_FILENAME.text()).lower()
             
             if ext in (".fasta", ".fa"):

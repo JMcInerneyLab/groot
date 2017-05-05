@@ -7,15 +7,15 @@ from enum import Enum
 from random import randint
 from typing import List, Optional, Set, Tuple, Union
 
-from PyQt5.QtCore import QPointF, QRectF, Qt, QRect
+from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, QGraphicsView
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget
 
-from MHelper.ExceptionHelper import SwitchError
 from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence
-from MHelper import ArrayHelper,QtColourHelper
+from MHelper import ArrayHelper, QtColourHelper
 from MHelper.CommentHelper import override
-from MHelper.QtColourHelper import Pens , Colours
+from MHelper.ExceptionHelper import SwitchError
+from MHelper.QtColourHelper import Colours, Pens
 
 
 class ESequenceColour(Enum):
@@ -247,13 +247,13 @@ class LegoViewComponent:
 
 
 class LegoViewSubsequence( QGraphicsItem ):
-    def __init__( self, subsequence: LegoSubsequence, owner_view: "LegoViewSequence", positional_index: int, pos: QPointF, precursor: "LegoViewSubsequence" ):
+    def __init__( self, subsequence: LegoSubsequence, owner_view: "LegoViewSequence", positional_index: int, precursor: "LegoViewSubsequence" ):
         super().__init__()
         
         self.rect = QRectF( 0, 0, subsequence.length * PROTEIN_SIZE, SEQUENCE_HEIGHT )
         
         if not subsequence.ui_position:
-            self.setPos( pos.x() + subsequence.start * PROTEIN_SIZE, pos.y() )
+            self.setPos( subsequence.start * PROTEIN_SIZE, subsequence.sequence.index * (DEFAULT_SEQUENCE_YSEP + SEQUENCE_HEIGHT) )
         else:
             self.setPos( subsequence.ui_position[ 0 ], subsequence.ui_position[ 1 ] )
         
@@ -516,8 +516,8 @@ class LegoViewSubsequence( QGraphicsItem ):
         if new_colour is None:
             return
         
-        all = (self.options.colour_apply == EApply.ALL) != (e.modifiers() & Qt.AltModifier)
-        one = (self.options.colour_apply == EApply.ONE)!=  (e.modifiers() & Qt.ShiftModifier)
+        all = (self.options.colour_apply == EApply.ALL) == (not bool(e.modifiers() & Qt.AltModifier))
+        one = (self.options.colour_apply == EApply.ONE) ==  (not bool(e.modifiers() & Qt.ShiftModifier))
         
         self.owner_model_view.change_colours( new_colour, EApply.ALL if all else EApply.ONE if one else EApply.EDGES )
     
@@ -529,32 +529,39 @@ class LegoViewSequence:
     """
     
     
-    def __init__( self, owner_model_view: "LegoViewModel", sequence: LegoSequence, pos: QPointF ):
+    def __init__( self, owner_model_view: "LegoViewModel", sequence: LegoSequence ):
         """
         :param owner_model_view: Owning view
         :param sequence: The sequence we are viewing
-        :param pos: Position in the view
         """
         
         self.owner_model_view = owner_model_view
         self.sequence = sequence
         self.subsequence_views = [ ]  # type:List[LegoViewSubsequence]
+        self._recreate()
         
-        prev = None
-        for target in sequence.subsequences:
-            this = LegoViewSubsequence( target, self, len( self.subsequence_views ), pos, prev )
-            self.subsequence_views.append( this )
-            prev = this
 
+
+    def _recreate( self ):
+        # Remove existing items
+        for x in self.subsequence_views:
+            self.owner_model_view.scene.removeItem(x)
+            
+        # Add new items
+        previous_subsequence = None
+        for subsequence in self.sequence.subsequences:
+            subsequence_view = LegoViewSubsequence( subsequence, self, len( self.subsequence_views ), previous_subsequence )
+            self.subsequence_views.append( subsequence_view )
+            self.owner_model_view.scene.addItem( subsequence_view )
+            previous_subsequence = subsequence_view
 
 class LegoViewAllEdges( QGraphicsItem ):
-    def __init__( self, view_model: "LegoViewModel", connect_components: bool ):
+    def __init__( self, view_model: "LegoViewModel" ):
         super().__init__()
         self.setZValue(Z_EDGES)
         self.__next_colour = -1
         self.view_model = view_model
         self.component_views = [ ]  # type: List[LegoViewComponent]
-        self.connect_components = connect_components
         
         for connected_component in self.__create_components():
             self.component_views.append( LegoViewComponent( self, connected_component ) )
@@ -698,13 +705,6 @@ class LegoViewAllEdges( QGraphicsItem ):
         for edge in subsequence.edges:
             for friend in edge.source + edge.destination:
                 cls.__connect_to( friend, target )
-    
-    
-    def join_alpha( self ):
-        if self.connect_components:
-            return 32
-        else:
-            return 16
 
 
 class LegoViewModel:
@@ -715,21 +715,24 @@ class LegoViewModel:
         self.edges_view = None  # type: Optional[LegoViewAllEdges]
         self.focus_notification=focus_notification
         
-        y = 0
-        
         for sequence in self.model.sequences:
-            item = LegoViewSequence( self, sequence, QPointF( 0, y ) )
+            item = LegoViewSequence( self, sequence )
             self.sequence_views.append( item )
-            
-            for subsequence_view in item.subsequence_views:
-                self.scene.addItem( subsequence_view )
-            
-            y += item.subsequence_views[ 0 ].boundingRect().height() + DEFAULT_SEQUENCE_YSEP
         
-        self.edges_view = LegoViewAllEdges( self, False )
+        self.edges_view = LegoViewAllEdges( self )
         self.scene.addItem( self.edges_view )
         
         self.options = LegoViewOptions()
+        
+    def selected_subsequence_views ( self )->List[LegoViewSubsequence ]:
+        r = []
+        
+        for x in self.sequence_views:
+            for y in x.subsequence_views:
+                if y.isSelected():
+                    r.append(y)
+                    
+        return r
     
     
     def update_edges( self ):
@@ -776,6 +779,29 @@ class LegoViewModel:
             
             subsequence_view.update_model()
             subsequence_view.update()
+
+
+    def add_new_sequence( self, sequence : LegoSequence ):
+        view = LegoViewSequence(self, sequence)
+        self.sequence_views.append(view)
+        self.recreate_edges()
+        
+    def recreate_sequence(self, sequence:LegoSequence):
+        for x in self.sequence_views:
+            if x.sequence == sequence:
+                x._recreate()
+                
+        self.recreate_edges()
+
+
+    def recreate_edges( self ):
+        self.scene.removeItem(self.edges_view)
+        self.edges_view = LegoViewAllEdges( self )
+        self.scene.addItem( self.edges_view )
+
+
+    def remove_sequence( self, x ):
+        pass
 
 
 COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),  # R
