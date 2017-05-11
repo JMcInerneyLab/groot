@@ -125,7 +125,7 @@ class LegoEdge:
         if self.is_destroyed:
             return "DELETED_EDGE"
         
-        return "!E{}!.{}[{}:{}]-->{}[{}:{}]".format( self.id, self.source_sequence, self.source_start, self.source_end, self.destination_sequence, self.destination_start, self.destination_end )
+        return "({} [ {} : {} ])-->({} [ {} : {} ])".format( self.source_sequence, self.source_start, self.source_end, self.destination_sequence, self.destination_start, self.destination_end )
     
     
     def position( self, subsequence: "LegoSubsequence" ):
@@ -273,7 +273,7 @@ class LegoSubsequence:
         if self.is_destroyed:
             return "DELETED_SUBSEQUENCE"
         
-        return "!SS{}!.{}[{}:{}]".format( self.id, self.sequence.accession, self.start, self.end )
+        return "{} [ {} : {} ]".format( self.sequence.accession, self.start, self.end )
     
     
     def inherit( self, original: "LegoSubsequence" ):
@@ -360,7 +360,7 @@ class LegoSequence:
     
     
     def __repr__( self ):
-        return "!S{}!.{}".format( self.id, self.accession )
+        return "{}".format( self.accession )
     
     
     def _make_subsequence( self, start, end ) -> Optional[ LegoSubsequence ]:
@@ -401,7 +401,7 @@ class LegoSequence:
         self.subsequences = sorted( self.subsequences, key = lambda x: x.start )
         
         if self.array is None:
-            self.array = "X" * self.length
+            self.array = "?" * self.length
     
     
     def _deconvolute( self ):
@@ -792,23 +792,28 @@ class LegoComponent:
     """
     
     
-    def __init__( self, subsequences: List[ LegoSubsequence ] ):
+    def __init__( self, index: int, subsequences: List[ LegoSubsequence ] ):
         sequences = set( x.sequence for x in subsequences )
         self.lines = [ ]  # type:List[List[LegoSubsequence]]
+        self.tree = None
+        self.index = index
         
         for sequence in sequences:
             self.lines.append( [ subsequence for subsequence in subsequences if subsequence.sequence is sequence ] )
+            
+    def __repr__(self):
+        return "{} ({} subsequences)".format(self.index, sum(len(x) for x in self.lines))
     
     
     def all_subsequences( self )->List[LegoSubsequence]:
         return [ x for y in self.lines for x in y ]
     
-    def all_sequences(self)->List[LegoSequence]
-        yield [x[0].sequence for x in self.lines]
+    def all_sequences(self)->List[LegoSequence]:
+        return [x[0].sequence for x in self.lines]
     
     
     @classmethod
-    def create( cls, model: LegoModel ):
+    def create( cls, model: LegoModel )->"List[LegoComponent]":
         print("CREATING CONNECTED COMPONENT COLLECTION")
         the_list = [ ]
         
@@ -816,7 +821,15 @@ class LegoComponent:
             for ss in s.subsequences:
                 cls.__connect_components( ss, the_list )
         
-        return [ LegoComponent( x ) for x in the_list ]
+        results = []  #type:List[LegoComponent]
+        
+        for x in the_list:
+            y = LegoComponent( len(results), x )
+            
+            if len(y.lines) >1:
+                results.append(y)
+                
+        return results
     
     
     @classmethod

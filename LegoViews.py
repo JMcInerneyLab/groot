@@ -18,15 +18,19 @@ from MHelper.ExceptionHelper import SwitchError
 from MHelper.QtColourHelper import Colours, Pens
 
 
-class ESequenceColour(Enum):
-        RESET = 1
-        RANDOM = 2
-        
-class EApply(Enum):
-        ONE =  1    
-        ALL = 2
-        EDGES = 3
-        
+class ESequenceColour( Enum ):
+    RESET = 1
+    RANDOM = 2
+
+
+class EApply( Enum ):
+    ONE = 1
+    ALL = 2
+    EDGES = 3
+    
+
+
+
 # Order of proteins in piano roll
 PROTEIN_TABLE = ArrayHelper.create_index_lookup( "IVLFCMAGTSWYPHEQDNKR" )
 
@@ -40,58 +44,56 @@ PROT_COLOURS = { "G": Pens.WHITE, "A": Pens.WHITE, "V": Pens.WHITE, "L": Pens.WH
                  "N": Pens.DARK_ORANGE, "Q": Pens.DARK_ORANGE,
                  "P": Pens.LIGHT_RED }
 
-SIZE_MULTIPLIER                                   = 2
-PROTEIN_SIZE                                      = 2
-DEFAULT_SEQUENCE_YSEP                             = SIZE_MULTIPLIER * 24
-SEQUENCE_HEIGHT                                   = SIZE_MULTIPLIER * (len( PROTEIN_TABLE ) + 2)
-TEXT_MARGIN                                       = SIZE_MULTIPLIER * 4
+SIZE_MULTIPLIER = 2
+PROTEIN_SIZE = 2
+DEFAULT_SEQUENCE_YSEP = SIZE_MULTIPLIER * 24
+SEQUENCE_HEIGHT = SIZE_MULTIPLIER * (len( PROTEIN_TABLE ) + 2)
+TEXT_MARGIN = SIZE_MULTIPLIER * 4
 
-PROTEIN_BG                                        = QBrush( QColor( 0, 0, 0 ) )
-PROTEIN_DEFAULT_FG                                = QPen( QColor( 255, 255, 0 ) )
+PROTEIN_BG = QBrush( QColor( 0, 0, 0 ) )
+PROTEIN_DEFAULT_FG = QPen( QColor( 255, 255, 0 ) )
 
-SELECTION_EDGE_LINE                               = QPen( QColor( 0, 0, 0 ) )
-SELECTION_EDGE_LINE                                 .setStyle(Qt.DotLine)
-FOCUS_LINE                                        = QPen( QColor( 255, 255, 255 ) )
-FOCUS_LINE.setStyle(Qt.DashLine)
-SELECTION_LINE                                    = QPen( QColor( 0, 0, 255 ) )
-SELECTION_FILL                                    = Qt.NoBrush
+SELECTION_EDGE_LINE = QPen( QColor( 0, 0, 0 ) )
+SELECTION_EDGE_LINE.setStyle( Qt.DotLine )
+FOCUS_LINE = QPen( QColor( 255, 255, 255 ) )
+FOCUS_LINE.setStyle( Qt.DashLine )
+SELECTION_LINE = QPen( QColor( 0, 0, 255 ) )
+SELECTION_FILL = Qt.NoBrush
 
-SNAP_LINE                                         = QPen( QColor( 0, 255, 255 ) )
-SNAP_LINE                                           .setWidth(3)
-SNAP_LINE                                           .setStyle( Qt.DotLine )
-SNAP_LINE_2                                       = QPen( QColor( 0, 0, 128 ) )
-SNAP_LINE_2                                         .setWidth(3)
-PAGE_LINE                                         = QPen( QColor( 0, 0, 0 ) )
-PAGE_LINE                                           .setStyle( Qt.DashLine )
-NO_SEQUENCE_LINE                                  = QPen( QColor( 0, 0, 0 ) )
-NO_SEQUENCE_LINE                                    .setStyle( Qt.DashLine )
-NO_SEQUENE_BACKWARDS_LINE                         = QPen( QColor( 255, 0, 0 ) )
-NO_SEQUENE_BACKWARDS_LINE                                     .setStyle( Qt.DashLine )
-NO_SEQUENCE_FILL                                  = QBrush( QColor( 0, 0, 0, alpha  = 32 ) )
-TEXT_LINE                                         = QPen( QColor( 128, 128, 128 ) )
-POSITION_TEXT                                     = QPen( QColor( 64, 64, 64 ) )
-DARK_TEXT                                         = QPen( QColor( 0, 0, 0 ) )
-LIGHT_TEXT                                        = QPen( QColor( 255, 255, 255 ) )
-SINGLE_COMPONENT_COLOUR                           = QColor( 64, 64, 64 )
+SNAP_LINE = QPen( QColor( 0, 255, 255 ) )
+SNAP_LINE.setWidth( 3 )
+SNAP_LINE.setStyle( Qt.DotLine )
+SNAP_LINE_2 = QPen( QColor( 0, 0, 128 ) )
+SNAP_LINE_2.setWidth( 3 )
+NO_SEQUENCE_LINE = QPen( QColor( 0, 0, 0 ) )
+NO_SEQUENCE_LINE.setStyle( Qt.DashLine )
+NO_SEQUENE_BACKWARDS_LINE = QPen( QColor( 255, 0, 0 ) )
+NO_SEQUENE_BACKWARDS_LINE.setStyle( Qt.DashLine )
+NO_SEQUENCE_FILL = QBrush( QColor( 0, 0, 0, alpha = 32 ) )
+TEXT_LINE = QPen( QColor( 128, 128, 128 ) )
+POSITION_TEXT = QPen( QColor( 64, 64, 64 ) )
+DARK_TEXT = QPen( QColor( 0, 0, 0 ) )
+LIGHT_TEXT = QPen( QColor( 255, 255, 255 ) )
+SINGLE_COMPONENT_COLOUR = QColor( 64, 64, 64 )
 
 # Z-values (draw order)
-Z_EDGES                                           = 1
-Z_SEQUENCE                                        = 2
-Z_FOCUS                                           = 3
+Z_EDGES = 1
+Z_SEQUENCE = 2
+Z_FOCUS = 3
 
 
 class LegoViewOptions:
     def __init__( self ):
-        self.colour_blend     = 1            # type:float
-        self.toggle_selection = False        # type:bool
-        self.y_snap           = True         # type:bool
-        self.x_snap           = True         # type:bool
-        self.colour_apply     = EApply.EDGES # type:EApply
-        self.view_edges       = True         # type:Optional[bool]
-        self.view_piano_roll  = None         # type:Optional[bool]
-        self.view_names       = True         # type:Optional[bool]
-        self.view_positions   = None         # type:Optional[bool]
-        self.view_component   = True         # type:bool
+        self.colour_blend = 1  # type:float
+        self.toggle_selection = False  # type:bool
+        self.y_snap = True  # type:bool
+        self.x_snap = True  # type:bool
+        self.colour_apply = EApply.EDGES  # type:EApply
+        self.view_edges = True  # type:Optional[bool]
+        self.view_piano_roll = None  # type:Optional[bool]
+        self.view_names = True  # type:Optional[bool]
+        self.view_positions = None  # type:Optional[bool]
+        self.view_component = True  # type:bool
 
 
 class ColourBlock:
@@ -109,57 +111,65 @@ class ColourBlock:
     
     
     def blend( self, colour: QColor, amount ):
-        new_colour = QtColourHelper.interpolate_colours(self.colour, colour, amount) 
+        new_colour = QtColourHelper.interpolate_colours( self.colour, colour, amount )
         
         return ColourBlock( new_colour )
 
+
 class LegoEdgeViewTarget:
-    def __init__(self, the_list):
+    def __init__( self, the_list ):
         self.list = the_list
-        
-    def __bool__(self):
-        return bool(self.list)
+    
+    
+    def __bool__( self ):
+        return bool( self.list )
+    
     
     def __average_colour( self ):
         return QtColourHelper.average_colour( list( x.colour.colour for x in self.list ) )
     
-    def __extract_points(self, backwards):
-        results = []
+    
+    def __extract_points( self, backwards ):
+        results = [ ]
         
         if not backwards:
-            for x in sorted(self.list, key = lambda z: z.window_rect().left()):
-                r = x.window_rect() #type:QRect
-                results.append(r.bottomLeft())
-                results.append(r.bottomRight())
+            for x in sorted( self.list, key = lambda z: z.window_rect().left() ):
+                r = x.window_rect()  # type:QRect
+                results.append( r.bottomLeft() )
+                results.append( r.bottomRight() )
         else:
-            for x in sorted(self.list, key = lambda z: -z.window_rect().left()):
-                r = x.window_rect() #type:QRect
-                results.append(r.topRight())
-                results.append(r.topLeft())
-                
+            for x in sorted( self.list, key = lambda z: -z.window_rect().left() ):
+                r = x.window_rect()  # type:QRect
+                results.append( r.topRight() )
+                results.append( r.topLeft() )
+        
         return results
     
-    def __any_selected(self):
-        return any(x.isSelected() for x in self.list)
     
-    def __all_selected(self):
-        return all(x.isSelected() for x in self.list)
+    def __any_selected( self ):
+        return any( x.isSelected() for x in self.list )
     
-    def top(self):
-        return self.list[0].window_rect().top()
-        
+    
+    def __all_selected( self ):
+        return all( x.isSelected() for x in self.list )
+    
+    
+    def top( self ):
+        return self.list[ 0 ].window_rect().top()
+    
+    
     @staticmethod
-    def paint_to(painter:QPainter, view_edges:Optional[bool], upper:"LegoEdgeViewTarget", lower:"LegoEdgeViewTarget"):
+    def paint_to( painter: QPainter, view_edges: Optional[ bool ], upper: "LegoEdgeViewTarget", lower: "LegoEdgeViewTarget" ):
         if not upper or not lower:
             return
         
         if view_edges is None:
             view_edges = upper.__any_selected() or lower.__any_selected()
-            
+        
         if not view_edges:
             return
         
-        highlight = upper.__all_selected() and lower.__all_selected() 
+        highlight = upper.__all_selected() and lower.__all_selected()
         
         upper_points = upper.__extract_points( False )
         lower_points = lower.__extract_points( True )
@@ -172,8 +182,8 @@ class LegoEdgeViewTarget:
         lower_colour = QColor( lower_colour )
         lower_colour.setAlpha( 64 )
         
-        left = min( upper_points[0].x(), lower_points[-1].x() )
-        right = max( upper_points[-1].x(), lower_points[0].x() )
+        left = min( upper_points[ 0 ].x(), lower_points[ -1 ].x() )
+        right = max( upper_points[ -1 ].x(), lower_points[ 0 ].x() )
         top = min( x.y() for x in upper_points )
         bottom = max( x.x() for x in lower_points )
         
@@ -188,31 +198,31 @@ class LegoEdgeViewTarget:
         else:
             painter.setPen( Qt.NoPen )
         painter.setBrush( brush )
-        painter.drawPolygon( QPolygonF( upper_points+lower_points+[upper_points[0]] ) )
-        
-        
+        painter.drawPolygon( QPolygonF( upper_points + lower_points + [ upper_points[ 0 ] ] ) )
+
 
 class LegoEdgeView:
-    def __init__( self, owner: "LegoViewComponent", source:LegoEdgeViewTarget, destination:LegoEdgeViewTarget ):
+    def __init__( self, owner: "LegoViewComponent", source: LegoEdgeViewTarget, destination: LegoEdgeViewTarget ):
         self.owner = owner
         self.source = source
         self.destination = destination
     
+    
     @staticmethod
-    def from_edge(owner: "LegoViewComponent", edge: LegoEdge):
-        source = [ ] #type:List[LegoViewSubsequence]
-        destination = [ ] #type:List[LegoViewSubsequence]
+    def from_edge( owner: "LegoViewComponent", edge: LegoEdge ):
+        source = [ ]  # type:List[LegoViewSubsequence]
+        destination = [ ]  # type:List[LegoViewSubsequence]
         
         for x in edge.source:
             source.append( owner.owner.view_model.find_ui_element( x ) )
         
         for x in edge.destination:
             destination.append( owner.owner.view_model.find_ui_element( x ) )
-            
-        return LegoEdgeView(owner, LegoEdgeViewTarget(source), LegoEdgeViewTarget(destination))
-
-
-    def get_upper_and_lower( self )->"Tuple[LegoEdgeViewTarget,LegoEdgeViewTarget]":
+        
+        return LegoEdgeView( owner, LegoEdgeViewTarget( source ), LegoEdgeViewTarget( destination ) )
+    
+    
+    def get_upper_and_lower( self ) -> "Tuple[LegoEdgeViewTarget,LegoEdgeViewTarget]":
         if self.source.top() < self.destination.top():
             return self.destination, self.source
         else:
@@ -247,8 +257,7 @@ class LegoViewComponent:
     
     
     def __init__( self, owner: "LegoViewAllEdges", component: LegoComponent ):
-        subsequence_views = [ owner.view_model.find_ui_element(x) for x in component.all_subsequences() ]
-        
+        subsequence_views = [ owner.view_model.find_ui_element( x ) for x in component.all_subsequences() ]
         
         self.owner = owner
         self.component = component
@@ -261,26 +270,26 @@ class LegoViewComponent:
         
         self.colour = ColourBlock( opaque_colour )
         
-        edges = set() #type:Set[LegoEdge]
+        edges = set()  # type:Set[LegoEdge]
         
         for subsequence_view in subsequence_views:
             subsequence_view.component = self
             
-            if subsequence_view.colour is None:
+            if subsequence_view.colour is DEFAULT_COLOUR:
                 subsequence_view.colour = self.colour
             
             for edge in subsequence_view.subsequence.edges:
                 edges.add( edge )
         
-        self.edge_views = [ ] #type: List[LegoEdgeView]
-        self.line_view_targets = [] #type:List[LegoEdgeViewTarget]
+        self.edge_views = [ ]  # type: List[LegoEdgeView]
+        self.line_view_targets = [ ]  # type:List[LegoEdgeViewTarget]
         
         for edge in edges:
-            edge_view=LegoEdgeView.from_edge( self, edge )
+            edge_view = LegoEdgeView.from_edge( self, edge )
             self.edge_views.append( edge_view )
-            
+        
         for line in component.lines:
-            self.line_view_targets.append( LegoEdgeViewTarget( [owner.view_model.find_ui_element(x) for x in line ] ))
+            self.line_view_targets.append( LegoEdgeViewTarget( [ owner.view_model.find_ui_element( x ) for x in line ] ) )
     
     
     def paint( self, painter: QPainter ):
@@ -292,12 +301,12 @@ class LegoViewComponent:
         if not options.view_component:
             for edge_view in self.edge_views:
                 lower, upper = edge_view.get_upper_and_lower()
-                LegoEdgeViewTarget.paint_to(painter, options.view_edges, lower, upper)
+                LegoEdgeViewTarget.paint_to( painter, options.view_edges, lower, upper )
         else:
             sorted_edge_targets = sorted( self.line_view_targets, key = lambda x: x.top() )
             
-            for upper, lower in ArrayHelper.lagged_iterate(sorted_edge_targets):
-                LegoEdgeViewTarget.paint_to(painter, options.view_edges, upper, lower)
+            for upper, lower in ArrayHelper.lagged_iterate( sorted_edge_targets ):
+                LegoEdgeViewTarget.paint_to( painter, options.view_edges, upper, lower )
 
 
 class LegoViewSubsequence( QGraphicsItem ):
@@ -312,7 +321,7 @@ class LegoViewSubsequence( QGraphicsItem ):
             self.setPos( subsequence.ui_position[ 0 ], subsequence.ui_position[ 1 ] )
         
         if not subsequence.ui_colour:
-            self.colour = None  # type:ColourBlock
+            self.colour = DEFAULT_COLOUR
         else:
             self.colour = ColourBlock( QColor( subsequence.ui_colour ) )
         
@@ -331,16 +340,16 @@ class LegoViewSubsequence( QGraphicsItem ):
         self.mousemove_snapline = None  # type:Tuple[int,int]
         self.mousedown_move_all = False
         
-        self.setZValue(Z_SEQUENCE)
-        
+        self.setZValue( Z_SEQUENCE )
     
-        
+    
     @property
-    def owner_model_view(self):
+    def owner_model_view( self ):
         return self.owner_sequence_view.owner_model_view
     
+    
     @property
-    def options(self):
+    def options( self ):
         return self.owner_model_view.options
     
     
@@ -363,20 +372,16 @@ class LegoViewSubsequence( QGraphicsItem ):
         painter.setPen( SELECTION_LINE if self.isSelected() else self.colour.pen )
         painter.drawRect( self.rect )
         
-        
-            
         draw_piano_roll = self.options.view_piano_roll
         
         if draw_piano_roll is None:
             draw_piano_roll = self.isSelected()
-            
+        
         if draw_piano_roll:
             painter.setPen( Qt.NoPen )
-            painter.setBrush(PROTEIN_BG)
+            painter.setBrush( PROTEIN_BG )
             OFFX = SIZE_MULTIPLIER
             painter.drawRect( 0, OFFX, self.rect.width(), len( PROTEIN_TABLE ) * SIZE_MULTIPLIER )
-            
-            
             
             for i, c in enumerate( self.subsequence.array ):
                 pos = PROTEIN_TABLE.get( c )
@@ -385,14 +390,12 @@ class LegoViewSubsequence( QGraphicsItem ):
                     painter.setPen( PROT_COLOURS.get( c, PROTEIN_DEFAULT_FG ) )
                     painter.drawEllipse( i * SIZE_MULTIPLIER, pos * SIZE_MULTIPLIER + OFFX, SIZE_MULTIPLIER, SIZE_MULTIPLIER )
         
-        
-        
         if self.mousemove_snapline:
             x = self.mousemove_snapline[ 0 ] - self.pos().x()
             y = self.mousemove_snapline[ 1 ] - self.pos().y()
-            painter.setPen(SNAP_LINE_2)
+            painter.setPen( SNAP_LINE_2 )
             painter.drawLine( x, self.boundingRect().height() / 2, x, y )
-            painter.setPen(SNAP_LINE)
+            painter.setPen( SNAP_LINE )
             painter.drawLine( x, self.boundingRect().height() / 2, x, y )
             if not self.mousemove_label.startswith( "<" ):
                 x -= QFontMetrics( painter.font() ).width( self.mousemove_label )
@@ -407,7 +410,7 @@ class LegoViewSubsequence( QGraphicsItem ):
             painter.setPen( TEXT_LINE )
             painter.drawText( QPointF( self.rect.left() + TEXT_MARGIN, self.rect.top() - TEXT_MARGIN ), self.mousemove_label )
         else:
-            if self.__draw_position(): 
+            if self.__draw_position():
                 painter.setPen( POSITION_TEXT )
                 
                 text = str( self.subsequence.start )
@@ -420,22 +423,24 @@ class LegoViewSubsequence( QGraphicsItem ):
                     x = self.rect.right() - QFontMetrics( painter.font() ).width( text ) / 2
                     y = self.rect.top() - TEXT_MARGIN if (x - lx) > 32 else self.rect.bottom() + QFontMetrics( painter.font() ).xHeight() + TEXT_MARGIN
                     painter.drawText( QPointF( x, y ), text )
-                
+        
         if self.hasFocus():
-            r =  self.rect.adjusted(1,1,-1,-1)
+            r = self.rect.adjusted( 1, 1, -1, -1 )
             painter.setPen( FOCUS_LINE )
-            painter.setBrush( 0)
+            painter.setBrush( 0 )
             painter.drawRect( r )
-            
+    
+    
     def __draw_position( self ):
         result = self.options.view_positions
-            
+        
         if result is None:
             result = self.isSelected()
-            
+        
         return result
     
-    def __draw_next_sibling_position(self):
+    
+    def __draw_next_sibling_position( self ):
         ns = self.next_sibling()
         
         if ns is None:
@@ -445,15 +450,16 @@ class LegoViewSubsequence( QGraphicsItem ):
             return False
         
         return ns.pos().x() == self.window_rect().right()
+    
+    
+    def next_sibling( self ):
+        ssvs = self.owner_sequence_view.subsequence_views
+        i = ssvs.index( self )
         
-    def next_sibling(self):
-        ssvs=self.owner_sequence_view.subsequence_views
-        i = ssvs.index(self)
-        
-        if  i== len(ssvs)-1:
+        if i == len( ssvs ) - 1:
             return None
         
-        return ssvs[i+1]
+        return ssvs[ i + 1 ]
     
     
     def window_rect( self ) -> QRectF:
@@ -463,7 +469,7 @@ class LegoViewSubsequence( QGraphicsItem ):
     PROHI = False
     
     
-    def keyPressEvent( self, e: QKeyEvent ):        
+    def keyPressEvent( self, e: QKeyEvent ):
         if e.key() == Qt.Key_Left:
             my_index = self.owner_sequence_view.subsequence_views.index( self )
             my_index -= 1
@@ -475,45 +481,58 @@ class LegoViewSubsequence( QGraphicsItem ):
             if my_index < len( self.owner_sequence_view.subsequence_views ):
                 self.owner_sequence_view.subsequence_views[ my_index ].setFocus()
         
-        self.__apply_colour(e)
-        
+        self.__apply_colour( e )
     
     
     def mousePressEvent( self, m: QGraphicsSceneMouseEvent ):
+        """
+        OVERRIDE
+        Mouse press on subsequence view
+        """
         if m.buttons() & Qt.LeftButton:
             # Remember the initial position of ALL items because it IS possible for the selection to change via double-click evenbts
             for item in self.owner_sequence_view.owner_model_view.scene.items():
                 item.mousedown_original_pos = item.pos()
-                
-            enable_toggle_selection = not self.options.toggle_selection == (bool(  (m.modifiers() & Qt.ControlModifier) or  (m.modifiers() & Qt.MetaModifier)))
+            
+            enable_toggle_selection = not self.options.toggle_selection == (bool( (m.modifiers() & Qt.ControlModifier) or (m.modifiers() & Qt.MetaModifier) ))
+            enable_full_sequence = not bool( m.modifiers() & Qt.AltModifier )
             
             if not enable_toggle_selection:
-                if not self.isSelected():
-                    self.owner_sequence_view.owner_model_view.scene.clearSelection()
+                if self.isSelected():
+                    return
                 
-                    self.setSelected(True)
+                self.owner_sequence_view.owner_model_view.scene.clearSelection()
+            
+            status = not self.isSelected()
+            
+            if enable_full_sequence:
+                for x in self.owner_sequence_view.subsequence_views:
+                    x.setSelected( status )
+            
             else:
-                self.setSelected(not self.isSelected())
-                
+                self.setSelected( status )
+            
             m.accept()
-            
-    def mouseDoubleClickEvent(self, m:QGraphicsSceneMouseEvent):
-        s= self.isSelected()
-        
-        if m.modifiers() & Qt.AltModifier:
-            for x in self.edge_subsequence_views:
-                x.setSelected(s)
-        else:
-            for x in self.owner_sequence_view.subsequence_views:
-                x.setSelected(s)
-            
-        m.accept()
-            
-    def focusInEvent(self, QFocusEvent):
-        self.setZValue(Z_FOCUS)
     
-    def focusOutEvent(self, QFocusEvent):
-        self.setZValue(Z_SEQUENCE)
+    
+    # def mouseDoubleClickEvent(self, m:QGraphicsSceneMouseEvent):
+    #     s= self.isSelected()
+    #     
+    #     if m.modifiers() & Qt.AltModifier:
+    #         for x in self.edge_subsequence_views:
+    #             x.setSelected(s)
+    #     else:
+    #         for x in self.owner_sequence_view.subsequence_views:
+    #             x.setSelected(s)
+    #         
+    #     m.accept()
+    
+    def focusInEvent( self, QFocusEvent ):
+        self.setZValue( Z_FOCUS )
+    
+    
+    def focusOutEvent( self, QFocusEvent ):
+        self.setZValue( Z_SEQUENCE )
     
     
     def snaps( self ):
@@ -529,7 +548,7 @@ class LegoViewSubsequence( QGraphicsItem ):
     def mouseMoveEvent( self, m: QGraphicsSceneMouseEvent ):
         if m.buttons() & Qt.LeftButton:
             if self.mousedown_original_pos is None:
-                return 
+                return
             
             new_pos = self.mousedown_original_pos + (m.scenePos() - m.buttonDownScenePos( Qt.LeftButton ))  # type:QPointF
             new_x = new_pos.x()
@@ -539,10 +558,10 @@ class LegoViewSubsequence( QGraphicsItem ):
             self.mousemove_label = "({0} {1})".format( new_pos.x(), new_pos.y() )
             self.mousemove_snapline = None
             
-            x_snap_enabled = self.options.x_snap == (not bool(m.modifiers() & Qt.ControlModifier)) 
-            y_snap_enabled = self.options.y_snap == (not bool(m.modifiers() & Qt.AltModifier))
+            x_snap_enabled = self.options.x_snap == (not bool( m.modifiers() & Qt.ControlModifier ))
+            y_snap_enabled = self.options.y_snap == (not bool( m.modifiers() & Qt.AltModifier ))
             
-            if x_snap_enabled :
+            if x_snap_enabled:
                 for snap_x, snap_label, snap_y in self.snaps():
                     if (snap_x - 8) <= new_x <= (snap_x + 8):
                         new_x = snap_x
@@ -580,18 +599,18 @@ class LegoViewSubsequence( QGraphicsItem ):
         self.mousemove_snapline = None
         self.update()
         pass  # suprress default mouse handling implementation
-
+    
+    
     def __apply_colour( self, e: QKeyEvent ):
-        new_colour = KEY_COLOURS.get(e.key())
+        new_colour = KEY_COLOURS.get( e.key() )
         
         if new_colour is None:
             return
         
-        all = (self.options.colour_apply == EApply.ALL) == (not bool(e.modifiers() & Qt.AltModifier))
-        one = (self.options.colour_apply == EApply.ONE) ==  (not bool(e.modifiers() & Qt.ShiftModifier))
+        all = (self.options.colour_apply == EApply.ALL) == (not bool( e.modifiers() & Qt.AltModifier ))
+        one = (self.options.colour_apply == EApply.ONE) == (not bool( e.modifiers() & Qt.ShiftModifier ))
         
         self.owner_model_view.change_colours( new_colour, EApply.ALL if all else EApply.ONE if one else EApply.EDGES )
-    
 
 
 class LegoViewSequence:
@@ -610,14 +629,13 @@ class LegoViewSequence:
         self.sequence = sequence
         self.subsequence_views = [ ]  # type:List[LegoViewSubsequence]
         self._recreate()
-        
-
-
+    
+    
     def _recreate( self ):
         # Remove existing items
         for x in self.subsequence_views:
-            self.owner_model_view.scene.removeItem(x)
-            
+            self.owner_model_view.scene.removeItem( x )
+        
         # Add new items
         previous_subsequence = None
         for subsequence in self.sequence.subsequences:
@@ -626,16 +644,17 @@ class LegoViewSequence:
             self.owner_model_view.scene.addItem( subsequence_view )
             previous_subsequence = subsequence_view
 
+
 class LegoViewAllEdges( QGraphicsItem ):
     def __init__( self, view_model: "LegoViewModel" ):
         super().__init__()
-        self.setZValue(Z_EDGES)
+        self.setZValue( Z_EDGES )
         self.__next_colour = -1
         self.view_model = view_model
         self.component_views = [ ]  # type: List[LegoViewComponent]
         
         for component in view_model.model.components:
-            self.component_views.append( LegoViewComponent( self,  component ) )
+            self.component_views.append( LegoViewComponent( self, component ) )
         
         self.rect = QRectF( 0, 0, 0, 0 )
         
@@ -654,14 +673,14 @@ class LegoViewAllEdges( QGraphicsItem ):
                 
                 if r.bottom() > self.rect.bottom():
                     self.rect.setBottom( r.bottom() )
-                    
+                
                 for edge in subsequence_view.subsequence.edges:
-                    for subsequence in edge.opposite(subsequence_view.subsequence):
+                    for subsequence in edge.opposite( subsequence_view.subsequence ):
                         subsequence_view.edge_subsequence_views.append( self.view_model.find_ui_element( subsequence ) )
         
-        MARGIN = 128
-        self.rect.setTop( self.rect.top() - MARGIN )
-        self.rect.setLeft( self.rect.left() - MARGIN )
+        MARGIN = 256
+        self.rect.setTop( self.rect.top() - MARGIN * 2 )
+        self.rect.setLeft( self.rect.left() - MARGIN * 2 )
         self.rect.setBottom( self.rect.bottom() + MARGIN )
         self.rect.setRight( self.rect.right() + MARGIN )
     
@@ -685,10 +704,6 @@ class LegoViewAllEdges( QGraphicsItem ):
         """
         for group in self.component_views:
             group.paint( painter )
-        
-        painter.setPen( PAGE_LINE )
-        painter.setBrush( Qt.NoBrush )
-        painter.drawRect( self.rect )
         
         painter.setPen( NO_SEQUENCE_LINE )
         painter.setBrush( NO_SEQUENCE_FILL )
@@ -722,16 +737,13 @@ class LegoViewAllEdges( QGraphicsItem ):
         
         if self.view_model.options.view_names is not False:
             for sequence_view in self.view_model.sequence_views:
-                if self.view_model.options.view_names or any(x.isSelected() for x in sequence_view.subsequence_views):
+                if self.view_model.options.view_names or any( x.isSelected() for x in sequence_view.subsequence_views ):
                     leftmost_subsequence = sorted( sequence_view.subsequence_views, key = lambda xx: xx.pos().x() )[ 0 ]
                     text = sequence_view.sequence.accession
                     r = leftmost_subsequence.window_rect()
                     x = r.left() - TEXT_MARGIN - QFontMetrics( painter.font() ).width( text )
                     y = r.top() + r.height() / 2
                     painter.drawText( QPointF( x, y ), text )
-    
-    
-   
 
 
 class LegoViewModel:
@@ -740,7 +752,7 @@ class LegoViewModel:
         self.scene = QGraphicsScene()
         self.sequence_views = [ ]  # type: List[LegoViewSequence]
         self.edges_view = None  # type: Optional[LegoViewAllEdges]
-        self.focus_notification=focus_notification
+        self.focus_notification = focus_notification
         
         for sequence in self.model.sequences:
             item = LegoViewSequence( self, sequence )
@@ -750,93 +762,95 @@ class LegoViewModel:
         self.scene.addItem( self.edges_view )
         
         self.options = LegoViewOptions()
-        
+    
+    
     def update_edges( self ):
         if self.edges_view:
             self.edges_view.update()
-        
-    def selected_subsequence_views ( self )->List[LegoViewSubsequence ]:
-        r = []
+    
+    
+    def selected_subsequence_views( self ) -> List[ LegoViewSubsequence ]:
+        r = [ ]
         
         for x in self.sequence_views:
             for y in x.subsequence_views:
                 if y.isSelected():
-                    r.append(y)
-                    
+                    r.append( y )
+        
         return r
-
-
+    
+    
     def selected_subsequence_view( self ) -> Optional[ LegoViewSubsequence ]:
         return ArrayHelper.first_or_nothing( self.selected_subsequence_views() )
-
-
+    
+    
     def selected_subsequences( self ) -> List[ LegoSubsequence ]:
         return [ x.subsequence for x in self.selected_subsequence_views() ]
-
-
+    
+    
     def selected_subsequence( self ) -> Optional[ LegoSubsequence ]:
         return ArrayHelper.first_or_nothing( self.selected_subsequences() )
-
-
+    
+    
     def selected_sequences( self ) -> Set[ LegoSequence ]:
         return set( x.sequence for x in self.selected_subsequences() )
     
+    
     def selected_complete_sequences( self ) -> Set[ LegoSequence ]:
         sel = self.selected_subsequences()
-        seqs =  set( x.sequence for x in sel )
+        seqs = set( x.sequence for x in sel )
         re = set()
         
         for seq in seqs:
-            if len(seq.subsequences) == sum(x.sequence == seq for x in sel):
-                re.add(seq)
-                
+            if len( seq.subsequences ) == sum( x.sequence == seq for x in sel ):
+                re.add( seq )
+        
         return re
     
-    def selected_complete_sequence(self)->Optional[LegoSequence]:
-        return ArrayHelper.first_or_nothing(self.selected_complete_sequences())
-
-
+    
+    def selected_complete_sequence( self ) -> Optional[ LegoSequence ]:
+        return ArrayHelper.first_or_nothing( self.selected_complete_sequences() )
+    
+    
     def selected_sequence( self ) -> Optional[ LegoSequence ]:
         return ArrayHelper.first_or_nothing( self.selected_sequences() )
-
-
+    
+    
     def selected_edges( self ) -> Set[ LegoEdge ]:
         selected = self.selected_subsequences()
         
-        if len(selected)==0:
+        if len( selected ) == 0:
             return set()
         
         edges = set( selected[ 0 ].edges )
-    
+        
         for x in selected:
-            edges = edges.intersection( set( x.edges ))
-            
-        r=set()
-            
+            edges = edges.intersection( set( x.edges ) )
+        
+        r = set()
+        
         for edge in edges:
-            if any(x in selected for x in edge.source) and any(x in selected for x in edge.destination):
-                r.add(edge)
-    
+            if any( x in selected for x in edge.source ) and any( x in selected for x in edge.destination ):
+                r.add( edge )
+        
         return r
-
-
+    
+    
     def selected_edge( self ) -> Optional[ LegoEdge ]:
         return ArrayHelper.first_or_nothing( self.selected_edges() )
-            
-            
-            
-    def selected_entity(self)->Any:
+    
+    
+    def selected_entity( self ) -> Any:
         complete_selected = self.selected_complete_sequences()
-        partial_selected = self.selected_sequences() 
+        partial_selected = self.selected_sequences()
         
-        if len(complete_selected)==1 and len(partial_selected)==1:
-            return next(iter(complete_selected))
+        if len( complete_selected ) == 1 and len( partial_selected ) == 1:
+            return next( iter( complete_selected ) )
         
         return self.selected_subsequence() or self.selected_edge()
-        
-
-    def change_colours( self, new_colour : Union[ QColor, ESequenceColour ], apply_colour:EApply= None ):
-            
+    
+    
+    def change_colours( self, new_colour: Union[ QColor, ESequenceColour ], apply_colour: EApply = None ):
         if apply_colour is None:
             apply_colour = self.options.colour_apply
         
@@ -857,7 +871,7 @@ class LegoViewModel:
                     if y.isSelected():
                         the_list.append( y )
         else:
-            raise SwitchError("apply_colour", apply_colour)
+            raise SwitchError( "apply_colour", apply_colour )
         
         if isinstance( new_colour, QColor ):
             the_colour = ColourBlock( new_colour )
@@ -867,7 +881,7 @@ class LegoViewModel:
                 the_colour = subsequence_view.component.colour
             elif new_colour == ESequenceColour.RANDOM:
                 the_colour = ColourBlock( QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) ) )
-                        
+            
             if self.options.colour_blend != 1:
                 subsequence_view.colour = subsequence_view.colour.blend( the_colour.colour, self.options.colour_blend )
             else:
@@ -875,20 +889,22 @@ class LegoViewModel:
             
             subsequence_view.update_model()
             subsequence_view.update()
-
-
-    def add_new_sequence( self, sequence : LegoSequence ):
-        view = LegoViewSequence(self, sequence)
-        self.sequence_views.append(view)
+    
+    
+    def add_new_sequence( self, sequence: LegoSequence ):
+        view = LegoViewSequence( self, sequence )
+        self.sequence_views.append( view )
         self.recreate_edges()
-        
-    def recreate_sequence(self, sequence:LegoSequence):
+    
+    
+    def recreate_sequence( self, sequence: LegoSequence ):
         for x in self.sequence_views:
             if x.sequence == sequence:
                 x._recreate()
-                
-        self.recreate_edges()
         
+        self.recreate_edges()
+    
+    
     def find_ui_element( self, target: LegoSubsequence ) -> LegoViewSubsequence:
         for sequence_view in self.sequence_views:
             for subsequence_view in sequence_view.subsequence_views:
@@ -896,19 +912,19 @@ class LegoViewModel:
                     return subsequence_view
         
         raise KeyError( "Cannot find the UI element for the subsequence '{0}'.".format( target ) )
-
-
+    
+    
     def recreate_edges( self ):
-        self.scene.removeItem(self.edges_view)
+        self.scene.removeItem( self.edges_view )
         self.edges_view = LegoViewAllEdges( self )
         self.scene.addItem( self.edges_view )
-
-
+    
+    
     def remove_sequence( self, x ):
         pass
-
-
-    def select( self, subsequences : List[LegoSubsequence] ):
+    
+    
+    def select( self, subsequences: List[ LegoSubsequence ] ):
         """
         API
         Replace the current selection
@@ -916,11 +932,10 @@ class LegoViewModel:
         """
         
         for x in self.selected_subsequence_views():
-            x.setSelected(False)
-            
-        for x in subsequences:
-            self.find_ui_element(x).setSelected(True)
+            x.setSelected( False )
         
+        for x in subsequences:
+            self.find_ui_element( x ).setSelected( True )
 
 
 COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),  # R
@@ -936,26 +951,28 @@ COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),  # R
                       QColor( 128, 255, 0 ),  # Yg
                       QColor( 128, 0, 255 ) ]  # Mb ]
 
-KEY_COLOURS = {Qt.Key_0:Colours.BLACK,
-               Qt.Key_1:Colours.BLUE,
-               Qt.Key_2:Colours.GREEN,
-               Qt.Key_3:Colours.CYAN,
-               Qt.Key_4:Colours.RED,
-               Qt.Key_5:Colours.MAGENTA,
-               Qt.Key_6:Colours.YELLOW,
-               Qt.Key_7:Colours.WHITE,
-               Qt.Key_8:Colours.GRAY,
-               Qt.Key_9:Colours.DARK_GRAY,
-               Qt.Key_K:Colours.BLACK,
-               Qt.Key_B:Colours.BLUE,
-               Qt.Key_G:Colours.GREEN,
-               Qt.Key_C:Colours.CYAN,
-               Qt.Key_R:Colours.RED,
-               Qt.Key_M:Colours.MAGENTA,
-               Qt.Key_Y:Colours.YELLOW,
-               Qt.Key_W:Colours.WHITE,
-               Qt.Key_L:Colours.GRAY,
-               Qt.Key_D:Colours.DARK_GRAY,
-               Qt.Key_P:ESequenceColour.RANDOM,
-               Qt.Key_O:ESequenceColour.RESET,
-               }
+KEY_COLOURS = { Qt.Key_0: Colours.BLACK,
+                Qt.Key_1: Colours.BLUE,
+                Qt.Key_2: Colours.GREEN,
+                Qt.Key_3: Colours.CYAN,
+                Qt.Key_4: Colours.RED,
+                Qt.Key_5: Colours.MAGENTA,
+                Qt.Key_6: Colours.YELLOW,
+                Qt.Key_7: Colours.WHITE,
+                Qt.Key_8: Colours.GRAY,
+                Qt.Key_9: Colours.DARK_GRAY,
+                Qt.Key_K: Colours.BLACK,
+                Qt.Key_B: Colours.BLUE,
+                Qt.Key_G: Colours.GREEN,
+                Qt.Key_C: Colours.CYAN,
+                Qt.Key_R: Colours.RED,
+                Qt.Key_M: Colours.MAGENTA,
+                Qt.Key_Y: Colours.YELLOW,
+                Qt.Key_W: Colours.WHITE,
+                Qt.Key_L: Colours.GRAY,
+                Qt.Key_D: Colours.DARK_GRAY,
+                Qt.Key_P: ESequenceColour.RANDOM,
+                Qt.Key_O: ESequenceColour.RESET,
+                }
+
+DEFAULT_COLOUR = ColourBlock( Colours.GRAY )

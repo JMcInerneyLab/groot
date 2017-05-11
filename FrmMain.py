@@ -1,7 +1,9 @@
-import subprocess
+import shutil
 from os import system
+import os
 from typing import Any, List, Optional
 
+from Bio import Phylo
 from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
@@ -9,9 +11,9 @@ from PyQt5.QtWidgets import QColorDialog, QFileDialog, QGraphicsScene, QInputDia
 
 from Designer.FrmMain_designer import Ui_MainWindow
 from MHelper.ExceptionHelper import SwitchError
-from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence
-from LegoViews import EApply, ESequenceColour, LegoViewModel, LegoViewSubsequence
-from MHelper import IoHelper, QtGuiHelper, PrintHelper,FileHelper
+from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoComponent
+from LegoViews import EApply, ESequenceColour, LegoViewModel, LegoViewSubsequence, PROT_COLOURS
+from MHelper import IoHelper, QtGuiHelper, PrintHelper, FileHelper, QtColourHelper, BioHelper
 from MHelper.QtColourHelper import Colours
 from MyView import MyView
 
@@ -77,14 +79,46 @@ class FrmMain( QMainWindow ):
         if sel:
             type_name = type( sel ).__name__[ 4: ].upper()
             self.statusBar().showMessage( "SELECTED: <<{}>> {}".format( type_name, sel ) )
+            
+            self.ui.LBL_VIEW_LEFT.setText( str( sel ) )
+            self.ui.LBL_VIEW_RIGHT.setText( type_name )
+            
+            if isinstance( sel, LegoSequence ):
+                self.ui.TXT_VIEW.setText( self.colour_fasta( sel.array ) )
+            elif isinstance( sel, LegoSubsequence ):
+                self.ui.TXT_VIEW.setText( self.colour_fasta( sel.array ) )
+            else:
+                self.ui.TXT_VIEW.setText( "" )
             return
         
-        nsel = len( self._view.selected_subsequence_views() )
+        tsel = self._view.selected_subsequence_views()
+        nsel = len( tsel )
         
         if nsel == 0:
             self.statusBar().showMessage( "SELECTED: <<NOTHING>>" )
+            self.ui.LBL_VIEW_LEFT.setText( "No selection" )
+            self.ui.LBL_VIEW_RIGHT.setText( "" )
         else:
             self.statusBar().showMessage( "SELECTED: <<MULTIPLE ITEMS>> ({} subsequences)".format( nsel ) )
+            self.ui.LBL_VIEW_LEFT.setText( "x {}".format( nsel ) )
+            self.ui.LBL_VIEW_RIGHT.setText( "Subsequences" )
+        
+        self.ui.TXT_VIEW.setText( "\n".join( str( x ) for x in tsel ) )
+    
+    
+    def colour_fasta( self, array ):
+        # 
+        res = [ ]
+        
+        for x in array:
+            colour = PROT_COLOURS.get( x )
+            
+            if colour is None:
+                colour = QtColourHelper.Pens.BLACK
+            
+            res.append( '<span style="color:' + colour.color().name() + ';">' + x + '</span>' )
+        
+        return "".join( res )
     
     
     def subsequence_view_focus( self, subsequence_view: LegoViewSubsequence ):
@@ -103,8 +137,13 @@ class FrmMain( QMainWindow ):
         self.ui.graphicsView.setScene( self._view.scene )
         self._view.scene.selectionChanged.connect( self.scene_selectionChanged )  # TODO: Does this need cleanup like in C#?
         
-        self.ui.LST_SEQUENCES.clear()
-        self.ui.LST_SEQUENCES.addItems( x.accession for x in self._model.sequences )
+        
+        
+        self.ui.LST_COMPONENTS.clear()
+        self.ui.LST_COMPONENTS.addItem("(ALL)", None)
+        
+        for x in self._model.components: 
+            self.ui.LST_COMPONENTS.addItem( str(x), x)
         
         o = self._view.options
         self.ui.CHK_MOVE_XSNAP.setChecked( o.x_snap )
@@ -223,16 +262,60 @@ class FrmMain( QMainWindow ):
     
     @pyqtSlot( int )
     def on_LST_SEQUENCES_currentIndexChanged( self, _ ):
+        self.__update_subsequence_list()
+        
+    def __update_subsequence_list(self):
         self.ui.LST_SUBSEQUENCES.clear()
         
-        seq = self.listbox_sequence()
+        selected_component = self.listbox_component()
+        selected_sequence = self.listbox_sequence()
         
-        if seq:
-            self.ui.LST_SUBSEQUENCES.addItems( str( x ) for x in seq.subsequences )
+        if selected_sequence:
+            if selected_component:
+                src = (  subsequence  for line in selected_component.lines for subsequence in line if subsequence in selected_sequence.subsequences  )
+            else:
+                src  =( subsequence  for subsequence in selected_sequence.subsequences )
+        else:
+            if selected_component:
+                src = ( subsequence  for line in selected_component.lines for subsequence in line  )
+            else:
+                src = (  subsequence  for sequence in self._model.sequences for subsequence in sequence.subsequences  )
+                
+        for x in src:
+            self.ui.LST_SUBSEQUENCES.addItem(str(x), x)
+            
+    @pyqtSlot( int )
+    def on_LST_COMPONENTS_currentIndexChanged( self, _ ):
+        self.ui.LST_SEQUENCES.clear()
+        
+        com = self.listbox_component()
+        
+        
+        self.ui.LST_SEQUENCES.clear()
+        self.ui.LST_SEQUENCES.addItem("(ALL)", None)
+        
+        if com:
+            src = (x for x in self._model.sequences if x in com.all_sequences())
+        else:
+            src = (x for x in self._model.sequences )
+            
+        for x in src:
+            self.ui.LST_SEQUENCES.addItem(str(x), x)
+            
+        self.__update_subsequence_list()
+    
+    def listbox_component( self ) -> Optional[LegoComponent]:
+        return self.ui.LST_COMPONENTS.currentData(Qt.UserRole)
+    
+    def listbox_sequence( self ) -> Optional[LegoSequence]:
+        return self.ui.LST_SEQUENCES.currentData(Qt.UserRole)
+    
+    def listbox_subsequence( self ) -> LegoSubsequence:
+        return self.ui.LST_SUBSEQUENCES.currentData(Qt.UserRole)
     
     
-    def listbox_sequence( self ) -> LegoSequence:
-        return self._model.sequences[ self.ui.LST_SEQUENCES.currentIndex() ] if self.ui.LST_SEQUENCES.currentIndex() != -1 else None
+    def listbox_edge( self ) -> LegoEdge:
+        return self.ui.LST_EDGES.currentData(Qt.UserRole)
     
     
     def selected_subsequences( self ) -> List[ LegoSubsequence ]:
@@ -252,16 +335,7 @@ class FrmMain( QMainWindow ):
         return sequences[ 0 ]
     
     
-    def listbox_subsequence( self ) -> LegoSubsequence:
-        s = self.listbox_sequence()
-        
-        return s.subsequences[ self.ui.LST_SUBSEQUENCES.currentIndex() ] if self.ui.LST_SUBSEQUENCES.currentIndex() != -1 else None
     
-    
-    def listbox_edge( self ) -> LegoEdge:
-        ss = self.listbox_subsequence()
-        
-        return ss.edges[ self.ui.LST_EDGES.currentIndex() ] if self.ui.LST_EDGES.currentIndex() != -1 else None
     
     
     @pyqtSlot( int )
@@ -271,7 +345,8 @@ class FrmMain( QMainWindow ):
         sseq = self.listbox_subsequence()
         
         if sseq:
-            self.ui.LST_EDGES.addItems( str( x ) for x in sseq.edges )
+            for x in sseq.edges:
+                self.ui.LST_EDGES.addItem( str(x),x )
     
     
     @pyqtSlot()
@@ -784,49 +859,92 @@ class FrmMain( QMainWindow ):
         self._model.remove_all_edges()
         self.refresh_model()
     
+    
     @pyqtSlot()
-    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered(self) -> None:
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self ) -> None:
         """
         Signal handler:
         """
         self._model.compartmentalise()
         self.refresh_model()
     
+    
     @pyqtSlot()
-    def on_ACT_ARRAY_ALIGN_triggered(self) -> None:
+    def on_ACT_ARRAY_ALIGN_triggered( self ) -> None:
         """
         Signal handler: Align arrays
         """
-        for index, component in enumerate(self._model.components):
-            fasta = []
+        components = [ x for x in self._model.components if len( x.lines ) > 1 ]
+        
+        for index, component in components:
+            if len( component.lines ) <= 1:
+                continue
+            
+            fasta = [ ]
             
             for sequence in component.all_sequences():
-                fasta.append(sequence.accession)
-                fasta.append(sequence.array)
-                fasta.append("")
-                
-            input_text = "\n".join(fasta)
-            command = "muscle -in temp_fasta_{0}.fasta -out temp_out_{0}.muscle".format(  index)
+                if "?" not in sequence.array:
+                    fasta.append( ">S" + str( sequence.id ) )
+                    fasta.append( sequence.array )
+                    fasta.append( "" )
             
-            FileHelper.write_all_text("temp_fasta.fasta", input_text)
+            temp_folder_name = "legoalign-temporary-folder"
             
-            #system(command)
-        
+            folder = FileHelper.create_directory( temp_folder_name )
+            
+            os.chdir( temp_folder_name )
+            
+            input_text = "\n".join( fasta )
+            command = "muscle -in temp_1.fasta -out temp_2.fasta".format( index )
+            
+            FileHelper.write_all_text( "temp_1.fasta".format( index ), input_text )
+            system( command )
+            
+            BioHelper.convert_file( "temp_2.fasta", "temp_2.phy", "fasta", "phylip" )
+            
+            command = "raxml -m PROTGAMMAWAG -p 12345 -s temp_2.phy -# 20 -n txt"
+            system( command )
+            
+            component.tree = FileHelper.read_all_text( "RAxML_bestTree.txt" )
+            
+            for sequence in component.all_sequences():
+                if "?" not in sequence.array:
+                    component.tree = component.tree.replace( "S{}:".format( sequence.id ), sequence.accession )
+            
+            FileHelper.write_all_text( "best_tree.new", component.tree )
+            
+            tree = Phylo.read( "best_tree.new", "newick" )
+            tree.ladderize()  # Flip branches so deeper clades are displayed at top
+            Phylo.draw( tree )
+            
+            # clean up
+            os.chdir( ".." )
+            shutil.rmtree( temp_folder_name )
+            return
+    
     
     @pyqtSlot()
-    def on_ACT_ARRAY_TREE_triggered(self) -> None:
+    def on_ACT_ARRAY_TREE_triggered( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @pyqtSlot()
+    def on_ACT_ARRAY_FUSE_triggered( self ) -> None:
         """
         Signal handler:
         """
         pass
     
     @pyqtSlot()
-    def on_ACT_ARRAY_FUSE_triggered(self) -> None:
+    def on_BTN_SELECT_COMPONENT_clicked(self) -> None:
         """
         Signal handler:
         """
         pass
-    
+            
     @pyqtSlot()
     def on_ACT_COMPARTMENTALISE_triggered( self ) -> None:
         """
