@@ -1,16 +1,19 @@
-from random import randint
-from typing import List, Optional
+import subprocess
+from os import system
+from typing import Any, List, Optional
 
 from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QColorDialog, QFileDialog, QGraphicsScene, QMainWindow, QMessageBox, QInputDialog
+from PyQt5.QtWidgets import QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy
 
 from Designer.FrmMain_designer import Ui_MainWindow
+from MHelper.ExceptionHelper import SwitchError
 from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence
 from LegoViews import EApply, ESequenceColour, LegoViewModel, LegoViewSubsequence
-from MHelper import IoHelper, QtGuiHelper
+from MHelper import IoHelper, QtGuiHelper, PrintHelper,FileHelper
 from MHelper.QtColourHelper import Colours
+from MyView import MyView
 
 
 class FrmMain( QMainWindow ):
@@ -33,6 +36,14 @@ class FrmMain( QMainWindow ):
         self.ui.setupUi( self )
         self.setWindowTitle( "Lego Model Creator" )
         
+        # Graphics view
+        self.ui.graphicsView = MyView( self.ui.centralwidget )
+        sizePolicy = QSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
+        sizePolicy.setHeightForWidth( self.ui.graphicsView.sizePolicy().hasHeightForWidth() )
+        self.ui.graphicsView.setSizePolicy( sizePolicy )
+        self.ui.graphicsView.setObjectName( "graphicsView" )
+        self.ui.gridLayout.addWidget( self.ui.graphicsView, 0, 0, 1, 1 )
+        
         # Open GL rendering
         self.ui.graphicsView.setViewport( QGLWidget( QGLFormat( QGL.SampleBuffers ) ) )
         
@@ -44,25 +55,53 @@ class FrmMain( QMainWindow ):
         
         # Load our sample model
         self._model = LegoModel()
-        # self._model.read_blast("./SampleData/blast.blast")
-        self._model.import_composites( "/Users/martinrusilowicz/HiddenDesktop/COMPOSITES/A0A024WP05.composites" )
+        try:
+            # self._model.read_blast("./SampleData/blast.blast")
+            self._model.import_composites( "/Users/martinrusilowicz/work/data/sera/composites/c855817.composites_fixed" )
+            self._model.import_fasta( "/Users/martinrusilowicz/work/data/sera/data.faa" )
+            self._model.remove_all_edges()
+            self._model.import_blast( "/Users/martinrusilowicz/work/data/sera/bbcfta3878.blastp.fixed" )
+        except Exception as ex:
+            PrintHelper.print_exception( ex )
+            exit( 1 )
         
         self._view = None  # type:LegoViewModel
         self.refresh_model()
         
-        self.statusBar().showMessage( "LMB = Select | LMB+Drag = Move sequence; Shift = Move subsequence; Ctrl = No X-snap; Alt = No Y-snap | 0-9 RGB CYMK W = Change colour; Shift = Bright colour; Ctrl = Recursive | X = Restore all colours", 0 )
+        self.statusBar().showMessage( "Press F1 to view keys." )
+    
+    
+    def scene_selectionChanged( self ):
+        sel = self._view.selected_entity()
+        
+        if sel:
+            type_name = type( sel ).__name__[ 4: ].upper()
+            self.statusBar().showMessage( "SELECTED: <<{}>> {}".format( type_name, sel ) )
+            return
+        
+        nsel = len( self._view.selected_subsequence_views() )
+        
+        if nsel == 0:
+            self.statusBar().showMessage( "SELECTED: <<NOTHING>>" )
+        else:
+            self.statusBar().showMessage( "SELECTED: <<MULTIPLE ITEMS>> ({} subsequences)".format( nsel ) )
     
     
     def subsequence_view_focus( self, subsequence_view: LegoViewSubsequence ):
-        ss = subsequence_view.subsequence
-        self.ui.LST_SEQUENCES.setCurrentIndex( self._model.sequences.index( ss.sequence ) )
-        self.ui.LST_SUBSEQUENCES.setCurrentIndex( ss.sequence.subsequences.index( ss ) )
+        """
+        CALLBACK
+        When subsequence view changes
+        :return: 
+        """
+        pass
     
     
     def refresh_model( self ):
         self.no_update_options = True
         self._view = LegoViewModel( self.subsequence_view_focus, self._model )
+        # noinspection PyUnresolvedReferences
         self.ui.graphicsView.setScene( self._view.scene )
+        self._view.scene.selectionChanged.connect( self.scene_selectionChanged )  # TODO: Does this need cleanup like in C#?
         
         self.ui.LST_SEQUENCES.clear()
         self.ui.LST_SEQUENCES.addItems( x.accession for x in self._model.sequences )
@@ -80,6 +119,7 @@ class FrmMain( QMainWindow ):
         self.ui.CHK_VIEW_NAMES.setCheckState( QtGuiHelper.to_check_state( o.view_names ) )
         self.ui.CHK_VIEW_PIANO_ROLLS.setCheckState( QtGuiHelper.to_check_state( o.view_piano_roll ) )
         self.ui.CHK_VIEW_POSITIONS.setCheckState( QtGuiHelper.to_check_state( o.view_positions ) )
+        self.ui.CHK_VIEW_COMPONENTS.setChecked( o.view_component )
         
         self.no_update_options = False
     
@@ -107,16 +147,20 @@ class FrmMain( QMainWindow ):
         o.view_names = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
         o.view_piano_roll = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_PIANO_ROLLS.checkState() )
         o.view_positions = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
+        o.view_component = self.ui.CHK_VIEW_COMPONENTS.isChecked()
         
         self.ui.SLI_BLEND.setVisible( self.ui.CHK_COL_BLEND.isChecked() )
         
         self._view.scene.update()
-        
-        self.statusBar().showMessage( str( randint( 0, 1000 ) ), 0 )
     
     
     @pyqtSlot( int )
     def on_CHK_VIEW_EDGES_stateChanged( self, _ ):
+        self.update_options()
+    
+    
+    @pyqtSlot( int )
+    def on_CHK_VIEW_COMPONENTS_stateChanged( self, _ ):
         self.update_options()
     
     
@@ -184,25 +228,28 @@ class FrmMain( QMainWindow ):
         seq = self.listbox_sequence()
         
         if seq:
-            self.ui.LST_SUBSEQUENCES.addItems(seq.subsequences)
+            self.ui.LST_SUBSEQUENCES.addItems( str( x ) for x in seq.subsequences )
     
     
     def listbox_sequence( self ) -> LegoSequence:
         return self._model.sequences[ self.ui.LST_SEQUENCES.currentIndex() ] if self.ui.LST_SEQUENCES.currentIndex() != -1 else None
     
-    def selected_subsequences(self)->List[LegoSubsequence]:
-        return [x.subsequence for x in self._view.selected_subsequence_views()]
     
-    def selected_sequences(self)->List[LegoSequence]:
-        return list(set(x.subsequence.sequence for x in self._view.selected_subsequence_views()))
+    def selected_subsequences( self ) -> List[ LegoSubsequence ]:
+        return [ x.subsequence for x in self._view.selected_subsequence_views() ]
     
-    def selected_sequence(self)->Optional[LegoSequence]:
+    
+    def selected_sequences( self ) -> List[ LegoSequence ]:
+        return list( set( x.subsequence.sequence for x in self._view.selected_subsequence_views() ) )
+    
+    
+    def selected_sequence( self ) -> Optional[ LegoSequence ]:
         sequences = self.selected_sequences()
         
-        if len(sequences)!=1:
+        if len( sequences ) != 1:
             return None
         
-        return sequences[0]
+        return sequences[ 0 ]
     
     
     def listbox_subsequence( self ) -> LegoSubsequence:
@@ -224,9 +271,7 @@ class FrmMain( QMainWindow ):
         sseq = self.listbox_subsequence()
         
         if sseq:
-            for edge in sseq.edges:
-                self.ui.LST_EDGES.addItems( "--> {0} ({1} - {2})".format( x.sequence.accession, x.start, x.end ) for x in edge.source )
-                self.ui.LST_EDGES.addItems( "<-- {0} ({1} - {2})".format( x.sequence.accession, x.start, x.end ) for x in edge.destination )
+            self.ui.LST_EDGES.addItems( str( x ) for x in sseq.edges )
     
     
     @pyqtSlot()
@@ -259,7 +304,7 @@ class FrmMain( QMainWindow ):
         """
         Signal handler: Import data
         """
-        filters = "FASTA files (*.fasta *.fa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
+        filters = "FASTA files (*.fasta *.fa *.faa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
         
         file_name, filter = QFileDialog.getOpenFileName( self, "Select file", None, ";;".join( filters ) )
         
@@ -269,11 +314,16 @@ class FrmMain( QMainWindow ):
         filter_index = filters.index( filter )
         
         if filter_index == 0:
-            self._model.read_fasta( file_name )
+            r = self._model.import_fasta( file_name )
         elif filter_index == 1:
-            self._model.import_blast( file_name )
+            r = self._model.import_blast( file_name )
         elif filter_index == 2:
-            self._model.import_composites( file_name )
+            r = self._model.import_composites( file_name )
+        else:
+            raise SwitchError( "filter_index", filter_index )
+        
+        if r:
+            self.statusBar().showMessage( str( r ) )
         
         self.refresh_model()
     
@@ -317,12 +367,13 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        level, ok = QInputDialog.getInt(self, self.windowTitle(), "This option will quantise subsequence positions to the nearest 'n', where 'n' is:", 10, 2, 1000)
+        level, ok = QInputDialog.getInt( self, self.windowTitle(), "This option will quantise subsequence positions to the nearest 'n', where 'n' is:", 10, 2, 1000 )
         
         if not ok:
             return
         
-        self._model.quantise(level)
+        self._model.quantise( level )
+        self.refresh_model()
     
     
     @pyqtSlot()
@@ -331,7 +382,7 @@ class FrmMain( QMainWindow ):
         Signal handler:
         """
         sequence = self._model.add_new_sequence()
-        self._view.add_new_sequence(sequence)
+        self._view.add_new_sequence( sequence )
     
     
     @pyqtSlot()
@@ -340,14 +391,13 @@ class FrmMain( QMainWindow ):
         Signal handler:
         """
         subsequences = self.selected_subsequences()
-    
-        try:
-            self._model.add_new_edge(subsequences)
-            self._view.recreate_edges()
-            
-        except Exception as ex:
-            QtGuiHelper.show_exception(self, ex)
         
+        try:
+            self._model.add_new_edge( subsequences )
+            self._view.recreate_edges()
+        
+        except Exception as ex:
+            QtGuiHelper.show_exception( self, ex )
     
     
     @pyqtSlot()
@@ -361,29 +411,42 @@ class FrmMain( QMainWindow ):
         if not sequence:
             return
         
-        default_split = (min(x.start for x in subsequences) + max(x.end for x in subsequences)) // 2
-        split_point, ok = QInputDialog.getInt(self, self.windowTitle(), "Split the sequence '{0}' into [1:x] and [x+1:n] where x = ",default_split, 1, sequence.length )
+        # noinspection PyUnresolvedReferences
+        default_split = (min( x.start for x in subsequences ) + max( x.end for x in subsequences )) // 2
+        split_point, ok = QInputDialog.getInt( self, self.windowTitle(), "Split the sequence '{0}' into [1:x] and [x+1:n] where x = ", default_split, 1, sequence.length )
         
         if not ok:
-            return 
+            return
         
         try:
-            self._model.add_new_subsequence(sequence, split_point)
-            self._view.recreate_sequence(sequence)
+            self._model.add_new_subsequence( sequence, split_point )
+            self._view.recreate_sequence( sequence )
         
         except Exception as ex:
-            QtGuiHelper.show_exception(self, ex)
+            QtGuiHelper.show_exception( self, ex )
+    
+    
+    @pyqtSlot()
+    def on_ACT_REMOVE_SELECTION_triggered( self ) -> None:
+        """
+        Signal handler: Remove selection
+        """
+        pass
+    
     
     @pyqtSlot()
     def on_ACT_REMOVE_SEQUENCE_triggered( self ) -> None:
         """
         Signal handler:
         """
-        sequences = self.selected_subsequences()
+        sequence = self.__ask_for_one( self.selected_sequences() )
         
-        for x in sequences:
-            self._model.remove_sequence(x)
-            self._view.remove_sequence(x)
+        if sequence:
+            if QMessageBox.question( self, self.windowTitle(), "This will remove the sequence '{0}'.".format( sequence ), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
+                return
+            
+            self._model.remove_sequence( sequence )
+            self._view.remove_sequence( sequence )
     
     
     @pyqtSlot()
@@ -391,7 +454,14 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        QMessageBox.information( self, "todo", "on_ACT_REMOVE_EDGE_triggered" )
+        edge = self.__ask_for_one( self._view.selected_edges() )
+        
+        if edge:
+            if QMessageBox.question( self, self.windowTitle(), "This will remove the edge '{0}'.".format( edge ), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
+                return
+            
+            self._model.remove_edge( edge )
+            self._view.recreate_edges()
     
     
     @pyqtSlot()
@@ -399,7 +469,14 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        QMessageBox.information( self, "todo", "on_ACT_REMOVE_SPLIT_triggered" )
+        subsequence = self.__ask_for_one( self._view.selected_subsequences() )
+        
+        if subsequence:
+            if QMessageBox.question( self, self.windowTitle(), "This will remove the subsequence '{0}'.".format( subsequence ), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
+                return
+            
+            self._model.remove_subsequence( subsequence )
+            self._view.recreate_sequence( subsequence.sequence )
     
     
     @pyqtSlot()
@@ -511,18 +588,107 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        s = self.listbox_sequence()
+        self.__view_sequence_details( self.__ask_for_one( self._view.selected_sequences() ) )
+    
+    
+    def __view_sequence_details( self, s: Optional[ LegoSequence ] ):
+        if not s:
+            return
+        
+        S = "<h2>"
+        E = "</h2>"
+        L = "<br/>"
         
         details = [ ]
-        details.append( "accession = {}".format( s.accession ) )
-        details.append( "subsequences = {}".format( s.subsequences ) )
-        details.append( "length = {}".format( s.length ) )
-        details.append( "array = {}".format( s.array ) )
-        details.append( "meta = {}".format( s.meta ) )
+        details.append( S + "ACCESSION" + E )
+        details.append( s.accession )
+        details.append( L )
+        details.append( S + "SUBSEQUENCES" + E )
+        details.append( s.subsequences )
+        details.append( L )
+        details.append( S + "LENGTH" + E )
+        details.append( s.length )
+        details.append( L )
+        details.append( S + "ARRAY" + E )
+        details.append( s.array )
+        details.append( L )
+        details.append( S + "META" + E )
+        details.append( "<br/>".join( str( x ) for x in s.source_info ) )
         
         b = QMessageBox()
-        b.setText( str( s ) )
-        b.setInformativeText( "\n".join( details ) )
+        b.setText( "SEQUENCE '{}'".format( s ) )
+        b.setInformativeText( "".join( str( x ) for x in details ) )
+        b.exec_()
+    
+    
+    def __view_edge_details( self, s: Optional[ LegoEdge ] ):
+        if not s:
+            return
+        
+        S = "<h2>"
+        E = "</h2>"
+        L = "<br/>"
+        
+        details = [ ]
+        details.append( S + "SOURCE" + E )
+        details.append( "{}[{}:{}" + E.format( s.source_sequence, s.source_start, s.source_end ) )
+        details.append( L )
+        details.append( S + "DESTINATION" + E )
+        details.append( "{}[{}:{}" + E.format( s.destination_sequence, s.destination_start, s.destination_end ) )
+        details.append( L )
+        details.append( S + "SOURCES" + E )
+        details.append( s.source )
+        details.append( L )
+        details.append( S + "DESTINATIONS" + E )
+        details.append( s.destination )
+        details.append( L )
+        details.append( S + "META" + E )
+        details.append( "\n".join( str( x ) for x in s.source_info ) )
+        details.append( L )
+        
+        b = QMessageBox()
+        b.setText( "EDGE '{}'".format( s ) )
+        b.setInformativeText( "\n".join( str( x ) for x in details ) )
+        b.exec_()
+    
+    
+    def __view_subsequence_details( self, s: Optional[ LegoSubsequence ] ):
+        if not s:
+            return
+        
+        S = "<h2>"
+        E = "</h2>"
+        L = "<br/>"
+        
+        details = [ ]
+        details.append( S + "SEQUENCE" + E )
+        details.append( s.sequence.accession )
+        details.append( L )
+        details.append( S + "START" + E )
+        details.append( s.start )
+        details.append( L )
+        details.append( S + "END" + E )
+        details.append( s.end )
+        details.append( L )
+        details.append( S + "EDGES" + E )
+        details.append( s.edges )
+        details.append( L )
+        details.append( S + "UI POSITION" + E )
+        details.append( s.ui_position )
+        details.append( L )
+        details.append( S + "UI COLOUR" + E )
+        details.append( s.ui_colour )
+        details.append( L )
+        details.append( S + "ARRAY" + E )
+        details.append( s.array )
+        details.append( L )
+        details.append( S + "META" + E )
+        details.append( s.source_info )
+        details.append( L )
+        
+        b = QMessageBox()
+        b.setText( "SUBSEQUENCE '{}'".format( s ) )
+        b.setInformativeText( "\n".join( str( x ) for x in details ) )
         b.exec_()
     
     
@@ -531,18 +697,7 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        s = self.listbox_edge()
-        
-        details = [ ]
-        details.append( "source = {}[{}:{}]".format( s.source_sequence, s.source_start, s.source_end ) )
-        details.append( "destination = {}[{}:{}]".format( s.destination_sequence, s.destination_start, s.destination_end ) )
-        details.append( "sources = {}".format( s.source ) )
-        details.append( "destinations = {}".format( s.destination ) )
-        
-        b = QMessageBox()
-        b.setText( str( s ) )
-        b.setInformativeText( "\n".join( details ) )
-        b.exec_()
+        self.__view_edge_details( self.__ask_for_one( self._view.selected_edges() ) )
     
     
     @pyqtSlot()
@@ -550,21 +705,7 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        s = self.listbox_subsequence()
-        
-        details = [ ]
-        details.append( "sequence = {}".format( s.sequence.accession ) )
-        details.append( "start = {}".format( s.start ) )
-        details.append( "end = {}".format( s.end ) )
-        details.append( "edges = {}".format( s.edges ) )
-        details.append( "ui position = {}".format( s.ui_position ) )
-        details.append( "ui colour = {}".format( s.ui_colour ) )
-        details.append( "array = {}".format( s.array ) )
-        
-        b = QMessageBox()
-        b.setText( str( s ) )
-        b.setInformativeText( "\n".join( details ) )
-        b.exec_()
+        self.__view_subsequence_details( self.__ask_for_one( self._view.selected_subsequences() ) )
     
     
     @pyqtSlot()
@@ -583,12 +724,23 @@ class FrmMain( QMainWindow ):
         self.apply_colour( Colours.DARK_GRAY, False )
     
     
-    @pyqtSlot()
-    def on_ACT_REMOVE_SELECTION_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
+    def __ask_for_one( self, array ) -> Optional[ Any ]:
+        if not array:
+            return None
+        
+        if len( array ) == 1:
+            return next( iter( array ) )
+        
+        item, ok = QInputDialog.getItem( self, self.windowTitle(), "Select", [ str( x ) for x in array ] )
+        
+        if not ok:
+            return None
+        
+        for x in array:
+            if str( x ) == item:
+                return x
+        
+        return None
     
     
     @pyqtSlot()
@@ -596,7 +748,14 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        pass
+        selected = self._view.selected_entity()
+        
+        if isinstance( selected, LegoSubsequence ):
+            self.__view_subsequence_details( selected )
+        elif isinstance( selected, LegoSequence ):
+            self.__view_sequence_details( selected )
+        elif isinstance( selected, LegoEdge ):
+            self.__view_edge_details( selected )
     
     
     @pyqtSlot()
@@ -605,3 +764,98 @@ class FrmMain( QMainWindow ):
         Signal handler: Random colour
         """
         self.apply_colour( ESequenceColour.RANDOM, False )
+    
+    
+    @pyqtSlot()
+    def on_ACT_HELP_KEYS_triggered( self ) -> None:
+        """
+        Signal handler:
+        """
+        keys = "Left click = Select subsequence|Double click = Select sequence|Double click + Alt = Select edge|Left click + Control = Add to selection|Left drag = Move selection|Left drag + Control = Move selection (toggle X-snap)|Left drag + Alt = Move selection (toggle Y-snap)"
+        
+        QMessageBox.information( self, "Keys", keys.replace( "|", "\n" ) )
+    
+    
+    @pyqtSlot()
+    def on_ACT_REMOVE_ALL_EDGES_triggered( self ) -> None:
+        """
+        Signal handler: Remove all edges
+        """
+        self._model.remove_all_edges()
+        self.refresh_model()
+    
+    @pyqtSlot()
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self._model.compartmentalise()
+        self.refresh_model()
+    
+    @pyqtSlot()
+    def on_ACT_ARRAY_ALIGN_triggered(self) -> None:
+        """
+        Signal handler: Align arrays
+        """
+        for index, component in enumerate(self._model.components):
+            fasta = []
+            
+            for sequence in component.all_sequences():
+                fasta.append(sequence.accession)
+                fasta.append(sequence.array)
+                fasta.append("")
+                
+            input_text = "\n".join(fasta)
+            command = "muscle -in temp_fasta_{0}.fasta -out temp_out_{0}.muscle".format(  index)
+            
+            FileHelper.write_all_text("temp_fasta.fasta", input_text)
+            
+            #system(command)
+        
+    
+    @pyqtSlot()
+    def on_ACT_ARRAY_TREE_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_ACT_ARRAY_FUSE_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_ACT_COMPARTMENTALISE_triggered( self ) -> None:
+        """
+        Signal handler: Compartmentalise model
+        """
+        self._model.compartmentalise()
+        self.refresh_model()
+    
+    
+    @pyqtSlot()
+    def on_BTN_SELECT_SEQUENCE_clicked( self ) -> None:
+        """
+        Signal handler: Select listed sequence
+        """
+        self._view.select( self.listbox_sequence().subsequences )
+    
+    
+    @pyqtSlot()
+    def on_BTN_SELECT_SUBSEQUENCE_clicked( self ) -> None:
+        """
+        Signal handler: Select listed subsequence
+        """
+        self._view.select( [ self.listbox_subsequence() ] )
+    
+    
+    @pyqtSlot()
+    def on_BTN_SELECT_EDGE_clicked( self ) -> None:
+        """
+        Signal handler: Select listed edge
+        """
+        edge = self.listbox_edge()
+        self._view.select( edge.source + edge.destination )
