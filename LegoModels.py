@@ -1,8 +1,8 @@
 from typing import List, Optional, Set
 
-from DisposalHelper import ManagedWith
 from MHelper.ExceptionHelper import ImplementationError
 from MHelper import ArrayHelper
+from MHelper.DisposalHelper import ManagedWith
 
 
 __incremental_id = 0
@@ -12,6 +12,8 @@ def _incremental_id():
     global __incremental_id
     __incremental_id += 1
     return __incremental_id
+
+VERIFY = False
 
 
 class LegoEdge:
@@ -40,6 +42,9 @@ class LegoEdge:
         return item in self.source or item in self.destination
     
     def _verify_deconvoluted(self):
+        if not VERIFY:
+            return
+        
         assert self.source and self.destination
         self._verify()
     
@@ -47,6 +52,9 @@ class LegoEdge:
         """
         Internally used to assert the integrity of the edge
         """
+        if not VERIFY:
+            return
+        
         if self.is_destroyed:
             raise ImplementationError("Edge '{}' has been destroyed.".format(self))
         
@@ -154,11 +162,9 @@ class LegoEdge:
             * Sorts the source and destination lists by position
             * Verifies the integrity
         """
-        print( "DECONVOLUTE {} BEGINS".format( self ) )
         self.source = sorted( self.source, key = lambda x: x.start )
         self.destination = sorted( self.destination, key = lambda x: x.start )
         self._verify()
-        print( "DECONVOLUTE {} ENDS".format( self ) )
     
     
     def unlink_all( self ):
@@ -213,7 +219,7 @@ class LegoSubsequence:
             raise ValueError( "Attempt to create a subsequence in '{0}' where start ({1}) > end ({2}).".format( sequence, start, end ) )
         
         self.id = _incremental_id()
-        self.sequence = sequence  # Sequence itself
+        self.sequence = sequence  #type:LegoSequence  
         self.start = start  # Start position
         self.end = end  # End position
         self.edges = [ ]  # type:List[LegoEdge]        # Edge list
@@ -227,12 +233,17 @@ class LegoSubsequence:
         print( "SUBSEQUENCE '{}' INITIALISED".format( self ) )
         
     def _verify_deconvoluted(self):
+        if not VERIFY:
+            return
+        
         assert self.start <= self.end
         assert not self.is_destroyed
         
         for edge in self.edges:
             edge._verify()
             assert edge in self.sequence.model.all_edges
+            
+        assert self in self.sequence.subsequences
     
     
     @property
@@ -250,7 +261,10 @@ class LegoSubsequence:
         """
         Obtains the slice of the sequence array pertinent to this subsequence
         """
-        return self.sequence.array[ self.start:self.end + 1 ]
+        if self.sequence.array:
+            return self.sequence.array[ self.start:self.end + 1 ]
+        else:
+            return None
     
     
     @property
@@ -262,6 +276,8 @@ class LegoSubsequence:
     
     
     def destroy( self ):
+        print("DESTROYING SUBSEQUENCE '{}'".format(self))
+        
         for edge in list( self.edges ):
             edge.unlink( self )
         
@@ -278,8 +294,6 @@ class LegoSubsequence:
     
     def inherit( self, original: "LegoSubsequence" ):
         assert original != self
-        
-        print( "{} INHERITS {}".format( self, original ) )
         
         for edge in original.edges:
             edge.link( edge.position( original ), self )
@@ -340,6 +354,9 @@ class LegoSequence:
         self.source_info = set()
         
     def _verify_deconvoluted(self):
+        if not VERIFY:
+            return
+        
         if self.subsequences[0].start!=1:
             raise ImplementationError("The first subsequence '{}' in sequence '{}' is not at the start.".format(self.subsequences[0],self))
 
@@ -399,18 +416,13 @@ class LegoSequence:
         
         self.subsequences.extend( to_add )
         self.subsequences = sorted( self.subsequences, key = lambda x: x.start )
-        
-        if self.array is None:
-            self.array = "?" * self.length
     
     
     def _deconvolute( self ):
-        print( "DECONVOLUTION {} BEGINS".format( self ) )
         while self.__deoverlap_subsequence():
             pass
         
         self.__complete_subsequences()
-        print( "DECONVOLUTION {} ENDS".format( self ) )
     
     
     def __deoverlap_subsequence( self ):
@@ -422,7 +434,7 @@ class LegoSequence:
                 if not (b.start <= a.end and b.end >= a.start):
                     continue
                 
-                print( "DEOVERLAPPING {} AND {}".format( a, b ) )
+                print( "DEOVERLAP '{}' AND '{}'".format( a, b ) )
                 
                 # They overlap
                 if a.start < b.start:
@@ -447,22 +459,20 @@ class LegoSequence:
                 self.subsequences.remove( b )
                 
                 if pos_1 != pos_2:
-                    print( "DEOVERLAPPING LEFT TO {}:{}".format( pos_1, pos_2 - 1 ) )
+                    print( "    [XOO] {}:{}".format( pos_1, pos_2 - 1 ) )
                     new_1 = self._make_subsequence( pos_1, pos_2 - 1 )
                     new_1.inherit( own_1 )
                 
-                print( "DEOVERLAPPING CENTRE TO  {}:{}".format( pos_2, pos_3 ) )
+                print( "    [OXO] {}:{}".format( pos_2, pos_3 ) )
                 new_2 = self._make_subsequence( pos_2, pos_3 )
                 new_2.inherit( a )
                 new_2.inherit( b )
                 
                 if pos_3 != pos_4:
-                    print( "DEOVERLAPPING RIGHT TO  {}:{}".format( pos_3 + 1, pos_4 ) )
+                    print( "    [OOX] {}:{}".format( pos_3 + 1, pos_4 ) )
                     new_3 = self._make_subsequence( pos_3 + 1, pos_4 )
                     new_3.inherit( own_3 )
                 
-                print( "DEOVERLAPPING DESTROYING OLD LEFT '{}'".format( a ) )
-                print( "DEOVERLAPPING DESTROYING OLD RIGHT '{}'".format( b ) )
                 a.destroy()
                 b.destroy()
                 
@@ -728,21 +738,64 @@ class LegoModel:
         sequence._split( split_point )
     
     
-    def remove_sequence( self, x: LegoSequence ):
-        for ss in x.subsequences:
-            x._remove_subsequence( ss )
+    def remove_sequences( self, sequences: List[LegoSequence] ):
+        for sequence in sequences:
+            print("REMOVING SEQUENCE '{}'".format(sequence))
+            
+            for subsequence in list(sequence.subsequences):
+                sequence._remove_subsequence( subsequence )
+            
+            self.sequences.remove( sequence )
         
-        self.sequences.remove( x )
+        self.__deconvolute()
     
     
     def remove_edge( self, edge: LegoEdge ):
         edge.unlink_all()
     
     
-    def remove_subsequence( self, subsequence: LegoSubsequence ):
-        subsequence.sequence.subsequences.remove( subsequence )
-        subsequence.destroy()
+    def merge_subsequences( self, subsequences: List[LegoSubsequence] )->List[LegoSubsequence]:
+        
+        to_do = list(subsequences)
+        results = []
+        
+        while len(to_do) > 0:
+            first = to_do.pop()
+            second = None
+            
+            for potential_second in to_do:
+                if potential_second.sequence is first.sequence:
+                    if potential_second.start == first.end + 1:
+                        to_do.remove(potential_second)
+                        second = potential_second
+                        break
+                    elif first.start == potential_second.end + 1:
+                        to_do.remove(potential_second)
+                        orig_first  =first
+                        first = potential_second
+                        second = orig_first 
+                        break
+                        
+            if second is None:
+                results.append(first)
+                continue
+            
+            sequence = first.sequence#type:LegoSequence
+            combined = LegoSubsequence(sequence, first.start, second.end)
+            
+            combined.inherit(first)
+            first.destroy()
+            combined.inherit(second)
+            second.destroy()
+            
+            sequence.subsequences.remove(first)
+            sequence.subsequences.remove(second)
+            sequence.subsequences.append(combined)
+            
+            to_do.append(combined)
+            
         self.__deconvolute()
+        return results
     
     
     def remove_all_edges( self ):
@@ -847,6 +900,8 @@ class LegoComponent:
     def __connect_to( cls, subsequence: LegoSubsequence, target: set ):
         if subsequence in target:
             return  # Already visited
+        
+        subsequence._verify_deconvoluted()
         
         target.add( subsequence )
         

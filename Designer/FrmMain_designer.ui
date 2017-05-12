@@ -10,6 +10,9 @@
     <height>964</height>
    </rect>
   </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
   <property name="dockOptions">
    <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::VerticalTabs</set>
   </property>
@@ -42,25 +45,20 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
-    <addaction name="ACT_NEW_SEQUENCE"/>
-    <addaction name="ACT_NEW_EDGE"/>
-    <addaction name="ACT_NEW_SPLIT"/>
+    <addaction name="ACT_SELECT_ALL"/>
+    <addaction name="ACT_SELECT_NONE"/>
+    <addaction name="ACT_SELECT_EMPTY"/>
+    <addaction name="ACT_SELECTION_INVERT"/>
     <addaction name="separator"/>
-    <addaction name="ACT_REMOVE_SELECTION"/>
-    <addaction name="ACT_REMOVE_SEQUENCE"/>
-    <addaction name="ACT_REMOVE_EDGE"/>
-    <addaction name="ACT_REMOVE_SPLIT"/>
-    <addaction name="separator"/>
+    <addaction name="ACT_NEW_ENTITY"/>
+    <addaction name="ACT_DELETE_ENTITY"/>
    </widget>
    <widget class="QMenu" name="menu_Model">
     <property name="title">
      <string>&amp;Model</string>
     </property>
     <addaction name="ACT_MODEL_QUANTISE"/>
-    <addaction name="ACT_REMOVE_ALL_EDGES"/>
     <addaction name="ACT_COMPONENT_COMPARTMENTALISE"/>
-    <addaction name="separator"/>
-    <addaction name="ACT_ARRAY_ALIGN"/>
     <addaction name="ACT_ARRAY_TREE"/>
     <addaction name="ACT_ARRAY_FUSE"/>
    </widget>
@@ -87,26 +85,26 @@
     <addaction name="ACT_WINDOW_COLOURS"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menu_View">
-    <property name="title">
-     <string>&amp;View</string>
-    </property>
-    <addaction name="ACT_DETAILS_SEQUENCE"/>
-    <addaction name="ACT_DETAILS_EDGE"/>
-    <addaction name="ACT_DETAILS_SPLIT"/>
-    <addaction name="ACT_DETAILS_SELECTION"/>
-   </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>&amp;Help</string>
     </property>
     <addaction name="ACT_HELP_KEYS"/>
    </widget>
+   <widget class="QMenu" name="menu_Mode">
+    <property name="title">
+     <string>&amp;Mode</string>
+    </property>
+    <addaction name="ACT_SELECT_COMPONENT"/>
+    <addaction name="ACT_SELECT_SEQUENCE"/>
+    <addaction name="ACT_SELECT_SUBSEQUENCE"/>
+    <addaction name="ACT_SELECT_EDGE"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Mode"/>
    <addaction name="menu_Edit"/>
    <addaction name="menu_Model"/>
    <addaction name="menu_Colouring"/>
-   <addaction name="menu_View"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget_2">
@@ -305,181 +303,6 @@
          <widget class="QCheckBox" name="CHK_VIEW_COMPONENTS">
           <property name="text">
            <string>Connected components</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidget_4">
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
-   <property name="windowTitle">
-    <string>Data</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QGridLayout" name="gridLayout_5">
-     <item row="0" column="0">
-      <widget class="QGroupBox" name="groupBox_13">
-       <property name="title">
-        <string>Explore</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_7">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <item row="1" column="0">
-         <widget class="QComboBox" name="LST_COMPONENTS">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="statusTip">
-           <string>Sequence views</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QComboBox" name="LST_SEQUENCES">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="statusTip">
-           <string>Sequence views</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QToolButton" name="BTN_SELECT_SEQUENCE">
-          <property name="statusTip">
-           <string>View specified sequence</string>
-          </property>
-          <property name="text">
-           <string>Select</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/select.svg</normaloff>:/Images/Resources/select.svg</iconset>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QComboBox" name="LST_SUBSEQUENCES">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="statusTip">
-           <string>Subsequence views</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QToolButton" name="BTN_SELECT_SUBSEQUENCE">
-          <property name="statusTip">
-           <string>View specified sequence</string>
-          </property>
-          <property name="text">
-           <string>Select</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/select.svg</normaloff>:/Images/Resources/select.svg</iconset>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QComboBox" name="LST_EDGES">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="statusTip">
-           <string>Edge views</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QToolButton" name="BTN_SELECT_EDGE">
-          <property name="statusTip">
-           <string>View specified sequence</string>
-          </property>
-          <property name="text">
-           <string>Select</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/select.svg</normaloff>:/Images/Resources/select.svg</iconset>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Subsequence</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Sequence</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Edge</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Component</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QToolButton" name="BTN_SELECT_COMPONENT">
-          <property name="statusTip">
-           <string>View specified sequence</string>
-          </property>
-          <property name="text">
-           <string>Select</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/select.svg</normaloff>:/Images/Resources/select.svg</iconset>
           </property>
          </widget>
         </item>
@@ -803,762 +626,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_7">
-   <property name="floating">
-    <bool>false</bool>
-   </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
-   <property name="windowTitle">
-    <string>Manipulate</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_7">
-    <layout class="QGridLayout" name="gridLayout_9">
-     <item row="2" column="1">
-      <widget class="QGroupBox" name="groupBox_6">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Details</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_8">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_DETAILS_SPLIT_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>View specified split</string>
-          </property>
-          <property name="text">
-           <string>Edge</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_DETAILS_EDGE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>View specified edge</string>
-          </property>
-          <property name="text">
-           <string>Subseq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_DETAILS_SEQUENCE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>View specified sequence</string>
-          </property>
-          <property name="text">
-           <string>Seq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="2" column="4">
-      <widget class="QGroupBox" name="groupBox_8">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Remove</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_11">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_REMOVE_EDGE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Remove edge</string>
-          </property>
-          <property name="text">
-           <string>Edge</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_REMOVE_SPLIT_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Remove (merge) splits</string>
-          </property>
-          <property name="text">
-           <string>Subseq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_REMOVE_SEQUENCE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Remove sequence</string>
-          </property>
-          <property name="text">
-           <string>Seq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="2" column="3">
-      <widget class="QGroupBox" name="groupBox_5">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Array</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_10">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_ARRAY_ALIGN_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Quantise model data</string>
-          </property>
-          <property name="text">
-           <string>Align</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/align.svg</normaloff>:/Images/Resources/align.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_ARRAY_FUSE_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Quantise model data</string>
-          </property>
-          <property name="text">
-           <string>Fuse</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/fuse.svg</normaloff>:/Images/Resources/fuse.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_ARRAY_TREE_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Quantise model data</string>
-          </property>
-          <property name="text">
-           <string>Tree</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QGroupBox" name="groupBox_15">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Data</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_COMPARTMENTALISE_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Quantise model data</string>
-          </property>
-          <property name="text">
-           <string>Compart.</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/compartmentalise.svg</normaloff>:/Images/Resources/compartmentalise.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_DATA_QUANTISE_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Quantise model data</string>
-          </property>
-          <property name="text">
-           <string>Quantise</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/quantise.svg</normaloff>:/Images/Resources/quantise.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_DATA_IMPORT_">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Import data into model</string>
-          </property>
-          <property name="text">
-           <string>Import</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/import-file.svg</normaloff>:/Images/Resources/import-file.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QGroupBox" name="groupBox_4">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Model</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_MODEL_SAVE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Save model</string>
-          </property>
-          <property name="text">
-           <string>Save</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/save-file.svg</normaloff>:/Images/Resources/save-file.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_MODEL_OPEN_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Open model</string>
-          </property>
-          <property name="text">
-           <string>Open</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/open-file.svg</normaloff>:/Images/Resources/open-file.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_MODEL_NEW_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>New model</string>
-          </property>
-          <property name="text">
-           <string>New</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/new-file.svg</normaloff>:/Images/Resources/new-file.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="1" column="4">
-      <widget class="QGroupBox" name="groupBox_7">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>New</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_7">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QToolButton" name="BTN_NEW_EDGE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>New edge</string>
-          </property>
-          <property name="text">
-           <string>Edge</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_NEW_SPLIT_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>New split</string>
-          </property>
-          <property name="text">
-           <string>Subseq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="BTN_NEW_SEQUENCE_">
-          <property name="minimumSize">
-           <size>
-            <width>64</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>64</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>New sequence</string>
-          </property>
-          <property name="text">
-           <string>Seq</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources.qrc">
-            <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextUnderIcon</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <widget class="QDockWidget" name="DOCK_COLOURS">
    <property name="enabled">
     <bool>true</bool>
@@ -1594,9 +661,6 @@
         </property>
         <property name="horizontalSpacing">
          <number>12</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>0</number>
         </property>
         <item row="0" column="0">
          <widget class="QPushButton" name="BTN_COL_RED_">
@@ -3342,11 +2406,16 @@
             <height>32</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="statusTip">
            <string>Randomise colours</string>
           </property>
           <property name="text">
-           <string>?</string>
+           <string>RAND</string>
           </property>
           <property name="flat">
            <bool>false</bool>
@@ -3361,11 +2430,16 @@
             <height>32</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="statusTip">
            <string>Reset colour</string>
           </property>
           <property name="text">
-           <string>-</string>
+           <string>DEFA</string>
           </property>
           <property name="flat">
            <bool>false</bool>
@@ -5116,11 +4190,16 @@
             <height>32</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="statusTip">
            <string>Custom colour</string>
           </property>
           <property name="text">
-           <string>...</string>
+           <string>MORE</string>
           </property>
           <property name="flat">
            <bool>false</bool>
@@ -5135,8 +4214,13 @@
             <height>32</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
           <property name="text">
-           <string>/2</string>
+           <string>DARK</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -5146,80 +4230,7 @@
           </property>
          </widget>
         </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Apply to</string>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QRadioButton" name="RAD_COL_CONNECTED">
-          <property name="statusTip">
-           <string>Apply to selection and connected items</string>
-          </property>
-          <property name="text">
-           <string>Connected</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="RAD_COL_ALL">
-          <property name="statusTip">
-           <string>Apply to all</string>
-          </property>
-          <property name="text">
-           <string>All</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="RAD_COL_SELECTION">
-          <property name="statusTip">
-           <string>Apply to selected item</string>
-          </property>
-          <property name="text">
-           <string>Selection</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_10">
-       <property name="title">
-        <string>Options</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_9">
-        <item>
-         <widget class="QCheckBox" name="CHK_COL_BLEND">
-          <property name="statusTip">
-           <string>Blend the new colour with the existing one</string>
-          </property>
-          <property name="text">
-           <string>Blending</string>
-          </property>
-         </widget>
-        </item>
-        <item>
+        <item row="2" column="1" colspan="5">
          <widget class="QSlider" name="SLI_BLEND">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -5233,6 +4244,12 @@
           <property name="minimum">
            <number>1</number>
           </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="value">
+           <number>100</number>
+          </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -5244,8 +4261,223 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="font">
+           <font>
+            <pointsize>7</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>ALFA</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget_6">
+   <property name="styleSheet">
+    <string notr="true">QToolButton { border:0px; background: transparent; } QToolButton::checked { background: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.302704, fy:0.267045, stop:0 rgba(0, 255, 255, 255), stop:1 rgba(0, 0, 0, 0)); }</string>
+   </property>
+   <property name="windowTitle">
+    <string>Edit mode</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>4</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_8">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SEL_COMPONENT_">
+       <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>128</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="statusTip">
+        <string>Remove sequence</string>
+       </property>
+       <property name="text">
+        <string>Component</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/Images/Resources/compartmentalise.svg</normaloff>:/Images/Resources/compartmentalise.svg</iconset>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SEL_SEQUENCE_">
+       <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>128</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="statusTip">
+        <string>Remove sequence</string>
+       </property>
+       <property name="text">
+        <string>Sequence</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SEL_SUBSEQUENCE_">
+       <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>128</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="statusTip">
+        <string>Remove (merge) splits</string>
+       </property>
+       <property name="text">
+        <string>Subsequence</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SEL_EDGE_">
+       <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>128</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="statusTip">
+        <string>Remove edge</string>
+       </property>
+       <property name="text">
+        <string>Edge</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources.qrc">
+         <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </widget>
@@ -5300,7 +4532,8 @@
      <item row="1" column="0" colspan="2">
       <widget class="QTextEdit" name="TXT_VIEW">
        <property name="styleSheet">
-        <string notr="true">background: black;</string>
+        <string notr="true">background-color: black;
+color: white;</string>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -5310,7 +4543,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.SF NS Text'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Please load some data first!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -5423,7 +4656,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_REMOVE_SEQUENCE">
    <property name="text">
-    <string>Remove sequence</string>
+    <string>Delete sequence</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+S</string>
@@ -5431,7 +4664,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_REMOVE_EDGE">
    <property name="text">
-    <string>Remove edge</string>
+    <string>Delete edge</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+E</string>
@@ -5439,7 +4672,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_REMOVE_SPLIT">
    <property name="text">
-    <string>Remove split</string>
+    <string>Delete (merge) subsequence</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+C</string>
@@ -5629,7 +4862,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_REMOVE_SELECTION">
    <property name="text">
-    <string>Remove selection</string>
+    <string>Delete selection</string>
    </property>
    <property name="shortcut">
     <string>Del</string>
@@ -5677,15 +4910,6 @@ p, li { white-space: pre-wrap; }
     <string>&amp;Compartmentalise</string>
    </property>
   </action>
-  <action name="ACT_ARRAY_ALIGN">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/align.svg</normaloff>:/Images/Resources/align.svg</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Align</string>
-   </property>
-  </action>
   <action name="ACT_ARRAY_TREE">
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -5702,6 +4926,71 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>&amp;Fuse trees</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_ALL">
+   <property name="text">
+    <string>Select &amp;all</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_NONE">
+   <property name="text">
+    <string>Select &amp;none</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_EMPTY">
+   <property name="text">
+    <string>Select &amp;empty</string>
+   </property>
+  </action>
+  <action name="ACT_SELECTION_INVERT">
+   <property name="text">
+    <string>&amp;Invert selection</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_SEQUENCE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Sequence</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_SUBSEQUENCE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Subsequence</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_EDGE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Edge</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_COMPONENT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Component</string>
+   </property>
+  </action>
+  <action name="ACT_NEW_ENTITY">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="ACT_DELETE_ENTITY">
+   <property name="text">
+    <string>Delete</string>
    </property>
   </action>
  </widget>
@@ -5886,14 +5175,14 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
   <connection>
-   <sender>BTN_DATA_IMPORT_</sender>
+   <sender>BTN_SEL_COMPONENT_</sender>
    <signal>clicked()</signal>
-   <receiver>ACT_MODEL_IMPORT</receiver>
+   <receiver>ACT_SELECT_COMPONENT</receiver>
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>238</x>
-     <y>844</y>
+     <x>479</x>
+     <y>61</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -5902,14 +5191,14 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
   <connection>
-   <sender>BTN_COMPARTMENTALISE_</sender>
+   <sender>BTN_SEL_EDGE_</sender>
    <signal>clicked()</signal>
-   <receiver>ACT_COMPONENT_COMPARTMENTALISE</receiver>
+   <receiver>ACT_SELECT_EDGE</receiver>
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>389</x>
-     <y>844</y>
+     <x>863</x>
+     <y>61</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -5918,14 +5207,14 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
   <connection>
-   <sender>BTN_DATA_QUANTISE_</sender>
+   <sender>BTN_SEL_SEQUENCE_</sender>
    <signal>clicked()</signal>
-   <receiver>ACT_MODEL_QUANTISE</receiver>
+   <receiver>ACT_SELECT_SEQUENCE</receiver>
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>300</x>
-     <y>844</y>
+     <x>607</x>
+     <y>61</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -5934,190 +5223,14 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
   <connection>
-   <sender>BTN_DETAILS_SEQUENCE_</sender>
+   <sender>BTN_SEL_SUBSEQUENCE_</sender>
    <signal>clicked()</signal>
-   <receiver>ACT_DETAILS_SEQUENCE</receiver>
+   <receiver>ACT_SELECT_SUBSEQUENCE</receiver>
    <slot>trigger()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>905</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_DETAILS_EDGE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_DETAILS_EDGE</receiver>
-   <slot>toggle()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>108</x>
-     <y>905</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_DETAILS_SPLIT_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_DETAILS_SPLIT</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>166</x>
-     <y>905</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_MODEL_NEW_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_MODEL_NEW</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>63</x>
-     <y>810</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_MODEL_OPEN_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_MODEL_OPEN</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>111</x>
-     <y>810</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_MODEL_SAVE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_MODEL_SAVE</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>160</x>
-     <y>810</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_NEW_SEQUENCE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_NEW_SEQUENCE</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>481</x>
-     <y>810</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_REMOVE_SEQUENCE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_REMOVE_SEQUENCE</receiver>
-   <slot>toggle()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>481</x>
-     <y>905</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_REMOVE_SPLIT_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_REMOVE_SPLIT</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>533</x>
-     <y>905</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_ARRAY_ALIGN_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_ARRAY_ALIGN</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>554</x>
-     <y>895</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_ARRAY_FUSE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_ARRAY_FUSE</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>804</x>
-     <y>895</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BTN_ARRAY_TREE_</sender>
-   <signal>clicked()</signal>
-   <receiver>ACT_ARRAY_TREE</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>679</x>
-     <y>895</y>
+     <x>735</x>
+     <y>61</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

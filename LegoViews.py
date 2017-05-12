@@ -5,11 +5,11 @@ Classes that manage the view of the model.
 """
 from enum import Enum
 from random import randint
-from typing import List, Optional, Set, Tuple, Union, Any
+from typing import List, Optional, Set, Tuple, Union, Any, Iterable
 
 from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget, QGraphicsView
 
 from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoComponent
 from MHelper import ArrayHelper, QtColourHelper
@@ -21,14 +21,40 @@ from MHelper.QtColourHelper import Colours, Pens
 class ESequenceColour( Enum ):
     RESET = 1
     RANDOM = 2
-
-
-class EApply( Enum ):
-    ONE = 1
-    ALL = 2
-    EDGES = 3
     
+class EMode(Enum):
+    SEQUENCE=0
+    SUBSEQUENCE=1
+    EDGE=2
+    COMPONENT=3
 
+
+class ESelect( Enum ):
+    """
+    Selection mode
+    """
+    ONLY = 1
+    """Only select this item (i.e. clear before select)"""
+    
+    APPEND = 2
+    """Add this item from the current selection"""
+    
+    REMOVE = 3
+    """Remove this item from the current selection"""
+    
+    TOGGLE = 4
+    """Toggle this items selected status"""
+    
+    
+    def set( self, item: QGraphicsItem ):
+        if self == ESelect.ONLY or self == ESelect.APPEND:
+            item.setSelected( True )
+        elif self == ESelect.REMOVE:
+            item.setSelected( False )
+        elif self == ESelect.TOGGLE:
+            item.setSelected( not item.isSelected() )
+        else:
+            raise SwitchError( "eselect", self )
 
 
 # Order of proteins in piano roll
@@ -65,7 +91,7 @@ SNAP_LINE.setWidth( 3 )
 SNAP_LINE.setStyle( Qt.DotLine )
 SNAP_LINE_2 = QPen( QColor( 0, 0, 128 ) )
 SNAP_LINE_2.setWidth( 3 )
-NO_SEQUENCE_LINE = QPen( QColor( 0, 0, 0 ) )
+NO_SEQUENCE_LINE = QPen( QColor( 255, 0, 0 ) )
 NO_SEQUENCE_LINE.setStyle( Qt.DashLine )
 NO_SEQUENE_BACKWARDS_LINE = QPen( QColor( 255, 0, 0 ) )
 NO_SEQUENE_BACKWARDS_LINE.setStyle( Qt.DashLine )
@@ -88,12 +114,13 @@ class LegoViewOptions:
         self.toggle_selection = False  # type:bool
         self.y_snap = True  # type:bool
         self.x_snap = True  # type:bool
-        self.colour_apply = EApply.EDGES  # type:EApply
         self.view_edges = True  # type:Optional[bool]
         self.view_piano_roll = None  # type:Optional[bool]
         self.view_names = True  # type:Optional[bool]
         self.view_positions = None  # type:Optional[bool]
         self.view_component = True  # type:bool
+        self.mode = EMode.SEQUENCE
+        self.move_enabled = False
 
 
 class ColourBlock:
@@ -214,10 +241,10 @@ class LegoEdgeView:
         destination = [ ]  # type:List[LegoViewSubsequence]
         
         for x in edge.source:
-            source.append( owner.owner.view_model.find_ui_element( x ) )
+            source.append( owner.owner.view_model.find_subsequence_view( x ) )
         
         for x in edge.destination:
-            destination.append( owner.owner.view_model.find_ui_element( x ) )
+            destination.append( owner.owner.view_model.find_subsequence_view( x ) )
         
         return LegoEdgeView( owner, LegoEdgeViewTarget( source ), LegoEdgeViewTarget( destination ) )
     
@@ -257,7 +284,7 @@ class LegoViewComponent:
     
     
     def __init__( self, owner: "LegoViewAllEdges", component: LegoComponent ):
-        subsequence_views = [ owner.view_model.find_ui_element( x ) for x in component.all_subsequences() ]
+        subsequence_views = [ owner.view_model.find_subsequence_view( x ) for x in component.all_subsequences() ]
         
         self.owner = owner
         self.component = component
@@ -289,7 +316,7 @@ class LegoViewComponent:
             self.edge_views.append( edge_view )
         
         for line in component.lines:
-            self.line_view_targets.append( LegoEdgeViewTarget( [ owner.view_model.find_ui_element( x ) for x in line ] ) )
+            self.line_view_targets.append( LegoEdgeViewTarget( [ owner.view_model.find_subsequence_view( x ) for x in line ] ) )
     
     
     def paint( self, painter: QPainter ):
@@ -368,11 +395,20 @@ class LegoViewSubsequence( QGraphicsItem ):
         """
         Paint subsequence
         """
+        r = self.rect
         painter.setBrush( self.colour.brush )
         painter.setPen( SELECTION_LINE if self.isSelected() else self.colour.pen )
-        painter.drawRect( self.rect )
+        painter.drawRect( r )
+        
+        if self.options.move_enabled:
+            painter.drawLine( r.left()-8, r.top(), r.right()+8, r.top() )
+            painter.drawLine( r.left()-8, r.bottom(), r.right()+8, r.bottom() )
+            painter.drawLine( r.left(), r.top()-8, r.left(), r.bottom()+8 )
+            painter.drawLine( r.right(), r.top()-8, r.right(), r.bottom()+8 )
         
         draw_piano_roll = self.options.view_piano_roll
+        
+        
         
         if draw_piano_roll is None:
             draw_piano_roll = self.isSelected()
@@ -381,14 +417,23 @@ class LegoViewSubsequence( QGraphicsItem ):
             painter.setPen( Qt.NoPen )
             painter.setBrush( PROTEIN_BG )
             OFFX = SIZE_MULTIPLIER
-            painter.drawRect( 0, OFFX, self.rect.width(), len( PROTEIN_TABLE ) * SIZE_MULTIPLIER )
+            rw = self.rect.width()
+            rh = len( PROTEIN_TABLE ) * SIZE_MULTIPLIER
+            painter.drawRect( 0, OFFX, rw, rh )
             
-            for i, c in enumerate( self.subsequence.array ):
-                pos = PROTEIN_TABLE.get( c )
-                
-                if pos is not None:
-                    painter.setPen( PROT_COLOURS.get( c, PROTEIN_DEFAULT_FG ) )
-                    painter.drawEllipse( i * SIZE_MULTIPLIER, pos * SIZE_MULTIPLIER + OFFX, SIZE_MULTIPLIER, SIZE_MULTIPLIER )
+            array = self.subsequence.array
+            
+            if not array:
+                painter.setPen( Pens.RED )
+                painter.drawLine( 0, 0, rw, rh )
+                painter.drawLine( 0, rh, rw, 0 )
+            else:
+                for i, c in enumerate( array ):
+                    pos = PROTEIN_TABLE.get( c )
+                    
+                    if pos is not None:
+                        painter.setPen( PROT_COLOURS.get( c, PROTEIN_DEFAULT_FG ) )
+                        painter.drawEllipse( i * SIZE_MULTIPLIER, pos * SIZE_MULTIPLIER + OFFX, SIZE_MULTIPLIER, SIZE_MULTIPLIER )
         
         if self.mousemove_snapline:
             x = self.mousemove_snapline[ 0 ] - self.pos().x()
@@ -495,7 +540,7 @@ class LegoViewSubsequence( QGraphicsItem ):
                 item.mousedown_original_pos = item.pos()
             
             enable_toggle_selection = not self.options.toggle_selection == (bool( (m.modifiers() & Qt.ControlModifier) or (m.modifiers() & Qt.MetaModifier) ))
-            enable_full_sequence = not bool( m.modifiers() & Qt.AltModifier )
+            
             
             if not enable_toggle_selection:
                 if self.isSelected():
@@ -505,27 +550,28 @@ class LegoViewSubsequence( QGraphicsItem ):
             
             status = not self.isSelected()
             
-            if enable_full_sequence:
+            mode = self.options.mode
+            
+            if mode == EMode.SEQUENCE:
                 for x in self.owner_sequence_view.subsequence_views:
                     x.setSelected( status )
-            
-            else:
+            elif mode == EMode.SUBSEQUENCE:
                 self.setSelected( status )
+            elif mode == EMode.EDGE:
+                for x in self.edge_subsequence_views:
+                    x.setSelected(status)
+            elif mode == EMode.COMPONENT:
+                for x in self.component.subsequence_views:
+                    x.setSelected(status)
+                    
             
             m.accept()
+            self.owner_model_view._call_selection_changed()
     
     
-    # def mouseDoubleClickEvent(self, m:QGraphicsSceneMouseEvent):
-    #     s= self.isSelected()
-    #     
-    #     if m.modifiers() & Qt.AltModifier:
-    #         for x in self.edge_subsequence_views:
-    #             x.setSelected(s)
-    #     else:
-    #         for x in self.owner_sequence_view.subsequence_views:
-    #             x.setSelected(s)
-    #         
-    #     m.accept()
+    def mouseDoubleClickEvent(self, m:QGraphicsSceneMouseEvent):
+        self.options.move_enabled = not self.options.move_enabled 
+        self.owner_model_view.scene.update()
     
     def focusInEvent( self, QFocusEvent ):
         self.setZValue( Z_FOCUS )
@@ -547,7 +593,7 @@ class LegoViewSubsequence( QGraphicsItem ):
     
     def mouseMoveEvent( self, m: QGraphicsSceneMouseEvent ):
         if m.buttons() & Qt.LeftButton:
-            if self.mousedown_original_pos is None:
+            if not self.options.move_enabled or self.mousedown_original_pos is None:
                 return
             
             new_pos = self.mousedown_original_pos + (m.scenePos() - m.buttonDownScenePos( Qt.LeftButton ))  # type:QPointF
@@ -607,10 +653,7 @@ class LegoViewSubsequence( QGraphicsItem ):
         if new_colour is None:
             return
         
-        all = (self.options.colour_apply == EApply.ALL) == (not bool( e.modifiers() & Qt.AltModifier ))
-        one = (self.options.colour_apply == EApply.ONE) == (not bool( e.modifiers() & Qt.ShiftModifier ))
-        
-        self.owner_model_view.change_colours( new_colour, EApply.ALL if all else EApply.ONE if one else EApply.EDGES )
+        self.owner_model_view.change_colours( new_colour )
 
 
 class LegoViewSequence:
@@ -635,6 +678,8 @@ class LegoViewSequence:
         # Remove existing items
         for x in self.subsequence_views:
             self.owner_model_view.scene.removeItem( x )
+            
+        self.subsequence_views.clear()
         
         # Add new items
         previous_subsequence = None
@@ -673,10 +718,12 @@ class LegoViewAllEdges( QGraphicsItem ):
                 
                 if r.bottom() > self.rect.bottom():
                     self.rect.setBottom( r.bottom() )
+                    
+                subsequence_view.edge_subsequence_views.clear()
                 
                 for edge in subsequence_view.subsequence.edges:
                     for subsequence in edge.opposite( subsequence_view.subsequence ):
-                        subsequence_view.edge_subsequence_views.append( self.view_model.find_ui_element( subsequence ) )
+                        subsequence_view.edge_subsequence_views.append( self.view_model.find_subsequence_view( subsequence ) )
         
         MARGIN = 256
         self.rect.setTop( self.rect.top() - MARGIN * 2 )
@@ -747,7 +794,9 @@ class LegoViewAllEdges( QGraphicsItem ):
 
 
 class LegoViewModel:
-    def __init__( self, focus_notification, model: LegoModel ):
+    def __init__( self, selection_changed_handler, view: QGraphicsView, focus_notification, model: LegoModel ):
+        self.__selection_changed_handler = selection_changed_handler
+        self.view = view
         self.model = model
         self.scene = QGraphicsScene()
         self.sequence_views = [ ]  # type: List[LegoViewSequence]
@@ -758,24 +807,37 @@ class LegoViewModel:
             item = LegoViewSequence( self, sequence )
             self.sequence_views.append( item )
         
-        self.edges_view = LegoViewAllEdges( self )
+        self.edges_view = self.update_edges()
         self.scene.addItem( self.edges_view )
         
         self.options = LegoViewOptions()
     
     
-    def update_edges( self ):
+    def _call_selection_changed( self ):
+        """
+        Calls the selection changed handler
+        We do this manually because the native Qt signal handler is raised for every slight change, and slows things down.
+        """
+        self.__selection_changed_handler()
+    
+    
+    def update_edges( self ) -> LegoViewAllEdges:
         if self.edges_view:
-            self.edges_view.update()
+            self.scene.removeItem(self.edges_view)
+            
+        self.edges_view = LegoViewAllEdges( self )
+        self.scene.addItem( self.edges_view )
+        return self.edges_view
+            
     
     
     def selected_subsequence_views( self ) -> List[ LegoViewSubsequence ]:
         r = [ ]
         
-        for x in self.sequence_views:
-            for y in x.subsequence_views:
-                if y.isSelected():
-                    r.append( y )
+        for sequence_view in self.sequence_views:
+            for subsequence_view in sequence_view.subsequence_views:
+                if subsequence_view.isSelected():
+                    r.append( subsequence_view )
         
         return r
     
@@ -850,28 +912,8 @@ class LegoViewModel:
         return self.selected_subsequence() or self.selected_edge()
     
     
-    def change_colours( self, new_colour: Union[ QColor, ESequenceColour ], apply_colour: EApply = None ):
-        if apply_colour is None:
-            apply_colour = self.options.colour_apply
-        
-        the_list = [ ]
-        
-        if apply_colour == EApply.ALL:
-            for x in self.sequence_views:
-                the_list.extend( x.subsequence_views )
-        elif apply_colour == EApply.EDGES:
-            for x in self.sequence_views:
-                for y in x.subsequence_views:
-                    if y.isSelected():
-                        the_list.append( y )
-                        the_list.extend( y.edge_subsequence_views )
-        elif apply_colour == EApply.ONE:
-            for x in self.sequence_views:
-                for y in x.subsequence_views:
-                    if y.isSelected():
-                        the_list.append( y )
-        else:
-            raise SwitchError( "apply_colour", apply_colour )
+    def change_colours( self, new_colour: Union[ QColor, ESequenceColour ] ):
+        the_list = self.selected_subsequence_views()
         
         if isinstance( new_colour, QColor ):
             the_colour = ColourBlock( new_colour )
@@ -897,15 +939,22 @@ class LegoViewModel:
         self.recreate_edges()
     
     
-    def recreate_sequence( self, sequence: LegoSequence ):
-        for x in self.sequence_views:
-            if x.sequence == sequence:
-                x._recreate()
+    def recreate_sequences( self, sequences: Iterable[LegoSequence] ):
+        to_do = set(sequences)
+        
+        for sequence in self.sequence_views:
+            if sequence.sequence in to_do:
+                sequence._recreate()
+                to_do.remove(sequence.sequence)
+                
+        for sequence in to_do:
+            self.add_new_sequence(sequence)
         
         self.recreate_edges()
+        self._call_selection_changed()
     
     
-    def find_ui_element( self, target: LegoSubsequence ) -> LegoViewSubsequence:
+    def find_subsequence_view( self, target: LegoSubsequence ) -> LegoViewSubsequence:
         for sequence_view in self.sequence_views:
             for subsequence_view in sequence_view.subsequence_views:
                 if subsequence_view.subsequence == target:
@@ -920,8 +969,17 @@ class LegoViewModel:
         self.scene.addItem( self.edges_view )
     
     
-    def remove_sequence( self, x ):
-        pass
+    def remove_sequences( self, sequences:List[LegoSequence] ):
+        for sequence in sequences:
+            sequence_view = self.find_sequence_view(sequence)
+            
+            for subsequence_view in sequence_view.subsequence_views:
+                self.scene.removeItem(subsequence_view)
+            
+            self.sequence_views.remove(sequence_view)
+            
+        self.update_edges()
+        self._call_selection_changed()
     
     
     def select( self, subsequences: List[ LegoSubsequence ] ):
@@ -935,7 +993,94 @@ class LegoViewModel:
             x.setSelected( False )
         
         for x in subsequences:
-            self.find_ui_element( x ).setSelected( True )
+            self.find_subsequence_view( x ).setSelected( True )
+        
+        self._call_selection_changed()
+    
+    
+    @property
+    def subsequence_views( self ):
+        return [ y for x in self.sequence_views for y in x.subsequence_views ]
+    
+    
+    def __clear_selection( self ):
+        """
+        Internal function (externally just use `select_all(ESelect.REMOVE)`, which calls the handler)
+        """
+        for x in self.subsequence_views:
+            x.setSelected( False )
+    
+    
+    class __selection:
+        def __init__( self, owner: "LegoViewModel" ):
+            self.view = owner.view
+            self.original_updates = None
+            self.original_signals = None
+        
+        
+        def __enter__( self ):
+            self.original_updates = self.view.updatesEnabled()
+            self.original_signals = self.view.signalsBlocked()
+            self.view.setUpdatesEnabled( False )
+            self.view.blockSignals( True )
+        
+        
+        def __exit__( self, exc_type, exc_val, exc_tb ):
+            self.view.setUpdatesEnabled( self.original_updates )
+            self.view.blockSignals( self.original_signals )
+    
+    
+    def select_all( self, select: ESelect = ESelect.ONLY ):
+        with self.__selection( self ):
+            for i, x in enumerate( self.subsequence_views ):
+                select.set( x )
+    
+    
+    def select_empty( self, select: ESelect = ESelect.ONLY ):
+        self.__clear_selection()
+        
+        for x in self.sequence_views:
+            if x.sequence.array is None:
+                for y in x.subsequence_views:
+                    select.set( y )
+        
+        self._call_selection_changed()
+    
+    
+    def select_component( self, component: LegoComponent, select: ESelect = ESelect.ONLY ):
+        ss = component.all_subsequences()
+        
+        for x in self.subsequence_views:
+            if x in ss:
+                select.set( x )
+        
+        self._call_selection_changed()
+    
+    
+    def find_sequence_view( self, sequence: LegoSequence ) -> LegoViewSequence:
+        for x in self.sequence_views:
+            if x.sequence is sequence:
+                return x
+        
+        raise KeyError( "sequence '{}' has no view.".format( sequence ) )
+    
+    
+    def select_sequence( self, sequence: LegoSequence, select: ESelect = ESelect.ONLY ):
+        self.__clear_selection()
+        
+        for x in self.find_sequence_view( sequence ).subsequence_views:
+            select.set( x )
+        
+        self._call_selection_changed()
+    
+    
+    def select_subsequence( self, subsequence: LegoSubsequence, select: ESelect = ESelect.ONLY ):
+        if select == ESelect.ONLY:
+            self.__clear_selection()
+        
+        select.set( self.find_subsequence_view( subsequence ) )
+        
+        self._call_selection_changed()
 
 
 COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),  # R

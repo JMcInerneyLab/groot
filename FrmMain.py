@@ -1,19 +1,16 @@
-import shutil
-from os import system
-import os
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from Bio import Phylo
+from Designer.FrmMain_designer import Ui_MainWindow
 from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy
 
-from Designer.FrmMain_designer import Ui_MainWindow
+import LegoFunctions
+from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from LegoViews import EMode, ESelect, ESequenceColour, LegoViewModel, LegoViewSubsequence, PROT_COLOURS
+from MHelper import IoHelper, QtColourHelper, QtGuiHelper
 from MHelper.ExceptionHelper import SwitchError
-from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoComponent
-from LegoViews import EApply, ESequenceColour, LegoViewModel, LegoViewSubsequence, PROT_COLOURS
-from MHelper import IoHelper, QtGuiHelper, PrintHelper, FileHelper, QtColourHelper, BioHelper
 from MHelper.QtColourHelper import Colours
 from MyView import MyView
 
@@ -37,6 +34,7 @@ class FrmMain( QMainWindow ):
         self.ui = Ui_MainWindow()
         self.ui.setupUi( self )
         self.setWindowTitle( "Lego Model Creator" )
+        self.ui.DOCK_COLOURS.setVisible(False)
         
         # Graphics view
         self.ui.graphicsView = MyView( self.ui.centralwidget )
@@ -55,23 +53,27 @@ class FrmMain( QMainWindow ):
         self.ui.graphicsView.setInteractive( True )
         self.ui.graphicsView.setScene( scene )
         
+        
         # Load our sample model
         self._model = LegoModel()
-        try:
-            # self._model.read_blast("./SampleData/blast.blast")
-            self._model.import_composites( "/Users/martinrusilowicz/work/data/sera/composites/c855817.composites_fixed" )
-            self._model.import_fasta( "/Users/martinrusilowicz/work/data/sera/data.faa" )
-            self._model.remove_all_edges()
-            self._model.import_blast( "/Users/martinrusilowicz/work/data/sera/bbcfta3878.blastp.fixed" )
-        except Exception as ex:
-            PrintHelper.print_exception( ex )
-            exit( 1 )
+        # try:
+        #     #self._model.read_blast("./SampleData/blast.blast")
+        #     # self._model.import_composites( "/Users/martinrusilowicz/work/data/sera/composites/c855817.composites_fixed" )
+        #     # self._model.import_fasta( "/Users/martinrusilowicz/work/data/sera/data.faa" )
+        #     # self._model.remove_all_edges()
+        #     # self._model.import_blast( "/Users/martinrusilowicz/work/data/sera/bbcfta3878.blastp.fixed" )
+        # except Exception as ex:
+        #     PrintHelper.print_exception( ex )
+        #     exit( 1 )
         
         self._view = None  # type:LegoViewModel
         self.refresh_model()
         
         self.statusBar().showMessage( "Press F1 to view keys." )
     
+    def on_scene_selectionChanged( self ):
+        if len(self._view.scene.selectedItems())==0:
+            self.scene_selectionChanged()
     
     def scene_selectionChanged( self ):
         sel = self._view.selected_entity()
@@ -103,11 +105,13 @@ class FrmMain( QMainWindow ):
             self.ui.LBL_VIEW_LEFT.setText( "x {}".format( nsel ) )
             self.ui.LBL_VIEW_RIGHT.setText( "Subsequences" )
         
-        self.ui.TXT_VIEW.setText( "\n".join( str( x ) for x in tsel ) )
+        self.ui.TXT_VIEW.setText( "* "+"\n* ".join( str( x.subsequence ) for x in tsel ) )
     
     
     def colour_fasta( self, array ):
-        # 
+        if not array:
+            return "<b>Missing array data!</b><br/>Have you loaded the FASTA?"
+        
         res = [ ]
         
         for x in array:
@@ -132,36 +136,45 @@ class FrmMain( QMainWindow ):
     
     def refresh_model( self ):
         self.no_update_options = True
-        self._view = LegoViewModel( self.subsequence_view_focus, self._model )
+        # noinspection PyUnresolvedReferences
+        self._view = LegoViewModel( self.scene_selectionChanged, self.ui.graphicsView, self.subsequence_view_focus, self._model )
         # noinspection PyUnresolvedReferences
         self.ui.graphicsView.setScene( self._view.scene )
-        self._view.scene.selectionChanged.connect( self.scene_selectionChanged )  # TODO: Does this need cleanup like in C#?
         
-        
-        
-        self.ui.LST_COMPONENTS.clear()
-        self.ui.LST_COMPONENTS.addItem("(ALL)", None)
-        
-        for x in self._model.components: 
-            self.ui.LST_COMPONENTS.addItem( str(x), x)
+        self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged )  # TODO: Does this need cleanup like in C#?
         
         o = self._view.options
         self.ui.CHK_MOVE_XSNAP.setChecked( o.x_snap )
         self.ui.CHK_MOVE_YSNAP.setChecked( o.y_snap )
-        self.ui.RAD_COL_CONNECTED.setChecked( o.colour_apply == EApply.EDGES )
-        self.ui.RAD_COL_ALL.setChecked( o.colour_apply == EApply.ALL )
-        self.ui.RAD_COL_SELECTION.setChecked( o.colour_apply == EApply.ONE )
-        self.ui.CHK_COL_BLEND.setChecked( o.colour_blend != 1 )
         self.ui.SLI_BLEND.setValue( o.colour_blend * 100 )
-        self.ui.SLI_BLEND.setVisible( self.ui.CHK_COL_BLEND.isChecked() )
         self.ui.CHK_VIEW_EDGES.setCheckState( QtGuiHelper.to_check_state( o.view_edges ) )
         self.ui.CHK_VIEW_NAMES.setCheckState( QtGuiHelper.to_check_state( o.view_names ) )
         self.ui.CHK_VIEW_PIANO_ROLLS.setCheckState( QtGuiHelper.to_check_state( o.view_piano_roll ) )
         self.ui.CHK_VIEW_POSITIONS.setCheckState( QtGuiHelper.to_check_state( o.view_positions ) )
         self.ui.CHK_VIEW_COMPONENTS.setChecked( o.view_component )
+        self.update_sel_btns()
         
         self.no_update_options = False
     
+    def update_sel_btns(self):
+        
+        o = self._view.options
+        print("UPDATE TO {}".format(o.mode))
+        
+        self.ui.BTN_SEL_SEQUENCE_.setChecked(o.mode == EMode.SEQUENCE)
+        self.ui.ACT_SELECT_SEQUENCE.setChecked(o.mode == EMode.SEQUENCE)
+        
+        self.ui.BTN_SEL_COMPONENT_.setChecked(o.mode == EMode.COMPONENT)
+        self.ui.ACT_SELECT_COMPONENT.setChecked(o.mode == EMode.COMPONENT)
+        
+        self.ui.BTN_SEL_SUBSEQUENCE_.setChecked(o.mode == EMode.SUBSEQUENCE)
+        self.ui.ACT_SELECT_SUBSEQUENCE.setChecked(o.mode == EMode.SUBSEQUENCE)
+        
+        self.ui.BTN_SEL_EDGE_.setChecked(o.mode == EMode.EDGE)
+        self.ui.ACT_SELECT_EDGE.setChecked(o.mode == EMode.EDGE)
+        
+        
+        
     
     def closeEvent( self, *args, **kwargs ):
         """
@@ -178,78 +191,77 @@ class FrmMain( QMainWindow ):
         o = self._view.options
         o.x_snap = self.ui.CHK_MOVE_XSNAP.isChecked()
         o.y_snap = self.ui.CHK_MOVE_YSNAP.isChecked()
-        o.colour_apply = EApply.EDGES if self.ui.RAD_COL_CONNECTED.isChecked() \
-            else EApply.ALL if self.ui.RAD_COL_ALL.isChecked() \
-            else EApply.ONE if self.ui.RAD_COL_SELECTION.isChecked() else None
-        o.colour_blend = self.ui.SLI_BLEND.value() / 100 if self.ui.CHK_COL_BLEND.isChecked() else 1
+        o.colour_blend = self.ui.SLI_BLEND.value() / 100
         o.view_edges = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_EDGES.checkState() )
         o.view_names = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
         o.view_piano_roll = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_PIANO_ROLLS.checkState() )
         o.view_positions = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
         o.view_component = self.ui.CHK_VIEW_COMPONENTS.isChecked()
-        
-        self.ui.SLI_BLEND.setVisible( self.ui.CHK_COL_BLEND.isChecked() )
+        #o.mode = EMode.SEQUENCE if self.ui.ACT_SELECT_SEQUENCE.isChecked() else EMode.SUBSEQUENCE if self.ui.ACT_SELECT_SUBSEQUENCE.isChecked() else EMode.EDGE if self.ui.ACT_SELECT_EDGE.isChecked() else EMode.COMPONENT
+        self.update_sel_btns()
         
         self._view.scene.update()
+        self.statusBar().showMessage("HIIII!")
+        self.no_update_options = False
     
     
     @pyqtSlot( int )
-    def on_CHK_VIEW_EDGES_stateChanged( self, _ ):
+    def on_CHK_VIEW_EDGES_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_VIEW_COMPONENTS_stateChanged( self, _ ):
+    def on_CHK_VIEW_COMPONENTS_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_VIEW_NAMES_stateChanged( self, _ ):
+    def on_CHK_VIEW_NAMES_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_VIEW_PIANO_ROLLS_stateChanged( self, _ ):
+    def on_CHK_VIEW_PIANO_ROLLS_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_VIEW_POSITIONS_stateChanged( self, _ ):
+    def on_CHK_VIEW_POSITIONS_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_MOVE_XSNAP_stateChanged( self, _ ):
+    def on_CHK_MOVE_XSNAP_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_MOVE_YSNAP_stateChanged( self, _ ):
+    def on_CHK_MOVE_YSNAP_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_CHK_COL_BLEND_stateChanged( self, _ ):
+    def on_CHK_COL_BLEND_stateChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( bool )
-    def on_RAD_COL_CONNECTED_toggled( self, _ ):
+    def on_RAD_COL_CONNECTED_toggled( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( bool )
-    def on_RAD_COL_SELECTION_toggled( self, _ ):
+    def on_RAD_COL_SELECTION_toggled( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( bool )
-    def on_RAD_COL_ALL_toggled( self, _ ):
+    def on_RAD_COL_ALL_toggled( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
     @pyqtSlot( int )
-    def on_SLI_BLEND_valueChanged( self, _ ):
+    def on_SLI_BLEND_valueChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         self.update_options()
     
     
@@ -258,95 +270,6 @@ class FrmMain( QMainWindow ):
             new_colour = QColor( new_colour.red() // 2, new_colour.green() // 2, new_colour.blue() // 2 )
         
         self._view.change_colours( new_colour )
-    
-    
-    @pyqtSlot( int )
-    def on_LST_SEQUENCES_currentIndexChanged( self, _ ):
-        self.__update_subsequence_list()
-        
-    def __update_subsequence_list(self):
-        self.ui.LST_SUBSEQUENCES.clear()
-        
-        selected_component = self.listbox_component()
-        selected_sequence = self.listbox_sequence()
-        
-        if selected_sequence:
-            if selected_component:
-                src = (  subsequence  for line in selected_component.lines for subsequence in line if subsequence in selected_sequence.subsequences  )
-            else:
-                src  =( subsequence  for subsequence in selected_sequence.subsequences )
-        else:
-            if selected_component:
-                src = ( subsequence  for line in selected_component.lines for subsequence in line  )
-            else:
-                src = (  subsequence  for sequence in self._model.sequences for subsequence in sequence.subsequences  )
-                
-        for x in src:
-            self.ui.LST_SUBSEQUENCES.addItem(str(x), x)
-            
-    @pyqtSlot( int )
-    def on_LST_COMPONENTS_currentIndexChanged( self, _ ):
-        self.ui.LST_SEQUENCES.clear()
-        
-        com = self.listbox_component()
-        
-        
-        self.ui.LST_SEQUENCES.clear()
-        self.ui.LST_SEQUENCES.addItem("(ALL)", None)
-        
-        if com:
-            src = (x for x in self._model.sequences if x in com.all_sequences())
-        else:
-            src = (x for x in self._model.sequences )
-            
-        for x in src:
-            self.ui.LST_SEQUENCES.addItem(str(x), x)
-            
-        self.__update_subsequence_list()
-    
-    def listbox_component( self ) -> Optional[LegoComponent]:
-        return self.ui.LST_COMPONENTS.currentData(Qt.UserRole)
-    
-    def listbox_sequence( self ) -> Optional[LegoSequence]:
-        return self.ui.LST_SEQUENCES.currentData(Qt.UserRole)
-    
-    def listbox_subsequence( self ) -> LegoSubsequence:
-        return self.ui.LST_SUBSEQUENCES.currentData(Qt.UserRole)
-    
-    
-    def listbox_edge( self ) -> LegoEdge:
-        return self.ui.LST_EDGES.currentData(Qt.UserRole)
-    
-    
-    def selected_subsequences( self ) -> List[ LegoSubsequence ]:
-        return [ x.subsequence for x in self._view.selected_subsequence_views() ]
-    
-    
-    def selected_sequences( self ) -> List[ LegoSequence ]:
-        return list( set( x.subsequence.sequence for x in self._view.selected_subsequence_views() ) )
-    
-    
-    def selected_sequence( self ) -> Optional[ LegoSequence ]:
-        sequences = self.selected_sequences()
-        
-        if len( sequences ) != 1:
-            return None
-        
-        return sequences[ 0 ]
-    
-    
-    
-    
-    
-    @pyqtSlot( int )
-    def on_LST_SUBSEQUENCES_currentIndexChanged( self, _ ):
-        self.ui.LST_EDGES.clear()
-        
-        sseq = self.listbox_subsequence()
-        
-        if sseq:
-            for x in sseq.edges:
-                self.ui.LST_EDGES.addItem( str(x),x )
     
     
     @pyqtSlot()
@@ -358,7 +281,7 @@ class FrmMain( QMainWindow ):
     
     
     @pyqtSlot()
-    def on_BTN_BLANK_clicked( self ) -> None:
+    def on_BTN_BLANK_clicked( self ) -> None: #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER #TODO: BAD_HANDLER
         """
         Signal handler: Blanking plate clicked
         """
@@ -495,7 +418,7 @@ class FrmMain( QMainWindow ):
         
         try:
             self._model.add_new_subsequence( sequence, split_point )
-            self._view.recreate_sequence( sequence )
+            self._view.recreate_sequences( [sequence] )
         
         except Exception as ex:
             QtGuiHelper.show_exception( self, ex )
@@ -514,14 +437,23 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        sequence = self.__ask_for_one( self.selected_sequences() )
+        sequences = self.selected_sequences()
         
-        if sequence:
-            if QMessageBox.question( self, self.windowTitle(), "This will remove the sequence '{0}'.".format( sequence ), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
+        if sequences:
+            message = "This will remove {} sequences.".format(len(sequences))
+            details = "* "+ "\n* ".join(str(x) for x in sequences)
+            msgbox = QMessageBox()
+            msgbox.setText(message)
+            msgbox.setDetailedText(details)
+            msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            
+            if msgbox.exec_() != QMessageBox.Yes:
                 return
             
-            self._model.remove_sequence( sequence )
-            self._view.remove_sequence( sequence )
+            self._model.remove_sequences( sequences )
+            self._view.remove_sequences( sequences )
+        else:
+            QMessageBox.information(self, self.windowTitle(), "Please select a sequence first.")
     
     
     @pyqtSlot()
@@ -544,14 +476,14 @@ class FrmMain( QMainWindow ):
         """
         Signal handler:
         """
-        subsequence = self.__ask_for_one( self._view.selected_subsequences() )
+        subsequences = self._view.selected_subsequences()
         
-        if subsequence:
-            if QMessageBox.question( self, self.windowTitle(), "This will remove the subsequence '{0}'.".format( subsequence ), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
+        if subsequences:
+            if QMessageBox.question( self, self.windowTitle(), "This will remove merge the following subsequences:\n* "+("\n* ".join(str(x) for x in subsequences )), QMessageBox.Yes | QMessageBox.No ) != QMessageBox.Yes:
                 return
             
-            self._model.remove_subsequence( subsequence )
-            self._view.recreate_sequence( subsequence.sequence )
+            results = self._model.merge_subsequences(subsequences)
+            self._view.recreate_sequences(x.sequence for x in results)
     
     
     @pyqtSlot()
@@ -801,6 +733,7 @@ class FrmMain( QMainWindow ):
     
     def __ask_for_one( self, array ) -> Optional[ Any ]:
         if not array:
+            QMessageBox.information(self, self.windowTitle(), "Make a valid selection first.")
             return None
         
         if len( array ) == 1:
@@ -870,65 +803,23 @@ class FrmMain( QMainWindow ):
     
     
     @pyqtSlot()
-    def on_ACT_ARRAY_ALIGN_triggered( self ) -> None:
-        """
-        Signal handler: Align arrays
-        """
-        components = [ x for x in self._model.components if len( x.lines ) > 1 ]
-        
-        for index, component in components:
-            if len( component.lines ) <= 1:
-                continue
-            
-            fasta = [ ]
-            
-            for sequence in component.all_sequences():
-                if "?" not in sequence.array:
-                    fasta.append( ">S" + str( sequence.id ) )
-                    fasta.append( sequence.array )
-                    fasta.append( "" )
-            
-            temp_folder_name = "legoalign-temporary-folder"
-            
-            folder = FileHelper.create_directory( temp_folder_name )
-            
-            os.chdir( temp_folder_name )
-            
-            input_text = "\n".join( fasta )
-            command = "muscle -in temp_1.fasta -out temp_2.fasta".format( index )
-            
-            FileHelper.write_all_text( "temp_1.fasta".format( index ), input_text )
-            system( command )
-            
-            BioHelper.convert_file( "temp_2.fasta", "temp_2.phy", "fasta", "phylip" )
-            
-            command = "raxml -m PROTGAMMAWAG -p 12345 -s temp_2.phy -# 20 -n txt"
-            system( command )
-            
-            component.tree = FileHelper.read_all_text( "RAxML_bestTree.txt" )
-            
-            for sequence in component.all_sequences():
-                if "?" not in sequence.array:
-                    component.tree = component.tree.replace( "S{}:".format( sequence.id ), sequence.accession )
-            
-            FileHelper.write_all_text( "best_tree.new", component.tree )
-            
-            tree = Phylo.read( "best_tree.new", "newick" )
-            tree.ladderize()  # Flip branches so deeper clades are displayed at top
-            Phylo.draw( tree )
-            
-            # clean up
-            os.chdir( ".." )
-            shutil.rmtree( temp_folder_name )
-            return
-    
-    
-    @pyqtSlot()
     def on_ACT_ARRAY_TREE_triggered( self ) -> None:
         """
         Signal handler:
         """
-        pass
+        component_name, ok = QInputDialog.getItem(self, self.windowTitle(), "Select component", [str(x) for x in self._model.components])
+        
+        if not ok:
+            return 
+        
+        component =  next(iter((x for x in self._model.components if str(x) == component_name)))
+        
+        assert component
+        
+        try:
+            LegoFunctions.process_create_tree( self._model, component )
+        except Exception as ex:
+            QtGuiHelper.show_exception(self, "Failed to process NRFG.", ex)
     
     
     @pyqtSlot()
@@ -939,14 +830,95 @@ class FrmMain( QMainWindow ):
         pass
     
     @pyqtSlot()
-    def on_BTN_SELECT_COMPONENT_clicked(self) -> None:
+    def on_ACT_SELECT_ALL_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self._view.select_all(ESelect.APPEND)
+            
+    @pyqtSlot()
+    def on_ACT_SELECT_NONE_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self._view.select_all(ESelect.REMOVE)
+            
+    @pyqtSlot()
+    def on_ACT_SELECT_EMPTY_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self._view.select_empty()
+            
+    @pyqtSlot()
+    def on_ACT_SELECTION_INVERT_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self._view.select_all(ESelect.TOGGLE)
+        
+    @pyqtSlot()
+    def on_ACT_SELECT_SEQUENCE_triggered(self) -> None:
+        """
+        Signal handler: Sequence selection mode
+        """
+        if self.no_update_options:
+            return 
+        
+        self._view.options.mode =EMode.SEQUENCE
+        self.update_options()
+            
+    @pyqtSlot()
+    def on_ACT_SELECT_SUBSEQUENCE_triggered(self) -> None:
+        """
+        Signal handler: Subsequence selection mode
+        """
+        if self.no_update_options:
+            return
+        
+        self._view.options.mode =EMode.SUBSEQUENCE
+        self.update_options()
+            
+    @pyqtSlot()
+    def on_ACT_SELECT_EDGE_triggered(self) -> None:
+        """
+        Signal handler: Edge selection mode
+        """
+        if self.no_update_options:
+            return
+        
+        self._view.options.mode =EMode.EDGE
+        self.update_options()
+            
+    @pyqtSlot()
+    def on_ACT_SELECT_COMPONENT_triggered(self) -> None:
+        """
+        Signal handler: Component selection mode
+        """
+        if self.no_update_options:
+            return
+        
+        self._view.options.mode =EMode.COMPONENT
+        self.update_options()
+            
+    @pyqtSlot()
+    def on_ACT_NEW_ENTITY_triggered(self) -> None: #TODO
+        """
+        Signal handler: 
+        """
+        pass
+            
+    @pyqtSlot()
+    def on_ACT_DELETE_ENTITY_triggered(self) -> None:
         """
         Signal handler:
         """
         pass
             
+    
+            
     @pyqtSlot()
-    def on_ACT_COMPARTMENTALISE_triggered( self ) -> None:
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self ) -> None:
         """
         Signal handler: Compartmentalise model
         """
@@ -954,26 +926,3 @@ class FrmMain( QMainWindow ):
         self.refresh_model()
     
     
-    @pyqtSlot()
-    def on_BTN_SELECT_SEQUENCE_clicked( self ) -> None:
-        """
-        Signal handler: Select listed sequence
-        """
-        self._view.select( self.listbox_sequence().subsequences )
-    
-    
-    @pyqtSlot()
-    def on_BTN_SELECT_SUBSEQUENCE_clicked( self ) -> None:
-        """
-        Signal handler: Select listed subsequence
-        """
-        self._view.select( [ self.listbox_subsequence() ] )
-    
-    
-    @pyqtSlot()
-    def on_BTN_SELECT_EDGE_clicked( self ) -> None:
-        """
-        Signal handler: Select listed edge
-        """
-        edge = self.listbox_edge()
-        self._view.select( edge.source + edge.destination )
