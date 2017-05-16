@@ -33,11 +33,27 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="MNU_RECENT">
+     <property name="title">
+      <string>&amp;Recent files</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="MNU_EXAMPLES">
+     <property name="title">
+      <string>&amp;Examples</string>
+     </property>
+    </widget>
     <addaction name="ACT_MODEL_NEW"/>
+    <addaction name="separator"/>
     <addaction name="ACT_MODEL_OPEN"/>
+    <addaction name="MNU_EXAMPLES"/>
+    <addaction name="MNU_RECENT"/>
+    <addaction name="separator"/>
     <addaction name="ACT_MODEL_SAVE"/>
+    <addaction name="ACT_SAVE_AS"/>
     <addaction name="separator"/>
     <addaction name="ACT_MODEL_IMPORT"/>
+    <addaction name="ACT_EXPORT"/>
     <addaction name="separator"/>
     <addaction name="ACT_APP_EXIT"/>
    </widget>
@@ -45,45 +61,48 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
-    <addaction name="ACT_SELECT_ALL"/>
-    <addaction name="ACT_SELECT_NONE"/>
-    <addaction name="ACT_SELECT_EMPTY"/>
-    <addaction name="ACT_SELECTION_INVERT"/>
+    <widget class="QMenu" name="menuSelect">
+     <property name="title">
+      <string>&amp;Selection</string>
+     </property>
+     <addaction name="ACT_SELECT_ALL"/>
+     <addaction name="ACT_SELECT_NONE"/>
+     <addaction name="ACT_SELECTION_INVERT"/>
+     <addaction name="separator"/>
+     <addaction name="ACT_SELECT_EMPTY"/>
+     <addaction name="ACT_SELECT_BY_NAME"/>
+    </widget>
+    <widget class="QMenu" name="menu_Modify">
+     <property name="title">
+      <string>&amp;Modify</string>
+     </property>
+     <addaction name="ACT_NEW_ENTITY"/>
+     <addaction name="ACT_DELETE_ENTITY"/>
+    </widget>
+    <widget class="QMenu" name="menuType_Here">
+     <property name="title">
+      <string>Type Here</string>
+     </property>
+    </widget>
+    <addaction name="menuSelect"/>
+    <addaction name="menu_Modify"/>
     <addaction name="separator"/>
-    <addaction name="ACT_NEW_ENTITY"/>
-    <addaction name="ACT_DELETE_ENTITY"/>
+    <addaction name="ACT_SELECT_COMPONENT"/>
+    <addaction name="ACT_SELECT_SEQUENCE"/>
+    <addaction name="ACT_SELECT_SUBSEQUENCE"/>
+    <addaction name="ACT_SELECT_EDGE"/>
+    <addaction name="menuType_Here"/>
    </widget>
    <widget class="QMenu" name="menu_Model">
     <property name="title">
-     <string>&amp;Model</string>
+     <string>&amp;Data</string>
     </property>
     <addaction name="ACT_MODEL_QUANTISE"/>
     <addaction name="ACT_COMPONENT_COMPARTMENTALISE"/>
     <addaction name="ACT_ARRAY_TREE"/>
     <addaction name="ACT_ARRAY_FUSE"/>
-   </widget>
-   <widget class="QMenu" name="menu_Colouring">
-    <property name="title">
-     <string>&amp;Colouring</string>
-    </property>
-    <addaction name="ACT_COL_RED"/>
-    <addaction name="ACT_COL_GREEN"/>
-    <addaction name="ACT_COL_BLUE"/>
-    <addaction name="ACT_COL_CYAN"/>
-    <addaction name="ACT_COL_MAGENTA"/>
-    <addaction name="ACT_COL_YELLOW"/>
-    <addaction name="ACT_COL_BLACK"/>
-    <addaction name="ACT_COL_GRAY"/>
-    <addaction name="ACT_COL_DARK_GRAY"/>
-    <addaction name="ACT_COL_WHITE"/>
     <addaction name="separator"/>
-    <addaction name="ACT_COL_RANDOM"/>
-    <addaction name="ACT_COL_RESET"/>
-    <addaction name="ACT_COL_CUSTOM"/>
-    <addaction name="separator"/>
-    <addaction name="ACTCHK_DARKER"/>
-    <addaction name="ACT_WINDOW_COLOURS"/>
-    <addaction name="separator"/>
+    <addaction name="ACT_DECONVOLUTE"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -91,23 +110,59 @@
     </property>
     <addaction name="ACT_HELP_KEYS"/>
    </widget>
-   <widget class="QMenu" name="menu_Mode">
+   <widget class="QMenu" name="menu_View">
     <property name="title">
-     <string>&amp;Mode</string>
+     <string>&amp;View</string>
     </property>
-    <addaction name="ACT_SELECT_COMPONENT"/>
-    <addaction name="ACT_SELECT_SEQUENCE"/>
-    <addaction name="ACT_SELECT_SUBSEQUENCE"/>
-    <addaction name="ACT_SELECT_EDGE"/>
+    <addaction name="ACT_WIN_REFERENCE"/>
+    <addaction name="ACT_WINDOW_COLOURS"/>
+    <addaction name="ACT_WIN_MOVE"/>
+    <addaction name="ACT_WIN_VIEW"/>
+    <addaction name="ACT_WIN_EDIT"/>
+    <addaction name="ACT_WIN_SELECTION"/>
+   </widget>
+   <widget class="QMenu" name="menu_Format">
+    <property name="title">
+     <string>&amp;Format</string>
+    </property>
+    <widget class="QMenu" name="menuA">
+     <property name="title">
+      <string>&amp;Change colours</string>
+     </property>
+     <addaction name="ACT_COL_RED"/>
+     <addaction name="ACT_COL_GREEN"/>
+     <addaction name="ACT_COL_BLUE"/>
+     <addaction name="ACT_COL_CYAN"/>
+     <addaction name="ACT_COL_MAGENTA"/>
+     <addaction name="ACT_COL_YELLOW"/>
+     <addaction name="ACT_COL_BLACK"/>
+     <addaction name="ACT_COL_GRAY"/>
+     <addaction name="ACT_COL_DARK_GRAY"/>
+     <addaction name="ACT_COL_WHITE"/>
+     <addaction name="separator"/>
+     <addaction name="ACT_COL_RANDOM"/>
+     <addaction name="ACT_COL_RESET"/>
+     <addaction name="ACT_COL_CUSTOM"/>
+     <addaction name="separator"/>
+     <addaction name="ACTCHK_DARKER"/>
+    </widget>
+    <widget class="QMenu" name="menu_Align">
+     <property name="title">
+      <string>&amp;Align</string>
+     </property>
+     <addaction name="ACT_ALIGN"/>
+    </widget>
+    <addaction name="menuA"/>
+    <addaction name="menu_Align"/>
    </widget>
    <addaction name="menu_File"/>
-   <addaction name="menu_Mode"/>
    <addaction name="menu_Edit"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Format"/>
    <addaction name="menu_Model"/>
-   <addaction name="menu_Colouring"/>
    <addaction name="menu_Help"/>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
+  <widget class="QDockWidget" name="DOCK_MOVEMENT">
    <property name="features">
     <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
@@ -118,7 +173,20 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QCheckBox" name="CHK_MOVE">
+       <property name="statusTip">
+        <string>Snap sequences to starts and ends of subsequences</string>
+       </property>
+       <property name="text">
+        <string>Enable movement</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
@@ -169,7 +237,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_3">
+  <widget class="QDockWidget" name="DOCK_VIEW">
    <property name="features">
     <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
@@ -312,7 +380,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_5">
+  <widget class="QDockWidget" name="DOCK_REFERENCE">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
      <horstretch>0</horstretch>
@@ -4295,7 +4363,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_6">
+  <widget class="QDockWidget" name="DOCK_EDIT">
    <property name="styleSheet">
     <string notr="true">QToolButton { border:0px; background: transparent; } QToolButton::checked { background: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.302704, fy:0.267045, stop:0 rgba(0, 255, 255, 255), stop:1 rgba(0, 0, 0, 0)); }</string>
    </property>
@@ -4482,15 +4550,18 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget">
+  <widget class="QDockWidget" name="DOCK_SELECTION">
    <property name="windowTitle">
-    <string>View</string>
+    <string>Data</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_6">
-    <layout class="QGridLayout" name="gridLayout_11">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -4503,37 +4574,127 @@
      <property name="bottomMargin">
       <number>0</number>
      </property>
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="QLabel" name="LBL_VIEW_LEFT">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QToolButton" name="BTN_DATA_SAVE">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>SAVE</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources.qrc">
+           <normaloff>:/Images/Resources/save-file.svg</normaloff>:/Images/Resources/save-file.svg</iconset>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>2</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="CHKBTN_DATA_FASTA">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>FASTA</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources.qrc">
+           <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="CHKBTN_DATA_NEWICK">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>NEWICK</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources.qrc">
+           <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="LBL_VIEW_RIGHT">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0" colspan="2">
+     <item>
       <widget class="QTextEdit" name="TXT_VIEW">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: black;
 color: white;</string>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOn</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOn</enum>
+       </property>
+       <property name="lineWrapMode">
+        <enum>QTextEdit::NoWrap</enum>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -4556,7 +4717,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/new-file.svg</normaloff>:/Images/Resources/new-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;New / clear</string>
+    <string>&amp;New</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -4568,7 +4729,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/import-file.svg</normaloff>:/Images/Resources/import-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Import</string>
+    <string>&amp;Import...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
@@ -4616,66 +4777,6 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+Q</string>
-   </property>
-  </action>
-  <action name="ACT_NEW_SEQUENCE">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New &amp;sequence</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+S</string>
-   </property>
-  </action>
-  <action name="ACT_NEW_EDGE">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New &amp;edge</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+E</string>
-   </property>
-  </action>
-  <action name="ACT_NEW_SPLIT">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New &amp;split</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+C</string>
-   </property>
-  </action>
-  <action name="ACT_REMOVE_SEQUENCE">
-   <property name="text">
-    <string>Delete sequence</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Alt+S</string>
-   </property>
-  </action>
-  <action name="ACT_REMOVE_EDGE">
-   <property name="text">
-    <string>Delete edge</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Alt+E</string>
-   </property>
-  </action>
-  <action name="ACT_REMOVE_SPLIT">
-   <property name="text">
-    <string>Delete (merge) subsequence</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Alt+C</string>
    </property>
   </action>
   <action name="ACT_COL_RED">
@@ -4790,8 +4891,12 @@ p, li { white-space: pre-wrap; }
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
    <property name="text">
-    <string>Show window</string>
+    <string>&amp;Colours</string>
    </property>
   </action>
   <action name="ACT_COL_RESET">
@@ -4808,33 +4913,6 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
-   </property>
-  </action>
-  <action name="ACT_DETAILS_SEQUENCE">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Sequence details</string>
-   </property>
-  </action>
-  <action name="ACT_DETAILS_EDGE">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Edge details</string>
-   </property>
-  </action>
-  <action name="ACT_DETAILS_SPLIT">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Split details</string>
    </property>
   </action>
   <action name="ACTCHK_DARKER">
@@ -4860,26 +4938,6 @@ p, li { white-space: pre-wrap; }
     <string>Ctrl+9</string>
    </property>
   </action>
-  <action name="ACT_REMOVE_SELECTION">
-   <property name="text">
-    <string>Delete selection</string>
-   </property>
-   <property name="shortcut">
-    <string>Del</string>
-   </property>
-  </action>
-  <action name="ACT_DETAILS_SELECTION">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/select.svg</normaloff>:/Images/Resources/select.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Selection details</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+V</string>
-   </property>
-  </action>
   <action name="ACT_COL_RANDOM">
    <property name="text">
     <string>Random</string>
@@ -4894,11 +4952,6 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="shortcut">
     <string>F1</string>
-   </property>
-  </action>
-  <action name="ACT_REMOVE_ALL_EDGES">
-   <property name="text">
-    <string>Remove all edges</string>
    </property>
   </action>
   <action name="ACT_COMPONENT_COMPARTMENTALISE">
@@ -4930,22 +4983,22 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_SELECT_ALL">
    <property name="text">
-    <string>Select &amp;all</string>
+    <string>&amp;All</string>
    </property>
   </action>
   <action name="ACT_SELECT_NONE">
    <property name="text">
-    <string>Select &amp;none</string>
+    <string>&amp;None</string>
    </property>
   </action>
   <action name="ACT_SELECT_EMPTY">
    <property name="text">
-    <string>Select &amp;empty</string>
+    <string>&amp;Where missing array</string>
    </property>
   </action>
   <action name="ACT_SELECTION_INVERT">
    <property name="text">
-    <string>&amp;Invert selection</string>
+    <string>&amp;Invert</string>
    </property>
   </action>
   <action name="ACT_SELECT_SEQUENCE">
@@ -4991,6 +5044,91 @@ p, li { white-space: pre-wrap; }
   <action name="ACT_DELETE_ENTITY">
    <property name="text">
     <string>Delete</string>
+   </property>
+  </action>
+  <action name="ACT_SAVE_AS">
+   <property name="text">
+    <string>Save &amp;as...</string>
+   </property>
+  </action>
+  <action name="ACT_EXPORT">
+   <property name="text">
+    <string>Export...</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_BY_NAME">
+   <property name="text">
+    <string>By name...</string>
+   </property>
+  </action>
+  <action name="ACT_WIN_REFERENCE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Reference</string>
+   </property>
+  </action>
+  <action name="ACT_WIN_MOVE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Movement</string>
+   </property>
+  </action>
+  <action name="ACT_WIN_VIEW">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>View</string>
+   </property>
+  </action>
+  <action name="ACT_WIN_EDIT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Edit mode</string>
+   </property>
+  </action>
+  <action name="ACT_WIN_SELECTION">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Selection</string>
+   </property>
+  </action>
+  <action name="ACT_DECONVOLUTE">
+   <property name="text">
+    <string>Deconvolute</string>
+   </property>
+  </action>
+  <action name="ACT_ALIGN">
+   <property name="text">
+    <string>Align component starts to selected sequence</string>
    </property>
   </action>
  </widget>

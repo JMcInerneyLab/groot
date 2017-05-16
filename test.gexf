@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf version="1.1" xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2001/XMLSchema-instance">
+  <graph defaultedgetype="undirected" mode="static">
+    <nodes>
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb3450" label="B_P_E_Shb3450" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb3818" label="B_P_E_Shb3818" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb2953" label="B_P_E_Shb2953" />
+      <node id="Clade" label="Clade" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Eco3100" label="B_P_E_Eco3100" />
+      <node id="B_P_E_Eco4109" label="B_P_E_Eco4109" />
+      <node id="B_P_E_Eco1740" label="B_P_E_Eco1740" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Eco20" label="B_P_E_Eco20" />
+      <node id="B_P_E_Eco246" label="B_P_E_Eco246" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Eco237" label="B_P_E_Eco237" />
+      <node id="B_P_E_Shb2952" label="B_P_E_Shb2952" />
+      <node id="B_B_C_Fta3878" label="B_B_C_Fta3878" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb2950" label="B_P_E_Shb2950" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb2949" label="B_P_E_Shb2949" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb2954" label="B_P_E_Shb2954" />
+      <node id="Clade" label="Clade" />
+      <node id="Clade" label="Clade" />
+      <node id="Clade" label="Clade" />
+      <node id="B_P_E_Shb817" label="B_P_E_Shb817" />
+    </nodes>
+    <edges>
+      <edge id="0" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="1" source="Clade" target="Clade" weight="0.013695867323476711" />
+      <edge id="2" source="Clade" target="B_B_C_Fta3878" weight="1.3990283574339843" />
+      <edge id="3" source="B_P_E_Shb3450" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="4" source="Clade" target="Clade" weight="0.02053788635324373" />
+      <edge id="5" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="6" source="B_P_E_Shb3818" target="Clade" weight="0.015019014039108925" />
+      <edge id="7" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="8" source="Clade" target="B_P_E_Eco20" weight="1.00000050002909e-06" />
+      <edge id="9" source="B_P_E_Shb2953" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="10" source="Clade" target="B_P_E_Eco1740" weight="1.00000050002909e-06" />
+      <edge id="11" source="Clade" target="B_P_E_Eco3100" weight="1.00000050002909e-06" />
+      <edge id="12" source="Clade" target="B_P_E_Eco4109" weight="1.00000050002909e-06" />
+      <edge id="13" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="14" source="Clade" target="B_P_E_Eco237" weight="1.00000050002909e-06" />
+      <edge id="15" source="Clade" target="B_P_E_Eco246" weight="1.00000050002909e-06" />
+      <edge id="16" source="Clade" target="B_P_E_Shb2952" weight="1.00000050002909e-06" />
+      <edge id="17" source="Clade" target="Clade" weight="0.020481777380403868" />
+      <edge id="18" source="Clade" target="B_P_E_Shb2950" weight="0.01578009981651083" />
+      <edge id="19" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="20" source="Clade" target="B_P_E_Shb2949" weight="0.015902820115256924" />
+      <edge id="21" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="22" source="Clade" target="B_P_E_Shb2954" weight="0.015756510600674765" />
+      <edge id="23" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="24" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="25" source="Clade" target="Clade" weight="1.00000050002909e-06" />
+      <edge id="26" source="Clade" target="B_P_E_Shb817" weight="1.00000050002909e-06" />
+    </edges>
+  </graph>
+</gexf>

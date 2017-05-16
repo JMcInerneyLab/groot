@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="Images">
+    <file>Resources/window.svg</file>
+    <file>Resources/move.svg</file>
     <file>Resources/align.svg</file>
     <file>Resources/fuse.svg</file>
     <file>Resources/tree.svg</file>
