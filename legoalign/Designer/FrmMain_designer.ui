@@ -16,6 +16,9 @@
   <property name="dockOptions">
    <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::VerticalTabs</set>
   </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout"/>
   </widget>
@@ -35,46 +38,55 @@
     </property>
     <widget class="QMenu" name="MNU_RECENT">
      <property name="title">
-      <string>&amp;Recent files</string>
+      <string>&amp;Recent diagrams</string>
      </property>
     </widget>
     <widget class="QMenu" name="MNU_EXAMPLES">
      <property name="title">
-      <string>&amp;Examples</string>
+      <string>&amp;Import sample data</string>
      </property>
     </widget>
     <addaction name="ACT_MODEL_NEW"/>
     <addaction name="separator"/>
     <addaction name="ACT_MODEL_OPEN"/>
-    <addaction name="MNU_EXAMPLES"/>
     <addaction name="MNU_RECENT"/>
     <addaction name="separator"/>
     <addaction name="ACT_MODEL_SAVE"/>
     <addaction name="ACT_SAVE_AS"/>
     <addaction name="separator"/>
     <addaction name="ACT_MODEL_IMPORT"/>
+    <addaction name="MNU_EXAMPLES"/>
+    <addaction name="separator"/>
     <addaction name="ACT_EXPORT"/>
     <addaction name="separator"/>
     <addaction name="ACT_APP_EXIT"/>
+   </widget>
+   <widget class="QMenu" name="menuSelect">
+    <property name="title">
+     <string>&amp;Selection</string>
+    </property>
+    <addaction name="ACT_SELECT_ALL"/>
+    <addaction name="ACT_SELECT_NONE"/>
+    <addaction name="ACT_SELECTION_INVERT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_SELECT_EMPTY"/>
+    <addaction name="ACT_SELECT_BY_NAME"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_SELECT_LEFT"/>
+    <addaction name="ACT_SELECT_RIGHT"/>
+    <addaction name="ACT_SELECT_DIRECT_CONNECTIONS"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_SELMASK_ALL"/>
+    <addaction name="ACT_SELMASK_NEXT"/>
+    <addaction name="ACT_SELMASK_PREV"/>
    </widget>
    <widget class="QMenu" name="menu_Edit">
     <property name="title">
      <string>&amp;Edit</string>
     </property>
-    <widget class="QMenu" name="menuSelect">
-     <property name="title">
-      <string>&amp;Selection</string>
-     </property>
-     <addaction name="ACT_SELECT_ALL"/>
-     <addaction name="ACT_SELECT_NONE"/>
-     <addaction name="ACT_SELECTION_INVERT"/>
-     <addaction name="separator"/>
-     <addaction name="ACT_SELECT_EMPTY"/>
-     <addaction name="ACT_SELECT_BY_NAME"/>
-    </widget>
     <widget class="QMenu" name="menu_Modify">
      <property name="title">
-      <string>&amp;Modify</string>
+      <string>&amp;Entities</string>
      </property>
      <addaction name="ACT_NEW_ENTITY"/>
      <addaction name="ACT_DELETE_ENTITY"/>
@@ -84,7 +96,6 @@
       <string>Type Here</string>
      </property>
     </widget>
-    <addaction name="menuSelect"/>
     <addaction name="menu_Modify"/>
     <addaction name="separator"/>
     <addaction name="ACT_SELECT_COMPONENT"/>
@@ -97,11 +108,19 @@
     <property name="title">
      <string>&amp;Data</string>
     </property>
-    <addaction name="ACT_MODEL_QUANTISE"/>
-    <addaction name="ACT_COMPONENT_COMPARTMENTALISE"/>
     <addaction name="ACT_ARRAY_TREE"/>
     <addaction name="ACT_ARRAY_FUSE"/>
     <addaction name="separator"/>
+    <addaction name="ACT_MODEL_QUANTISE"/>
+    <addaction name="ACT_CONNECT_COMPONENTS"/>
+    <addaction name="ACT_REMOVE_REDUNDANT_EDGES"/>
+    <addaction name="ACT_REMOVE_REDUNDANT_SUBSEQUENCES"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_MARK_AS_COMPOSITE"/>
+    <addaction name="ACT_MARK_AS_ROOT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_COMPONENT_COMPARTMENTALISE"/>
+    <addaction name="ACT_DEBUG_FIX"/>
     <addaction name="ACT_DECONVOLUTE"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -114,7 +133,6 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="ACT_WIN_REFERENCE"/>
     <addaction name="ACT_WINDOW_COLOURS"/>
     <addaction name="ACT_WIN_MOVE"/>
     <addaction name="ACT_WIN_VIEW"/>
@@ -151,6 +169,8 @@
       <string>&amp;Align</string>
      </property>
      <addaction name="ACT_ALIGN"/>
+     <addaction name="ACT_ALIGN_SUBSEQUENCES"/>
+     <addaction name="ACT_ALIGN_FIRST_SUBSEQUENCES"/>
     </widget>
     <addaction name="menuA"/>
     <addaction name="menu_Align"/>
@@ -159,6 +179,7 @@
    <addaction name="menu_Edit"/>
    <addaction name="menu_View"/>
    <addaction name="menu_Format"/>
+   <addaction name="menuSelect"/>
    <addaction name="menu_Model"/>
    <addaction name="menu_Help"/>
   </widget>
@@ -372,320 +393,6 @@
           <property name="text">
            <string>Connected components</string>
           </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="DOCK_REFERENCE">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
-   <property name="windowTitle">
-    <string>Reference</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_5">
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <item>
-      <widget class="QGroupBox" name="groupBox_11">
-       <property name="title">
-        <string>Amino acids</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QFrame" name="frame_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="autoFillBackground">
-           <bool>true</bool>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Panel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Sunken</enum>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_8">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <family>Courier</family>
-              </font>
-             </property>
-             <property name="statusTip">
-              <string>Amino acid ordering and colours in piano roll</string>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;IVL&lt;/span&gt;&lt;span style=&quot; color:#ff8000;&quot;&gt;F&lt;/span&gt;&lt;span style=&quot; color:#ffff00;&quot;&gt;CM&lt;/span&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;AG&lt;/span&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;TS&lt;/span&gt;&lt;span style=&quot; color:#ff8000;&quot;&gt;WY&lt;/span&gt;&lt;span style=&quot; color:#ff8080;&quot;&gt;P&lt;/span&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;H&lt;/span&gt;&lt;span style=&quot; color:#00ffff;&quot;&gt;E&lt;/span&gt;&lt;span style=&quot; color:#804000;&quot;&gt;Q&lt;/span&gt;&lt;span style=&quot; color:#00ffff;&quot;&gt;D&lt;/span&gt;&lt;span style=&quot; color:#804000;&quot;&gt;N&lt;/span&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;KR&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_12">
-       <property name="title">
-        <string>Nucleotides</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_6">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QFrame" name="frame_4">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>0</red>
-                <green>0</green>
-                <blue>0</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="autoFillBackground">
-           <bool>true</bool>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Panel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Sunken</enum>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_10">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <family>Courier</family>
-              </font>
-             </property>
-             <property name="statusTip">
-              <string>Base ordering and colours in piano roll</string>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#00ffff;&quot;&gt;A&lt;/span&gt;&lt;span style=&quot; color:#ffff00;&quot;&gt;TU&lt;/span&gt;&lt;span style=&quot; color:#00ff00;&quot;&gt;G&lt;/span&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;C&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
        </layout>
@@ -4560,7 +4267,7 @@
    <widget class="QWidget" name="dockWidgetContents_6">
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="leftMargin">
       <number>0</number>
@@ -4613,99 +4320,259 @@
         </spacer>
        </item>
        <item>
-        <widget class="QToolButton" name="CHKBTN_DATA_FASTA">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="spacing">
+          <number>0</number>
          </property>
-         <property name="text">
-          <string>FASTA</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../resources.qrc">
-           <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextBesideIcon</enum>
-         </property>
-         <property name="autoRaise">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="CHKBTN_DATA_NEWICK">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>NEWICK</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../resources.qrc">
-           <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextBesideIcon</enum>
-         </property>
-         <property name="autoRaise">
-          <bool>true</bool>
-         </property>
-        </widget>
+         <item>
+          <widget class="QToolButton" name="CHKBTN_DATA_FASTA">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>FASTA</string>
+           </property>
+           <property name="text">
+            <string>FASTA</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonIconOnly</enum>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="CHKBTN_DATA_NEWICK">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>Newick</string>
+           </property>
+           <property name="text">
+            <string>Newick</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonIconOnly</enum>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="CHKBTN_DATA_BLAST">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>BLAST</string>
+           </property>
+           <property name="text">
+            <string>BLAST</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources.qrc">
+             <normaloff>:/Images/Resources/align.svg</normaloff>:/Images/Resources/align.svg</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonIconOnly</enum>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
      <item>
-      <widget class="QTextEdit" name="TXT_VIEW">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">background-color: black;
-color: white;</string>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="BTN_SELMASK_PREV">
+         <property name="toolTip">
+          <string>Highlight previous</string>
+         </property>
+         <property name="text">
+          <string>&lt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="BTN_SELMASK_ALL">
+         <property name="toolTip">
+          <string>Highlight all</string>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="BTN_SELMASK_NEXT">
+         <property name="toolTip">
+          <string>Highlight next</string>
+         </property>
+         <property name="text">
+          <string>&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QScrollArea" name="scrollArea">
+       <property name="palette">
+        <palette>
+         <active>
+          <colorrole role="Base">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Window">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </active>
+         <inactive>
+          <colorrole role="Base">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Window">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </inactive>
+         <disabled>
+          <colorrole role="Base">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+          <colorrole role="Window">
+           <brush brushstyle="SolidPattern">
+            <color alpha="255">
+             <red>255</red>
+             <green>255</green>
+             <blue>255</blue>
+            </color>
+           </brush>
+          </colorrole>
+         </disabled>
+        </palette>
        </property>
        <property name="verticalScrollBarPolicy">
         <enum>Qt::ScrollBarAlwaysOn</enum>
        </property>
        <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOn</enum>
+        <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
-       <property name="lineWrapMode">
-        <enum>QTextEdit::NoWrap</enum>
-       </property>
-       <property name="readOnly">
+       <property name="widgetResizable">
         <bool>true</bool>
        </property>
-       <property name="html">
-        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.SF NS Text'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Please load some data first!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
+       <widget class="QWidget" name="SCR_AREA">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>170</width>
+          <height>777</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_8"/>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -4717,7 +4584,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/new-file.svg</normaloff>:/Images/Resources/new-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;New</string>
+    <string>&amp;New diagram</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -4729,7 +4596,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/import-file.svg</normaloff>:/Images/Resources/import-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Import...</string>
+    <string>&amp;Import custom data...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
@@ -4737,7 +4604,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="ACT_APP_EXIT">
    <property name="text">
-    <string>E&amp;xit</string>
+    <string>E&amp;xit program</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
@@ -4749,7 +4616,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/save-file.svg</normaloff>:/Images/Resources/save-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Save...</string>
+    <string>&amp;Save diagram...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -4761,7 +4628,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/open-file.svg</normaloff>:/Images/Resources/open-file.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Open...</string>
+    <string>&amp;Open diagram...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -4773,7 +4640,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/quantise.svg</normaloff>:/Images/Resources/quantise.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Quantise</string>
+    <string>&amp;Quantise subsequences</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+Q</string>
@@ -4896,7 +4763,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Colours</string>
+    <string>&amp;Colour panel</string>
    </property>
   </action>
   <action name="ACT_COL_RESET">
@@ -4955,10 +4822,6 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
   <action name="ACT_COMPONENT_COMPARTMENTALISE">
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/compartmentalise.svg</normaloff>:/Images/Resources/compartmentalise.svg</iconset>
-   </property>
    <property name="text">
     <string>&amp;Compartmentalise</string>
    </property>
@@ -4969,7 +4832,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
    </property>
    <property name="text">
-    <string>Generate &amp;tree</string>
+    <string>Generate component &amp;trees</string>
    </property>
   </action>
   <action name="ACT_ARRAY_FUSE">
@@ -4978,27 +4841,27 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/fuse.svg</normaloff>:/Images/Resources/fuse.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Fuse trees</string>
+    <string>Generate fused tree</string>
    </property>
   </action>
   <action name="ACT_SELECT_ALL">
    <property name="text">
-    <string>&amp;All</string>
+    <string>Select &amp;all</string>
    </property>
   </action>
   <action name="ACT_SELECT_NONE">
    <property name="text">
-    <string>&amp;None</string>
+    <string>Select &amp;none</string>
    </property>
   </action>
   <action name="ACT_SELECT_EMPTY">
    <property name="text">
-    <string>&amp;Where missing array</string>
+    <string>&amp;Select items missing sequence data</string>
    </property>
   </action>
   <action name="ACT_SELECTION_INVERT">
    <property name="text">
-    <string>&amp;Invert</string>
+    <string>&amp;Invert selection</string>
    </property>
   </action>
   <action name="ACT_SELECT_SEQUENCE">
@@ -5009,7 +4872,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Sequence</string>
+    <string>Sequence mode</string>
    </property>
   </action>
   <action name="ACT_SELECT_SUBSEQUENCE">
@@ -5017,7 +4880,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Subsequence</string>
+    <string>Subsequence mode</string>
    </property>
   </action>
   <action name="ACT_SELECT_EDGE">
@@ -5025,7 +4888,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Edge</string>
+    <string>Edge mode</string>
    </property>
   </action>
   <action name="ACT_SELECT_COMPONENT">
@@ -5033,44 +4896,32 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Component</string>
+    <string>Component mode</string>
    </property>
   </action>
   <action name="ACT_NEW_ENTITY">
    <property name="text">
-    <string>New</string>
+    <string>New item</string>
    </property>
   </action>
   <action name="ACT_DELETE_ENTITY">
    <property name="text">
-    <string>Delete</string>
+    <string>Delete selected item</string>
    </property>
   </action>
   <action name="ACT_SAVE_AS">
    <property name="text">
-    <string>Save &amp;as...</string>
+    <string>Save diagram &amp;as...</string>
    </property>
   </action>
   <action name="ACT_EXPORT">
    <property name="text">
-    <string>Export...</string>
+    <string>Export selected data...</string>
    </property>
   </action>
   <action name="ACT_SELECT_BY_NAME">
    <property name="text">
-    <string>By name...</string>
-   </property>
-  </action>
-  <action name="ACT_WIN_REFERENCE">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Reference</string>
+    <string>Select items by &amp;name</string>
    </property>
   </action>
   <action name="ACT_WIN_MOVE">
@@ -5082,7 +4933,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
    </property>
    <property name="text">
-    <string>Movement</string>
+    <string>Movement panel</string>
    </property>
   </action>
   <action name="ACT_WIN_VIEW">
@@ -5094,7 +4945,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
    </property>
    <property name="text">
-    <string>View</string>
+    <string>View panel</string>
    </property>
   </action>
   <action name="ACT_WIN_EDIT">
@@ -5106,7 +4957,7 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
    </property>
    <property name="text">
-    <string>Edit mode</string>
+    <string>Mode panel</string>
    </property>
   </action>
   <action name="ACT_WIN_SELECTION">
@@ -5118,17 +4969,96 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
    </property>
    <property name="text">
-    <string>Selection</string>
+    <string>Data panel</string>
    </property>
   </action>
   <action name="ACT_DECONVOLUTE">
    <property name="text">
-    <string>Deconvolute</string>
+    <string>Debug - deconvolute and verify</string>
    </property>
   </action>
   <action name="ACT_ALIGN">
    <property name="text">
     <string>Align component starts to selected sequence</string>
+   </property>
+  </action>
+  <action name="ACT_REMOVE_REDUNDANT_EDGES">
+   <property name="text">
+    <string>&amp;Remove redundant edges</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_LEFT">
+   <property name="text">
+    <string>Select all subsequences to the left</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Left</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_RIGHT">
+   <property name="text">
+    <string>Select all subsequences to the right</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Right</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_DIRECT_CONNECTIONS">
+   <property name="text">
+    <string>Select all subsequences with direct connections</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Up</string>
+   </property>
+  </action>
+  <action name="ACT_REMOVE_REDUNDANT_SUBSEQUENCES">
+   <property name="text">
+    <string>Remove redundant slices</string>
+   </property>
+  </action>
+  <action name="ACT_ALIGN_SUBSEQUENCES">
+   <property name="text">
+    <string>Align subsequences to previous sibilings</string>
+   </property>
+  </action>
+  <action name="ACT_CONNECT_COMPONENTS">
+   <property name="text">
+    <string>Recalculate connected components</string>
+   </property>
+  </action>
+  <action name="ACT_ALIGN_FIRST_SUBSEQUENCES">
+   <property name="text">
+    <string>Align first subsequences</string>
+   </property>
+  </action>
+  <action name="ACT_MARK_AS_COMPOSITE">
+   <property name="text">
+    <string>Mark selected sequence as composite</string>
+   </property>
+  </action>
+  <action name="ACT_MARK_AS_ROOT">
+   <property name="text">
+    <string>Mark selected sequence as root</string>
+   </property>
+  </action>
+  <action name="ACT_DEBUG_FIX">
+   <property name="text">
+    <string>Debug - update missing data</string>
+   </property>
+  </action>
+  <action name="ACT_SELMASK_ALL">
+   <property name="text">
+    <string>Highlight all in selection</string>
+   </property>
+  </action>
+  <action name="ACT_SELMASK_NEXT">
+   <property name="text">
+    <string>Highlight next in selection</string>
+   </property>
+  </action>
+  <action name="ACT_SELMASK_PREV">
+   <property name="text">
+    <string>Highlight previous in selection</string>
    </property>
   </action>
  </widget>
@@ -5369,6 +5299,54 @@ p, li { white-space: pre-wrap; }
     <hint type="sourcelabel">
      <x>735</x>
      <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_ALL</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELMASK_ALL</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>201</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_NEXT</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELMASK_NEXT</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>232</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_PREV</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELMASK_PREV</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>140</x>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

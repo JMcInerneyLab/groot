@@ -1,7 +1,8 @@
 import sys
+
 from PyQt5.QtWidgets import QApplication
 
-from FrmMain import FrmMain
+from legoalign.FrmMain import FrmMain
 
 
 def main( ) -> None:

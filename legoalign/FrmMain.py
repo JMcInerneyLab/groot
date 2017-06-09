@@ -1,22 +1,26 @@
-from typing import Any, Optional, Set
-
-from Designer.FrmMain_designer import Ui_MainWindow
-from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot, QPointF
-from PyQt5.QtGui import QColor, QTextOption
-from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QAction, QTextEdit
 from os import path
+from typing import Optional, List, Set
 
-from networkx.algorithms import components
+import sys
 
-import LegoFunctions
-from GlobalOptions import GlobalOptions
-from LegoModels import LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoComponent
-from LegoViews import EMode, ESelect, ESequenceColour, LegoViewModel, LegoViewSubsequence, PROT_COLOURS, ILegoViewModelObserver, ColourBlock
-from MHelper import IoHelper, QtColourHelper, QtGuiHelper, FileHelper, PrintHelper, ArrayHelper
+import sip
+from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot, QPoint
+from PyQt5.QtGui import QColor, QBrush
+from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
+from PyQt5.QtWidgets import QAction, QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QTextEdit, QGroupBox, QVBoxLayout, QWidget, QCheckBox, QPushButton, QGraphicsView
+
+from MHelper import FileHelper, IoHelper, QtColourHelper, QtGuiHelper, ArrayHelper
 from MHelper.ExceptionHelper import SwitchError
 from MHelper.QtColourHelper import Colours
-from MyView import MyView
+from MHelper.QtGuiHelper import exceptToGui, exqtSlot
+
+from legoalign import LegoFunctions
+from legoalign.FrmTreeSelector import FrmTreeSelector
+from legoalign.Designer.FrmMain_designer import Ui_MainWindow
+from legoalign.GlobalOptions import GlobalOptions
+from legoalign.LegoViews import EMode, ESelect, ESequenceColour, ILegoViewModelObserver, LegoViewModel, LegoViewSubsequence
+from legoalign.LegoModels import LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from legoalign.MyView import MyView
 
 
 class FrmMain( QMainWindow, ILegoViewModelObserver ):
@@ -30,6 +34,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         CONSTRUCTOR
         """
         self.no_update_options = False
+        self.__group_boxes = []
+        
         
         QCoreApplication.setAttribute( Qt.AA_DontUseNativeMenuBar )
         
@@ -42,7 +48,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.DOCK_COLOURS.setVisible( False )
         self.ui.DOCK_VIEW.setVisible( False )
         self.ui.DOCK_MOVEMENT.setVisible( False )
-        self.ui.DOCK_REFERENCE.setVisible( False )
         
         self.ui.ACT_WIN_EDIT.setChecked( True )
         self.ui.ACT_WIN_SELECTION.setChecked( True )
@@ -56,6 +61,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         sizePolicy.setHeightForWidth( self.ui.graphicsView.sizePolicy().hasHeightForWidth() )
         self.ui.graphicsView.setSizePolicy( sizePolicy )
         self.ui.graphicsView.setObjectName( "graphicsView" )
+        self.ui.graphicsView.setBackgroundBrush(QBrush(QColor(255,255,255)))
         self.ui.gridLayout.addWidget( self.ui.graphicsView, 0, 0, 1, 1 )
         
         # Open GL rendering
@@ -67,48 +73,53 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.graphicsView.setInteractive( True )
         self.ui.graphicsView.setScene( scene )
         
-        # Load our sample model
+        # Load our default model
         self._model = LegoModel()
         self._model_file_name = None
         
-        if self.global_options.recent_files:
-            self.load_file( self.global_options.recent_files[ -1 ] )
             
-        def seras_data():
-            try:
-                self.__new_model()
-                self._model.import_composites( "SampleData/sera.composites" )
-                self._model.import_blast( "SampleData/sera.blast" )
-                self._model.import_fasta( "SampleData/sera.fasta" )
-                self.refresh_model()
-                QMessageBox.information(self, self.windowTitle(), "\n".join(self._model.comments))
-            except Exception as ex:
-                PrintHelper.print_exception( ex )
-                exit( 1 )
-                
-        def triptych_data():
-            try:
-                self.__new_model()
-                self._model.import_blast( "SampleData/triptych.blast" )
-                self._model.import_fasta( "SampleData/triptych.fasta" )
-                self.refresh_model()
-                QMessageBox.information(self, self.windowTitle(), "\n".join(self._model.comments))
-            except Exception as ex:
-                PrintHelper.print_exception( ex )
-                exit( 1 )
+        sample_data_folder = path.join( FileHelper.get_directory( __file__), "sampledata")
         
-        for x in [seras_data, triptych_data]:
-            action = QAction( x.__name__, self )
-            action.setStatusTip( x.__name__ )
+        for x in FileHelper.sub_dirs(sample_data_folder):  
+            action = QAction( FileHelper.get_filename(x), self )
+            action.setStatusTip( x )
             # noinspection PyUnresolvedReferences
-            action.triggered.connect( x )
+            action.triggered[bool].connect( self.__select_sample_data )
             self.ui.MNU_EXAMPLES.addAction( action )
         
-        self._view = None  # type:LegoViewModel
+        if self.global_options.recent_files:
+            try:
+                self.load_file( self.global_options.recent_files[ -1 ], errors = False )
+                self._view = None  # type:LegoViewModel
+                self.refresh_model()
+            except:
+                self.statusBar().showMessage("Could not load the file '{}'.".format(self.global_options.recent_files[ -1 ]))
+            
+            
+        
+    @exceptToGui()
+    def __select_sample_data(self, _ : bool):
+        directory = self.sender().statusTip()
+        contents = FileHelper.list_dir(directory)
+        
+        self._model = LegoModel()
+        self._model_file_name = None
+        
+        for x in contents:
+            if x.endswith(".composites"):
+                self._model.import_composites( x )
+        
+        for x in contents:
+            if x.endswith(".blast"):
+                self._model.import_blast( x )
+    
+        for x in contents:
+            if x.endswith(".fasta"):
+                self._model.import_fasta( x )
+                
         self.refresh_model()
         
-        self.statusBar().showMessage( "Press F1 to view keys." )
-    
+        QMessageBox.information(self, self.windowTitle(), "\n".join(self._model.comments))
     
     def refresh_recent_files( self ):
         self.ui.MNU_RECENT.clear()
@@ -132,58 +143,131 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     
     def ILegoViewModelObserver_selection_changed( self ):
-        sel = self._view.selected_entities()
+        #
+        # What have we selected?
+        #
+        entities = self._view.selected_entities()
+        first = ArrayHelper.first_or_nothing(entities)
+        type_name = (type( first ).__name__[ 4: ].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
+        self._view.clear_selection_mask()
         
-        if len( sel ) == 0:
+        self.ui.BTN_SELMASK_ALL.setText(str(len(entities)))
+        
+        #
+        # Delete existing controls
+        #
+        for group_box in self.__group_boxes: #type: List[QWidget]
+            for widget in group_box: #type: QWidget
+                widget.parentWidget().layout().removeWidget(widget)
+                sip.delete(widget)
+            
+        self.__group_boxes.clear()
+        
+        # Status bar
+        #
+        if len( entities ) == 0:
             self.statusBar().showMessage( "SELECTED: <<NOTHING>>" )
-            self.ui.TXT_VIEW.setText( "" )
             return
-        
-        first = sel[ 0 ]
-        type_name = type( first ).__name__[ 4: ].upper() + ("s" if len( sel ) > 1 else "")
-        
-        if len( sel ) == 1:
+        elif len( entities ) == 1:
             self.statusBar().showMessage( "SELECTED: <<{}>> {}".format( type_name, first ) )
         else:
-            self.statusBar().showMessage( "SELECTED: <<MULTIPLE ITEMS>> ({} {})".format( len( sel ), type_name ) )
+            self.statusBar().showMessage( "SELECTED: <<MULTIPLE ITEMS>> ({} {})".format( len( entities ), type_name ) )
             
-        content = []
         
-        for x in sel:
+        
+        for entity in entities:
+            assert entity is not None
+            
+            #
+            # Controls
+            #
+            group_box = QGroupBox()
+            group_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            group_box.setTitle(type(entity).__name__[4:]+" : "+  str(entity))
+            self.ui.SCR_AREA.layout().addWidget(group_box)
+            
+            layout = QVBoxLayout()
+            group_box.setLayout(layout)
+            
+            def __check_box(state : bool):
+                check_box = self.sender() #type: QPushButton
+                
+                if not isinstance(check_box, QPushButton):
+                    return
+
+                self.__update_for_checkbox( check_box )
+                self._view.scene.update()
+
+
+            
+
+
+            check_box = QPushButton()
+            check_box.setText("Selected")
+            check_box.setCheckable(True)
+            check_box.setChecked(True)
+            check_box.toggled[bool].connect(__check_box)
+            check_box.setProperty("entity", entity)
+            layout.addWidget(check_box)
+            
+            multiline = len(entities) > 1 or not self.ui.CHKBTN_DATA_FASTA.isChecked()
+            
+            text_edit = QTextEdit()
+            text_edit.setLineWrapMode(QTextEdit.NoWrap if multiline else QTextEdit.WidgetWidth)
+            text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding if multiline else QSizePolicy.Minimum)
+            text_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            text_edit.setStyleSheet("background: black; color: white;")
+            layout.addWidget(text_edit)
+            
+            self.__group_boxes.append((check_box, text_edit, group_box))
+            
+            content = []
+            
             if self.ui.CHKBTN_DATA_NEWICK.isChecked():
-                content.append(">"+str(x))
-                if isinstance(x, LegoComponent):
-                    if x.tree:
-                        content.append(x.tree)
+                #content.append(">"+str(entity))
+                
+                if isinstance(entity, LegoComponent):
+                    if entity.tree:
+                        content.append(entity.tree)
                     else:
-                        content.append(";MISSING - Generate a tree first! ")
+                        content.append("; MISSING - Generate a tree first!")
                 else:
                     
-                    content.append(";NOT AVAILABLE - Only available for components")
+                    content.append("; NOT AVAILABLE - Only available for components")
             elif self.ui.CHKBTN_DATA_FASTA.isChecked():
-                if hasattr( x, "to_fasta" ):
-                    fasta = x.to_fasta()
+                if hasattr( entity, "to_fasta" ):
+                    fasta = entity.to_fasta(header=False)
                     content.append(fasta)
                 else:
-                    content.append(">"+str(x))
-                    content.append(";NOT AVAILABLE")
-        
-        
-        
-        content="\n\n".join(content )
-        
-        self.ui.TXT_VIEW.setLineWrapMode(QTextEdit.NoWrap if content.count(">") > 1 else QTextEdit.WidgetWidth)
-        
-        if self.ui.CHKBTN_DATA_FASTA.isChecked():
-            content = self.colour_fasta( content)
+                    #content.append(">"+str(entity))
+                    content.append("; NOT AVAILABLE")
+            elif self.ui.CHKBTN_DATA_BLAST.isChecked():
+                if hasattr( entity, "extra_data" ):
+                    content.append("\n".join(entity.extra_data))
+                else:
+                    content.append("; NOT AVAILABLE")
+                    
+            content = "\n\n".join(content)
             
-        self.ui.TXT_VIEW.setText( content )
+            if self.ui.CHKBTN_DATA_FASTA.isChecked():
+                content = self.colour_fasta( content)
             
+            text_edit.setText(content)
+            
+    def __update_for_checkbox( self, check_box : QPushButton):
+        assert isinstance(check_box, QPushButton), check_box
         
+        entity = check_box.property( "entity" )
+        assert entity is not None
+        
+        state = check_box.isChecked()
+        self._view.set_selection_mask( entity, state )
+
     
     
     def ILegoViewModelObserver_options_changed( self ):
-        self.update_sel_btns()
+        self.update_selection_buttons()
     
     
     def colour_fasta( self, array ):
@@ -193,6 +277,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         res = [ ]
         no_colours = False
         pending=""
+        table=self._view.lookup_table.letter_colour_table
         
         for x in array:
             if x == ">":
@@ -217,7 +302,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             if no_colours:
                 res.append(x)
             else:
-                colour = PROT_COLOURS.get( x )
+                colour = table.get( x )
                 
                 if colour is None:
                     colour = QtColourHelper.Pens.BLACK
@@ -238,18 +323,24 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     def refresh_model( self ):
         self.no_update_options = True
+        first_load=  self._view is None
         # noinspection PyUnresolvedReferences
         self._view = LegoViewModel( self, self.ui.graphicsView, self.subsequence_view_focus, self._model )
         # noinspection PyUnresolvedReferences
         self.ui.graphicsView.setScene( self._view.scene )
         
-        self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged )  # TODO: Does this need cleanup like in C#?
+        self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged ) # TODO: Does this need cleanup like in C#?
         
-        o = self._view.options
-        self.update_sel_btns()
+        if first_load:
+            self.update_selection_buttons()
+        else:
+            self.no_update_options = False
+            self.update_options()
+            
+        self.update_window_title()
     
     
-    def update_sel_btns( self ):
+    def update_selection_buttons( self ):
         self.no_update_options = True
         
         o = self._view.options
@@ -291,20 +382,19 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         if self.no_update_options:
             return
         
-        o = self._view.options
-        o.x_snap = self.ui.CHK_MOVE_XSNAP.isChecked()
-        o.y_snap = self.ui.CHK_MOVE_YSNAP.isChecked()
-        o.colour_blend = self.ui.SLI_BLEND.value() / 100
-        o.view_edges = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_EDGES.checkState() )
-        o.view_names = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
+        o                 = self._view.options
+        o.x_snap          = self.ui.CHK_MOVE_XSNAP.isChecked()
+        o.y_snap          = self.ui.CHK_MOVE_YSNAP.isChecked()
+        o.colour_blend    = self.ui.SLI_BLEND.value() / 100
+        o.view_edges      = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_EDGES.checkState() )
+        o.view_names      = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
         o.view_piano_roll = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_PIANO_ROLLS.checkState() )
-        o.view_positions = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
-        o.view_component = self.ui.CHK_VIEW_COMPONENTS.isChecked()
-        o.move_enabled = self.ui.CHK_MOVE.isChecked()
-        self.update_sel_btns()
+        o.view_positions  = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
+        o.view_component  = self.ui.CHK_VIEW_COMPONENTS.isChecked()
+        o.move_enabled    = self.ui.CHK_MOVE.isChecked()
+        self.update_selection_buttons()
         
         self._view.scene.update()
-        self.statusBar().showMessage( "HIIII!" )
         self.no_update_options = False
     
     
@@ -315,16 +405,16 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self._view.change_colours( new_colour )
     
     
-    @pyqtSlot()
-    def on_BTNCHK_DARKER_clicked( self ) -> None:
+    @exqtSlot(bool)
+    def on_BTNCHK_DARKER_clicked( self, _:bool) -> None:
         """
         Signal handler: Darker check-button clicked
         """
         self.ui.ACTCHK_DARKER.setChecked( self.ui.BTNCHK_DARKER.isChecked() )
     
     
-    @pyqtSlot()
-    def on_ACT_MODEL_NEW_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_MODEL_NEW_triggered( self, _ : bool ) -> None:
         """
         Signal handler: New model
         """
@@ -344,8 +434,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             self.setWindowTitle("GeneticLego Diagram Editor - (Untitled)")
     
     
-    @pyqtSlot()
-    def on_ACT_MODEL_IMPORT_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_MODEL_IMPORT_triggered( self,_:bool ) -> None:
         """
         Signal handler: Import data
         """
@@ -373,16 +463,16 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.refresh_model()
     
     
-    @pyqtSlot()
-    def on_ACT_APP_EXIT_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_APP_EXIT_triggered( self,_:bool ) -> None:
         """
         Signal handler: Exit application
         """
         self.close()
     
     
-    @pyqtSlot()
-    def on_ACT_MODEL_SAVE_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_MODEL_SAVE_triggered( self,_:bool ) -> None:
         """
         Signal handler: Save model
         """
@@ -394,8 +484,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.save_file(file_name)
     
     
-    @pyqtSlot()
-    def on_ACT_MODEL_OPEN_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_MODEL_OPEN_triggered( self,_:bool ) -> None:
         """
         Signal handler:
         """
@@ -406,7 +496,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             self.load_file( file_name )
     
     
-    def load_file( self, file_name ):
+    def load_file( self, file_name, errors = True ):
         if file_name:
             try:
                 self._model = IoHelper.load_binary( file_name )
@@ -415,13 +505,17 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                 self.refresh_model()
                 self.update_window_title()
             except Exception as ex:
-                QtGuiHelper.show_exception( self, "Could not load the file '{}'. Perhaps it is from a different version?".format(file_name), ex )
+                if errors:
+                    QtGuiHelper.show_exception( self, "Could not load the file '{}'. Perhaps it is from a different version?".format(file_name), ex )
+                else:
+                    self.statusBar().showMessage("Could not load the file '{}'.".format(file_name))
                 
     def save_file(self, file_name):
         if file_name:
             try:
                 self._model_file_name = file_name
                 self.remember_file(file_name)
+                sys.setrecursionlimit(10000)
                 IoHelper.save_binary( file_name, self._model )
                 self.update_window_title()
             except Exception as ex:
@@ -452,8 +546,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         IoHelper.save_binary( self.global_options_file_name(), self.global_options )
     
     
-    @pyqtSlot()
-    def on_ACT_MODEL_QUANTISE_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_MODEL_QUANTISE_triggered( self,_:bool ) -> None:
         """
         Signal handler:
         """
@@ -695,7 +789,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.apply_colour( Colours.DARK_GRAY, False )
     
     
-    def __ask_for_one( self, array ) -> Optional[ Any ]:
+    def __ask_for_one( self, array ) -> Optional[ object ]:
         if not array:
             QMessageBox.information( self, self.windowTitle(), "Make a valid selection first." )
             return None
@@ -791,14 +885,12 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             QtGuiHelper.show_exception( self, "Failed to process NRFG for component '{}'.".format(component), ex )
     
     
-    @pyqtSlot()
-    def on_ACT_ARRAY_FUSE_triggered( self ) -> None:
+    @exqtSlot(bool)
+    def on_ACT_ARRAY_FUSE_triggered( self, _ : bool ) -> None:
         """
         Signal handler:
         """
-        #QMessageBox.question(self, self.windowTitle(), "Do you wish to produce a rooted tree?", QtMess)
-        
-        LegoFunctions.process_trees(self._model)
+        FrmTreeSelector.request(self, self._model)
     
     
     @pyqtSlot()
@@ -898,7 +990,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                 QMessageBox.information( self, self.windowTitle(), "Select a subsequence to split first." )
                 return
             
-            sequence = subsequences[0].sequence
+            sequence = ArrayHelper.first(subsequences).sequence
             
             if not all(x.sequence is sequence for x in subsequences):
                 QMessageBox.information( self, self.windowTitle(), "All of the the selected subsequences must be in the same sequence." )
@@ -972,8 +1064,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             if not ok:
                 return
             
-            edge = next(iter(x for x in edges if str(x)==edge_name))
-            
             self._model.remove_edges( subsequences, edges )
             self._view.recreate_edges()
             
@@ -981,15 +1071,20 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             QMessageBox.information( self, self.windowTitle(), "Components are automatically generated, you cannot delete them." )
 
 
-    def __query_remove( self, items )->bool:
-        type_name = type( items[0 ] ).__name__[ 4: ] + "s"
+    def __query_remove( self, items : Set[object] )->bool:
+        first = ArrayHelper.first(items)
+        
+        if first is None:
+            return False
+        
+        type_name = type(first).__name__[ 4: ] + "s"
         message = "This will remove {} {}.".format( len( items ), type_name )
         details = "* " + "\n* ".join( str( x ) for x in items )
-        msgbox = QMessageBox()
-        msgbox.setText( message )
-        msgbox.setDetailedText( details )
-        msgbox.setStandardButtons( QMessageBox.Yes | QMessageBox.No )
-        x = msgbox.exec_()
+        message_box = QMessageBox()
+        message_box.setText( message )
+        message_box.setDetailedText( details )
+        message_box.setStandardButtons( QMessageBox.Yes | QMessageBox.No )
+        x = message_box.exec_()
         return x  == QMessageBox.Yes
     
     
@@ -1011,7 +1106,16 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         file_name = QtGuiHelper.browse_save( self, filter )
         
         if file_name:
-            FileHelper.write_all_text(file_name, self.ui.TXT_VIEW.toPlainText())
+            c = []
+            
+            for a in self.__group_boxes:
+                b = a[0] #type: QPushButton
+                t = a[1] #type: QTextEdit
+                
+                if b.isChecked():
+                    c.append(t.toPlainText())
+                
+            FileHelper.write_all_text(file_name, "\n".join(c))
     
     
     @pyqtSlot()
@@ -1023,7 +1127,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     
     @pyqtSlot()
-    def on_ACT_WIN_REFERENCE_triggered( self ) -> None:
+    def on_ACT_WIN_REFERENCE_triggered( self ) -> None: #TODO: BAD_HANDLER - The widget 'ACT_WIN_REFERENCE' does not appear in the designer file.
         """
         Signal handler:
         """
@@ -1031,7 +1135,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     
     @pyqtSlot()
-    def on_ACT_WIN_REFERENCE_visibilityChanged( self, visible ) -> None:
+    def on_ACT_WIN_REFERENCE_visibilityChanged( self, visible ) -> None: #TODO: BAD_HANDLER - The widget 'ACT_WIN_REFERENCE' does not appear in the designer file.
         self.ui.ACT_WIN_REFERENCE.setChecked( visible )
     
     
@@ -1097,7 +1201,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     @pyqtSlot()
     def on_ACT_ALIGN_triggered(self) -> None:
         """
-        Signal handler:
+        Signal handler: Align others to sequence
         """
         sel_sequence = self._view.selected_sequence()
         
@@ -1109,112 +1213,284 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                 
         QMessageBox.information(self, self.windowTitle(), "Aligned data about '{}'.".format(sel_sequence))
                 
+    @exqtSlot(bool)
+    def on_ACT_REMOVE_REDUNDANT_EDGES_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Remove redundant edges
+        """
+        self._model.remove_redundant_edges()
+        self.refresh_model()
+    
+    @exqtSlot(bool)
+    def on_ACT_SELECT_LEFT_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Select subsequences to left
+        """
+        self._view.select_left()
+    
+    @exqtSlot(bool)
+    def on_ACT_SELECT_RIGHT_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Select subsequences to right
+        """
+        self._view.select_right()
+    
+    @exqtSlot(bool)
+    def on_ACT_SELECT_DIRECT_CONNECTIONS_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Select direct connections
+        """
+        self._view.select_direct_connections()
+    
+    @exqtSlot(bool)
+    def on_ACT_REMOVE_REDUNDANT_SUBSEQUENCES_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Remove redundant subsequences
+        """
+        self._model.remove_redundant_subsequences()
+        self.refresh_model()
+        
+    @exqtSlot(bool)
+    def on_ACT_ALIGN_SUBSEQUENCES_triggered(self, _ : bool) -> None:
+        """
+        Signal handler: Align subsequences to precursors
+        """
+        the_list = self._view.selected_subsequence_views() or self._view.subsequence_views
+        
+        for x in sorted(the_list, key = lambda x: x.index):
+            if x.index != 0:
+                x.restore_default_position()
             
-    @pyqtSlot()
-    def on_CHKBTN_DATA_FASTA_clicked(self) -> None:
+    @exqtSlot(bool)
+    def on_ACT_CONNECT_COMPONENTS_triggered(self, _:bool) -> None:
         """
         Signal handler:
+        """
+        self._model.deconvolute()
+        self.refresh_model()
+    
+    @exqtSlot(bool)
+    def on_ACT_ALIGN_FIRST_SUBSEQUENCES_triggered(self, _:bool) -> None:
+        """
+        Signal handler: Align first subsequences
+        """
+        the_list = self._view.selected_subsequence_views() or self._view.subsequence_views
+        
+        x = min(x.pos().x() for x in the_list)
+        
+        for subsequence_view in self._view.selected_subsequence_views():
+            if subsequence_view.index == 0:
+                subsequence_view.setPos(QPoint(x, subsequence_view.pos().y()))
+                subsequence_view.update_model()
+                
+    @exqtSlot(bool)
+    def on_ACT_MARK_AS_COMPOSITE_triggered(self, _:bool) -> None:
+        """
+        Signal handler:
+        """
+        for x in self._view.selected_sequences():
+            x.is_composite = not x.is_composite
+        
+    @pyqtSlot()
+    def on_ACT_MARK_AS_ROOT_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        for x in self._view.selected_sequences():
+            x.is_root = not x.is_root
+            
+    @pyqtSlot()
+    def on_ACT_DEBUG_FIX_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        for sequence in self._model.sequences:
+            sequence.is_root = False
+            
+    @pyqtSlot()
+    def on_BTN_SELMASK_PREV_clicked(self) -> None:
+        """
+        Signal handler: Pass. Handled in action.
+        """
+        pass
+            
+    @pyqtSlot()
+    def on_BTN_SELMASK_NONE_clicked(self) -> None: #TODO: BAD_HANDLER - The widget 'BTN_SELMASK_NONE' does not appear in the designer file.
+        """
+        Signal handler: Pass. Handled in action.
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_BTN_SELMASK_ALL_clicked(self) -> None:
+        """
+        Signal handler: Pass. Handled in action.
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_BTN_SELMASK_NEXT_clicked(self) -> None:
+        """
+        Signal handler: Pass. Handled in action.
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_ACT_SELMASK_ALL_triggered(self) -> None:
+        """
+        Signal handler: Select all in mask
+        """
+        state = not self.__group_boxes[0][0].isChecked()
+        
+        for x in self.__group_boxes:
+            c = x[0] #type: QCheckBox
+            c.setChecked(state)
+            self.__update_for_checkbox( c )
+            
+        self._view.scene.update()
+    
+    @pyqtSlot()
+    def on_ACT_SELMASK_NEXT_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self.__select_next([x[0] for x in self.__group_boxes])
+
+
+    def __select_next( self, check_boxes : List[QPushButton]):
+        first = None
+        multiple = False
+        
+        for check_box in check_boxes:
+            if check_box.isChecked():
+                if first is None:
+                    first = check_box
+                else:
+                    multiple = True
+                    
+        if first is None:
+            first = ArrayHelper.first(check_boxes)
+            multiple = True
+        
+        defer = False
+        
+        for check_box in check_boxes:
+            if check_box is first:
+                if multiple:
+                    check_box.setChecked(True)
+                else:
+                    defer = True
+                    check_box.setChecked(False)
+            elif defer:
+                check_box.setChecked(True)
+                defer = False
+            else:
+                check_box.setChecked(False)
+                
+            self.__update_for_checkbox( check_box )
+                
+        if defer:
+            check_box = ArrayHelper.first(check_boxes)
+            
+            if check_box is not None:
+                check_box.setChecked(True)
+                self.__update_for_checkbox( check_box )
+            
+        self._view.scene.update()
+
+
+    @pyqtSlot()
+    def on_ACT_SELMASK_PREV_triggered(self) -> None:
+        """
+        Signal handler:
+        """
+        self.__select_next(list(reversed([x[0] for x in self.__group_boxes])))
+        
+    @pyqtSlot()
+    def on_CHKBTN_DATA_BLAST_clicked(self) -> None:
+        """
+        Signal handler:
+        """
+        pass
+            
+    @exqtSlot(bool)
+    def on_CHKBTN_DATA_FASTA_clicked(self, _:bool) -> None:
+        """
+        Signal handler: No action
         """
         pass
         
-    @pyqtSlot()
-    def on_CHKBTN_DATA_NEWICK_clicked(self) -> None:
+    @exqtSlot(bool)
+    def on_CHKBTN_DATA_NEWICK_clicked(self, _:bool) -> None:
         """
-        Signal handler:
+        Signal handler: No action
         """
         pass
             
-    @pyqtSlot()
-    def on_BTN_DATA_SAVE_clicked(self) -> None:
+    @exqtSlot()
+    def on_BTN_DATA_SAVE_clicked(self, _:bool) -> None:
         """
-        Signal handler:
+        Signal handler: Save FASTA / Tree
         """
-        pass
+        pass #TODO
         
-    @pyqtSlot(bool)
-    def on_CHKBTN_DATA_FASTA_toggled(self, checked) -> None:
+    @exqtSlot(bool)
+    def on_CHKBTN_DATA_FASTA_toggled(self, _:bool) -> None:
         """
         Signal handler:
         """
         self.ILegoViewModelObserver_selection_changed()
         
-    @pyqtSlot(bool)
-    def on_CHKBTN_DATA_NEWICK_toggled(self, checked) -> None:
+    @exqtSlot(bool)
+    def on_CHKBTN_DATA_NEWICK_toggled(self, _:bool) -> None:
         """
-        Signal handler:
+        Signal handler: View data
         """
         self.ILegoViewModelObserver_selection_changed()
             
-    @pyqtSlot()
-    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self ) -> None:
+    @exqtSlot()
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self:bool ) -> None:
         """
         Signal handler: Compartmentalise model
         """
         self._model.compartmentalise()
         self.refresh_model()
-        
-    @pyqtSlot(bool)
-    def on_CHKBTN_DATA_NEWICK_toggled(self, checked) -> None:
-        """
-        Signal handler:
-        """
-        self.update_options()
 
-    @pyqtSlot( int )
-    def on_CHK_VIEW_EDGES_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_VIEW_EDGES_stateChanged( self, _ :int):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_VIEW_COMPONENTS_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_VIEW_COMPONENTS_stateChanged( self, _:int ):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_VIEW_NAMES_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_VIEW_NAMES_stateChanged( self, _:int ):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_VIEW_PIANO_ROLLS_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_VIEW_PIANO_ROLLS_stateChanged( self, _ :int):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_VIEW_POSITIONS_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_VIEW_POSITIONS_stateChanged( self, _:int ):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_MOVE_XSNAP_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_MOVE_XSNAP_stateChanged( self, _:int ):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_MOVE_YSNAP_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_CHK_MOVE_YSNAP_stateChanged( self, _:int ):   
         self.update_options()
     
     
-    @pyqtSlot( int )
-    def on_CHK_COL_BLEND_stateChanged( self, _ ): #TODO: BAD_HANDLER
+    @exqtSlot( int )
+    def on_SLI_BLEND_valueChanged( self, _ :int): 
         self.update_options()
-    
-    
-    @pyqtSlot( bool )
-    def on_RAD_COL_CONNECTED_toggled( self, _ ): #TODO: BAD_HANDLER
-        self.update_options()
-    
-    
-    @pyqtSlot( bool )
-    def on_RAD_COL_SELECTION_toggled( self, _ ): #TODO: BAD_HANDLER
-        self.update_options()
-    
-    
-    @pyqtSlot( bool )
-    def on_RAD_COL_ALL_toggled( self, _ ): #TODO: BAD_HANDLER
-        self.update_options()
-    
-    
-    @pyqtSlot( int )
-    def on_SLI_BLEND_valueChanged( self, _ ): #TODO: BAD_HANDLER #TODO: BAD_HANDLER
-            self.update_options()
