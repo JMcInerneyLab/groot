@@ -3,31 +3,31 @@ MVC architecture.
 
 Classes that manage the view of the model.
 """
-from enum import Enum
+from enum   import Enum
 from random import randint
 from typing import Iterable, List, Optional, Set, Tuple, Union, Dict
 
-from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtCore       import QPointF, QRect, QRectF, Qt
+from PyQt5.QtGui        import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
+from PyQt5.QtWidgets    import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from MHelper import ArrayHelper, QtColourHelper
-from MHelper.CommentHelper import override
-from MHelper.ExceptionHelper import SwitchError
-from MHelper.QtColourHelper import Colours, Pens
+from MHelper                    import ArrayHelper, QtColourHelper
+from MHelper.CommentHelper      import override
+from MHelper.ExceptionHelper    import SwitchError
+from MHelper.QtColourHelper     import Colours, Pens
 
-from legoalign.LegoModels import ELetterType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from legoalign.LegoModels       import ELetterType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
 
 
 class ESequenceColour( Enum ):
-    RESET = 1
+    RESET  = 1
     RANDOM = 2
     
 class EMode(Enum):
-    SEQUENCE=0
-    SUBSEQUENCE=1
-    EDGE=2
-    COMPONENT=3
+    SEQUENCE    = 0
+    SUBSEQUENCE = 1
+    EDGE        = 2
+    COMPONENT   = 3
 
 
 class ESelect( Enum ):
@@ -59,68 +59,71 @@ class ESelect( Enum ):
 
 
 # Order of proteins in piano roll
+# noinspection PyTypeChecker
 PROTEIN_ORDER_TABLE = ArrayHelper.create_index_lookup( "IVLFCMAGTSWYPHEQDNKR" )
-DNA_ORDER_TABLE = ArrayHelper.create_index_lookup( "ATCG" )
-RNA_ORDER_TABLE = ArrayHelper.create_index_lookup( "AUCG" )
+# noinspection PyTypeChecker
+DNA_ORDER_TABLE     = ArrayHelper.create_index_lookup( "ATCG" )
+# noinspection PyTypeChecker
+RNA_ORDER_TABLE     = ArrayHelper.create_index_lookup( "AUCG" )
 
 # Colour of proteins in piano roll
-PROTEIN_COLOUR_TABLE = { "G": Pens.WHITE, "A": Pens.WHITE, "V": Pens.WHITE, "L": Pens.WHITE, "I": Pens.WHITE,
+PROTEIN_COLOUR_TABLE = { "G": Pens.WHITE,  "A": Pens.WHITE,  "V": Pens.WHITE, "L": Pens.WHITE, "I": Pens.WHITE,
                          "F": Pens.ORANGE, "Y": Pens.ORANGE, "W": Pens.ORANGE,
                          "C": Pens.YELLOW, "M": Pens.YELLOW,
-                         "S": Pens.GREEN, "T": Pens.GREEN,
-                         "K": Pens.RED, "R": Pens.RED, "H": Pens.RED,
-                         "D": Pens.CYAN, "E": Pens.CYAN,
+                         "S": Pens.GREEN,  "T": Pens.GREEN,
+                         "K": Pens.RED,    "R": Pens.RED,    "H": Pens.RED,
+                         "D": Pens.CYAN,   "E": Pens.CYAN,
                          "N": Pens.DARK_ORANGE, "Q": Pens.DARK_ORANGE,
                          "P": Pens.LIGHT_RED }
 
-DNA_COLOUR_TABLE = { "A": Pens.YELLOW, "T":Pens.RED, "C":Pens.GREEN, "G":Pens.LIGHT_BLUE }
-RNA_COLOUR_TABLE = { "A": Pens.YELLOW, "U":Pens.RED, "C":Pens.GREEN, "G":Pens.LIGHT_BLUE }
+DNA_COLOUR_TABLE                                   = { "A": Pens.YELLOW, "T":Pens.RED, "C":Pens.GREEN, "G":Pens.LIGHT_BLUE }
+RNA_COLOUR_TABLE                                   = { "A": Pens.YELLOW, "U":Pens.RED, "C":Pens.GREEN, "G":Pens.LIGHT_BLUE }
 
-SIZE_MULTIPLIER = 2
-PROTEIN_SIZE = SIZE_MULTIPLIER * 1
-NUCLEOTIDE_SIZE = SIZE_MULTIPLIER * 1
-TEXT_MARGIN = SIZE_MULTIPLIER * 4
+SIZE_MULTIPLIER                                    = 2
+PROTEIN_SIZE                                       = SIZE_MULTIPLIER * 1
+NUCLEOTIDE_SIZE                                    = SIZE_MULTIPLIER * 1
+TEXT_MARGIN                                        = SIZE_MULTIPLIER * 4
 
-PIANO_ROLL_SELECTED_BACKGROUND = QBrush( QColor( 0, 0, 0 ) )
-PIANO_ROLL_UNSELECTED_BACKGROUND = QBrush( QColor( 0, 0, 0, alpha = 128 ) )
-SEQUENCE_DEFAULT_FG = QPen( QColor( 255, 255, 0 ) )
+PIANO_ROLL_SELECTED_BACKGROUND                     = QBrush( QColor( 0, 0, 0 ) )
+PIANO_ROLL_UNSELECTED_BACKGROUND                   = QBrush( QColor( 0, 0, 0, alpha = 128 ) )
+SEQUENCE_DEFAULT_FG                                = QPen( QColor( 255, 255, 0 ) )
 
-SELECTION_EDGE_LINE = QPen( QColor( 0, 0, 255 ) )
+SELECTION_EDGE_LINE                                = QPen( QColor( 0, 0, 255 ) )
 SELECTION_EDGE_LINE.setWidth(2)
-EDGE_LINE = QPen( QColor( 128, 128, 128 ) )
+EDGE_LINE                                          = QPen( QColor( 128, 128, 128 ) )
 EDGE_LINE.setStyle(Qt.DotLine)
-FOCUS_LINE = QPen( QColor( 255, 255, 255 ) )
+FOCUS_LINE                                         = QPen( QColor( 255, 255, 255 ) )
 FOCUS_LINE.setStyle( Qt.DashLine )
-SELECTION_LINE = QPen( QColor( 0, 0, 255 ) )
+SELECTION_LINE                                     = QPen( QColor( 0, 0, 255 ) )
 SELECTION_LINE.setWidth(2)
-PARTIAL_SELECTION_LINE = QPen( QColor( 128, 128, 255 ) )
+PARTIAL_SELECTION_LINE                             = QPen( QColor( 128, 128, 255 ) )
 PARTIAL_SELECTION_LINE.setWidth(2)
-MOVE_LINE = QPen( QColor( 255, 128, 0 ) )
-MOVE_LINE_SEL = QPen( QColor( 0, 128, 255 ) )
-DISJOINT_LINE =QPen( QColor( 0, 0, 0 ) )
+MOVE_LINE                                          = QPen( QColor( 255, 128, 0 ) )
+MOVE_LINE_SEL                                      = QPen( QColor( 0, 128, 255 ) )
+DISJOINT_LINE                                      = QPen( QColor( 0, 0, 0 ) )
 DISJOINT_LINE.setWidth(3)
-SELECTION_FILL = Qt.NoBrush
-COMPONENT_PEN =  QPen(QColor(0,0,0,alpha=64))
-SNAP_LINE = QPen( QColor( 0, 255, 255 ) )
+SELECTION_FILL                                     = Qt.NoBrush
+COMPONENT_PEN                                      = QPen(QColor(0,0,0,alpha = 64))
+SNAP_LINE                                          = QPen( QColor( 0, 255, 255 ) )
 SNAP_LINE.setWidth( 3 )
 SNAP_LINE.setStyle( Qt.DotLine )
-SNAP_LINE_2 = QPen( QColor( 0, 0, 128 ) )
+SNAP_LINE_2                                        = QPen( QColor( 0, 0, 128 ) )
 SNAP_LINE_2.setWidth( 3 )
-NO_SEQUENCE_LINE = QPen( QColor( 0, 0, 0 ) )
+NO_SEQUENCE_LINE                                   = QPen( QColor( 0, 0, 0 ) )
 NO_SEQUENCE_LINE.setStyle( Qt.DashLine )
-NO_SEQUENCE_BACKWARDS_LINE = QPen( QColor( 255, 0, 0 ) )
+NO_SEQUENCE_BACKWARDS_LINE                         = QPen( QColor( 255, 0, 0 ) )
 NO_SEQUENCE_BACKWARDS_LINE.setStyle( Qt.DashLine )
-NO_SEQUENCE_FILL = QBrush( QColor( 0, 0, 0, alpha = 32 ) )
-TEXT_LINE = QPen( QColor( 128, 128, 128 ) )
-POSITION_TEXT = QPen( QColor( 64, 64, 64 ) )
-DARK_TEXT = QPen( QColor( 0, 0, 0 ) )
-LIGHT_TEXT = QPen( QColor( 255, 255, 255 ) )
-SINGLE_COMPONENT_COLOUR = QColor( 64, 64, 64 )
+NO_SEQUENCE_FILL                                   = QBrush( QColor( 0, 0, 0, alpha = 32 ) )
+TEXT_LINE                                          = QPen( QColor( 128, 128, 128 ) )
+POSITION_TEXT                                      = QPen( QColor( 64, 64, 64 ) )
+DARK_TEXT                                          = QPen( QColor( 0, 0, 0 ) )
+LIGHT_TEXT                                         = QPen( QColor( 255, 255, 255 ) )
+SINGLE_COMPONENT_COLOUR                            = QColor( 64, 64, 64 )
 
 # Z-values (draw order)
 Z_SEQUENCE = 1
-Z_EDGES = 2
-Z_FOCUS = 3
+Z_EDGES    = 2
+Z_FOCUS    = 3
 
 
 class LegoViewOptions:
@@ -129,17 +132,17 @@ class LegoViewOptions:
     """
     
     def __init__( self ):
-        self.colour_blend = 1  # type:float
-        self.toggle_selection = False  # type:bool
-        self.y_snap = True  # type:bool
-        self.x_snap = True  # type:bool
-        self.view_edges = True  # type:Optional[bool]
-        self.view_piano_roll = None  # type:Optional[bool]
-        self.view_names = True  # type:Optional[bool]
-        self.view_positions = None  # type:Optional[bool]
-        self.view_component = True  # type:bool
-        self.mode = EMode.SEQUENCE
-        self.move_enabled = False
+        self.colour_blend     = 1              # type: float
+        self.toggle_selection = False          # type: bool
+        self.y_snap           = True           # type: bool
+        self.x_snap           = True           # type: bool
+        self.view_edges       = True           # type: Optional[bool]
+        self.view_piano_roll  = None           # type: Optional[bool]
+        self.view_names       = True           # type: Optional[bool]
+        self.view_positions   = None           # type: Optional[bool]
+        self.view_component   = True           # type: bool
+        self.mode             = EMode.SEQUENCE
+        self.move_enabled     = False
 
 
 class ColourBlock:
@@ -197,7 +200,12 @@ class LegoEdgeViewTarget:
     
     
     @staticmethod
-    def paint_to( painter: QPainter, view_edges: Optional[ bool ], upper: "LegoEdgeViewTarget", lower: "LegoEdgeViewTarget", reduce_alpha: bool, is_selected : bool ):
+    def paint_to( painter      : QPainter,
+                  view_edges   : Optional[ bool ],
+                  upper        : "LegoEdgeViewTarget",
+                  lower        : "LegoEdgeViewTarget",
+                  reduce_alpha : bool,
+                  is_selected  : bool ):
         if not upper or not lower:
             return
         
@@ -207,7 +215,7 @@ class LegoEdgeViewTarget:
         if not view_edges:
             return
         
-        alpha = 64 if not reduce_alpha else 8 if is_selected else 1
+        alpha = 64 if not reduce_alpha else 32 if is_selected else 16
         
         upper_points = upper.__extract_points( False )
         lower_points = lower.__extract_points( True )
@@ -345,7 +353,7 @@ class LegoViewComponent:
             #
             for edge_view in self.edge_views:
                 lower, upper = edge_view.get_upper_and_lower()
-                is_selected = edge_view.edge in self.owner.view_model.selected_edges()
+                is_selected  = edge_view.edge in self.owner.view_model.selected_edges()
                 LegoEdgeViewTarget.paint_to( painter, options.view_edges, upper, lower, True, is_selected )
         else:
             #
@@ -373,18 +381,18 @@ class LegoViewSubsequence( QGraphicsItem ):
         #
         # FIELDS
         #
-        self.owner_sequence_view = owner_view
-        self.sibling_previous = precursor
-        self.sibling_next = None #type: LegoViewSubsequence
-        self.subsequence = subsequence
-        self.components = [] # type:List[LegoViewComponent]
+        self.owner_sequence_view    = owner_view
+        self.sibling_previous       = precursor
+        self.sibling_next           = None #type: LegoViewSubsequence
+        self.subsequence            = subsequence
+        self.components             = [] # type:List[LegoViewComponent]
         self.mousedown_original_pos = None  # type:QPointF
-        self.mousemove_label = None  # type:str
-        self.mousemove_snapline = None  # type:Tuple[int,int]
-        self.mousedown_move_all = False
-        self.index = positional_index
+        self.mousemove_label        = None  # type:str
+        self.mousemove_snapline     = None  # type:Tuple[int,int]
+        self.mousedown_move_all     = False
+        self.index                  = positional_index
         self.edge_subsequence_views = [ ]  # type:List[LegoViewSubsequence]
-        self.__colour = ColourBlock( QColor( subsequence.ui_colour ) ) if subsequence.ui_colour else None
+        self.__colour               = ColourBlock( QColor( subsequence.ui_colour ) ) if subsequence.ui_colour else None
         
         #
         # POSITION
@@ -805,10 +813,10 @@ class LegoViewSequence:
         previous_subsequence = None
         
         for subsequence in self.sequence.subsequences:
-            subsequence_view = LegoViewSubsequence( subsequence, self, len( self.subsequence_views ), previous_subsequence )
-            self.subsequence_view_lookup[subsequence] = subsequence_view
+            subsequence_view                                        = LegoViewSubsequence( subsequence, self, len( self.subsequence_views ), previous_subsequence )
+            self.subsequence_view_lookup[subsequence]               = subsequence_view
             self.owner_model_view.scene.addItem( subsequence_view )
-            previous_subsequence = subsequence_view
+            previous_subsequence                                    = subsequence_view
 
 
 class LegoViewAllEdges( QGraphicsItem ):
@@ -935,20 +943,20 @@ class LookupTable:
         self.type = type_
         
         if type_ == ELetterType.PROTEIN:
-            self.letter_size = PROTEIN_SIZE
-            self.letter_order_table = PROTEIN_ORDER_TABLE
+            self.letter_size         = PROTEIN_SIZE
+            self.letter_order_table  = PROTEIN_ORDER_TABLE
             self.letter_colour_table = PROTEIN_COLOUR_TABLE
         elif type_ == ELetterType.DNA:
-            self.letter_size = NUCLEOTIDE_SIZE
-            self.letter_order_table = DNA_ORDER_TABLE
+            self.letter_size         = NUCLEOTIDE_SIZE
+            self.letter_order_table  = DNA_ORDER_TABLE
             self.letter_colour_table = DNA_COLOUR_TABLE
         elif type_ == ELetterType.RNA:
-            self.letter_size = NUCLEOTIDE_SIZE
-            self.letter_order_table = RNA_ORDER_TABLE
+            self.letter_size         = NUCLEOTIDE_SIZE
+            self.letter_order_table  = RNA_ORDER_TABLE
             self.letter_colour_table = RNA_COLOUR_TABLE
         else:
-            self.letter_size = PROTEIN_SIZE
-            self.letter_order_table = PROTEIN_ORDER_TABLE
+            self.letter_size         = PROTEIN_SIZE
+            self.letter_order_table  = PROTEIN_ORDER_TABLE
             self.letter_colour_table = PROTEIN_COLOUR_TABLE
             print( "Warning: Cannot create the lookup table because I don't know the letter type. Defaulting to `protein`.")
             
@@ -1434,20 +1442,21 @@ class LegoViewModel:
     
 
 
-COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),  # R
-                      QColor( 0, 255, 0 ),  # G
-                      QColor( 0, 0, 255 ),  # B
-                      QColor( 0, 255, 255 ),  # C
-                      QColor( 255, 255, 0 ),  # Y
-                      QColor( 255, 0, 255 ),  # M
-                      QColor( 0, 255, 128 ),  # Cg
-                      QColor( 255, 128, 0 ),  # Yr
-                      QColor( 255, 0, 128 ),  # Mr
-                      QColor( 0, 128, 255 ),  # Cb
-                      QColor( 128, 255, 0 ),  # Yg
+COMPONENT_COLOURS = [ QColor( 255, 0, 0 ),     # R
+                      QColor( 0, 255, 0 ),     # G
+                      QColor( 0, 0, 255 ),     # B
+                      QColor( 0, 255, 255 ),   # C
+                      QColor( 255, 255, 0 ),   # Y
+                      QColor( 255, 0, 255 ),   # M
+                      QColor( 0, 255, 128 ),   # Cg
+                      QColor( 255, 128, 0 ),   # Yr
+                      QColor( 255, 0, 128 ),   # Mr
+                      QColor( 0, 128, 255 ),   # Cb
+                      QColor( 128, 255, 0 ),   # Yg
                       QColor( 128, 0, 255 ) ]  # Mb ]
 
-KEY_COLOURS = { Qt.Key_0: Colours.BLACK,
+KEY_COLOURS = { 
+                Qt.Key_0: Colours.BLACK,
                 Qt.Key_1: Colours.BLUE,
                 Qt.Key_2: Colours.GREEN,
                 Qt.Key_3: Colours.CYAN,
@@ -1469,6 +1478,6 @@ KEY_COLOURS = { Qt.Key_0: Colours.BLACK,
                 Qt.Key_D: Colours.DARK_GRAY,
                 Qt.Key_P: ESequenceColour.RANDOM,
                 Qt.Key_O: ESequenceColour.RESET,
-                }
+              }
 
 DEFAULT_COLOUR = ColourBlock( Colours.GRAY )

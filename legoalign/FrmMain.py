@@ -1,9 +1,11 @@
+"""
+Main form
+"""
+import sys
+import sip
 from os import path
 from typing import Optional, List, Set
 
-import sys
-
-import sip
 from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot, QPoint
 from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
@@ -1218,8 +1220,9 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: Remove redundant edges
         """
-        self._model.remove_redundant_edges()
+        removed = self._model.remove_redundant_edges()
         self.refresh_model()
+        QMessageBox.information(self, self.windowTitle(), "Removed {} edges.".format(removed))
     
     @exqtSlot(bool)
     def on_ACT_SELECT_LEFT_triggered(self, _:bool) -> None:
@@ -1247,8 +1250,9 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: Remove redundant subsequences
         """
-        self._model.remove_redundant_subsequences()
+        removed = self._model.remove_redundant_subsequences()
         self.refresh_model()
+        QMessageBox.information(self, self.windowTitle(), "Removed {} subsequences.".format(removed))
         
     @exqtSlot(bool)
     def on_ACT_ALIGN_SUBSEQUENCES_triggered(self, _ : bool) -> None:

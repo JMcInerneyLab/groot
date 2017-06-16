@@ -200,12 +200,16 @@ class LegoEdge:
         
         raise KeyError( "Not found: '{0}'".format( subsequence ) )
     
+
+    def side( self, position : bool ):
+        return self.destination if position else self.source
+    
     
     def opposite( self, subsequence ):
         """
         Returns the list (source/destination) opposite the specified subsequence
         """
-        return self.source if self.position( subsequence ) else self.destination
+        return self.side(not self.position( subsequence ))
     
     
     def _deconvolute( self ):
@@ -287,10 +291,10 @@ class LegoSubsequence:
         if start > end:
             raise ValueError( "Attempt to create a subsequence in '{0}' where start ({1}) > end ({2}).".format( sequence, start, end ) )
         
-        self.sequence = sequence  # type:LegoSequence  
-        self.__start = start  # Start position
-        self.__end = end  # End position
-        self.edges = [ ]  # type:List[LegoEdge]        # Edge list
+        self.sequence = sequence  # type: LegoSequence
+        self.__start = start      # Start position
+        self.__end = end          # End position
+        self.edges = [ ]          # type: List[LegoEdge] # Edge list
         
         self.ui_position = None
         self.ui_colour = None
@@ -299,6 +303,7 @@ class LegoSubsequence:
         self.is_destroyed = False
         
         self.extra_data = [] #type:List[str]
+        self.components = set()
         
     @property
     def start(self) -> int:
@@ -450,6 +455,8 @@ class LegoSequence:
         self.is_composite = is_composite
         self.is_root = False
         self.extra_data = [] #List[str]
+        self.composite_part_start = {}
+        self.composite_part_end = {}
         
     @property
     def length(self):
@@ -520,6 +527,9 @@ class LegoSequence:
     
     
     def _make_subsequence( self, start, end, extra_data ) -> List[ LegoSubsequence ]:
+        assert start > 0, start
+        assert end > 0  , end
+        
         with LOG( "REQUEST TO MAKE SUBSEQUENCE FROM {} TO {}".format( start, end ) ):    
             if start > end:
                 raise ImplementationError( "Cannot make a subsequence in '{0}' which has a start ({1}) > end ({2}) because that doesn't make sense.".format( self, start, end ) )
@@ -1105,7 +1115,7 @@ class LegoModel:
     def compartmentalise( self ):
         """
         API
-        Merges adjacent subsequences in the same connected component
+        Merges adjacent subsequences in the same connected component, composites excluded.
         """
         for component in self.components:
             for line in component.lines:
@@ -1124,21 +1134,24 @@ class LegoModel:
         def it():
             for sequence in self.sequences:
                 for previous, next in ArrayHelper.lagged_iterate(sequence.subsequences):
-                    a = set(previous.edges)
-                    b = set(next.edges)
-                
-                    if a == b:
+                    if set(previous.edges) == set(next.edges) \
+                            and previous.components == next.components:
+                         
                          with LOG("EQUIVALENT:"):
-                            LOG("X = {}".format(previous))
-                            LOG("Y = {}".format(next))
-                            self.merge_subsequences((previous, next))
-                            return True
+                             LOG("X = {}".format(previous))
+                             LOG("Y = {}".format(next))
+                             self.merge_subsequences((previous, next))
+                             return True
             
             return False
         
         with LOG("REMOVE REDUNDANT SUBSEQUENCES"):
+            removed = 0
+            
             while it():
-                pass
+                removed +=1
+                
+            return removed
 
 
     def remove_redundant_edges( self ):
@@ -1149,6 +1162,8 @@ class LegoModel:
         the_list = list(self.all_edges)
         
         with LOG("REMOVE REDUNDANT EDGES"):
+            removed = 0
+            
             for x in the_list:
                 for y in the_list:
                     if not x.is_destroyed and not y.is_destroyed and x is not y:
@@ -1162,6 +1177,9 @@ class LegoModel:
                                 LOG("X = {}".format(x))
                                 LOG("Y = {}".format(y))
                                 y.unlink_all()
+                                removed +=1
+                                
+            return removed
 
 
     def find_sequence( self, name ):
@@ -1264,6 +1282,13 @@ class LegoComponent:
         """
         Calculates the connected components
         """
+        for sequence in model.sequences:
+            for subsequence in sequence.subsequences:
+                if not hasattr(subsequence, "components"):
+                    subsequence.components = set()
+                    
+                subsequence.components.clear()
+        
         with LOG( "CREATING CONNECTED COMPONENT COLLECTION" ):
             component_list_regular = [ ]
             component_list_composites = [ ]
@@ -1298,47 +1323,71 @@ class LegoComponent:
             LOG("STARTING WITH {} IN {} COMPONENT".format(subsequence, "COMPOSITE" if subsequence.sequence.is_composite else "REGULAR"))
             visited_set = set()
             component_list.append( visited_set )
-            cls.__connect_to( subsequence, visited_set, subsequence.sequence.is_composite, -1, -1 )
+            component_uid = object()
+            cls.__connect_to( subsequence, visited_set, subsequence.sequence.is_composite, -1, -1, component_uid,0 )
     
     
     @classmethod
-    def __connect_to( cls, subsequence: LegoSubsequence, target: set, look_for_composites : bool, incoming_start, incoming_end ):
+    def __connect_to( cls, origin: LegoSubsequence, target_set: set, look_for_composites : bool, incoming_start : int, incoming_end : int, component_uid : object, indent : int ):
         """
-        Adds `subsequence`, and everything connected to `subsequence` to the `target` `set`.
+        Adds the `origin` subsequence, and everything connected to `origin` to the `target_set`.
         """
-        if subsequence in target:
-            return  # Already visited
-        
-        subsequence._verify_subsequence()
-        
-        target.add( subsequence )
-        
-        
-        
-        for edge in subsequence.edges:
-            opposite_side = edge.opposite(subsequence)
-            assert subsequence not in opposite_side
+        # Already visited?
+        if origin in target_set:
+            return  
             
-            if look_for_composites and not opposite_side[0].sequence.is_composite:
-                # Looking for composites, ignore anything that's not
+        print("    "*indent+ "COMPFIND *{}* {}".format(id(component_uid), origin))
+        
+        # Quick check
+        origin._verify_subsequence()
+        
+        # Add to the list
+        target_set.add( origin )
+        
+        
+        for edge in origin.edges: #type: LegoEdge
+            # Get the side opposite the `origin`
+            side = edge.position(origin)
+            destination_side = edge.side( not side )
+            assert origin not in destination_side
+            
+            
+            destination_sequence = destination_side[0].sequence
+            opposite_is_composite = destination_sequence.is_composite
+            
+            # If started from a composite, ignore anything that's not
+            if look_for_composites and not destination_side[0].sequence.is_composite:
                 continue
                 
-            if not look_for_composites and subsequence.sequence.is_composite and not opposite_side[0].sequence.is_composite:
-                # Can't leave a composite once in
+            # If we started from a non-composite, don't leave the composite once we're in
+            if not look_for_composites and origin.sequence.is_composite and not destination_side[0 ].sequence.is_composite:
                 continue
             
-            outgoing_start = min(x.start for x in opposite_side)
-            outgoing_end = max(x.end for x in opposite_side)
+            # (-) removed old code that assumed partial homologies existed
             
-            if not look_for_composites and subsequence.sequence.is_composite:
-                # Not searching for composites
-                # - Discount edges that span a different part of the sequence to the incoming edge
-                if not cls.__is_close(outgoing_start, incoming_start, outgoing_end, incoming_end):
-                    continue
+            destination_start = min(x.start for x in destination_side)
+            destination_end   = max(x.end for x in destination_side )
             
-            for friend in opposite_side:
-                LOG("JOINING {} TO {} IN {} COMPONENT".format(subsequence, friend, "COMPOSITE" if look_for_composites else "REGULAR"))
-                cls.__connect_to( friend, target, look_for_composites, outgoing_start, outgoing_end )
+            # Not searching for composites but we are inside one!
+            if not look_for_composites and opposite_is_composite:
+                if incoming_start == -1:
+                    # First incoming to composite
+                    comp_start = destination_start
+                    comp_end   = destination_end
+                else:
+                    # Subsequent incoming to composite
+                    origin_side = edge.side(side)
+                    edge_source_start = min(x.start for x in origin_side)
+                    comp_start = destination_start + incoming_start - edge_source_start 
+                    comp_end   = destination_start + incoming_end   - edge_source_start # TODO: could assert this by checking `end` too
+                    
+                for friend in destination_sequence._make_subsequence(comp_start, comp_end, "Auto-component {} to {}".format(comp_start, comp_end)):
+                    friend.components.add( component_uid )
+                    cls.__connect_to( friend, target_set, look_for_composites, comp_start, comp_end, component_uid,indent+1 )
+            else:
+                for friend in destination_side:
+                    LOG("JOINING {} TO {} IN {} COMPONENT".format( origin, friend, "COMPOSITE" if look_for_composites else "REGULAR" ) )
+                    cls.__connect_to( friend, target_set, look_for_composites, -1, -1, component_uid, indent+1 )
 
 
     @classmethod
