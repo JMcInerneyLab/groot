@@ -1,11 +1,12 @@
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QSizePolicy
+from PyQt5.QtWidgets import QDialog, QSizePolicy
 
+from MHelper.QtGuiHelper import exqtSlot
 from legoalign.Designer.FrmTreeSelector_designer import Ui_Dialog
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 from legoalign import LegoFunctions
+from legoalign.LegoFunctions import EFuse, ERoot
 from legoalign.LegoModels import LegoModel
 
 
@@ -20,17 +21,11 @@ class FrmTreeSelector( QDialog ):
         
         self._model = model
         
-        rads = (self.ui.RAD_FUSEON_ANY,
-            self.ui.RAD_FUSEON_ROOT,
-            self.ui.RAD_PLOT_ROOTED,
-            self.ui.RAD_PLOT_UNROOTED,
-            self.ui.RAD_TYPE_FUSED,
-            self.ui.RAD_TYPE_REGULAR)
+        self.ui.LST_ROOT.addItems(x.name for x in ERoot)
+        self.ui.LST_TYPE.addItems(x.name for x in EFuse)
         
-        for rad in rads:
-            rad.toggled[bool].connect(self.__on_rad_toggled)
-            
-        self.__on_rad_toggled(False)
+        self.ui.LST_ROOT.setCurrentIndex(0)
+        self.ui.LST_TYPE.setCurrentIndex(0)
         
         self.figure = pyplot.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
@@ -38,17 +33,6 @@ class FrmTreeSelector( QDialog ):
         
         self.layout().addWidget( self.canvas )
             
-    def __on_rad_toggled(self, _ : bool):
-        e = self.ui.RAD_TYPE_FUSED.isChecked() and self.ui.RAD_PLOT_ROOTED.isChecked()
-        self.ui.RAD_FUSEON_ANY.setEnabled(e)
-        self.ui.RAD_FUSEON_ROOT.setEnabled(e)
-        
-        
-        ok = (self.ui.RAD_FUSEON_ANY.isChecked() or self.ui.RAD_FUSEON_ROOT.isChecked() or self.ui.RAD_TYPE_REGULAR.isChecked() or self.ui.RAD_PLOT_UNROOTED.isChecked()) and \
-            (self.ui.RAD_PLOT_ROOTED.isChecked() or self.ui.RAD_PLOT_UNROOTED.isChecked()) and \
-            (self.ui.RAD_TYPE_FUSED.isChecked() or self.ui.RAD_TYPE_REGULAR.isChecked())
-        
-        self.ui.BTNBOX_MAIN.button(QDialogButtonBox.Ok).setEnabled(ok)
         
         
     @staticmethod
@@ -58,28 +42,21 @@ class FrmTreeSelector( QDialog ):
         self.exec_()
             
                   
-    @pyqtSlot()
+    @exqtSlot()
     def on_BTNBOX_MAIN_accepted(self) -> None:
         """
         Signal handler:
         """
-        if self.ui.RAD_PLOT_ROOTED.isChecked():
-            roots = [x for x in self._model.sequences if x.is_root]
-        else:
-            roots = []
+        root_mode = ERoot(self.ui.LST_ROOT.currentIndex())
+        fuse_mode = EFuse(self.ui.LST_TYPE.currentIndex())
             
-        if self.ui.RAD_FUSEON_ANY.isChecked():
-            roots = [x for x in roots if not x.is_composite]
-            
-        fused = self.ui.RAD_TYPE_FUSED.isChecked()
-        
         self.figure.clear()
         
-        LegoFunctions.process_trees(self._model, roots, fused)
+        LegoFunctions.fuse_trees( self._model, root_mode, fuse_mode )
         
         self.canvas.draw()
             
-    @pyqtSlot()
+    @exqtSlot()
     def on_BTNBOX_MAIN_rejected(self) -> None:
         """
         Signal handler:

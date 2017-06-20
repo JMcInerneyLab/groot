@@ -140,7 +140,6 @@ class LegoViewOptions:
         self.view_piano_roll  = None           # type: Optional[bool]
         self.view_names       = True           # type: Optional[bool]
         self.view_positions   = None           # type: Optional[bool]
-        self.view_component   = True           # type: bool
         self.mode             = EMode.SEQUENCE
         self.move_enabled     = False
 
@@ -347,7 +346,7 @@ class LegoViewComponent:
         """
         options = self.owner.view_model.options
         
-        if not options.view_component or options.mode == EMode.EDGE:
+        if options.mode == EMode.EDGE:
             #
             # ALL EDGES VIEW
             #
@@ -355,7 +354,7 @@ class LegoViewComponent:
                 lower, upper = edge_view.get_upper_and_lower()
                 is_selected  = edge_view.edge in self.owner.view_model.selected_edges()
                 LegoEdgeViewTarget.paint_to( painter, options.view_edges, upper, lower, True, is_selected )
-        else:
+        elif options.mode == EMode.COMPONENT:
             #
             # COMPONENT VIEW
             #

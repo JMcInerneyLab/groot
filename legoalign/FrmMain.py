@@ -4,12 +4,12 @@ Main form
 import sys
 import sip
 from os import path
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Union
 
 from PyQt5.QtCore import QCoreApplication, QRectF, Qt, pyqtSlot, QPoint
 from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QAction, QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QTextEdit, QGroupBox, QVBoxLayout, QWidget, QCheckBox, QPushButton, QGraphicsView
+from PyQt5.QtWidgets import QAction, QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QTextEdit, QGroupBox, QVBoxLayout, QWidget, QCheckBox, QPushButton, QGridLayout
 
 from MHelper import FileHelper, IoHelper, QtColourHelper, QtGuiHelper, ArrayHelper
 from MHelper.ExceptionHelper import SwitchError
@@ -58,16 +58,21 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.refresh_recent_files()
         
         # Graphics view
-        self.ui.graphicsView = MyView( self.ui.centralwidget )
+        self.ui.graphicsView = MyView(  )
         sizePolicy = QSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
         sizePolicy.setHeightForWidth( self.ui.graphicsView.sizePolicy().hasHeightForWidth() )
         self.ui.graphicsView.setSizePolicy( sizePolicy )
         self.ui.graphicsView.setObjectName( "graphicsView" )
         self.ui.graphicsView.setBackgroundBrush(QBrush(QColor(255,255,255)))
-        self.ui.gridLayout.addWidget( self.ui.graphicsView, 0, 0, 1, 1 )
+        
+        layout = QGridLayout()
+        self.ui.FRA_MAIN.setLayout(layout)
+        layout.addWidget(self.ui.graphicsView)
+        
         
         # Open GL rendering
         self.ui.graphicsView.setViewport( QGLWidget( QGLFormat( QGL.SampleBuffers ) ) )
+        #self.ui.graphicsView.resizeEvent()
         
         # Default (empty) scene
         scene = QGraphicsScene()
@@ -149,7 +154,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         # What have we selected?
         #
         entities = self._view.selected_entities()
-        first = ArrayHelper.first_or_nothing(entities)
+        first = ArrayHelper.first(entities)
         type_name = (type( first ).__name__[ 4: ].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
         self._view.clear_selection_mask()
         
@@ -161,6 +166,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         for group_box in self.__group_boxes: #type: List[QWidget]
             for widget in group_box: #type: QWidget
                 widget.parentWidget().layout().removeWidget(widget)
+                # noinspection PyTypeChecker
                 sip.delete(widget)
             
         self.__group_boxes.clear()
@@ -191,7 +197,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             layout = QVBoxLayout()
             group_box.setLayout(layout)
             
-            def __check_box(state : bool):
+            def __check_box(_ : bool):
                 check_box = self.sender() #type: QPushButton
                 
                 if not isinstance(check_box, QPushButton):
@@ -257,8 +263,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             
             text_edit.setText(content)
             
-    def __update_for_checkbox( self, check_box : QPushButton):
-        assert isinstance(check_box, QPushButton), check_box
+    def __update_for_checkbox( self, check_box : Union[QCheckBox, QPushButton]):
+        assert isinstance(check_box, QPushButton) or isinstance(check_box, QCheckBox), check_box
         
         entity = check_box.property( "entity" )
         assert entity is not None
@@ -354,7 +360,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.CHK_VIEW_NAMES.setCheckState( QtGuiHelper.to_check_state( o.view_names ) )
         self.ui.CHK_VIEW_PIANO_ROLLS.setCheckState( QtGuiHelper.to_check_state( o.view_piano_roll ) )
         self.ui.CHK_VIEW_POSITIONS.setCheckState( QtGuiHelper.to_check_state( o.view_positions ) )
-        self.ui.CHK_VIEW_COMPONENTS.setChecked( o.view_component )
         self.ui.CHK_MOVE.setChecked( o.move_enabled )
         
         self.ui.BTN_SEL_SEQUENCE_.setChecked( o.mode == EMode.SEQUENCE )
@@ -392,7 +397,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         o.view_names      = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
         o.view_piano_roll = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_PIANO_ROLLS.checkState() )
         o.view_positions  = QtGuiHelper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
-        o.view_component  = self.ui.CHK_VIEW_COMPONENTS.isChecked()
         o.move_enabled    = self.ui.CHK_MOVE.isChecked()
         self.update_selection_buttons()
         
@@ -882,7 +886,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         
         try:
             for component in components:
-                LegoFunctions.process_create_tree( self._model, component )
+                LegoFunctions.create_tree( component )
         except Exception as ex:
             QtGuiHelper.show_exception( self, "Failed to process NRFG for component '{}'.".format(component), ex )
     
@@ -1129,19 +1133,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     
     @pyqtSlot()
-    def on_ACT_WIN_REFERENCE_triggered( self ) -> None: #TODO: BAD_HANDLER - The widget 'ACT_WIN_REFERENCE' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        self.ui.DOCK_REFERENCE.setVisible( self.ui.ACT_WIN_REFERENCE.isChecked() )
-    
-    
-    @pyqtSlot()
-    def on_ACT_WIN_REFERENCE_visibilityChanged( self, visible ) -> None: #TODO: BAD_HANDLER - The widget 'ACT_WIN_REFERENCE' does not appear in the designer file.
-        self.ui.ACT_WIN_REFERENCE.setChecked( visible )
-    
-    
-    @pyqtSlot()
     def on_ACT_WIN_MOVE_visibilityChanged( self, visible ) -> None:
         self.ui.ACT_WIN_MOVE.setChecked( visible )
     
@@ -1175,22 +1166,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         Signal handler:
         """
         self.ui.DOCK_VIEW.setVisible( self.ui.ACT_WIN_VIEW.isChecked() )
-    
-    
-    @pyqtSlot()
-    def on_ACT_WIN_EDIT_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.ui.DOCK_EDIT.setVisible( self.ui.ACT_WIN_EDIT.isChecked() )
-    
-    
-    @pyqtSlot()
-    def on_ACT_WIN_SELECTION_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.ui.DOCK_SELECTION.setVisible( self.ui.ACT_WIN_SELECTION.isChecked() )
         
     @pyqtSlot()
     def on_ACT_DECONVOLUTE_triggered(self) -> None:
@@ -1318,12 +1293,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         pass
             
-    @pyqtSlot()
-    def on_BTN_SELMASK_NONE_clicked(self) -> None: #TODO: BAD_HANDLER - The widget 'BTN_SELMASK_NONE' does not appear in the designer file.
-        """
-        Signal handler: Pass. Handled in action.
-        """
-        pass
     
     @pyqtSlot()
     def on_BTN_SELMASK_ALL_clicked(self) -> None:
@@ -1409,7 +1378,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         Signal handler:
         """
         self.__select_next(list(reversed([x[0] for x in self.__group_boxes])))
-        
+            
     @pyqtSlot()
     def on_CHKBTN_DATA_BLAST_clicked(self) -> None:
         """
@@ -1453,7 +1422,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ILegoViewModelObserver_selection_changed()
             
     @exqtSlot()
-    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self:bool ) -> None:
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self, _:bool ) -> None:
         """
         Signal handler: Compartmentalise model
         """

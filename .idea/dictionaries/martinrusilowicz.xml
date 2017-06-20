@@ -5,6 +5,7 @@
       <w>aucg</w>
       <w>blastn</w>
       <w>clade</w>
+      <w>clades</w>
       <w>deconvolute</w>
       <w>deconvoluted</w>
       <w>deconvolutes</w>
@@ -17,13 +18,22 @@
       <w>megablast</w>
       <w>mousedown</w>
       <w>mousemove</w>
+      <w>neato</w>
+      <w>networkx</w>
       <w>newick</w>
       <w>nrfg</w>
+      <w>phylip</w>
+      <w>phylo</w>
+      <w>phylogenies</w>
       <w>pident</w>
       <w>prot</w>
+      <w>protgammawag</w>
+      <w>pyplot</w>
       <w>quantises</w>
       <w>quantising</w>
+      <w>raxml</w>
       <w>reiterrant</w>
+      <w>sampledata</w>
       <w>snapline</w>
       <w>subsequence</w>
       <w>subsequences</w>

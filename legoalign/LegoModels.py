@@ -1182,7 +1182,7 @@ class LegoModel:
             return removed
 
 
-    def find_sequence( self, name ):
+    def find_sequence( self, name : str ) -> "LegoSequence":
         for x in self.sequences:
             if x.accession == name:
                 return x
@@ -1232,7 +1232,7 @@ class LegoComponent:
             return x.lower()
     
     
-    def to_fasta( self, header, simplify : bool = False ) -> str:
+    def to_fasta( self, header : bool = True, simplify : bool = False ) -> str:
         """
         Converts the component to FASTA
         :param simplify: Turns on simplified mode to produce output for limited parsers: Names are replaced with short "S*" numbers, comments are removed, errors are raised on failure instead of appending comments to the file 
