@@ -11,12 +11,12 @@ from PyQt5.QtCore       import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui        import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets    import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from MHelper                    import ArrayHelper, QtColourHelper
-from MHelper.CommentHelper      import override
-from MHelper.ExceptionHelper    import SwitchError
-from MHelper.QtColourHelper     import Colours, Pens
+from mhelper                    import ArrayHelper, QtColourHelper
+from mhelper.CommentHelper      import override
+from mhelper.ExceptionHelper    import SwitchError
+from mhelper.QtColourHelper     import Colours, Pens
 
-from legoalign.LegoModels       import ELetterType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from legoalign.LegoModels       import ESiteType, LegoSsComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
 
 
 class ESequenceColour( Enum ):
@@ -307,8 +307,8 @@ class LegoViewComponent:
     """
     
     
-    def __init__( self, owner: "LegoViewAllEdges", component: LegoComponent ):
-        subsequence_views = [ owner.view_model.find_subsequence_view( x ) for x in component.all_subsequences() ]
+    def __init__( self, owner: "LegoViewAllEdges", component: LegoSsComponent ):
+        subsequence_views = [ owner.view_model.find_subsequence_view( x ) for x in component.minor_subsequences() ]
         
         self.owner = owner
         self.component = component
@@ -524,7 +524,7 @@ class LegoViewSubsequence( QGraphicsItem ):
             rect_height = lookup_table.count * letter_size
             painter.drawRect( 0, OFFSET_X, rect_width, rect_height )
             
-            array = self.subsequence.array
+            array = self.subsequence.site_array
             
             if not array:
                 painter.setPen( Pens.RED )
@@ -826,7 +826,7 @@ class LegoViewAllEdges( QGraphicsItem ):
         self.view_model = view_model
         self.component_views = [ ]  # type: List[LegoViewComponent]
         
-        for component in view_model.model.components:
+        for component in view_model.model.subsequence_components:
             self.component_views.append( LegoViewComponent( self, component ) )
         
         self.rect = QRectF( 0, 0, 0, 0 )
@@ -938,18 +938,18 @@ class ILegoViewModelObserver:
         pass
     
 class LookupTable:
-    def __init__( self, type_: ELetterType ):
+    def __init__( self, type_: ESiteType ):
         self.type = type_
         
-        if type_ == ELetterType.PROTEIN:
+        if type_ == ESiteType.PROTEIN:
             self.letter_size         = PROTEIN_SIZE
             self.letter_order_table  = PROTEIN_ORDER_TABLE
             self.letter_colour_table = PROTEIN_COLOUR_TABLE
-        elif type_ == ELetterType.DNA:
+        elif type_ == ESiteType.DNA:
             self.letter_size         = NUCLEOTIDE_SIZE
             self.letter_order_table  = DNA_ORDER_TABLE
             self.letter_colour_table = DNA_COLOUR_TABLE
-        elif type_ == ELetterType.RNA:
+        elif type_ == ESiteType.RNA:
             self.letter_size         = NUCLEOTIDE_SIZE
             self.letter_order_table  = RNA_ORDER_TABLE
             self.letter_colour_table = RNA_COLOUR_TABLE
@@ -965,7 +965,7 @@ class LookupTable:
 
 class LegoViewModel:
     def __init__( self, observer:ILegoViewModelObserver, view: QGraphicsView, focus_notification, model: LegoModel ):
-        self.lookup_table = LookupTable( model.letter_type() )
+        self.lookup_table = LookupTable( model.site_type )
         self.observer = observer
         self.view = view
         self.model = model
@@ -1118,15 +1118,15 @@ class LegoViewModel:
             raise SwitchError("self.options.mode", mode)
 
 
-    def selected_components( self, mask = True ) -> Set[LegoComponent]:
+    def selected_components( self, mask = True ) -> Set[LegoSsComponent ]:
         """
         Components selected by the user (complete)
         """
         
         r = set()
         selected_subsequences = self.selected_subsequences(mask = False)
-        for component in self.model.components:
-            if all( subsequence in selected_subsequences for subsequence in component.all_subsequences() ):
+        for component in self.model.subsequence_components:
+            if all( subsequence in selected_subsequences for subsequence in component.minor_subsequences() ):
                 r.add( component )
                 
         if mask:
@@ -1316,18 +1316,18 @@ class LegoViewModel:
         self.__clear_selection()
         
         for x in self.sequence_views:
-            if x.sequence.array is None:
+            if x.sequence.site_array is None:
                 for y in x.subsequence_views:
                     select.set( y )
         
         self._call_selection_changed()
     
     
-    def select_component( self, component: LegoComponent, select: ESelect = ESelect.ONLY ):
+    def select_component( self, component: LegoSsComponent, select: ESelect = ESelect.ONLY ):
         """
         Selects the specified `component`.
         """
-        ss = component.all_subsequences()
+        ss = component.minor_subsequences()
         
         for x in self.subsequence_views:
             if x in ss:
@@ -1376,7 +1376,7 @@ class LegoViewModel:
         """
         Positions sequence views sharing components with `sel_sequence` so that their components align with those in `sel_sequence`.
         """
-        components = [x for x in self.model.components if sel_sequence in x.all_sequences()]
+        components = [ x for x in self.model.subsequence_components if sel_sequence in x.all_sequences() ]
         starts = {}
         
         for component in components:

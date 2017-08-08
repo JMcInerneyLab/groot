@@ -13,11 +13,11 @@ from Bio.Phylo.Consensus import strict_consensus
 import networkx
 from networkx import DiGraph
 
-from MHelper.LogHelper import Logger
-from MHelper.ExceptionHelper import SwitchError
-from MHelper import ExceptionHelper, FileHelper
+from mhelper.LogHelper import Logger
+from mhelper.ExceptionHelper import SwitchError
+from mhelper import ExceptionHelper, FileHelper
 
-from legoalign.LegoModels import LegoComponent, LegoModel, LegoSequence
+from legoalign.LegoModels import LegoSsComponent, LegoModel, LegoSequence
 
 LOG = Logger(True)
 
@@ -56,7 +56,7 @@ class EFuse(Enum):
     XY = 2
 
 
-def create_tree( component: LegoComponent ):
+def create_tree( component: LegoSsComponent ):
     """
     Creates a tree from the component.
     
@@ -64,7 +64,7 @@ def create_tree( component: LegoComponent ):
     """
     try:
         # noinspection PyUnresolvedReferences
-        from MHelper import BioHelper
+        from mhelper import BioHelper
         # noinspection PyUnresolvedReferences
         from Bio import Phylo
     except ImportError:
@@ -101,7 +101,7 @@ def create_tree( component: LegoComponent ):
     component.tree = FileHelper.read_all_text( RAXML_BEST_FILE_NAME )
     
     for sequence in component.all_sequences():
-        if "?" not in sequence.array:
+        if "?" not in sequence.sites:
             component.tree = component.tree.replace( "S{}:".format( sequence.id ), sequence.accession + ":" )
     
     # clean up
@@ -122,7 +122,7 @@ def fuse_trees( model: LegoModel, root_mode : ERoot, fuse_mode: EFuse ):
     #
     trees = []
     
-    for component in sorted(model.components, key = lambda x: not x.is_composite):
+    for component in sorted( model.subsequence_components, key = lambda x: not x.is_composite ):
         tree = __component_to_phylo( component )
         trees.append(tree)
     
@@ -170,7 +170,7 @@ class _FITree( BaseTree.Tree ):
     """
     def __init__(self):
         super().__init__()
-        self.ex_component = LegoComponent( 0, [ ], False)
+        self.ex_component = LegoSsComponent( 0, [ ], False )
 
 class _MyNode:
     # Colours, comp. index: 1    ,  2       ,  3
@@ -178,7 +178,7 @@ class _MyNode:
     CLADE_COLOURS     = "#FF0000", "#00FF00", "#0000FF"
     SEQUENCE_COLOURS  = "#FFC0C0", "#C0FFC0", "#C0C0FF"
     
-    def __init__( self, component : LegoComponent, name, is_clade, sequence : Optional[LegoSequence] ):
+    def __init__( self, component : LegoSsComponent, name, is_clade, sequence : Optional[LegoSequence ] ):
         self.component = component
         self.name = name
         self.is_clade = is_clade

@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../mhelper/.idea/MHelper.iml" filepath="$PROJECT_DIR$/../mhelper/.idea/MHelper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../editorium/.idea/editorium.iml" filepath="$PROJECT_DIR$/../editorium/.idea/editorium.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/legoalign.iml" filepath="$PROJECT_DIR$/.idea/legoalign.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../mcommand/.idea/mcommand.iml" filepath="$PROJECT_DIR$/../mcommand/.idea/mcommand.iml" />
     </modules>
   </component>
 </project>

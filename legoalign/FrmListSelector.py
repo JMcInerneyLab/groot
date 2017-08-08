@@ -3,7 +3,7 @@ from typing import Any, Optional, Callable, List, Iterable
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtWidgets import QDialog, QTreeWidgetItem, QDialogButtonBox
 
-from MHelper import QtGuiHelper
+from mhelper import QtGuiHelper
 
 from legoalign.Designer.FrmListSelector_designer import Ui_Dialog
 

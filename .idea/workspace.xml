@@ -5,18 +5,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3e06b8ae-fd96-4b2b-940e-4f6a6561e9e3" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/martinrusilowicz.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/martinrusilowicz.xml" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/legoalign/.gitignore" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/legoalign/sampledata/triptych/triptych.blast" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/legoalign/sampledata/triptych/triptych.fasta" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../editorium/editorium/editorium.py" afterPath="$PROJECT_DIR$/../editorium/editorium/editorium.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../editorium/editorium/special_types.py" afterPath="$PROJECT_DIR$/../editorium/editorium/special_types.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/legoalign.iml" afterPath="$PROJECT_DIR$/.idea/legoalign.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/Designer/FrmMain_designer.py" afterPath="$PROJECT_DIR$/legoalign/Designer/FrmMain_designer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/Designer/FrmMain_designer.ui" afterPath="$PROJECT_DIR$/legoalign/Designer/FrmMain_designer.ui" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/Designer/FrmTreeSelector_designer.py" afterPath="$PROJECT_DIR$/legoalign/Designer/FrmTreeSelector_designer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/Designer/FrmTreeSelector_designer.ui" afterPath="$PROJECT_DIR$/legoalign/Designer/FrmTreeSelector_designer.ui" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/FrmImport.py" afterPath="$PROJECT_DIR$/legoalign/FrmImport.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/FrmListSelector.py" afterPath="$PROJECT_DIR$/legoalign/FrmListSelector.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/FrmMain.py" afterPath="$PROJECT_DIR$/legoalign/FrmMain.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/FrmTreeSelector.py" afterPath="$PROJECT_DIR$/legoalign/FrmTreeSelector.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/LegoFunctions.py" afterPath="$PROJECT_DIR$/legoalign/LegoFunctions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/LegoModels.py" afterPath="$PROJECT_DIR$/legoalign/LegoModels.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/LegoViews.py" afterPath="$PROJECT_DIR$/legoalign/LegoViews.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/resources_rc.py" afterPath="$PROJECT_DIR$/legoalign/resources_rc.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/legoalign/__main__.py" afterPath="$PROJECT_DIR$/legoalign/__main__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/__init__.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/engine/cli_helper.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/engine/cli_helper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/engine/environment.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/engine/environment.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/engine/plugin_manager.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/engine/plugin_manager.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/engine/print_helper.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/engine/print_helper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/engine/progress_reporter.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/engine/progress_reporter.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/frontends/command_line.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/frontends/command_line.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui_qt/frm_main.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui_qt/frm_main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/hosts/base.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/hosts/base.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/hosts/console.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/hosts/console.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/hosts/gui.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/hosts/gui.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/plugins/command_plugin.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/plugins/command_plugin.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/plugins/common_commands.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/plugins/common_commands.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable_operations.py" afterPath="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable_operations.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mhelper/mhelper/ArrayHelper.py" afterPath="$PROJECT_DIR$/../mhelper/mhelper/ArrayHelper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mhelper/mhelper/ExceptionHelper.py" afterPath="$PROJECT_DIR$/../mhelper/mhelper/ExceptionHelper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../mhelper/mhelper/StringHelper.py" afterPath="$PROJECT_DIR$/../mhelper/mhelper/StringHelper.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -26,8 +51,8 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/legoalign$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1497979968745" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/legoalign$Unittests_in_BatchList_test_py.coverage" NAME="Unittests in BatchList_test.py Coverage Results" MODIFIED="1497960520659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../mhelper/MHelper" />
+    <SUITE FILE_PATH="coverage/legoalign$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1502210828941" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
@@ -41,7 +66,6 @@
     <option name="SHOW_EMPTY_GROUPS" value="false" />
     <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="legoalign" />
   </component>
@@ -51,41 +75,186 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="FrmTreeSelector.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/legoalign/FrmTreeSelector.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="734">
-              <caret line="55" column="56" lean-forward="true" selection-start-line="55" selection-start-column="56" selection-end-line="55" selection-end-column="56" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FrmMain.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/legoalign/FrmMain.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="567">
-              <caret line="68" column="93" lean-forward="true" selection-start-line="68" selection-start-column="93" selection-end-line="68" selection-end-column="93" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LegoFunctions.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/legoalign/LegoFunctions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="334" column="34" lean-forward="false" selection-start-line="334" selection-start-column="34" selection-end-line="334" selection-end-column="34" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="IoHelper.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/IoHelper.py">
+      <file leaf-file-name="lego_controller.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/legoalign/mcommand_extensions/lego_controller.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding>
+                <element signature="e#1924#1983#1" expanded="true" />
+                <element signature="e#2247#2386#1" expanded="true" />
+                <element signature="e#2597#2741#1" expanded="true" />
+                <element signature="e#2948#3087#1" expanded="true" />
+                <element signature="e#3310#3468#1" expanded="true" />
+                <element signature="e#4210#4336#1" expanded="true" />
+                <element signature="e#7302#7561#1" expanded="true" />
+                <element signature="e#8076#8309#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="importation.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/legoalign/algorithms/importation.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="425">
+              <caret line="25" column="21" lean-forward="false" selection-start-line="25" selection-start-column="21" selection-end-line="25" selection-end-column="21" />
+              <folding>
+                <element signature="e#184#354#1" expanded="true" />
+                <element signature="e#2374#2516#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="console_explorer.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="339">
+              <caret line="376" column="119" lean-forward="false" selection-start-line="376" selection-start-column="119" selection-end-line="376" selection-end-column="119" />
+              <folding>
+                <element signature="e#10827#11080#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="common_commands.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/plugins/common_commands.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="512">
+              <caret line="273" column="0" lean-forward="false" selection-start-line="273" selection-start-column="0" selection-end-line="273" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="base.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/hosts/base.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="487">
+              <caret line="43" column="150" lean-forward="false" selection-start-line="43" selection-start-column="150" selection-end-line="43" selection-end-column="150" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="print_helper.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/print_helper.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="510">
+              <caret line="39" column="49" lean-forward="true" selection-start-line="39" selection-start-column="49" selection-end-line="39" selection-end-column="49" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="components.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/legoalign/algorithms/components.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="784">
+              <caret line="78" column="48" lean-forward="false" selection-start-line="78" selection-start-column="48" selection-end-line="78" selection-end-column="48" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="StringHelper.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/StringHelper.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="5746">
+              <caret line="362" column="64" lean-forward="true" selection-start-line="362" selection-start-column="64" selection-end-line="362" selection-end-column="64" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="console.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/hosts/console.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="477">
+              <caret line="384" column="35" lean-forward="false" selection-start-line="384" selection-start-column="35" selection-end-line="384" selection-end-column="35" />
+              <folding>
+                <element signature="e#14443#14529#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="progress_reporter.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/progress_reporter.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="431">
+              <caret line="369" column="42" lean-forward="false" selection-start-line="369" selection-start-column="42" selection-end-line="369" selection-end-column="42" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="LegoModels.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/legoalign/LegoModels.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="663">
+              <caret line="453" column="53" lean-forward="false" selection-start-line="453" selection-start-column="53" selection-end-line="453" selection-end-column="53" />
+              <folding>
+                <element signature="e#485#783#1" expanded="true" />
+                <element signature="e#872#1080#1" expanded="true" />
+                <element signature="e#1162#1211#1" expanded="true" />
+                <element signature="e#3116#3171#1" expanded="true" />
+                <element signature="e#4478#4876#1" expanded="true" />
+                <element signature="e#6301#6655#1" expanded="true" />
+                <element signature="e#8183#8435#1" expanded="true" />
+                <element signature="e#8682#8768#1" expanded="true" />
+                <element signature="e#9048#9230#1" expanded="true" />
+                <element signature="e#16930#17118#1" expanded="true" />
+                <element signature="e#19360#19412#1" expanded="true" />
+                <element signature="e#20485#21010#1" expanded="true" />
+                <element signature="e#22248#22317#1" expanded="true" />
+                <element signature="e#22507#22645#1" expanded="true" />
+                <element signature="e#22816#22983#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="editor.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/legoalign/algorithms/editor.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="391">
+              <caret line="27" column="42" lean-forward="false" selection-start-line="27" selection-start-column="42" selection-end-line="27" selection-end-column="42" />
+              <folding>
+                <element signature="e#504#725#1" expanded="true" />
+                <element signature="e#2555#2742#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mandate.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/mandate.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="296">
+              <caret line="199" column="14" lean-forward="false" selection-start-line="199" selection-start-column="14" selection-end-line="199" selection-end-column="14" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="visualisable.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="307">
+              <caret line="299" column="32" lean-forward="false" selection-start-line="299" selection-start-column="32" selection-end-line="299" selection-end-column="32" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="deconvolution.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/legoalign/algorithms/deconvolution.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="289">
+              <caret line="20" column="53" lean-forward="true" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
               <folding />
             </state>
           </provider>
@@ -102,36 +271,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>consen</find>
-      <find>viable</find>
-      <find>visited_nodes</find>
-      <find>__add_phylo_to_network_x</find>
-      <find>__My</find>
-      <find>ascii</find>
-      <find>__phylo_to_network_x</find>
-      <find>c</find>
-      <find>cannot f</find>
-      <find>cannot fi</find>
-      <find>cannot find</find>
-      <find>cannot find a</find>
-      <find>cannot find a</find>
-      <find>di</find>
-      <find>fi</find>
-      <find>find_du</find>
-      <find>_xy(</find>
-      <find>fuse_xy</find>
-      <find>MERGE_DUPLICATES</find>
-      <find>__find_best_merge_point</find>
-      <find>REJECTING</find>
-      <find>.test</find>
-      <find>only(</find>
-      <find>only</find>
-      <find>.onlyt</find>
-      <find>find_dup</find>
-      <find>ADDING</find>
-      <find>&quot;ADDING</find>
-      <find>.onlt</find>
-      <find>.only</find>
+      <find>source_info</find>
+      <find>__get_incremental_id</find>
+      <find>make_edge</find>
+      <find>_split</find>
+      <find>to_fasta</find>
+      <find>fasta</find>
+      <find>merge_subsequences</find>
+      <find>link_edge</find>
+      <find>an argu</find>
+      <find>cannot i</find>
+      <find>cannot import</find>
+      <find>if self.length &lt; new_length:</find>
+      <find>blast file</find>
+      <find>query = query_s._make_subsequence( query_start, query_end, line ) if query_s else None</find>
+      <find>self._receiver.progress_update(</find>
+      <find>self.__draw_progress_bar( info )</find>
+      <find>print_source</find>
+      <find>subsequence_list = to_do_s._make_subsequence( destination_entry_point_start, destination_entry_point_end, None )</find>
+      <find>legomodel(</find>
+      <find>extra</find>
+      <find>ss.extra_data.append( extra_data )</find>
+      <find>extra_</find>
+      <find>namedva</find>
+      <find>or the zero</find>
+      <find>eggs</find>
+      <find>has a designated</find>
+      <find>sample(</find>
+      <find>new(</find>
+      <find>legoseq</find>
+      <find>if average_lengths[ opposite_component ] &lt; average_lengths[ component ]</find>
     </findStrings>
     <replaceStrings>
       <replace>__repr__</replace>
@@ -157,6 +326,7 @@
       <replace>\t</replace>
       <replace>&gt;</replace>
       <replace>\n</replace>
+      <replace>from mhelper</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -165,57 +335,57 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/MyView.py" />
-        <option value="$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/builtins.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/PrintHelper.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/DisposalHelper.py" />
-        <option value="$PROJECT_DIR$/Designer/FrmMain_designer.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/BioHelper.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/ExceptionHelper.py" />
-        <option value="$PROJECT_DIR$/GlobalOptions.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/greek.txt" />
-        <option value="$PROJECT_DIR$/readme.md" />
-        <option value="$PROJECT_DIR$/SampleData/blast.blast" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/StringHelper.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
-        <option value="$PROJECT_DIR$/FrmListEditor.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/QtGuiHelper.py" />
-        <option value="$PROJECT_DIR$/FrmListSelector.py" />
-        <option value="$PROJECT_DIR$/LegoFunctions.py" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/upper.fasta" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/tree.nex.py" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/tree.txt" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/left.fasta" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/right.fasta" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.txt" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/tree.new" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/readme.md" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/FileHelper.py" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/sequences.blast" />
-        <option value="$PROJECT_DIR$/LegoModels.py" />
-        <option value="$PROJECT_DIR$/LegoViews.py" />
-        <option value="$PROJECT_DIR$/SampleData/seqgen/sequences.fasta" />
-        <option value="$PROJECT_DIR$/FrmMain.py" />
-        <option value="$PROJECT_DIR$/leogoalign/FrmMain.py" />
-        <option value="$PROJECT_DIR$/legoalign/FrmListSelector.py" />
-        <option value="$PROJECT_DIR$/legoalign/SampleData/seqgen/readme.md" />
-        <option value="$PROJECT_DIR$/legoalign/SampleData/seqgen/sequences.fasta" />
-        <option value="$PROJECT_DIR$/legoalign/sampledata/seqgen/readme.md" />
-        <option value="$PROJECT_DIR$/legoalign/sampledata/seqgen/sequences.fasta" />
-        <option value="$PROJECT_DIR$/legoalign/sampledata/seqgen/sequences.blast" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/NameHelper.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/LogHelper.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/FrmText.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/IoHelper.py" />
-        <option value="$PROJECT_DIR$/../mhelper/MHelper/ArrayHelper.py" />
         <option value="$PROJECT_DIR$/../mhelper/MHelper/BatchList.py" />
         <option value="$PROJECT_DIR$/../mhelper/MHelper/BatchList_test.py" />
         <option value="$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/sip.py" />
-        <option value="$PROJECT_DIR$/legoalign/LegoViews.py" />
-        <option value="$PROJECT_DIR$/legoalign/FrmMain.py" />
         <option value="$PROJECT_DIR$/legoalign/FrmTreeSelector.py" />
-        <option value="$PROJECT_DIR$/legoalign/LegoModels.py" />
         <option value="$PROJECT_DIR$/legoalign/LegoFunctions.py" />
+        <option value="$PROJECT_DIR$/legoalign/FrmImport.py" />
+        <option value="$PROJECT_DIR$/legoalign/FrmListSelector.py" />
+        <option value="$PROJECT_DIR$/legoalign/controller.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtCore/QCoreApplication.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QAbstractButton.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QMainWindow.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QFileDialog.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QInputDialog.py" />
+        <option value="$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QMessageBox.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui_qt/frm_main.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/hosts/gui.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/frontends/gui.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/__init__.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/plugins/command_plugin.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/event.py" />
+        <option value="$PROJECT_DIR$/../mhelper/mhelper/event.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/environment.py" />
+        <option value="$PROJECT_DIR$/legoalign/mcommand_extensions/commands.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/cli_helper.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable_operations.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/frontends/command_line.py" />
+        <option value="$PROJECT_DIR$/legoalign/__main__.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/plugin_manager.py" />
+        <option value="$PROJECT_DIR$/../mhelper/mhelper/components.py" />
+        <option value="$PROJECT_DIR$/../mhelper/mhelper/ArrayHelper.py" />
+        <option value="$PROJECT_DIR$/legoalign/LegoViews.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/verification.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/quantisation.py" />
+        <option value="$PROJECT_DIR$/legoalign/FrmMain.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/deconvolution.py" />
+        <option value="$PROJECT_DIR$/../mhelper/mhelper/ExceptionHelper.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/fastaiser.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/designer.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/importation.py" />
+        <option value="$PROJECT_DIR$/../mhelper/mhelper/StringHelper.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/progress_reporter.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/hosts/console.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/engine/print_helper.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/editor.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/plugins/common_commands.py" />
+        <option value="$PROJECT_DIR$/../mcommand/mcommand/hosts/base.py" />
+        <option value="$PROJECT_DIR$/legoalign/mcommand_extensions/lego_controller.py" />
+        <option value="$PROJECT_DIR$/legoalign/LegoModels.py" />
+        <option value="$PROJECT_DIR$/legoalign/algorithms/components.py" />
       </list>
     </option>
   </component>
@@ -225,7 +395,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="2560" />
     <option name="height" value="1440" />
   </component>
@@ -247,358 +417,135 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="-859012295" />
-              <option name="myItemType" value="com.jetbrains.python.projectView.PySkeletonsNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="isort" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Bio" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Bio" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Phylo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="python3.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="python3.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="python3.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="isort" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="python3.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Bio" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="python3.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="site-packages" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Bio" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Phylo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mhelper" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mhelper" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="MHelper" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sampledata" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sampledata" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="seqgen" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="legoalign" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Designer" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
+          <expand>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+              <item name="algorithms" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+              <item name="legoalign" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand_extensions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="engine" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="frontends" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="hosts" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="plugins" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="mcommand" type="462c0819:PsiDirectoryNode" />
+              <item name="visualisables" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mhelper" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mhelper" type="462c0819:PsiDirectoryNode" />
+              <item name="mhelper" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="python3.5" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="-859012295" type="70582d5e:PySkeletonsNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="-859012295" type="70582d5e:PySkeletonsNode" />
+              <item name="PyQt5" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="-859012295" type="70582d5e:PySkeletonsNode" />
+              <item name="PyQt5" type="462c0819:PsiDirectoryNode" />
+              <item name="QtCore" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="legoalign" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.5.2 (/opt/local/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5) &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="-859012295" type="70582d5e:PySkeletonsNode" />
+              <item name="PyQt5" type="462c0819:PsiDirectoryNode" />
+              <item name="QtWidgets" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="js.eslint.eslintPackage" value="" />
-    <property name="FullScreen" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="settings.editor.selected.configurable" value="editor.breadcrumbs" />
     <property name="run.code.analysis.last.selected.profile" value="aMJR Quick" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="TEXT" />
@@ -628,7 +575,22 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.__main__">
-    <configuration default="false" name="__main__" type="PythonConfigurationType" factoryName="Python" singleton="true" temporary="true">
+    <configuration name="Unittests in BatchList_test.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../mhelper/MHelper" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="legoalign" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/../mhelper/MHelper/BatchList_test.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+    </configuration>
+    <configuration name="__main__" type="PythonConfigurationType" factoryName="Python" singleton="true" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -645,34 +607,19 @@
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
-      <method />
     </configuration>
-    <configuration default="false" name="Unittests in BatchList_test.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="true" type="PyBehaveRunConfigurationType" factoryName="Behave">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../mhelper/MHelper" />
+      <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="legoalign" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/../mhelper/MHelper/BatchList_test.py&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
-      <method />
-    </configuration>
-    <configuration default="true" type="BashConfigurationType" factoryName="Bash">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="INTERPRETER_PATH" value="/bin/bash" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <module name="" />
-      <envs />
-      <method />
+      <option name="ADDITIONAL_ARGS" value="" />
     </configuration>
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -692,99 +639,6 @@
       <option name="CUSTOM_SETTINGS" value="false" />
       <option name="USE_OPTIONS" value="false" />
       <option name="OPTIONS" value="" />
-      <method />
-    </configuration>
-    <configuration default="true" type="JavaScriptTestRunnerJest" factoryName="Jest">
-      <node-interpreter value="project" />
-      <working-dir value="" />
-      <envs />
-      <scope-kind value="ALL" />
-      <method />
-    </configuration>
-    <configuration default="true" type="JavaScriptTestRunnerProtractor" factoryName="Protractor">
-      <config-file value="" />
-      <node-interpreter value="project" />
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
-      <method />
-    </configuration>
-    <configuration default="true" type="PyBehaveRunConfigurationType" factoryName="Behave">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="legoalign" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="ADDITIONAL_ARGS" value="" />
-      <method />
-    </configuration>
-    <configuration default="true" type="PyLettuceRunConfigurationType" factoryName="Lettuce">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="legoalign" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="ADDITIONAL_ARGS" value="" />
-      <method />
-    </configuration>
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="legoalign" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <method />
-    </configuration>
-    <configuration default="true" type="Tox" factoryName="Tox">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <module name="legoalign" />
-      <method />
-    </configuration>
-    <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <gulpfile />
-      <tasks />
-      <arguments />
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="true" type="js.build_tools.npm" factoryName="npm">
-      <command value="run" />
-      <scripts />
-      <node-interpreter value="project" />
-      <envs />
-      <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="Doctests">
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -804,6 +658,90 @@
       <option name="TEST_TYPE" value="TEST_SCRIPT" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <gulpfile />
+      <tasks />
+      <arguments />
+      <envs />
+    </configuration>
+    <configuration default="true" type="PyLettuceRunConfigurationType" factoryName="Lettuce">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="legoalign" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="ADDITIONAL_ARGS" value="" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="legoalign" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+    </configuration>
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <module name="legoalign" />
+    </configuration>
+    <configuration default="true" type="BashConfigurationType" factoryName="Bash">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <module name="" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavaScriptTestRunnerJest" factoryName="Jest">
+      <node-interpreter value="project" />
+      <working-dir value="" />
+      <envs />
+      <scope-kind value="ALL" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavaScriptTestRunnerProtractor" factoryName="Protractor">
+      <config-file value="" />
+      <node-interpreter value="project" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
+      <method />
+    </configuration>
+    <configuration default="true" type="js.build_tools.npm" factoryName="npm">
+      <command value="run" />
+      <scripts />
+      <node-interpreter value="project" />
+      <envs />
       <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="Nosetests">
@@ -856,16 +794,6 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
-    <list size="2">
-      <item index="0" class="java.lang.String" itemvalue="Python.__main__" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in BatchList_test.py" />
-    </list>
-    <recent_temporary>
-      <list size="2">
-        <item index="0" class="java.lang.String" itemvalue="Python.__main__" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in BatchList_test.py" />
-      </list>
-    </recent_temporary>
     <configuration default="true" type="tests" factoryName="Attests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -886,6 +814,16 @@
       <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
+    <list size="2">
+      <item index="0" class="java.lang.String" itemvalue="Python.__main__" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in BatchList_test.py" />
+    </list>
+    <recent_temporary>
+      <list size="2">
+        <item index="0" class="java.lang.String" itemvalue="Python.__main__" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in BatchList_test.py" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -929,17 +867,17 @@
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32886904" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3296131" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32886904" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Graph Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22637014" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23232724" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Graph Database Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32886904" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32886904" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24980143" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27306548" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.27232143" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -952,13 +890,20 @@
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="processedProjectFiles" value="true" />
+    <option name="version" value="1" />
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py</url>
+          <line>291</line>
+          <option name="timeStamp" value="154" />
+        </line-breakpoint>
+      </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
@@ -969,7 +914,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="150" />
+      <option name="time" value="155" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -984,362 +929,454 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/Desktop/tryptich/fasta.fasta" />
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QWidget.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="25" column="48" lean-forward="true" selection-start-line="25" selection-start-column="48" selection-end-line="25" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FrmListEditor.py" />
-    <entry file="file://$PROJECT_DIR$/legoalign/Designer/FrmListSelector_designer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="13" column="13" lean-forward="true" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/QtGuiHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="429">
-          <caret line="120" column="66" lean-forward="true" selection-start-line="120" selection-start-column="66" selection-end-line="120" selection-end-column="66" />
+        <state relative-caret-position="326">
+          <caret line="893" column="8" lean-forward="false" selection-start-line="893" selection-start-column="8" selection-end-line="893" selection-end-column="8" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/FrmImport.py">
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/QtGuiHelper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="496">
-          <caret line="37" column="30" lean-forward="false" selection-start-line="36" selection-start-column="8" selection-end-line="37" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/PyQt5/QtWidgets/QTreeWidget.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="381">
-          <caret line="188" column="83" lean-forward="true" selection-start-line="188" selection-start-column="83" selection-end-line="188" selection-end-column="83" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/PyQt5/QtWidgets/QTreeWidgetItem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="291">
-          <caret line="140" column="8" lean-forward="false" selection-start-line="140" selection-start-column="8" selection-end-line="140" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/fasta.clw">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="25" column="50" lean-forward="false" selection-start-line="25" selection-start-column="50" selection-end-line="25" selection-end-column="50" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SampleData/seqgen/right.fasta" />
-    <entry file="file://$PROJECT_DIR$/SampleData/seqgen/tree.new" />
-    <entry file="file://$PROJECT_DIR$/SampleData/blast.blast" />
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/FileHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="348">
-          <caret line="166" column="17" lean-forward="true" selection-start-line="166" selection-start-column="17" selection-end-line="166" selection-end-column="17" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/Monkey.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="16" column="43" lean-forward="true" selection-start-line="16" selection-start-column="43" selection-end-line="16" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/MyView.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/sampledata/seqgen/sequences.fasta">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="361">
-          <caret line="19" column="52" lean-forward="false" selection-start-line="19" selection-start-column="52" selection-end-line="19" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/sampledata/seqgen/sequences.blast">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/NameHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" column="13" lean-forward="false" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/GenericsHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="676">
-          <caret line="67" column="0" lean-forward="true" selection-start-line="67" selection-start-column="0" selection-end-line="67" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/matplotlib/backends/backend_qt4.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1235">
-          <caret line="65" column="0" lean-forward="false" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/Designer/FrmTreeSelector_designer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-268">
-          <caret line="11" column="8" lean-forward="false" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/matplotlib/backends/backend_qt4agg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="673">
-          <caret line="75" column="0" lean-forward="false" selection-start-line="75" selection-start-column="0" selection-end-line="75" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/networkx/classes/digraph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="439">
-          <caret line="880" column="8" lean-forward="false" selection-start-line="880" selection-start-column="8" selection-end-line="880" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/networkx/classes/graph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="1085" column="8" lean-forward="false" selection-start-line="1085" selection-start-column="8" selection-end-line="1085" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/matplotlib/pyplot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="83" column="0" lean-forward="false" selection-start-line="83" selection-start-column="0" selection-end-line="83" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/sys.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="267">
-          <caret line="332" column="4" lean-forward="false" selection-start-line="332" selection-start-column="4" selection-end-line="332" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/PyQt5/QtWidgets/QGraphicsItem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="443" column="8" lean-forward="false" selection-start-line="443" selection-start-column="8" selection-end-line="443" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/sampledata/seqgen/readme.md">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" column="16" lean-forward="true" selection-start-line="7" selection-start-column="16" selection-end-line="7" selection-end-column="17" />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="601">
-            <caret line="50" column="43" lean-forward="false" selection-start-line="50" selection-start-column="43" selection-end-line="50" selection-end-column="43" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/GlobalOptions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="6" lean-forward="false" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="6" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/LogHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
-          <caret line="6" column="36" lean-forward="true" selection-start-line="6" selection-start-column="36" selection-end-line="6" selection-end-column="36" />
+        <state relative-caret-position="289">
+          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/legoalign/FrmListSelector.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="361">
-          <caret line="19" column="44" lean-forward="true" selection-start-line="11" selection-start-column="4" selection-end-line="19" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/FrmText.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="456">
-          <caret line="24" column="42" lean-forward="false" selection-start-line="24" selection-start-column="42" selection-end-line="24" selection-end-column="42" />
+        <state relative-caret-position="408">
+          <caret line="29" column="62" lean-forward="true" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/builtins.py">
+    <entry file="file://$PROJECT_DIR$/legoalign/FrmImport.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="81643">
-          <caret line="4297" column="8" lean-forward="false" selection-start-line="4297" selection-start-column="8" selection-end-line="4297" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/PyQt5/QtWidgets/QAbstractButton.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2812">
-          <caret line="148" column="8" lean-forward="false" selection-start-line="148" selection-start-column="8" selection-end-line="148" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/PyQt5/QtWidgets/QTextEdit.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="13" column="6" lean-forward="false" selection-start-line="13" selection-start-column="6" selection-end-line="13" selection-end-column="6" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/typing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="325">
-          <caret line="1023" column="0" lean-forward="false" selection-start-line="1023" selection-start-column="0" selection-end-line="1023" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/IoHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/isort/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/BatchList_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="30" column="94" lean-forward="true" selection-start-line="30" selection-start-column="94" selection-end-line="30" selection-end-column="94" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/BatchList.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="665">
-          <caret line="35" column="32" lean-forward="true" selection-start-line="35" selection-start-column="32" selection-end-line="35" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../mhelper/MHelper/ArrayHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="325">
-          <caret line="257" column="4" lean-forward="false" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.1/python_stubs/-859012295/sip.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" column="21" lean-forward="true" selection-start-line="17" selection-start-column="21" selection-end-line="17" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/Designer/FrmMain_designer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="488">
-          <caret line="111" column="76" lean-forward="true" selection-start-line="111" selection-start-column="76" selection-end-line="111" selection-end-column="76" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/LegoViews.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="355" column="89" lean-forward="false" selection-start-line="355" selection-start-column="89" selection-end-line="355" selection-end-column="89" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/FrmMain.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="567">
-          <caret line="68" column="93" lean-forward="true" selection-start-line="68" selection-start-column="93" selection-end-line="68" selection-end-column="93" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/Bio/Phylo/Consensus.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="737">
-          <caret line="238" column="38" lean-forward="true" selection-start-line="238" selection-start-column="38" selection-end-line="238" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/Bio/Phylo/BaseTree.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1471">
-          <caret line="725" column="22" lean-forward="true" selection-start-line="725" selection-start-column="22" selection-end-line="725" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/LegoModels.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="226">
-          <caret line="449" column="22" lean-forward="false" selection-start-line="449" selection-start-column="13" selection-end-line="449" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/legoalign/FrmTreeSelector.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="734">
-          <caret line="55" column="56" lean-forward="true" selection-start-line="55" selection-start-column="56" selection-end-line="55" selection-end-column="56" />
+        <state relative-caret-position="119">
+          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="12" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/legoalign/LegoFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="334" column="34" lean-forward="false" selection-start-line="334" selection-start-column="34" selection-end-line="334" selection-end-column="34" />
+        <state relative-caret-position="527">
+          <caret line="53" column="62" lean-forward="true" selection-start-line="53" selection-start-column="62" selection-end-line="53" selection-end-column="62" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtCore/QCoreApplication.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="161" column="17" lean-forward="false" selection-start-line="161" selection-start-column="17" selection-end-line="161" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QAbstractButton.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1092">
+          <caret line="188" column="13" lean-forward="false" selection-start-line="188" selection-start-column="13" selection-end-line="188" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QMainWindow.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1041">
+          <caret line="234" column="46" lean-forward="false" selection-start-line="234" selection-start-column="46" selection-end-line="234" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QFileDialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="460">
+          <caret line="91" column="24" lean-forward="false" selection-start-line="91" selection-start-column="24" selection-end-line="91" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QInputDialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="494">
+          <caret line="63" column="16" lean-forward="true" selection-start-line="63" selection-start-column="16" selection-end-line="63" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2017.2/python_stubs/-859012295/PyQt5/QtWidgets/QMessageBox.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="460">
+          <caret line="115" column="4" lean-forward="false" selection-start-line="115" selection-start-column="4" selection-end-line="115" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/frontends/gui_qt/frm_main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="650">
+          <caret line="89" column="45" lean-forward="false" selection-start-line="89" selection-start-column="45" selection-end-line="89" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/hosts/gui.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="623">
+          <caret line="78" column="57" lean-forward="true" selection-start-line="78" selection-start-column="57" selection-end-line="78" selection-end-column="57" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/frontends/gui.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="27" column="20" lean-forward="false" selection-start-line="27" selection-start-column="20" selection-end-line="27" selection-end-column="20" />
+          <folding>
+            <element signature="e#302#956#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/plugins/command_plugin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="640">
+          <caret line="82" column="12" lean-forward="false" selection-start-line="82" selection-start-column="12" selection-end-line="82" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/event.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/event.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="6" lean-forward="true" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/environment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="653">
+          <caret line="42" column="51" lean-forward="true" selection-start-line="42" selection-start-column="51" selection-end-line="42" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable_operations.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="265" column="38" lean-forward="true" selection-start-line="265" selection-start-column="38" selection-end-line="265" selection-end-column="38" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/cli_helper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="216" column="8" lean-forward="false" selection-start-line="216" selection-start-column="8" selection-end-line="216" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/plugin_manager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-81">
+          <caret line="29" column="59" lean-forward="true" selection-start-line="29" selection-start-column="59" selection-end-line="29" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/components.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="381">
+          <caret line="29" column="66" lean-forward="true" selection-start-line="29" selection-start-column="66" selection-end-line="29" selection-end-column="66" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/_collections_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="373" column="55" lean-forward="true" selection-start-line="373" selection-start-column="55" selection-end-line="373" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/LegoViews.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2396">
+          <caret line="982" column="59" lean-forward="true" selection-start-line="982" selection-start-column="59" selection-end-line="982" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/verification.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" column="59" lean-forward="true" selection-start-line="22" selection-start-column="59" selection-end-line="22" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/quantisation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="591">
+          <caret line="43" column="15" lean-forward="false" selection-start-line="43" selection-start-column="15" selection-end-line="43" selection-end-column="15" />
+          <folding>
+            <element signature="e#0#58#1" expanded="false" />
+            <element signature="e#202#276#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/ExceptionHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="404">
+          <caret line="64" column="47" lean-forward="true" selection-start-line="64" selection-start-column="47" selection-end-line="64" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/fastaiser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" column="68" lean-forward="true" selection-start-line="18" selection-start-column="68" selection-end-line="18" selection-end-column="68" />
+          <folding>
+            <element signature="e#1873#2328#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/FrmMain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="426" column="72" lean-forward="true" selection-start-line="426" selection-start-column="72" selection-end-line="426" selection-end-column="72" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/__main__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="22" column="49" lean-forward="true" selection-start-line="22" selection-start-column="49" selection-end-line="22" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/ArrayHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="370">
+          <caret line="318" column="61" lean-forward="true" selection-start-line="318" selection-start-column="61" selection-end-line="318" selection-end-column="61" />
+          <folding>
+            <element signature="e#7696#7777#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/frontends/command_line.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="617">
+          <caret line="134" column="47" lean-forward="false" selection-start-line="134" selection-start-column="47" selection-end-line="134" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/FrmTreeSelector.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="850">
+          <caret line="55" column="8" lean-forward="false" selection-start-line="55" selection-start-column="8" selection-end-line="55" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/IoHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/designer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/deconvolution.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="20" column="53" lean-forward="true" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/importation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="25" column="21" lean-forward="false" selection-start-line="25" selection-start-column="21" selection-end-line="25" selection-end-column="21" />
+          <folding>
+            <element signature="e#184#354#1" expanded="true" />
+            <element signature="e#2374#2516#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mhelper/mhelper/StringHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5746">
+          <caret line="362" column="64" lean-forward="true" selection-start-line="362" selection-start-column="64" selection-end-line="362" selection-end-column="64" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/progress_reporter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="431">
+          <caret line="369" column="42" lean-forward="false" selection-start-line="369" selection-start-column="42" selection-end-line="369" selection-end-column="42" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/hosts/console.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="477">
+          <caret line="384" column="35" lean-forward="false" selection-start-line="384" selection-start-column="35" selection-end-line="384" selection-end-column="35" />
+          <folding>
+            <element signature="e#14443#14529#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/print_helper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="39" column="49" lean-forward="true" selection-start-line="39" selection-start-column="49" selection-end-line="39" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/editor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="27" column="42" lean-forward="false" selection-start-line="27" selection-start-column="42" selection-end-line="27" selection-end-column="42" />
+          <folding>
+            <element signature="e#504#725#1" expanded="true" />
+            <element signature="e#2555#2742#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/engine/mandate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="296">
+          <caret line="199" column="14" lean-forward="false" selection-start-line="199" selection-start-column="14" selection-end-line="199" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/visualisables/visualisable.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="299" column="32" lean-forward="false" selection-start-line="299" selection-start-column="32" selection-end-line="299" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/plugins/console_explorer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="339">
+          <caret line="376" column="119" lean-forward="false" selection-start-line="376" selection-start-column="119" selection-end-line="376" selection-end-column="119" />
+          <folding>
+            <element signature="e#10827#11080#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/plugins/common_commands.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="512">
+          <caret line="273" column="0" lean-forward="false" selection-start-line="273" selection-start-column="0" selection-end-line="273" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../mcommand/mcommand/hosts/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="487">
+          <caret line="43" column="150" lean-forward="false" selection-start-line="43" selection-start-column="150" selection-end-line="43" selection-end-column="150" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/mcommand_extensions/lego_controller.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#1924#1983#1" expanded="true" />
+            <element signature="e#2247#2386#1" expanded="true" />
+            <element signature="e#2597#2741#1" expanded="true" />
+            <element signature="e#2948#3087#1" expanded="true" />
+            <element signature="e#3310#3468#1" expanded="true" />
+            <element signature="e#4210#4336#1" expanded="true" />
+            <element signature="e#7302#7561#1" expanded="true" />
+            <element signature="e#8076#8309#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/LegoModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="663">
+          <caret line="453" column="53" lean-forward="false" selection-start-line="453" selection-start-column="53" selection-end-line="453" selection-end-column="53" />
+          <folding>
+            <element signature="e#485#783#1" expanded="true" />
+            <element signature="e#872#1080#1" expanded="true" />
+            <element signature="e#1162#1211#1" expanded="true" />
+            <element signature="e#3116#3171#1" expanded="true" />
+            <element signature="e#4478#4876#1" expanded="true" />
+            <element signature="e#6301#6655#1" expanded="true" />
+            <element signature="e#8183#8435#1" expanded="true" />
+            <element signature="e#8682#8768#1" expanded="true" />
+            <element signature="e#9048#9230#1" expanded="true" />
+            <element signature="e#16930#17118#1" expanded="true" />
+            <element signature="e#19360#19412#1" expanded="true" />
+            <element signature="e#20485#21010#1" expanded="true" />
+            <element signature="e#22248#22317#1" expanded="true" />
+            <element signature="e#22507#22645#1" expanded="true" />
+            <element signature="e#22816#22983#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/legoalign/algorithms/components.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="784">
+          <caret line="78" column="48" lean-forward="false" selection-start-line="78" selection-start-column="48" selection-end-line="78" selection-end-column="48" />
           <folding />
         </state>
       </provider>
