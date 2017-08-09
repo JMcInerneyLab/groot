@@ -10,8 +10,10 @@ from legoalign.algorithms import editor
 from legoalign.LegoModels import LegoModel, LegoComponent, LegoSequence, LegoSide, LegoEdge
 from mhelper import ArrayHelper
 from mhelper.ExceptionHelper import ImplementationError
+from mhelper.LogHelper import Logger
 from mhelper.components import ComponentFinder
 
+LOG_DETECTION = Logger( "component.detection", False )
 
 def detect( model: LegoModel, tolerance: int ) -> None:
     """
@@ -49,21 +51,35 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     # Create new components
     components = ComponentFinder()
     
+    LOG_DETECTION( "There are {} sequences.", len( model.sequences ) )
+    
     for sequence_alpha in model.sequences:
+        
+        LOG_DETECTION( "Sequence {} contains {} edges.", sequence_alpha, len( sequence_alpha.all_edges() ) )
+        
         for edge in sequence_alpha.all_edges():
-            source_difference       = abs( edge.source.length          - edge.source.sequence.length )
-            destination_difference  = abs( edge.destination.length     - edge.destination.sequence.length )
-            total_difference        = abs( edge.source.sequence.length - edge.destination.sequence.length )
+            source_difference       = abs( edge.left.length - edge.left.sequence.length )
+            destination_difference  = abs( edge.right.length - edge.right.sequence.length )
+            total_difference        = abs( edge.left.sequence.length - edge.right.sequence.length )
+
+            LOG_DETECTION( "{}", edge )
+            LOG_DETECTION( "-- Source difference (={} e={} s={})", source_difference, edge.left.length, edge.left.sequence.length )
+            LOG_DETECTION( "-- Destination difference (l={} e={} s={})", destination_difference, edge.right.length, edge.right.sequence.length )
+            LOG_DETECTION( "-- Total difference (l={} s={} d={})", total_difference, edge.left.sequence.length, edge.right.sequence.length )
             
             if                                              \
                        source_difference      > tolerance   \
                     or destination_difference > tolerance   \
                     or total_difference       > tolerance:
                 
+                LOG_DETECTION( "-- ==> REJECTED" )
                 continue
+            else:
+                LOG_DETECTION( "-- ==> ACCEPTED" )
+
 
             beta = edge.opposite( sequence_alpha ).sequence
-            print("{} and {}".format(sequence_alpha, beta))
+            LOG_DETECTION( "-- LINKS {} AND {}", sequence_alpha, beta )
             components.equate( sequence_alpha, beta )
 
     for index, sequence_list in enumerate( components.tabulate() ):
@@ -76,7 +92,7 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     # Create components for orphans
     for sequence in model.sequences:
         if sequence.component is None:
-            print("ORPHAN: {}".format(sequence))
+            LOG_DETECTION( "ORPHAN: {}", sequence )
             component = LegoComponent( model, len(model.components) )
             model.components.append( component )
             sequence.component = component
@@ -169,22 +185,44 @@ def __detect_minor( model: LegoModel ) -> None:
             
                 # Now we have our relationship, we can use it to calculate the offset
                 # We use just the `start` of the edge (TODO: a possible improvement might be to use something more advanced)
-                src = edge_b.side( done_s )
-                dst = edge_b.side( to_do_s )
+                left  = edge_b.side( done_s )
+                right = edge_b.side( to_do_s )
                 
-                source_subsequences             = [x for x in src.sequence.subsequences if component in x.components]
+                source_subsequences             = [x for x in left.sequence.subsequences if component in x.components]
                 source_entry_point_start        = source_subsequences[0].start
-                source_offset                   = source_entry_point_start - src.start
-                destination_entry_point_start   = dst.start + source_offset
-                destination_entry_point_end     = dst.start + source_offset + source_subsequences[-1].end
-
-                subsequence_list = editor.make_subsequence( to_do_s, destination_entry_point_start, destination_entry_point_end, None )
+                source_entry_point_end          = source_subsequences[-1].end
+                source_offset                   = source_entry_point_start - left.start
+                
+                destination_entry_point_start   = right.start + source_offset
+                destination_entry_point_end     = right.start + source_offset + source_entry_point_end
+                destination_entry_point_end, destination_entry_point_start = __fit_to_range( to_do_s.length, destination_entry_point_start, destination_entry_point_end )
+                    
+                subsequence_list = editor.make_subsequence( to_do_s, destination_entry_point_start, destination_entry_point_end, None, allow_resize = False )
 
                 for subsequence in subsequence_list:
                     subsequence.components.add( component )
 
                 to_do.remove( to_do_s )
                 done.add( to_do_s )
+
+
+def __fit_to_range( max_value:int, start:int, end :int)->Tuple[int,int]:
+    """
+    Given a range "start..end" this tries to shift it such that it does not lie outside "1..max_value".
+    """
+    if end > max_value:
+        subtract = end - max_value
+        end -= subtract
+        start -= subtract
+        
+        if start < 1:
+            end -= (start - 1)
+            start = 1
+            
+            if end > max_value:
+                end = max_value
+                
+    return end, start
 
 
 def average_component_lengths( model: LegoModel ):

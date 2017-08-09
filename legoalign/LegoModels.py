@@ -168,10 +168,10 @@ class LegoEdge( IVisualisable ):
     """
     Edge from one subsequence (or set of subsequences) to another
     
-    Edges have a Source and Destination list:
-        * All subsequences in a list (Source or Destination) must reference the same sequence
-        * The Source and Destination sequences cannot reference the same sequence
-            * This also implies any element in Source cannot be in Destination and vice-versa
+    These undirected edges have a "left" and "right" list:
+        * All subsequences in a list (left or right) must reference the same sequence
+        * The left and right sequences cannot reference the same sequence
+            * This also implies any element in left cannot be in right and vice-versa
     """
     
     
@@ -179,10 +179,10 @@ class LegoEdge( IVisualisable ):
         """
         CONSTRUCTOR
         """
-        self.source = LegoSide( True )
-        self.destination = LegoSide( False )
-        self.is_destroyed = False
-        self.comments = [ ]  # type: List[str]
+        self.left           = LegoSide( True )
+        self.right          = LegoSide( False )
+        self.is_destroyed   = False
+        self.comments       = [ ]  # type: List[str]
     
     
     def ui_info( self ):
@@ -196,19 +196,19 @@ class LegoEdge( IVisualisable ):
     
     def ui_items( self ):
         yield _NamedList( "comments", self.comments, "elements" )
-        yield self.source
-        yield self.destination
+        yield self.left
+        yield self.right
     
     
     def __contains__( self, item ):
-        return item in self.source or item in self.destination
+        return item in self.left or item in self.right
     
     
     def __str__( self ):
         if self.is_destroyed:
             return "DELETED_EDGE"
         
-        return "{}+{}".format( self.source, self.destination )
+        return "{}+{}".format( self.left, self.right )
     
     
     def __repr__( self ):
@@ -218,7 +218,7 @@ class LegoEdge( IVisualisable ):
         if self.is_destroyed:
             return "DELETED_EDGE"
         
-        return "({} [ {} : {} ])-->({} [ {} : {} ])".format( self.source.sequence.accession, self.source.start, self.source.end, self.destination.sequence.accession, self.destination.start, self.destination.end )
+        return "({} [ {} : {} ])<-->({} [ {} : {} ])".format( self.left.sequence.accession, self.left.start, self.left.end, self.right.sequence.accession, self.right.start, self.right.end )
     
     
     TSide = "Union[LegoSequence,LegoSubsequence,LegoComponent,bool]"
@@ -233,29 +233,29 @@ class LegoEdge( IVisualisable ):
         Raises `KeyError` if it does not appear in either.
         """
         if isinstance( item, LegoSubsequence ):
-            if item in self.source:
+            if item in self.left:
                 return False
             
-            if item in self.destination:
+            if item in self.right:
                 return True
             
             raise KeyError( "I cannot find the subsequence '{}' within this edge.".format( item ) )
         elif isinstance( item, LegoSequence ):
-            if item is self.source.sequence:
+            if item is self.left.sequence:
                 return False
             
-            if item is self.destination.sequence:
+            if item is self.right.sequence:
                 return True
             
-            raise KeyError( "I cannot find the sequence '{}' within this edge. This edge's sequences are '{}' and '{}'.".format( item, self.source.sequence, self.destination.sequence ) )
+            raise KeyError( "I cannot find the sequence '{}' within this edge. This edge's sequences are '{}' and '{}'.".format( item, self.left.sequence, self.right.sequence ) )
         elif isinstance( item, LegoComponent ):
-            if item is self.source.sequence.component:
+            if item is self.left.sequence.component:
                 return False
             
-            if item is self.destination.sequence.component:
+            if item is self.right.sequence.component:
                 return True
             
-            raise KeyError( "I cannot find the component '{}' within this edge. This edge's sequences are '{}' and '{}' and their components are '{}' and '{}'.".format( item, self.source.sequence, self.destination.sequence, self.source.component, self.destination.component ) )
+            raise KeyError( "I cannot find the component '{}' within this edge. This edge's sequences are '{}' and '{}' and their components are '{}' and '{}'.".format( item, self.left.sequence, self.right.sequence, self.left.component, self.right.component ) )
         elif isinstance( item, bool ):
             return item  # redundant support for bool for compatibility with `side`
         else:
@@ -274,7 +274,7 @@ class LegoEdge( IVisualisable ):
         if opposite:
             position = not position
         
-        return self.destination if position else self.source
+        return self.right if position else self.left
     
     
     def opposite( self, item: TSide ) -> LegoSide:

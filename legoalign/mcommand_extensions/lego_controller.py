@@ -7,10 +7,13 @@ from flags import Flags
 
 
 from legoalign.GlobalOptions import GlobalOptions
-from legoalign.LegoModels import LegoModel
+from legoalign.LegoModels import LegoModel, LegoComponent
 from mcommand import command, Mandate, current_environment
+from mcommand.helpers.table_draw import Table
 from mcommand.plugins import common_commands
 from mcommand.plugins import console_explorer
+
+from mcommand.engine.constants import EVisibility
 from mhelper import FileHelper, IoHelper
 from legoalign.algorithms import importation, quantisation, components, verification, deconvolution
 
@@ -71,7 +74,7 @@ def sample( e: Mandate, name: Optional[ str ] = None ) -> EChanges:
 
 
 @command()
-def new( e: Mandate ) -> EChanges:
+def new_model( e: Mandate ) -> EChanges:
     """
     Starts a new model
     :param e:   Internal
@@ -174,7 +177,7 @@ def detect(e:Mandate, tolerance:int= 0)->EChanges:
 
 
 @command()
-def print_minor( e:Mandate ):
+def print_minor( e:Mandate, component : Optional[LegoComponent] = None ):
     """
     Prints the edges between the component subsequences.
     
@@ -189,23 +192,34 @@ def print_minor( e:Mandate ):
         `start`  is the average of the start of the destination entry point
         `end`    is the average of the end of the destination entry point
         `length` is the average length of the sequences in the destination 
-    
+
+    :param e:         Internal
+    :param component: Component to print. If not specified prints a summary of all components.    
     """
     if not __model.components:
         raise ValueError("Cannot print minor components because components have not been calculated.")
     
-    message = [ ]
+    message = Table()
     
     average_lengths = components.average_component_lengths( __model )
     
+    if component:
+        message.add_title(component)
+    else:
+        message.add_title("all components")
+        
+    message.add_row("source","destination", "sequence", "seq-length", "start", "end" )
+    message.add_hline()
+    
     for major in __model.components:
+        if component is not None and component is not major:
+            continue
+            
         major_sequences = list(major.major_sequences())
         
         for minor in __model.components:
             if major is minor:
                 continue
-                
-            
             
             start  = 0
             end    = 0
@@ -217,6 +231,9 @@ def print_minor( e:Mandate ):
                 if subsequences:
                     start  += subsequences[0].start
                     end    += subsequences[-1].end
+                    
+                    if component is not None:
+                        message.add_row(minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end)
                 else:
                     failed = True
                     
@@ -226,9 +243,9 @@ def print_minor( e:Mandate ):
             start  /= len(major_sequences)
             end    /= len(major_sequences)
         
-            message.append( "FROM {} TO {} [ {} : {} ] ({})".format( minor, major, round(start), round(end), round(average_lengths[major]) ) )
+            message.add_row(  minor, major, "AVG*{}".format(len(major_sequences)), round(average_lengths[major]), round(start), round(end) )
                     
-    e.print( "\n".join( message ) )
+    e.print( message.to_string() )
 
 
 @command()
@@ -249,11 +266,17 @@ def print_major( e :Mandate):
     if not __model.components:
         raise ValueError("Cannot print major components because components have not been calculated.")
     
-    message = [ ]
+    message = Table()
+    
+    message.add_title("major elements of components")
+    message.add_row("component", "major elements")
+    message.add_hline()
+    
+    
     for component in __model.components:
-        message.append( "COMPONENT {} = {}".format( component, ", ".join( x.accession for x in component.major_sequences() ) ) )
+        message.add_row( component, ", ".join( x.accession for x in component.major_sequences() ) )
         
-    e.print( "\n".join( message ) )
+    e.print( message.to_string() )
     
 
 

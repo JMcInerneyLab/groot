@@ -6,12 +6,20 @@ In order to maintain correct within-model relationships, the model should only b
 
 from typing import List, Iterable
 
-from legoalign.LegoModels import LegoSequence, LegoModel, LegoSubsequence, LegoEdge, LOG
+from legoalign.LegoModels import LegoSequence, LegoModel, LegoSubsequence, LegoEdge
 from mhelper import ArrayHelper
 from mhelper.ExceptionHelper import ImplementationError
+from mhelper.LogHelper import Logger
 
 
-def make_sequence( model : LegoModel, accession: str, obtain_only : bool, initial_length : int, extra_data ) -> LegoSequence:
+LOG = Logger(False)
+LOG_MAKESS = Logger("make.subsequence", False)
+
+def make_sequence( model : LegoModel,
+                   accession: str, 
+                   obtain_only : bool,
+                   initial_length : int, 
+                   extra_data : object ) -> LegoSequence:
     """
     Creates the specified sequence, or returns it if it already exists.
     
@@ -64,8 +72,8 @@ def make_edge( model : LegoModel, source: List[ LegoSubsequence ], destination: 
     sd = set( destination )
     
     for edge in model.all_edges:
-        if (set( edge.source ) == ss and set( edge.destination ) == sd) \
-                or (set( edge.source ) == sd and set( edge.destination ) == ss):
+        if (set( edge.left ) == ss and set( edge.right ) == sd) \
+                or (set( edge.left ) == sd and set( edge.right ) == ss):
             edge.comments.append( extra_data )
             return edge
     
@@ -81,9 +89,14 @@ def make_edge( model : LegoModel, source: List[ LegoSubsequence ], destination: 
     return result
 
             
-def make_subsequence( sequence : LegoSequence, start, end, extra_data ) -> List[ LegoSubsequence ]:
+def make_subsequence( sequence : LegoSequence, 
+                      start:int, 
+                      end:int, 
+                      extra_data:object,
+                      allow_resize : bool = True) -> List[ LegoSubsequence ]:
     """
     Creates the specified subsequence(s), or returns that if it already exists.
+    :param allow_resize: 
     :param sequence: 
     :param start: 
     :param end: 
@@ -93,9 +106,14 @@ def make_subsequence( sequence : LegoSequence, start, end, extra_data ) -> List[
     assert start > 0, start
     assert end > 0, end
     
-    with LOG( "REQUEST TO MAKE SUBSEQUENCE FROM {} TO {}".format( start, end ) ):
-        if start > end:
-            raise ImplementationError( "Cannot make a subsequence in '{0}' which has a start ({1}) > end ({2}) because that doesn't make sense.".format( sequence, start, end ) )
+    if start > end:
+        raise ImplementationError( "Cannot make a subsequence in '{0}' which has a start ({1}) > end ({2}) because that doesn't make sense.".format( sequence, start, end ) )
+    
+    if not allow_resize:
+        if start > sequence.length or end > sequence.length:
+            raise ImplementationError("make_subsequence called with start = {} and end = {} but the sequence length is {} and allow_resize is set to False.".format(start,end, sequence.length))
+    
+    with LOG_MAKESS( "REQUEST TO MAKE SUBSEQUENCE IN {} FROM {} TO {}".format( sequence, start, end ) ):
         
         if sequence.length < end:
             sequence._ensure_length( end )
@@ -105,18 +123,18 @@ def make_subsequence( sequence : LegoSequence, start, end, extra_data ) -> List[
         for subsequence in sequence.subsequences:
             if subsequence.end >= start:
                 if subsequence.start == start:
-                    LOG( "FIRST - {}".format( subsequence ) )
+                    LOG_MAKESS( "FIRST - {}".format( subsequence ) )
                     first = subsequence
                 else:
-                    with LOG( "FIRST - {} - ¡SPLIT!".format( subsequence ) ):
+                    with LOG_MAKESS( "FIRST - {} - ¡SPLIT!".format( subsequence ) ):
                         _, first = split_subsequence( subsequence, start )
-                        LOG( "SPLIT ABOUT {} GIVING RIGHT {}".format( start, first ) )
+                        LOG_MAKESS( "SPLIT ABOUT {} GIVING RIGHT {}".format( start, first ) )
                 
                 if first.end > end:
                     first, _ = split_subsequence( first, end + 1 )
-                    LOG( "THEN SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, first ) )
+                    LOG_MAKESS( "THEN SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, first ) )
                 
-                LOG( "#### {}".format( first ) )
+                LOG_MAKESS( "#### {}".format( first ) )
                 r.append( first )
                 break
         
@@ -124,17 +142,17 @@ def make_subsequence( sequence : LegoSequence, start, end, extra_data ) -> List[
             if subsequence.start > start:
                 if subsequence.end > end:
                     if subsequence.start != end + 1:
-                        with LOG( "LAST - {} - ¡SPLIT!".format( subsequence ) ):
+                        with LOG_MAKESS( "LAST - {} - ¡SPLIT!".format( subsequence ) ):
                             last, _ = split_subsequence( subsequence, end + 1 )
-                            LOG( "SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, last ) )
+                            LOG_MAKESS( "SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, last ) )
                         
-                        LOG( "#### {}".format( last ) )
+                        LOG_MAKESS( "#### {}".format( last ) )
                         r.append( last )
                     
                     break
                 else:
-                    LOG( "MIDDLE - {}".format( subsequence ) )
-                    LOG( "#### {}".format( subsequence ) )
+                    LOG_MAKESS( "MIDDLE - {}".format( subsequence ) )
+                    LOG_MAKESS( "#### {}".format( subsequence ) )
                     r.append( subsequence )
         
         for left, right in ArrayHelper.lagged_iterate( sequence.subsequences ):
@@ -198,10 +216,10 @@ def unlink_all_edges( edge : LegoEdge ):
     """
     Removes all references to this edge.
     """
-    for x in edge.source:
+    for x in edge.left:
         x.edges.remove( edge )
     
-    for x in edge.destination:
+    for x in edge.right:
         x.edges.remove( edge )
     
     edge.is_destroyed = True
@@ -213,7 +231,7 @@ def unlink_edge( edge : LegoEdge, subsequence: "LegoSubsequence" ):
     
     Warning: If this empties the edge, the edge is automatically destroyed.
     """
-    the_list = edge.destination if edge.position( subsequence ) else edge.source
+    the_list = edge.right if edge.position( subsequence ) else edge.left
     
     subsequence.edges.remove( edge )
     the_list.remove( subsequence )
@@ -231,7 +249,7 @@ def link_edge( edge : LegoEdge, position: bool, subsequences: "List[LegoSubseque
         for x in subsequences:
             LOG( "{} {}".format( pfx, x ) )
         
-        the_list = edge.destination if position else edge.source
+        the_list = edge.right if position else edge.left
         
         for subsequence in subsequences:
             assert not subsequence.is_destroyed

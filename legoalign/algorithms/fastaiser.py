@@ -20,15 +20,15 @@ def edge_to_fasta( edge: LegoEdge, header ):
     fasta.append( ";" )
     
     if header:
-        fasta.append( ">{} [ {} : {} ]".format( edge.source.sequence, edge.source.start, edge.source.end ) )
+        fasta.append( ">{} [ {} : {} ]".format( edge.left.sequence, edge.left.start, edge.left.end ) )
     
-    fasta.append( edge.source.sites or ";MISSING" )
+    fasta.append( edge.left.sites or ";MISSING" )
     fasta.append( "" )
     
     if header:
-        fasta.append( ">{} [ {} : {} ]".format( edge.destination.sequence, edge.destination.start, edge.destination.end ) )
+        fasta.append( ">{} [ {} : {} ]".format( edge.right.sequence, edge.right.start, edge.right.end ) )
     
-    fasta.append( edge.destination.sites or ";MISSING" )
+    fasta.append( edge.right.sites or ";MISSING" )
     fasta.append( "" )
     return "\n".join( fasta )
 

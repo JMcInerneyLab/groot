@@ -46,10 +46,10 @@ def remove_redundant_edges( model : LegoModel ):
         for x in the_list:
             for y in the_list:
                 if not x.is_destroyed and not y.is_destroyed and x is not y:
-                    x_source = set( x.source )
-                    x_dest = set( x.destination )
-                    y_source = set( y.source )
-                    y_dest = set( y.destination )
+                    x_source = set( x.left )
+                    x_dest = set( x.right )
+                    y_source = set( y.left )
+                    y_dest = set( y.right )
                     
                     if (x_source == y_source and x_dest == y_dest) or (x_source == y_dest and x_dest == y_source):
                         with LOG( "EQUIVALENT:" ):

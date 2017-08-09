@@ -4,7 +4,7 @@ Verifies the integrity of the model.
 See `verify`.
 """
 
-from legoalign.LegoModels import LOG, LegoSequence, LegoSubsequence, LegoEdge, LegoModel
+from legoalign.LegoModels import LOG, LegoSequence, LegoSubsequence, LegoEdge, LegoModel, LegoSide
 from mhelper import ArrayHelper
 from mhelper.ExceptionHelper import ImplementationError
 
@@ -53,31 +53,30 @@ def __verify_edge( edge : LegoEdge ):
         if edge.is_destroyed:
             raise ImplementationError( "Edge '{}' has been destroyed.".format( edge ) )
         
-        if not edge.source or not edge.destination:
-            return
+        __verify_side( edge.left )
+        __verify_side( edge.right )
         
-        if len(edge.source)==0:
-            raise ImplementationError( "An edge has no source." )
-        
-        if len(edge.destination)==0:
-            raise ImplementationError( "An edge has no destination." )
-        
-        for x in edge.source:
-            if x.sequence is not edge.source[ 0 ].sequence:
-                raise ImplementationError( "The source subsequences in the edge '{}' do not all reference the same sequence, e.g. '{}' and '{}'.".format( x, x, edge.source[ 0 ] ) )
-        
-        for x in edge.destination:
-            if x.sequence is not edge.destination[ 0 ].sequence:
-                raise ImplementationError( "The destination subsequences in the edge '{}' do not all reference the same sequence, e.g. '{}' and '{}'.".format( x, x, edge.destination[ 0 ] ) )
-        
-        if edge.source[ 0 ].sequence is edge.destination[ 0 ].sequence:
+        if edge.left.sequence is edge.right.sequence:
             # Don't allow this, it's unnecessary and just causes problems further down the line
-            raise ImplementationError( "The source and destination sequences of the edge '{}' are the same ('{}').".format( edge, edge.source[ 0 ].sequence ) )
+            raise ImplementationError( "The source and destination sequences of the edge '{}' are the same ('{}').".format( edge, edge.left[ 0 ].sequence ) )
         
-        for x in edge.source:
-            if x.is_destroyed:
-                raise ImplementationError( "Edge '{}' source contains a destroyed subsequence '{}'".format( edge, x ) )
+        
             
-        for x in edge.destination:
-            if x.is_destroyed:
-                raise ImplementationError( "Edge '{}' destination contains a destroyed subsequence '{}'".format( edge, x ) )
+def __verify_side( side : LegoSide ):
+    if side is None:
+        raise ImplementationError( "A side '{}' is `None`.".format(side) )
+    
+    if len(side)==0:
+        raise ImplementationError( "A side '{}' is empty.".format(side) )
+    
+    for subsequence in side:
+        if subsequence.is_destroyed:
+            raise ImplementationError( "Side '{}' source contains a destroyed subsequence '{}'".format( side, subsequence ) )
+        
+        if subsequence.sequence is not side.sequence:
+            raise ImplementationError( "The source subsequences in the side '{}' do not all reference the same sequence, e.g. '{}' and '{}'.".format( side, subsequence.sequence, side.sequence ) )
+        
+        if subsequence not in subsequence.sequence.subsequences:
+            raise ImplementationError("The subsequence '{}' in side '{}' is not in its sequence '{}'.".format(subsequence, side, subsequence.sequence))
+        
+        

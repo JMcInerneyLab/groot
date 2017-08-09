@@ -260,10 +260,10 @@ class LegoEdgeView:
         source = [ ]  # type:List[LegoViewSubsequence]
         destination = [ ]  # type:List[LegoViewSubsequence]
         
-        for x in edge.source:
+        for x in edge.left:
             source.append( owner.owner.view_model.find_subsequence_view( x ) )
         
-        for x in edge.destination:
+        for x in edge.right:
             destination.append( owner.owner.view_model.find_subsequence_view( x ) )
         
         return LegoEdgeView( owner, LegoEdgeViewTarget( source ), LegoEdgeViewTarget( destination ), edge )
