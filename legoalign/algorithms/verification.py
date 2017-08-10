@@ -69,6 +69,13 @@ def __verify_side( side : LegoSide ):
     if len(side)==0:
         raise ImplementationError( "A side '{}' is empty.".format(side) )
     
+    for a, b in ArrayHelper.lagged_iterate(side):
+        if a.start >= b.start:
+            raise ValueError("The subsequences '{}' and '{}' in the side '{}' are not in the correct order!")
+        
+        if a.end + 1 != b.start:
+            raise ValueError("The subsequences '{}' and '{}' in the side '{}' are not adjacent!")
+    
     for subsequence in side:
         if subsequence.is_destroyed:
             raise ImplementationError( "Side '{}' source contains a destroyed subsequence '{}'".format( side, subsequence ) )

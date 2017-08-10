@@ -8,23 +8,25 @@ from typing import Tuple, Set
 
 from legoalign.algorithms import editor
 from legoalign.LegoModels import LegoModel, LegoComponent, LegoSequence, LegoSide, LegoEdge
+from mcommand.engine.mandate import Mandate
 from mhelper import ArrayHelper
 from mhelper.ExceptionHelper import ImplementationError
 from mhelper.LogHelper import Logger
 from mhelper.components import ComponentFinder
 
-LOG_DETECTION = Logger( "component.detection", False )
+LOG_MAJOR = Logger( "component.major", False )
+LOG_MINOR = Logger( "component.minor", True ) 
 
-def detect( model: LegoModel, tolerance: int ) -> None:
+def detect( e:Mandate,model: LegoModel, tolerance: int ) -> None:
     """
     Detects sequence and subsequence components.
     """
-    __clear( model )
-    __detect_major( model, tolerance )
-    __detect_minor( model )
+    __clear( e,model )
+    __detect_major(e, model, tolerance )
+    __detect_minor( e,model, tolerance )
 
 
-def __clear( model: LegoModel ):
+def __clear( _:Mandate,model: LegoModel ):
     """
     Clears the components from the model.
     """
@@ -37,7 +39,7 @@ def __clear( model: LegoModel ):
         subsequence.components.clear()
 
 
-def __detect_major( model: LegoModel, tolerance: int ) -> None:
+def __detect_major(_:Mandate, model: LegoModel, tolerance: int ) -> None:
     """
     Finds the sequence components, here termed the "major" elements.
     
@@ -51,35 +53,35 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     # Create new components
     components = ComponentFinder()
     
-    LOG_DETECTION( "There are {} sequences.", len( model.sequences ) )
+    LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
     
     for sequence_alpha in model.sequences:
         
-        LOG_DETECTION( "Sequence {} contains {} edges.", sequence_alpha, len( sequence_alpha.all_edges() ) )
+        LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( sequence_alpha.all_edges() ) )
         
         for edge in sequence_alpha.all_edges():
             source_difference       = abs( edge.left.length - edge.left.sequence.length )
             destination_difference  = abs( edge.right.length - edge.right.sequence.length )
             total_difference        = abs( edge.left.sequence.length - edge.right.sequence.length )
 
-            LOG_DETECTION( "{}", edge )
-            LOG_DETECTION( "-- Source difference (={} e={} s={})", source_difference, edge.left.length, edge.left.sequence.length )
-            LOG_DETECTION( "-- Destination difference (l={} e={} s={})", destination_difference, edge.right.length, edge.right.sequence.length )
-            LOG_DETECTION( "-- Total difference (l={} s={} d={})", total_difference, edge.left.sequence.length, edge.right.sequence.length )
+            LOG_MAJOR( "{}", edge )
+            LOG_MAJOR( "-- Source difference (={} e={} s={})", source_difference, edge.left.length, edge.left.sequence.length )
+            LOG_MAJOR( "-- Destination difference (l={} e={} s={})", destination_difference, edge.right.length, edge.right.sequence.length )
+            LOG_MAJOR( "-- Total difference (l={} s={} d={})", total_difference, edge.left.sequence.length, edge.right.sequence.length )
             
             if                                              \
                        source_difference      > tolerance   \
                     or destination_difference > tolerance   \
                     or total_difference       > tolerance:
                 
-                LOG_DETECTION( "-- ==> REJECTED" )
+                LOG_MAJOR( "-- ==> REJECTED" )
                 continue
             else:
-                LOG_DETECTION( "-- ==> ACCEPTED" )
+                LOG_MAJOR( "-- ==> ACCEPTED" )
 
 
             beta = edge.opposite( sequence_alpha ).sequence
-            LOG_DETECTION( "-- LINKS {} AND {}", sequence_alpha, beta )
+            LOG_MAJOR( "-- LINKS {} AND {}", sequence_alpha, beta )
             components.equate( sequence_alpha, beta )
 
     for index, sequence_list in enumerate( components.tabulate() ):
@@ -92,13 +94,13 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     # Create components for orphans
     for sequence in model.sequences:
         if sequence.component is None:
-            LOG_DETECTION( "ORPHAN: {}", sequence )
+            LOG_MAJOR( "ORPHAN: {}", sequence )
             component = LegoComponent( model, len(model.components) )
             model.components.append( component )
             sequence.component = component
 
 
-def __detect_minor( model: LegoModel ) -> None:
+def __detect_minor( e:Mandate,model: LegoModel, tolerance : int ) -> None:
     """
     Finds the subsequence components, here termed the "minor" elements.
     
@@ -127,8 +129,8 @@ def __detect_minor( model: LegoModel ) -> None:
         for subsequence in sequence.subsequences:
             subsequence.components.add( component )
         
-        for edge in sequence.all_edges():
-            opposite_side       = edge.opposite(sequence)
+        for entering_edge in sequence.all_edges():
+            opposite_side       = entering_edge.opposite(sequence)
             opposite_sequence   = opposite_side.sequence
             opposite_component  = opposite_sequence.component
             
@@ -154,17 +156,18 @@ def __detect_minor( model: LegoModel ) -> None:
                         existing_edge = None
     
                 if existing_edge is None:
-                    entry_dict[ component ][ opposite_component ] = edge
+                    LOG_MINOR("FROM {} TO {} ACROSS {}", component, opposite_component, entering_edge)
+                    entry_dict[ component ][ opposite_component ] = entering_edge
 
     # Now slice those sequences up!
     # Unfortunately we can't just relay the positions, since there will be shifts.
     # We need to use BLAST to work out the relationship between the genes.
-    for component, data in entry_dict.items():
-        for other_component, edge in data.items():
+    for component, opposing_dict in entry_dict.items():
+        for other_component, entering_edge in opposing_dict.items():
             # `component` enters `other_component` via `edge`
             assert isinstance( other_component, LegoComponent )
         
-            opposite_side = edge.opposite( component )  # type: LegoSide
+            opposite_side = entering_edge.opposite( component )  # type: LegoSide
         
             # Flag the entry point into `other component`
             for subsequence in opposite_side:
@@ -177,50 +180,77 @@ def __detect_minor( model: LegoModel ) -> None:
             to_do.remove( opposite_side.sequence )
             done = set()
             done.add( opposite_side.sequence )
+            
+            LOG_MINOR("flw. FOR {}".format(entering_edge))
+            LOG_MINOR("flw. ENTRY POINT IS {}".format(opposite_side))
         
             while to_do:
                 # First we need to find an edge between something in the "done" set and something in the "to_do" set.
                 # If multiple relationships are present, we use the largest one.
-                edge_b, done_s, to_do_s = __find_largest_relationship( to_do, done )
+                edge, origin_seq, destination_seq = __find_largest_relationship( to_do, done )
+                
+                LOG_MINOR("flw. FOLLOWING {}",edge)
             
                 # Now we have our relationship, we can use it to calculate the offset
-                # We use just the `start` of the edge (TODO: a possible improvement might be to use something more advanced)
-                left  = edge_b.side( done_s )
-                right = edge_b.side( to_do_s )
+                left  = edge.side( origin_seq )
+                right = edge.side( destination_seq )
+                LOG_MINOR("flw. -- LEFT {} {}",left.start, left.end)
+                LOG_MINOR("flw. -- RIGHT {} {}",right.start, right.end)
                 
-                source_subsequences             = [x for x in left.sequence.subsequences if component in x.components]
-                source_entry_point_start        = source_subsequences[0].start
-                source_entry_point_end          = source_subsequences[-1].end
-                source_offset                   = source_entry_point_start - left.start
+                # Our origin is the part of the leading side which comprises our component
+                origin_subsequences     = [x for x in left if component in x.components]  # TODO: "left" or "left.subsequences"?
+                origin_start            = origin_subsequences[0].start
+                origin_end              = origin_subsequences[-1].end
+                LOG_MINOR("flw. -- ORIGIN {} {}",origin_start, origin_end)
+                assert origin_start >= left.start, "The origin start ({}) cannot be before the left start ({}), but it is: {}".format(origin_start, left.start, origin_subsequences) 
+                assert origin_end <= left.end, "The origin end ({}) cannot be beyond the left end ({}), but it is: {}".format(origin_end, left.end, origin_subsequences)
                 
-                destination_entry_point_start   = right.start + source_offset
-                destination_entry_point_end     = right.start + source_offset + source_entry_point_end
-                destination_entry_point_end, destination_entry_point_start = __fit_to_range( to_do_s.length, destination_entry_point_start, destination_entry_point_end )
-                    
-                subsequence_list = editor.make_subsequence( to_do_s, destination_entry_point_start, destination_entry_point_end, None, allow_resize = False )
+                # The offset is the position in the edge pertaining to our origin
+                offset_start                   = origin_start - left.start
+                offset_end                     = origin_end   - left.start # We use just the `start` of the edge (TODO: a possible improvement might be to use something more advanced)
+                LOG_MINOR("flw. -- OFFSET {} {}",offset_start, offset_end)
+                
+                # The destination is the is slice of the trailing side, adding our original offset
+                destination_start   = right.start + offset_start
+                destination_end     = right.start + offset_end
+                LOG_MINOR("flw. -- DESTINATION {} {}",offset_start, offset_end)
+                
+                # Fix any small discrepancies
+                destination_end, destination_start = __fit_to_range( e, destination_seq.length, destination_start, destination_end, tolerance )
+                
+                subsequence_list = editor.make_subsequence( destination_seq, destination_start, destination_end, None, allow_resize = False )
+                
+                LOG_MINOR("flw. -- SHIFTED {} {}",offset_start, offset_end)
 
                 for subsequence in subsequence_list:
                     subsequence.components.add( component )
 
-                to_do.remove( to_do_s )
-                done.add( to_do_s )
+                to_do.remove( destination_seq )
+                done.add( destination_seq )
 
 
-def __fit_to_range( max_value:int, start:int, end :int)->Tuple[int,int]:
+def __fit_to_range( e:Mandate,max_value:int, start:int, end :int,tolerance:int)->Tuple[int,int]:
     """
     Given a range "start..end" this tries to shift it such that it does not lie outside "1..max_value".
     """
     if end > max_value:
-        subtract = end - max_value
+        subtract = min(end - max_value, start-1)
+        
+        if subtract > tolerance:
+            e.warning("Fitting the subsequence to the new range results in a concerning ({}>{}) shift in position.".format(subtract,tolerance))
+        
+        LOG_MINOR("fix. {}...{} SLIPS PAST {}, SUBTRACTING {}",start,end,max_value,subtract)
         end -= subtract
         start -= subtract
         
-        if start < 1:
-            end -= (start - 1)
-            start = 1
+        if end > max_value:
+            if (end - max_value) > tolerance:
+                e.warning("Fitting the subsequence to the new range results in a concerning ({}>{}) excess in length.".format(end - max_value,tolerance))
             
-            if end > max_value:
-                end = max_value
+            LOG_MINOR("fix. -- FIXING TAIL.")
+            end = max_value
+            
+        LOG_MINOR("fix. -- FIXED TO {} {} OF {}",start,end,max_value)
                 
     return end, start
 

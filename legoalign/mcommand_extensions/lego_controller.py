@@ -8,14 +8,15 @@ from flags import Flags
 
 from legoalign.GlobalOptions import GlobalOptions
 from legoalign.LegoModels import LegoModel, LegoComponent
+from legoalign.mcommand_extensions import console_view
 from mcommand import command, Mandate, current_environment
 from mcommand.helpers.table_draw import Table
 from mcommand.plugins import common_commands
 from mcommand.plugins import console_explorer
 
-from mcommand.engine.constants import EVisibility
-from mhelper import FileHelper, IoHelper
-from legoalign.algorithms import importation, quantisation, components, verification, deconvolution
+from mcommand.visualisables.visualisable import IVisualisable
+from mhelper import FileHelper, IoHelper, ExceptionHelper
+from legoalign.algorithms import importation, quantisation, components, verification, deconvolution, fastaiser, alignment
 
 
 class EChanges( Flags ):
@@ -171,9 +172,49 @@ def detect(e:Mandate, tolerance:int= 0)->EChanges:
     :param tolerance:   Tolerance on overlap
     """
     with e.action("Component detection"):
-        components.detect( __model, tolerance )
+        components.detect( e,__model, tolerance )
         
     return EChanges.ATTRS
+
+@command()
+def fasta(e:Mandate, x : IVisualisable):
+    """
+    Presents the FASTA sequences for an object.
+    :param e: 
+    :param x:   Object to present.
+    """
+    e.information( console_view.colour_fasta_ansi(fastaiser.to_fasta(x) ))
+    
+@command()
+def align(e:Mandate, x:Optional[ LegoComponent ] = None ):
+    """
+    Aligns the component. If no component is specified, aligns all components.
+    
+    :param e:
+    :param x: Component to align, or `None` for all.
+    """
+    if x is not None:
+        to_do = [ x ]
+    else:
+        to_do = __model.components
+    
+    for component in to_do:
+        assert isinstance( component, LegoComponent ), ExceptionHelper.instance_message( "component", component, LegoComponent )
+        alignment.align( component )
+        
+@command()
+def print_alignment(e:Mandate, x:LegoComponent):
+    """
+    Prints the alignment for a component.
+    :param e: 
+    :param x:   Component to print alignment for. 
+    :return: 
+    """
+    if x.alignment is None:
+        raise ValueError("No alignment is available for this component. Did you remember to run `align` first?")
+    else:
+        e.information(console_view.colour_fasta_ansi(x.alignment))
+        
 
 
 @command()

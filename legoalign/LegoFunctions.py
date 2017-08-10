@@ -88,10 +88,7 @@ def create_tree( component: LegoSsComponent ):
     raxml_file_extension = "t{}".format( uid )
     RAXML_BEST_FILE_NAME = "RAxML_bestTree." + raxml_file_extension  # NOT MODIFIABLE
     
-    alignment_command = "muscle -in " + in_file_name + " -out " + out_file_name
     
-    FileHelper.write_all_text( in_file_name, fasta )
-    ExceptionHelper.run_subprocess( alignment_command )
     
     BioHelper.convert_file( out_file_name, phy_file_name, "fasta", "phylip" )
     

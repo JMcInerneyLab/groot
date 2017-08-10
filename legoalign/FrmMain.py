@@ -242,48 +242,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.update_selection_buttons()
     
     
-    def colour_fasta( self, array ):
-        if not array:
-            return "<b>Missing array data!</b><br/>Have you loaded the FASTA?"
-        
-        res = [ ]
-        no_colours = False
-        pending=""
-        table=self._view.lookup_table.letter_colour_table
-        
-        for x in array:
-            if x == ">":
-                no_colours = True
-                res.append('<b>')
-                pending = "</b>"+pending
-            elif x == "[":
-                res.append('<span style="color:cyan;">[')
-                continue
-            elif x == "]":
-                res.append(']</span>')
-                continue
-            elif x == ";":
-                no_colours = True
-                res.append('<span style="color:silver;">')
-                pending = "</span>"+pending
-            elif x=="\n":
-                no_colours = False
-                res.append(pending+"<br/>")
-                pending=""
-                
-            if no_colours:
-                res.append(x)
-            else:
-                colour = table.get( x )
-                
-                if colour is None:
-                    colour = QtColourHelper.Pens.BLACK
-                
-                res.append( '<span style="color:' + colour.color().name() + ';">' + x + '</span>' )
-        
-        return "".join( res )
-    
-    
     def subsequence_view_focus( self, subsequence_view: LegoViewSubsequence ):
         """
         CALLBACK

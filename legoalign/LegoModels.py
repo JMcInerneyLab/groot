@@ -3,7 +3,9 @@ Holds the Lego model, and its dependencies.
 
 See class `LegoModel`.
 """
-from typing import Iterable, Iterator, List, Optional, Set
+from typing import Iterable, Iterator, List, Optional, Set, Tuple
+
+from colorama import Back, Style, Fore
 
 from editorium import MEnum
 from mcommand import EColour, IVisualisable, UiInfo, resources
@@ -14,6 +16,16 @@ from mhelper.LogHelper import Logger
 
 
 LOG = Logger( False )
+
+# EDGE_FORMAT = "❮ {}·𝑛{} {}…{} ❮❯ {}·𝑛{} {}…{} ❯"
+# SIDE_FORMAT = "{}·𝑛{}~{}…{}·𝓂{}"
+# SEQ_FORMAT = "{}·𝑛{}"
+# SUBSEQUENCE_FORMAT = "{}·𝑛{}~{}…{}"
+
+SIDE_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·𝑛" + Fore.GREEN + "{} " + Fore.LIGHTYELLOW_EX + "{}" + Fore.WHITE + "…" + Fore.YELLOW + "{}" + Fore.WHITE + "·𝓂" + Fore.GREEN + "{}" + Fore.RESET
+SUBSEQUENCE_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·𝑛" + Fore.GREEN + "{} " + Fore.LIGHTYELLOW_EX + "{}" + Fore.WHITE + "…" + Fore.YELLOW + "{}" + Fore.RESET
+EDGE_FORMAT = Back.BLUE + "❮ " + SUBSEQUENCE_FORMAT + " ❮ " + Back.RED + "❯ " + SUBSEQUENCE_FORMAT + " ❯" + Back.RESET
+SEQ_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·" + Fore.GREEN + "{}" + Fore.RESET
 
 
 class ESiteType( MEnum ):
@@ -135,9 +147,13 @@ class LegoSide( IVisualisable ):
         """
         return max( x.end for x in self.__list )
     
+    @staticmethod
+    def to_string(sequence, start, end, count):
+        return SIDE_FORMAT.format(sequence.accession, sequence.length, start, end, count)
+    
     
     def __str__( self ):
-        return "{}[{}:{}]".format( self.sequence.accession, self.start, self.end )
+        return self.to_string(self.sequence, self.start, self.end, len(self.__list))
     
     
     def __contains__( self, item ):
@@ -151,7 +167,7 @@ class LegoSide( IVisualisable ):
         self.__list.remove( subsequence )
     
     
-    def __iter__( self ):
+    def __iter__( self ) -> "Iterator[LegoSubsequence]":
         return iter( self.__list )
     
     
@@ -203,12 +219,16 @@ class LegoEdge( IVisualisable ):
     def __contains__( self, item ):
         return item in self.left or item in self.right
     
+    @staticmethod
+    def to_string(sequence, start, end, sequence_b, start_b, end_b):
+        return EDGE_FORMAT.format( sequence.accession, sequence.length, start, end, sequence_b.accession, sequence_b.length, start_b, end_b  )
+    
     
     def __str__( self ):
         if self.is_destroyed:
             return "DELETED_EDGE"
         
-        return "{}+{}".format( self.left, self.right )
+        return self.to_string(self.left.sequence, self.left.start, self.left.end, self.right.sequence, self.right.start, self.right.end)
     
     
     def __repr__( self ):
@@ -348,9 +368,11 @@ class LegoSubsequence( IVisualisable ):
         yield _NamedList( "edges", self.edges )
         yield _NamedList( "minor_components", self.components )
     
+    def to_string(self, sequence, start, end):
+        return SUBSEQUENCE_FORMAT.format( sequence.accession, sequence.length, start, end )
     
     def __str__( self ):
-        return "{}[{}:{}]".format( self.sequence.accession, self.__start, self.__end )
+        return self.to_string(self.sequence, self.start, self.end)
     
     
     @property
@@ -482,9 +504,12 @@ class LegoSequence( IVisualisable ):
         
         return result
     
+    def to_string(self, sequence):
+        return SEQ_FORMAT.format(sequence.accession, sequence.length)
+    
     
     def __str__( self ):
-        return "{}[{}]".format( self.accession, self.length )
+        return self.to_string(self)
     
     
     def connected_sequences( self ) -> "Set[LegoSequence]":
@@ -669,6 +694,20 @@ class LegoModel( IVisualisable ):
 
 _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
 
+class LegoComponentElement:
+    def __init__(self, is_major, sequence, start, end, subsequences):
+        self.is_major = is_major
+        self.sequence=sequence
+        self.start=start
+        self.end=end
+        self.subsequences=subsequences
+        
+    def __str__(self):
+        return ("⎅" if self.is_major else "⎕") + LegoSide.to_string(self.sequence, self.start, self.end, len(self.subsequences))
+    
+    def sites(self):
+        return self.sequence.sub_sites(self.start, self.end)
+
 
 class LegoComponent( IVisualisable ):
     """
@@ -687,6 +726,7 @@ class LegoComponent( IVisualisable ):
         self.model = model  # Source model
         self.index = index  # Index of component
         self.tree = None  # Tree generated for component
+        self.alignment = None # Alignment generate for component
     
     
     def ui_info( self ):
@@ -713,6 +753,19 @@ class LegoComponent( IVisualisable ):
     
     def __repr__( self ):
         return _GREEK[ self.index % len( _GREEK ) ].lower()
+    
+    def elements(self) -> List[LegoComponentElement ]:
+        r= []
+        minor = set(self.minor_sequences())
+        
+        for sequence in self.model.sequences:
+            if sequence.component is self:
+                r.append( LegoComponentElement( True, sequence, 1, sequence.length, sequence.subsequences ) )
+            elif sequence in minor:
+                rss = [x for x in sequence.subsequences if self in x.components]
+                r.append( LegoComponentElement( False, sequence, rss[0 ].start, rss[-1 ].end, rss ) )
+        
+        return r
     
     
     def minor_subsequences( self ) -> List[ LegoSubsequence ]:
