@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QSizePolicy
 
-from MHelper.QtGuiHelper import exqtSlot
+from mhelper.QtGuiHelper import exqtSlot
 from legoalign.Designer.FrmTreeSelector_designer import Ui_Dialog
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg

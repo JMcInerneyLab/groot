@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QDialog, QTreeWidgetItem
 from os import path
 
 from Designer.FrmImport_designer import Ui_Dialog
-from MHelper import FileHelper, QtGuiHelper
+from mhelper import FileHelper, QtGuiHelper
 
 
 class LegoQueuedFile:

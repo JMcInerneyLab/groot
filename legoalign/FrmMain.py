@@ -1,7 +1,6 @@
 """
 Main form
 """
-import sys
 import sip
 from os import path
 from typing import Optional, List, Set, Union
@@ -11,18 +10,22 @@ from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QTextEdit, QGroupBox, QVBoxLayout, QWidget, QCheckBox, QPushButton, QGridLayout
 
-from MHelper import FileHelper, IoHelper, QtColourHelper, QtGuiHelper, ArrayHelper
-from MHelper.ExceptionHelper import SwitchError
-from MHelper.QtColourHelper import Colours
-from MHelper.QtGuiHelper import exceptToGui, exqtSlot
+from legoalign.mcommand_extensions.lego_controller import EChanges
+from mcommand.engine.async_result import AsyncResult
+from mhelper import FileHelper, QtColourHelper, QtGuiHelper, ArrayHelper
+from mhelper.ExceptionHelper import SwitchError
+from mhelper.QtColourHelper import Colours
+from mhelper.QtGuiHelper import exceptToGui, exqtSlot
 
 from legoalign import LegoFunctions
 from legoalign.FrmTreeSelector import FrmTreeSelector
 from legoalign.Designer.FrmMain_designer import Ui_MainWindow
-from legoalign.GlobalOptions import GlobalOptions
 from legoalign.LegoViews import EMode, ESelect, ESequenceColour, ILegoViewModelObserver, LegoViewModel, LegoViewSubsequence
-from legoalign.LegoModels import LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from legoalign.LegoModels import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from legoalign.MyView import MyView
+from legoalign.algorithms import importation
+
+from legoalign.mcommand_extensions import lego_controller
 
 
 class FrmMain( QMainWindow, ILegoViewModelObserver ):
@@ -54,8 +57,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.ACT_WIN_EDIT.setChecked( True )
         self.ui.ACT_WIN_SELECTION.setChecked( True )
         
-        self.global_options = IoHelper.default_values( IoHelper.load_binary( self.global_options_file_name(), default = None ), GlobalOptions() )  # type: GlobalOptions
-        self.refresh_recent_files()
+        
+        
         
         # Graphics view
         self.ui.graphicsView = MyView(  )
@@ -80,63 +83,28 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.graphicsView.setInteractive( True )
         self.ui.graphicsView.setScene( scene )
         
-        # Load our default model
-        self._model = LegoModel()
-        self._model_file_name = None
-        
-            
-        sample_data_folder = path.join( FileHelper.get_directory( __file__), "sampledata")
-        
-        for x in FileHelper.sub_dirs(sample_data_folder):  
-            action = QAction( FileHelper.get_filename(x), self )
-            action.setStatusTip( x )
+        for sample_dir in lego_controller._get_samples():  
+            action = QAction( FileHelper.get_filename(sample_dir), self )
+            action.setStatusTip( sample_dir )
             # noinspection PyUnresolvedReferences
             action.triggered[bool].connect( self.__select_sample_data )
             self.ui.MNU_EXAMPLES.addAction( action )
+            
+        self._view = None  # type:LegoViewModel
         
         if self.global_options.recent_files:
-            try:
-                self.load_file( self.global_options.recent_files[ -1 ], errors = False )
-                self._view = None  # type:LegoViewModel
-                self.refresh_model()
-            except:
-                self.statusBar().showMessage("Could not load the file '{}'.".format(self.global_options.recent_files[ -1 ]))
+            self.load_file( self.global_options.recent_files[ -1 ], errors = False )
             
-            
+    @property
+    def _model(self):
+        return lego_controller._current_model()
         
     @exceptToGui()
     def __select_sample_data(self, _ : bool):
         directory = self.sender().statusTip()
-        contents = FileHelper.list_dir(directory)
-        
-        self._model = LegoModel()
-        self._model_file_name = None
-        
-        for x in contents:
-            if x.endswith(".composites"):
-                self._model.import_composites( x )
-        
-        for x in contents:
-            if x.endswith(".blast"):
-                self._model.import_blast( x )
+        lego_controller.import_directory(directory)
+
     
-        for x in contents:
-            if x.endswith(".fasta"):
-                self._model.import_fasta( x )
-                
-        self.refresh_model()
-        
-        QMessageBox.information(self, self.windowTitle(), "\n".join(self._model.comments))
-    
-    def refresh_recent_files( self ):
-        self.ui.MNU_RECENT.clear()
-        
-        for x in self.global_options.recent_files:
-            action = QAction( x, self )
-            action.setStatusTip( x )
-            # noinspection PyUnresolvedReferences
-            action.triggered.connect( self.recent_file_triggered )
-            self.ui.MNU_RECENT.addAction( action )
     
     
     def recent_file_triggered( self ):
@@ -206,10 +174,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                 self.__update_for_checkbox( check_box )
                 self._view.scene.update()
 
-
-            
-
-
             check_box = QPushButton()
             check_box.setText("Selected")
             check_box.setCheckable(True)
@@ -235,7 +199,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             if self.ui.CHKBTN_DATA_NEWICK.isChecked():
                 #content.append(">"+str(entity))
                 
-                if isinstance(entity, LegoComponent):
+                if isinstance( entity, LegoComponent ):
                     if entity.tree:
                         content.append(entity.tree)
                     else:
@@ -251,7 +215,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                     #content.append(">"+str(entity))
                     content.append("; NOT AVAILABLE")
             elif self.ui.CHKBTN_DATA_BLAST.isChecked():
-                if hasattr( entity, "extra_data" ):
+                if hasattr( entity, "comments" ):
                     content.append("\n".join(entity.extra_data))
                 else:
                     content.append("; NOT AVAILABLE")
@@ -278,48 +242,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.update_selection_buttons()
     
     
-    def colour_fasta( self, array ):
-        if not array:
-            return "<b>Missing array data!</b><br/>Have you loaded the FASTA?"
-        
-        res = [ ]
-        no_colours = False
-        pending=""
-        table=self._view.lookup_table.letter_colour_table
-        
-        for x in array:
-            if x == ">":
-                no_colours = True
-                res.append('<b>')
-                pending = "</b>"+pending
-            elif x == "[":
-                res.append('<span style="color:cyan;">[')
-                continue
-            elif x == "]":
-                res.append(']</span>')
-                continue
-            elif x == ";":
-                no_colours = True
-                res.append('<span style="color:silver;">')
-                pending = "</span>"+pending
-            elif x=="\n":
-                no_colours = False
-                res.append(pending+"<br/>")
-                pending=""
-                
-            if no_colours:
-                res.append(x)
-            else:
-                colour = table.get( x )
-                
-                if colour is None:
-                    colour = QtColourHelper.Pens.BLACK
-                
-                res.append( '<span style="color:' + colour.color().name() + ';">' + x + '</span>' )
-        
-        return "".join( res )
-    
-    
     def subsequence_view_focus( self, subsequence_view: LegoViewSubsequence ):
         """
         CALLBACK
@@ -327,25 +249,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         :return: 
         """
         pass
-    
-    
-    def refresh_model( self ):
-        self.no_update_options = True
-        first_load=  self._view is None
-        # noinspection PyUnresolvedReferences
-        self._view = LegoViewModel( self, self.ui.graphicsView, self.subsequence_view_focus, self._model )
-        # noinspection PyUnresolvedReferences
-        self.ui.graphicsView.setScene( self._view.scene )
-        
-        self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged ) # TODO: Does this need cleanup like in C#?
-        
-        if first_load:
-            self.update_selection_buttons()
-        else:
-            self.no_update_options = False
-            self.update_options()
-            
-        self.update_window_title()
     
     
     def update_selection_buttons( self ):
@@ -424,20 +327,48 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: New model
         """
-        self.__new_model()
+        lego_controller.new()
         
-    def __new_model(self):
-        self._model = LegoModel()
-        self._model_file_name = None
-        self.update_window_title()
-        self.refresh_model()
+    def plugin_completed(self, r : AsyncResult):
+        rr = r.result
+        if isinstance(rr, EChanges):
+            if rr.ATTRS or rr.MODEL:
+                self.no_update_options = True
+                first_load=  self._view is None
+                # noinspection PyUnresolvedReferences
+                self._view = LegoViewModel( self, self.ui.graphicsView, self.subsequence_view_focus, self._model )
+                # noinspection PyUnresolvedReferences
+                self.ui.graphicsView.setScene( self._view.scene )
+                
+                self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged ) # TODO: Does this need cleanup like in C#?
+                
+                if first_load:
+                    self.update_selection_buttons()
+                else:
+                    self.no_update_options = False
+                    self.update_options()
+            
+            if rr.FILE:
+                if self._model_file_name:
+                    file_name = FileHelper.get_filename(self._model_file_name)
+                    self.setWindowTitle("GeneticLego Diagram Editor - "+ file_name)
+                else:
+                    self.setWindowTitle("GeneticLego Diagram Editor - (Untitled)")
+                    
+            if rr.RECENT:
+                self.ui.MNU_RECENT.clear()
         
-    def update_window_title(self):
-        if self._model_file_name:
-            file_name = FileHelper.get_filename(self._model_file_name)
-            self.setWindowTitle("GeneticLego Diagram Editor - "+ file_name)
-        else:
-            self.setWindowTitle("GeneticLego Diagram Editor - (Untitled)")
+                for x in self.global_options.recent_files:
+                    action = QAction( x, self )
+                    action.setStatusTip( x )
+                    # noinspection PyUnresolvedReferences
+                    action.triggered.connect( self.recent_file_triggered )
+                    self.ui.MNU_RECENT.addAction( action )
+                    
+            if rr.MODEL and self._model.comments:
+                QMessageBox.information( self, self.windowTitle(), "\n".join( self._model.comments ) )
+                    
+        
     
     
     @exqtSlot(bool)
@@ -445,7 +376,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: Import data
         """
-        filters = "FASTA files (*.fasta *.fa *.faa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
+        filters = "Valid files (*.fasta *.fa *.faa *.blast *.tsv *.composites *.txt *.comp)", "FASTA files (*.fasta *.fa *.faa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
         
         file_name, filter = QFileDialog.getOpenFileName( self, "Select file", None, ";;".join( filters ), options = QFileDialog.DontUseNativeDialog )
         
@@ -455,11 +386,13 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         filter_index = filters.index( filter )
         
         if filter_index == 0:
-            r = self._model.import_fasta( file_name )
+            r = importation.import_file( self._model, file_name )
+        elif filter_index == 0:
+            r = importation.import_fasta( self._model, file_name )
         elif filter_index == 1:
-            r = self._model.import_blast( file_name )
+            r = importation.import_blast( self._model, file_name )
         elif filter_index == 2:
-            r = self._model.import_composites( file_name )
+            r = importation.import_composites( self._model, file_name )
         else:
             raise SwitchError( "filter_index", filter_index )
         
@@ -505,9 +438,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     def load_file( self, file_name, errors = True ):
         if file_name:
             try:
-                self._model = IoHelper.load_binary( file_name )
-                self._model_file_name = file_name
-                self.remember_file( file_name )
+                lego_controller.load_model(file_name, _sync = True)
                 self.refresh_model()
                 self.update_window_title()
             except Exception as ex:
@@ -515,41 +446,27 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
                     QtGuiHelper.show_exception( self, "Could not load the file '{}'. Perhaps it is from a different version?".format(file_name), ex )
                 else:
                     self.statusBar().showMessage("Could not load the file '{}'.".format(file_name))
+                    
+            self.refresh_recent_files()
                 
     def save_file(self, file_name):
         if file_name:
             try:
-                self._model_file_name = file_name
-                self.remember_file(file_name)
-                sys.setrecursionlimit(10000)
-                IoHelper.save_binary( file_name, self._model )
+                lego_controller.save_model(file_name, _sync = True)
                 self.update_window_title()
             except Exception as ex:
                 QtGuiHelper.show_exception( self, "Could not save the file '{}. Check the filename and permissions.".format(file_name), ex )
+                
+            self.refresh_recent_files()
     
     
-    def remember_file( self, file_name ):
-        if file_name in self.global_options.recent_files:
-            self.global_options.recent_files.remove( file_name )
-        
-        self.global_options.recent_files.append( file_name )
-        
-        while len( self.global_options.recent_files ) > 10:
-            del self.global_options.recent_files[ 0 ]
-        
-        self.save_global_options()
-        self.refresh_recent_files()
     
     
-    def global_options_file_name( self ):
-        dir = path.expanduser( "~/legoalign" )
-        FileHelper.create_directory( dir )
-        
-        return path.join( dir, "options.p" )
     
     
-    def save_global_options( self ):
-        IoHelper.save_binary( self.global_options_file_name(), self.global_options )
+    
+    
+    
     
     
     @exqtSlot(bool)
@@ -562,8 +479,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         if not ok:
             return
         
-        self._model.quantise( level )
-        self.refresh_model()
+        lego_controller.quantise(level)
         
     
     
@@ -697,10 +613,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         details.append( s.length )
         details.append( L )
         details.append( S + "ARRAY" + E )
-        details.append( s.array )
+        details.append( s.site_array )
         details.append( L )
         details.append( S + "META" + E )
-        details.append( "<br/>".join( str( x ) for x in s.source_info ) )
+        details.append( "<br/>".join( str( x ) for x in s.comments ) )
         
         b = QMessageBox()
         b.setText( "SEQUENCE '{}'".format( s ) )
@@ -718,19 +634,19 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         
         details = [ ]
         details.append( S + "SOURCE" + E )
-        details.append( "{}[{}:{}" + E.format( s.source_sequence, s.source_start, s.source_end ) )
+        details.append( "{}[{}:{}" + E.format( s.left.sequence, s.left.start, s.left.end ) )
         details.append( L )
         details.append( S + "DESTINATION" + E )
-        details.append( "{}[{}:{}" + E.format( s.destination_sequence, s.destination_start, s.destination_end ) )
+        details.append( "{}[{}:{}" + E.format( s.right.sequence, s.right.start, s.right.end ) )
         details.append( L )
         details.append( S + "SOURCES" + E )
-        details.append( s.source )
+        details.append( s.left )
         details.append( L )
         details.append( S + "DESTINATIONS" + E )
-        details.append( s.destination )
+        details.append( s.right )
         details.append( L )
         details.append( S + "META" + E )
-        details.append( "\n".join( str( x ) for x in s.source_info ) )
+        details.append( "\n".join( str( x ) for x in s.comments ) )
         details.append( L )
         
         b = QMessageBox()
@@ -767,10 +683,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         details.append( s.ui_colour )
         details.append( L )
         details.append( S + "ARRAY" + E )
-        details.append( s.array )
+        details.append( s.site_array )
         details.append( L )
         details.append( S + "META" + E )
-        details.append( s.source_info )
+        details.append( s.comments )
         details.append( L )
         
         b = QMessageBox()
@@ -833,13 +749,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         QMessageBox.information( self, "Keys", keys.replace( "|", "\n" ) )
     
     
-    @pyqtSlot()
-    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self._model.compartmentalise()
-        self.refresh_model()
     
     
     @pyqtSlot()
@@ -848,7 +757,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         Signal handler:
         """
         ALL = "(ALL)"
-        component_name, ok = QInputDialog.getItem( self, self.windowTitle(), "Select component", [ALL]+[ str( x ) for x in self._model.components ] )
+        component_name, ok = QInputDialog.getItem( self, self.windowTitle(), "Select component", [ALL] + [ str( x ) for x in self._model.components ] )
         
         if not ok:
             return
@@ -856,7 +765,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         
         
         if component_name == ALL:
-            components = list(self._model.components)
+            components = list( self._model.components )
         else:
             component = next( iter( (x for x in self._model.components if str( x ) == component_name) ) )
             assert component
@@ -1168,14 +1077,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.DOCK_VIEW.setVisible( self.ui.ACT_WIN_VIEW.isChecked() )
         
     @pyqtSlot()
-    def on_ACT_DECONVOLUTE_triggered(self) -> None:
-        """
-        Signal handler:
-        """
-        self._model.deconvolute()
-        self.refresh_model()
-        
-    @pyqtSlot()
     def on_ACT_ALIGN_triggered(self) -> None:
         """
         Signal handler: Align others to sequence
@@ -1245,8 +1146,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        self._model.deconvolute()
-        self.refresh_model()
+        lego_controller.deconvolute()
     
     @exqtSlot(bool)
     def on_ACT_ALIGN_FIRST_SUBSEQUENCES_triggered(self, _:bool) -> None:
@@ -1422,12 +1322,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ILegoViewModelObserver_selection_changed()
             
     @exqtSlot()
-    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self, _:bool ) -> None:
+    def on_ACT_COMPONENT_COMPARTMENTALISE_triggered( self ) -> None:
         """
         Signal handler: Compartmentalise model
         """
-        self._model.compartmentalise()
-        self.refresh_model()
+        lego_controller.compartmentalise()
 
     @exqtSlot( int )
     def on_CHK_VIEW_EDGES_stateChanged( self, _ :int):   
