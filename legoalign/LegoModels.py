@@ -571,12 +571,23 @@ class LegoSequence( IVisualisable ):
 
 class LegoModel( IVisualisable ):
     """
-    The model comprises:
-        1. The similarity network:
-            i.  The set of sequences
-            ii. The set of edges
+    At it's apex, the model comprises:
+    
+        1. The set of sequences
+            i. Their FASTA (or "site") data
+        
+        2. The the set of edges (or "similarity network")
+        
+        3. The subsequences as defined by the edge-sequence relations
             
-        2. The component analysis
+        4. The set of connected components
+              i. Their major sequences
+              ii. Their minor subsequences
+              iii. Their FASTA alignment
+              iiii. Their trees
+              v. Their consensus trees
+                
+        5. The NRF graph
     """
     
     
@@ -725,8 +736,10 @@ class LegoComponent( IVisualisable ):
     def __init__( self, model: LegoModel, index: int ):
         self.model = model  # Source model
         self.index = index  # Index of component
-        self.tree = None  # Tree generated for component
-        self.alignment = None # Alignment generate for component
+        self.tree = None  # Tree generated for component, in Newick format
+        self.alignment = None # Alignment generated for component, in FASTA format
+        self.consensus = None # Consensus tree, in Newick format
+        self.consensus_intersection = None #type: List[LegoSequence]
     
     
     def ui_info( self ):
@@ -773,6 +786,19 @@ class LegoComponent( IVisualisable ):
         Finds subsequences related by this component.
         """
         return [ subsequence for subsequence in self.model.all_subsequences() if self in subsequence.components ]
+    
+    def incoming_components(self)->"List[LegoComponent]":
+        """
+        Returns components which implicitly form part of this component.
+        """
+        return [ component for component in self.model.components if any(x in component.minor_sequences() for x in self.major_sequences()) ]
+    
+    def outgoing_components(self)->"List[LegoComponent]":
+        """
+        Returns components which implicitly form part of this component.
+        """
+        return [ component for component in self.model.components if any(x in component.major_sequences() for x in self.minor_sequences()) ]
+    
     
     
     def major_sequences( self ) -> List[ LegoSequence ]:

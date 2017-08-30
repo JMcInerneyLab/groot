@@ -73,10 +73,9 @@ def subsequence_to_fasta( subsequence: LegoSubsequence ):
 def sequence_to_fasta( sequence: LegoSequence ):
     fasta = [ ]
     
-    if header:
-        fasta.append( ">" + sequence.accession )
+    fasta.append( ">" + sequence.accession )
     
-    if sequence.site_array is not None:
+    if sequence.site_array:
         fasta.append( sequence.site_array )
     else:
         fasta.append( "; MISSING" )

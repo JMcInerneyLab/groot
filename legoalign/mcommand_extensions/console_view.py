@@ -1,4 +1,4 @@
-from colorama import Fore, Back
+from colorama import Fore, Back, Style
 
 from legoalign.LegoModels import LegoModel, ESiteType
 
@@ -12,8 +12,8 @@ PROTEIN_COLOUR_TABLE = { "G"  : Fore.WHITE           , "A" : Fore.WHITE,        
                          "N"  : Fore.LIGHTMAGENTA_EX , "Q" : Fore.LIGHTMAGENTA_EX,
                          "P"  : Fore.LIGHTRED_EX }
 
-DNA_COLOUR_TABLE     = { "A": Fore.YELLOW,"T":Fore.RED,"C":Fore.GREEN,"G":Fore.LIGHT_BLUE }
-RNA_COLOUR_TABLE     = { "A": Fore.YELLOW,"U":Fore.RED,"C":Fore.GREEN,"G":Fore.LIGHT_BLUE }
+DNA_COLOUR_TABLE     = { "A": Fore.YELLOW,"T":Fore.RED,"C":Fore.GREEN,"G":Fore.LIGHTBLUE_EX }
+RNA_COLOUR_TABLE     = { "A": Fore.YELLOW,"U":Fore.RED,"C":Fore.GREEN,"G":Fore.LIGHTBLUE_EX }
 
 
 def colour_fasta_ansi( model:LegoModel,array ):
@@ -26,17 +26,17 @@ def colour_fasta_ansi( model:LegoModel,array ):
     else:
         table = {}
     
-    res = []
+    result = []
     
     for line in array.split("\n"):
         if line.startswith(">"):
-            res.append(Back.LIGHTBLACK_EX+ line+Back.RESET)
+            result.append(Back.LIGHTBLACK_EX+ line+Back.RESET)
         else:
-            strr = []
+            result_line = []
             
             for char in line:
-                strr.append( table.get(char, Fore.LIGHTBLACK_EX) )
+                result_line.append( table.get(char, Fore.LIGHTBLACK_EX) + char )
                 
-            res.append("".join(strr))
+            result.append("".join(result_line) + Style.RESET_ALL )
     
-    return "\n".join( res )
+    return "\n".join( result )

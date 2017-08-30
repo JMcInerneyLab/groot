@@ -15,12 +15,15 @@ from mhelper.LogHelper import Logger
 from mhelper.components import ComponentFinder
 
 LOG_MAJOR = Logger( "component.major", False )
-LOG_MINOR = Logger( "component.minor", True ) 
+LOG_MINOR = Logger( "component.minor", False ) 
 
 def detect( e:Mandate,model: LegoModel, tolerance: int ) -> None:
     """
     Detects sequence and subsequence components.
     """
+    if not model.sequences:
+        raise ValueError("Cannot perform component detection because the model has no sequences.")
+    
     __clear( e,model )
     __detect_major(e, model, tolerance )
     __detect_minor( e,model, tolerance )

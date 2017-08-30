@@ -1,0 +1,30 @@
+seqgen -mMTREV -l100 -d0.25 -wa < alpha.nwk > alpha.phy
+seqgen -mMTREV -l100 -d0.25 -wa < alpha.nwk > beta.phy
+seqgen -mMTREV -l100 -d0.25 -wa < alpha.nwk > gamma.phy
+  
+grep "18\t" < alpha.phy 
+grep "19\t" < beta.phy 
+cp alpha.nwk delta.nwk
+mcedit delta.nwk 
+mcedit delta.nwk
+   
+seqgen -mMTREV -d0.25 -wa -k 1 < delta.nwk > delta.phy
+  
+grep "18\t" < delta.phy 
+grep "19\t" < gamma.phy 
+cp alpha.nwk epsilon.nwk
+mcedit epsilon.nwk 
+mcedit epsilon.nwk 
+  
+seqgen -mMTREV -d0.25 -wa -k 1 < epsilon.nwk > epsilon.phy
+  
+cp alpha.phy triptych.fasta
+cat beta.phy >> triptych.fasta
+cat gamma.phy >> triptych.fasta
+cat delta.phy >> triptych.fasta
+cat epsilon.phy >> triptych.fasta
+  
+cp triptych.fasta triptych.fasta.all
+mcedit triptych.fasta
+   
+blastp  -query triptych.fasta -subject triptych.fasta -outfmt 6 > triptych.blast

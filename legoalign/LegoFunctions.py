@@ -56,54 +56,7 @@ class EFuse(Enum):
     XY = 2
 
 
-def create_tree( component: LegoSsComponent ):
-    """
-    Creates a tree from the component.
-    
-    The tree is set as the component's `tree` field. 
-    """
-    try:
-        # noinspection PyUnresolvedReferences
-        from mhelper import BioHelper
-        # noinspection PyUnresolvedReferences
-        from Bio import Phylo
-    except ImportError:
-        raise ImportError( "Install BioPython if you want to generate NRFGs." )
-    
-    fasta = component.to_fasta( simplify = True )
-    
-    temp_folder_name = "legoalign-temporary-folder"
-    
-    if os.path.exists( temp_folder_name ):
-        shutil.rmtree( temp_folder_name )
-    
-    FileHelper.create_directory( temp_folder_name )
-    
-    os.chdir( temp_folder_name )
-    
-    uid = component.index
-    in_file_name = "temp_{}_in.fasta".format( uid )
-    out_file_name = "temp_{}_out.fasta".format( uid )
-    phy_file_name = "temp_{}_out.phy".format( uid )
-    raxml_file_extension = "t{}".format( uid )
-    RAXML_BEST_FILE_NAME = "RAxML_bestTree." + raxml_file_extension  # NOT MODIFIABLE
-    
-    
-    
-    BioHelper.convert_file( out_file_name, phy_file_name, "fasta", "phylip" )
-    
-    tree_command = "raxml -m PROTGAMMAWAG -p 1 -s {} -# 20 -n {}".format( phy_file_name, raxml_file_extension)
-    ExceptionHelper.run_subprocess( tree_command )
-    
-    component.tree = FileHelper.read_all_text( RAXML_BEST_FILE_NAME )
-    
-    for sequence in component.all_sequences():
-        if "?" not in sequence.sites:
-            component.tree = component.tree.replace( "S{}:".format( sequence.id ), sequence.accession + ":" )
-    
-    # clean up
-    os.chdir( ".." )
-    shutil.rmtree( temp_folder_name )
+
     
 def fuse_trees( model: LegoModel, root_mode : ERoot, fuse_mode: EFuse ):
     """
@@ -161,13 +114,7 @@ def fuse_trees( model: LegoModel, root_mode : ERoot, fuse_mode: EFuse ):
     
     #pyplot.show()
 
-class _FITree( BaseTree.Tree ):
-    """
-    Fake interface for tree with component for intellisense.
-    """
-    def __init__(self):
-        super().__init__()
-        self.ex_component = LegoSsComponent( 0, [ ], False )
+
 
 class _MyNode:
     # Colours, comp. index: 1    ,  2       ,  3
