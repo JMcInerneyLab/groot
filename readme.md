@@ -1,16 +1,87 @@
-# Lego diagram viewer
-Still in development, doesn't look like a lego diargam yet
+GROOT
+=====
+From a genomic BLAST to an n-rooted fusion graph
 
 ![Screen Shot 2017-01-19 at 12.16.08.png](https://bitbucket.org/repo/BLKbyp/images/3678596765-Screen%20Shot%202017-01-19%20at%2012.16.08.png)
 
-## Image copyrights
-Freepik
 
-## Tutorial
+Simple tutorial
+---------------
+We'll deal with this example using the command line interface, because it's much easier to explain.
+When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly.
 
-### Simple example - From composite finder to an n-rooted fusion graph
+Start GROOT.
 
-Start LegoAlign and make sure we have a new file
+```
+$ python3 -m groot
+```
+
+Find out where the example is located
+
+```
+$ file.sample triptych +view
+```
+
+This will give you the path to the example files (`/blah/blah/blah`), load them manually:
+```
+$ import.blast /blah/blah/blah/triptych.blast
+$ import.fasta /blah/blah/blah/triptych.fasta 
+```
+
+Be safe, save our model, call it `tri`
+
+```
+$ file.save tri
+```
+
+What do we need to do?
+
+```
+$ print.status
+```
+
+Should be clear.
+
+```
+$ make.components
+```
+
+This printed an error telling you that you have odd results. You can confirm this manually:
+
+```
+$ print.components
+```
+
+So try again
+
+```
+$ make.components tolerance=10
+$ print.components
+```
+
+Should be much better. What next? Let's make a basic tree.
+
+```
+make.alignments
+make.tree
+```
+
+We need a consensus tree too, so make one of those.
+
+```
+make.consensus
+```
+
+Now we can begin the NRFG steps.
+
+```
+print.fusions
+```
+
+It looks good.
+
+
+
 
 * file -> new
     
@@ -70,3 +141,8 @@ Let's produce an image from that.
 The n-rooted fusion graph of the trees should appear.
 
 This is the end of the example.
+
+Image copyrights
+----------------
+
+Freepik

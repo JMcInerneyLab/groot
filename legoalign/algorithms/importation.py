@@ -1,6 +1,6 @@
-from legoalign.LegoModels import LegoModel, LOG
 from legoalign.algorithms import editor
-from mhelper import FileHelper
+from legoalign.data.lego_model import LegoModel, LOG
+from mhelper import file_helper
 
 
 def import_directory( model : LegoModel, directory: str ):
@@ -10,7 +10,7 @@ def import_directory( model : LegoModel, directory: str ):
     :param directory: Directory to import
     :return: 
     """
-    contents = FileHelper.list_dir( directory )
+    contents = file_helper.list_dir( directory )
     
     for file_name in contents:
         import_file(model, file_name, skip_bad_extensions = True)
@@ -18,7 +18,7 @@ def import_directory( model : LegoModel, directory: str ):
 
 
 def import_file( model : LegoModel, file_name: str, *, skip_bad_extensions : bool = False ):
-    ext = FileHelper.get_extension(file_name).lower()
+    ext = file_helper.get_extension(file_name).lower()
     
     if ext in (".blast", ".tsv"):
         import_blast(model, file_name)

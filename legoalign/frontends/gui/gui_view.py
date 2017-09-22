@@ -16,7 +16,7 @@ from mhelper.CommentHelper      import override
 from mhelper.ExceptionHelper    import SwitchError
 from mhelper.QtColourHelper     import Colours, Pens
 
-from legoalign.LegoModels       import ESiteType, LegoSsComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from legoalign.lego_models       import ESiteType, LegoSsComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
 
 
 class ESequenceColour( Enum ):

@@ -1,5 +1,5 @@
-from legoalign.LegoModels import LegoEdge, LegoSubsequence, LegoSequence, LegoComponent
-from mhelper.ExceptionHelper import SwitchError
+from legoalign.data.lego_model import LegoSequence, LegoSubsequence, LegoEdge, LegoComponent
+from mhelper import SwitchError
 
 
 def to_fasta( item ):

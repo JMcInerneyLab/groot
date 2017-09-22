@@ -7,12 +7,11 @@ from collections import defaultdict
 from typing import Tuple, Set
 
 from legoalign.algorithms import editor
-from legoalign.LegoModels import LegoModel, LegoComponent, LegoSequence, LegoSide, LegoEdge
+from legoalign.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoSide, LegoEdge
 from mcommand.engine.mandate import Mandate
-from mhelper import ArrayHelper
-from mhelper.ExceptionHelper import ImplementationError
-from mhelper.LogHelper import Logger
-from mhelper.components import ComponentFinder
+from mhelper import Logger, ImplementationError, array_helper
+from mhelper.component_helper import ComponentFinder
+
 
 LOG_MAJOR = Logger( "component.major", False )
 LOG_MINOR = Logger( "component.minor", False ) 
@@ -262,7 +261,7 @@ def average_component_lengths( model: LegoModel ):
     average_lengths = { }
     
     for component in model.components:
-        average_lengths[ component ] = ArrayHelper.average( [ x.length for x in component.major_sequences() ] )
+        average_lengths[ component ] = array_helper.average( [ x.length for x in component.major_sequences() ] )
     
     return average_lengths
 

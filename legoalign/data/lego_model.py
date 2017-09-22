@@ -3,16 +3,14 @@ Holds the Lego model, and its dependencies.
 
 See class `LegoModel`.
 """
-from typing import Iterable, Iterator, List, Optional, Set, Tuple
+from typing import Iterable, Iterator, List, Optional, Set
 
-from colorama import Back, Style, Fore
+from colorama import Back, Fore
 
 from editorium import MEnum
 from mcommand import EColour, IVisualisable, UiInfo, resources
 from mcommand.visualisables.visualisable import NamedValue
-from mhelper import ArrayHelper, FileHelper, StringHelper
-from mhelper.ExceptionHelper import SwitchError
-from mhelper.LogHelper import Logger
+from mhelper import Logger, SwitchError, array_helper as ArrayHelper, file_helper as FileHelper, string_helper as StringHelper
 
 
 LOG = Logger( False )
@@ -69,11 +67,11 @@ class _NamedList( IVisualisable ):
         self.length = ArrayHelper.count( list )
     
     
-    def ui_info( self ) -> UiInfo:
+    def visualisable_info( self ) -> UiInfo:
         return UiInfo( self.name, None, "List", "{} {}".format( self.length, self.ext_name ), EColour.MAGENTA, resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         return self.list
 
 
@@ -83,7 +81,7 @@ class LegoSide( IVisualisable ):
         self.is_source = is_source
     
     
-    def ui_info( self ):
+    def visualisable_info( self ):
         return UiInfo( "source" if self.is_source else "destination",
                        None,
                        "Side",
@@ -92,7 +90,7 @@ class LegoSide( IVisualisable ):
                        resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield NamedValue( "start", self.start, is_property = True )
         yield NamedValue( "end", self.end, is_property = True )
         yield NamedValue( "length", self.length, is_property = True )
@@ -201,7 +199,7 @@ class LegoEdge( IVisualisable ):
         self.comments       = [ ]  # type: List[str]
     
     
-    def ui_info( self ):
+    def visualisable_info( self ):
         return UiInfo( self,
                        None,
                        "Edge",
@@ -210,7 +208,7 @@ class LegoEdge( IVisualisable ):
                        resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield _NamedList( "comments", self.comments, "elements" )
         yield self.left
         yield self.right
@@ -347,7 +345,7 @@ class LegoSubsequence( IVisualisable ):
             self.components = set()  # type: Set[LegoComponent]
     
     
-    def ui_info( self ) -> UiInfo:
+    def visualisable_info( self ) -> UiInfo:
         return UiInfo( "{}:{}".format( self.__start, self.__end ),
                        None,
                        "Subsequence",
@@ -356,7 +354,7 @@ class LegoSubsequence( IVisualisable ):
                        resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield NamedValue( "sequence", self.sequence, is_property = True )
         yield NamedValue( "start", self.start, is_property = True )
         yield NamedValue( "end", self.end, is_property = True )
@@ -458,7 +456,7 @@ class LegoSequence( IVisualisable ):
         self.component = None  # type: Optional[LegoComponent]
     
     
-    def ui_info( self ) -> UiInfo:
+    def visualisable_info( self ) -> UiInfo:
         return UiInfo( self.accession,
                        None,
                        "Sequence",
@@ -467,7 +465,7 @@ class LegoSequence( IVisualisable ):
                        resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield NamedValue( "id", self.id, is_property = True )
         yield NamedValue( "accession", self.accession, is_property = True )
         yield NamedValue( "is_composite", self.is_composite(), is_property = True )
@@ -605,7 +603,7 @@ class LegoModel( IVisualisable ):
         self.file_name = None
     
     
-    def ui_info( self ) -> UiInfo:
+    def visualisable_info( self ) -> UiInfo:
         return UiInfo( self.name,
                        self.comments,
                        "Model",
@@ -619,7 +617,7 @@ class LegoModel( IVisualisable ):
         return FileHelper.get_filename_without_extension( self.file_name ) if self.file_name else "Unsaved model"
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield NamedValue( "name", self.name )
         yield NamedValue( "file_name", self.file_name )
         yield NamedValue( "comments", self.comments )
@@ -701,6 +699,13 @@ class LegoModel( IVisualisable ):
                 return x
         
         raise KeyError( name )
+    
+    def find_sequence_by_id( self, id: int ) -> "LegoSequence":
+        for x in self.sequences:
+            if x.id == id:
+                return x
+        
+        raise KeyError( id )
 
 
 _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
@@ -742,7 +747,7 @@ class LegoComponent( IVisualisable ):
         self.consensus_intersection = None #type: List[LegoSequence]
     
     
-    def ui_info( self ):
+    def visualisable_info( self ):
         return UiInfo( self,
                        self.__doc__,
                        "Component",
@@ -751,7 +756,7 @@ class LegoComponent( IVisualisable ):
                        resources.folder )
     
     
-    def ui_items( self ):
+    def visualisable_items( self ):
         yield NamedValue( "name", str( self ), is_property = True )
         yield NamedValue( "index", self.index, is_property = True )
         

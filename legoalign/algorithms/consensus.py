@@ -2,10 +2,8 @@ from typing import List
 
 from ete3 import Tree
 
-from legoalign import external_runner
-from legoalign.scripts import external_tools
-from legoalign.LegoModels import LegoComponent
-from legoalign.algorithms import tree
+from legoalign.algorithms import tree, external_tools
+from legoalign.data.lego_model import LegoComponent
 
 
 def consensus(component:LegoComponent):
@@ -49,7 +47,7 @@ def consensus(component:LegoComponent):
         raise ValueError("Cannot perform consensus, trees are empty.")
     
     if len(trees_list) != 1:
-        component.consensus = external_runner.run_in_temporary( external_tools.consensus, trees_text )
+        component.consensus = external_tools.run_in_temporary( external_tools.consensus, trees_text )
     else:
         component.consensus = trees_text
     

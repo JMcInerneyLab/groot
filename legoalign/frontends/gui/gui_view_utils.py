@@ -1,3 +1,6 @@
+from random import randint
+
+from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QGraphicsView
@@ -28,3 +31,17 @@ class MyView(QGraphicsView):
             # Move scene to old position
             delta = newPos - oldPos
             self.translate(delta.x(), delta.y())
+            
+            
+def random_colour(  ):
+    return QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) )
+
+
+
+def triangle(sequence):
+    """
+    Yields the triangle
+    """
+    for i, a in enumerate(sequence):
+        for j in range(0, i):
+            yield a, sequence[j]

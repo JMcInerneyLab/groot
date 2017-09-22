@@ -6,10 +6,8 @@ In order to maintain correct within-model relationships, the model should only b
 
 from typing import List, Iterable
 
-from legoalign.LegoModels import LegoSequence, LegoModel, LegoSubsequence, LegoEdge
-from mhelper import ArrayHelper
-from mhelper.ExceptionHelper import ImplementationError
-from mhelper.LogHelper import Logger
+from legoalign.data.lego_model import LegoModel, LegoSequence, LegoSubsequence, LegoEdge
+from mhelper import Logger, array_helper, ImplementationError
 
 
 LOG = Logger(False)
@@ -48,7 +46,7 @@ def make_sequence( model : LegoModel,
     
     if result is None and not obtain_only:
         result = LegoSequence( model, accession, model._get_incremental_id() )
-        ArrayHelper.ordered_insert( model.sequences, result, lambda x: x.accession )
+        array_helper.ordered_insert( model.sequences, result, lambda x: x.accession )
     
     if result is not None:
         result._ensure_length( initial_length )
@@ -155,7 +153,7 @@ def make_subsequence( sequence : LegoSequence,
                     LOG_MAKESS( "#### {}".format( subsequence ) )
                     r.append( subsequence )
         
-        for left, right in ArrayHelper.lagged_iterate( sequence.subsequences ):
+        for left, right in array_helper.lagged_iterate( sequence.subsequences ):
             assert left.end + 1 == right.start
         
         assert not any( x.is_destroyed for x in r )
@@ -264,7 +262,7 @@ def merge_subsequences( all: Iterable[ LegoSubsequence ] ):
     if len( all ) <= 1:
         raise ValueError( "Cannot merge a list '{}' of less than two elements.".format( all ) )
     
-    for left, right in ArrayHelper.lagged_iterate( all ):
+    for left, right in array_helper.lagged_iterate( all ):
         if left.sequence != right.sequence:
             raise ValueError( "merge_subsequences attempted but the subsequences '{}' and '{}' are not in the same sequence.".format( left, right ) )
         

@@ -13,11 +13,9 @@ from Bio.Phylo.Consensus import strict_consensus
 import networkx
 from networkx import DiGraph
 
-from mhelper.LogHelper import Logger
-from mhelper.ExceptionHelper import SwitchError
-from mhelper import ExceptionHelper, FileHelper
+from legoalign.data.lego_model import LegoModel, LegoSequence
+from mhelper import Logger, SwitchError, file_helper
 
-from legoalign.LegoModels import LegoSsComponent, LegoModel, LegoSequence
 
 LOG = Logger(True)
 
@@ -488,7 +486,7 @@ def __find_node( graph, name ):
 
 def __component_to_phylo( component ) -> _FITree:
     temp_file_name = "temporary.new"
-    FileHelper.write_all_text( temp_file_name, component.tree )
+    file_helper.write_all_text( temp_file_name, component.tree )
     tree = Phylo.read( temp_file_name, "newick" )  # type: BaseTree.Tree
     os.remove( temp_file_name )
     fi_tree = tree #type: _FITree

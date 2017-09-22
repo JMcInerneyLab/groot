@@ -3,9 +3,8 @@ Quantise implementation.
 
 See `quantise` function.
 """
-
-from legoalign.LegoModels import LegoModel, LOG, LegoSequence
-from mhelper import ArrayHelper
+from legoalign.data.lego_model import LegoModel, LegoSequence, LOG
+from mhelper import array_helper
 
 
 def quantise( model : LegoModel, level ):
@@ -31,8 +30,8 @@ def __quantise_sequence( sequence : LegoSequence, level: int ):
     __quantise_subsequence( sequence, new_length, sequence.subsequences[-1 ] )
 
 
-def __quantise_iteration( self, level ):
-    for previous, next in ArrayHelper.lagged_iterate( list( self.subsequences ) ):
+def __quantise_iteration( sequence, level ):
+    for previous, next in array_helper.lagged_iterate( list( sequence.subsequences ) ):
         new_start = __quantise_int( level, next.start )
     
         if new_start == next.start:
@@ -40,13 +39,12 @@ def __quantise_iteration( self, level ):
     
         if new_start > next.end:
             LOG( "'{}' START MOVES TO {} => disappeared.".format( next, new_start ) )
-            next.destroy()
-            self.subsequences.remove( next )
+            sequence.subsequences.remove( next )
         else:
             LOG( "'{}' START MOVES TO {}".format( next, new_start ) )
             next.start = new_start
     
-        self._quantise_subsequence( new_start, previous )
+        __quantise_subsequence( sequence, new_start, previous )
         
         return True
     
@@ -64,7 +62,6 @@ def __quantise_subsequence( sequence : LegoSequence, new_start, previous ):
     else:
         # "previous" has shrunk to nothing
         with LOG( "'{}' END MOVES TO {} => disappeared.".format( previous, new_end ) ):
-            previous.destroy()
             sequence.subsequences.remove( previous )
             
 def __quantise_int( level, position ):

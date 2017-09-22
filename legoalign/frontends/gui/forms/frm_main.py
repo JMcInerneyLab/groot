@@ -10,22 +10,22 @@ from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QColorDialog, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMessageBox, QSizePolicy, QTextEdit, QGroupBox, QVBoxLayout, QWidget, QCheckBox, QPushButton, QGridLayout
 
-from legoalign.mcommand_extensions.lego_controller import EChanges
+from legoalign.mcommand_extensions.old import EChanges
 from mcommand.engine.async_result import AsyncResult
 from mhelper import FileHelper, QtColourHelper, QtGuiHelper, ArrayHelper
 from mhelper.ExceptionHelper import SwitchError
 from mhelper.QtColourHelper import Colours
 from mhelper.QtGuiHelper import exceptToGui, exqtSlot
 
-from legoalign import LegoFunctions
+from legoalign import obsolete_functions
 from legoalign.FrmTreeSelector import FrmTreeSelector
 from legoalign.Designer.FrmMain_designer import Ui_MainWindow
 from legoalign.LegoViews import EMode, ESelect, ESequenceColour, ILegoViewModelObserver, LegoViewModel, LegoViewSubsequence
-from legoalign.LegoModels import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
+from legoalign.lego_models import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from legoalign.MyView import MyView
 from legoalign.algorithms import importation
 
-from legoalign.mcommand_extensions import lego_controller
+from legoalign.mcommand_extensions import old
 
 
 class FrmMain( QMainWindow, ILegoViewModelObserver ):
@@ -83,7 +83,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         self.ui.graphicsView.setInteractive( True )
         self.ui.graphicsView.setScene( scene )
         
-        for sample_dir in lego_controller._get_samples():  
+        for sample_dir in old._get_samples():  
             action = QAction( FileHelper.get_filename(sample_dir), self )
             action.setStatusTip( sample_dir )
             # noinspection PyUnresolvedReferences
@@ -97,12 +97,12 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             
     @property
     def _model(self):
-        return lego_controller._current_model()
+        return old._current_model()
         
     @exceptToGui()
     def __select_sample_data(self, _ : bool):
         directory = self.sender().statusTip()
-        lego_controller.import_directory(directory)
+        old.import_directory( directory )
 
     
     
@@ -327,7 +327,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: New model
         """
-        lego_controller.new()
+        old.new()
         
     def plugin_completed(self, r : AsyncResult):
         rr = r.result
@@ -438,7 +438,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     def load_file( self, file_name, errors = True ):
         if file_name:
             try:
-                lego_controller.load_model(file_name, _sync = True)
+                old.load_model( file_name, _sync = True )
                 self.refresh_model()
                 self.update_window_title()
             except Exception as ex:
@@ -452,7 +452,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     def save_file(self, file_name):
         if file_name:
             try:
-                lego_controller.save_model(file_name, _sync = True)
+                old.save_model( file_name, _sync = True )
                 self.update_window_title()
             except Exception as ex:
                 QtGuiHelper.show_exception( self, "Could not save the file '{}. Check the filename and permissions.".format(file_name), ex )
@@ -479,7 +479,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         if not ok:
             return
         
-        lego_controller.quantise(level)
+        old.quantise( level )
         
     
     
@@ -795,7 +795,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         
         try:
             for component in components:
-                LegoFunctions.create_tree( component )
+                obsolete_functions.create_tree( component )
         except Exception as ex:
             QtGuiHelper.show_exception( self, "Failed to process NRFG for component '{}'.".format(component), ex )
     
@@ -1146,7 +1146,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        lego_controller.deconvolute()
+        old.deconvolute()
     
     @exqtSlot(bool)
     def on_ACT_ALIGN_FIRST_SUBSEQUENCES_triggered(self, _:bool) -> None:
@@ -1326,7 +1326,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: Compartmentalise model
         """
-        lego_controller.compartmentalise()
+        old.compartmentalise()
 
     @exqtSlot( int )
     def on_CHK_VIEW_EDGES_stateChanged( self, _ :int):   

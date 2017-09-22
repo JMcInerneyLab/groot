@@ -4,9 +4,8 @@ Verifies the integrity of the model.
 See `verify`.
 """
 
-from legoalign.LegoModels import LOG, LegoSequence, LegoSubsequence, LegoEdge, LegoModel, LegoSide
-from mhelper import ArrayHelper
-from mhelper.ExceptionHelper import ImplementationError
+from legoalign.data.lego_model import LOG, LegoSequence, LegoSubsequence, LegoEdge, LegoModel, LegoSide
+from mhelper import array_helper, ImplementationError
 
 
 def verify( model : LegoModel ):
@@ -28,7 +27,7 @@ def __verify_sequence( sequence : LegoSequence ):
         if len(sequence.subsequences) == 0:
             raise ImplementationError( "The sequence '{}' has no subsequences.".format( sequence ) )
         
-        for left, right in ArrayHelper.lagged_iterate( sequence.subsequences ):
+        for left, right in array_helper.lagged_iterate( sequence.subsequences ):
             if left.end != right.start - 1:
                 raise ImplementationError( "Subsequences '{}' and '{}' in sequence '{}' are not adjacent.".format( left, right, sequence ) )
 
@@ -69,7 +68,7 @@ def __verify_side( side : LegoSide ):
     if len(side)==0:
         raise ImplementationError( "A side '{}' is empty.".format(side) )
     
-    for a, b in ArrayHelper.lagged_iterate(side):
+    for a, b in array_helper.lagged_iterate( side ):
         if a.start >= b.start:
             raise ValueError("The subsequences '{}' and '{}' in the side '{}' are not in the correct order!")
         

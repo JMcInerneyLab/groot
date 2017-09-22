@@ -1,6 +1,6 @@
-from legoalign.LegoModels import LOG, LegoModel
 from legoalign.algorithms import editor
-from mhelper import ArrayHelper
+from legoalign.data.lego_model import LegoModel, LOG
+from mhelper import array_helper
 
 
 def remove_redundant_subsequences( model : LegoModel ):
@@ -12,7 +12,7 @@ def remove_redundant_subsequences( model : LegoModel ):
     
     def it():
         for sequence in model.sequences:
-            for previous, next in ArrayHelper.lagged_iterate( sequence.subsequences ):
+            for previous, next in array_helper.lagged_iterate( sequence.subsequences ):
                 if set( previous.edges ) == set( next.edges ) \
                         and previous.components == next.components:
                     with LOG( "EQUIVALENT:" ):

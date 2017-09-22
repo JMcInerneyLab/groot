@@ -5,9 +5,9 @@ from legoalign.Designer.FrmTreeSelector_designer import Ui_Dialog
 from matplotlib import pyplot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from legoalign import LegoFunctions
-from legoalign.LegoFunctions import EFuse, ERoot
-from legoalign.LegoModels import LegoModel
+from legoalign import obsolete_functions
+from legoalign.obsolete_functions import EFuse, ERoot
+from legoalign.lego_models import LegoModel
 
 
 class FrmTreeSelector( QDialog ):
@@ -52,7 +52,7 @@ class FrmTreeSelector( QDialog ):
             
         self.figure.clear()
         
-        LegoFunctions.fuse_trees( self._model, root_mode, fuse_mode )
+        obsolete_functions.fuse_trees( self._model, root_mode, fuse_mode )
         
         self.canvas.draw()
             
