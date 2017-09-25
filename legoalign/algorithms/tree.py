@@ -31,7 +31,8 @@ def generate_tree( component: LegoComponent ) -> None:
 
 
 def tree_from_newick( newick: str ) -> Tree:
-    if "FUSION" in newick:
-        return Tree( newick, format = 1 )
-    else:
+    try:
         return Tree( newick, format = 0 )
+    except:
+        return Tree( newick, format = 1 )
+        

@@ -37,7 +37,7 @@ class FusionEvent:
             return "In the trees of {} and {} I can see the fusion into {} ({}).".format( self.component_a, self.component_b, ", ".join( str( x ) for x in self.intersections ), "+".join( str( x ) for x in self.orig_intersections ) )
 
 
-def find_events( model: LegoModel ) -> List[ FusionEvent ]:
+def find_fusion_events( model: LegoModel ) -> List[ FusionEvent ]:
     """
     Finds the fusion events in the model.
     i.e. Which components fuse together to generate which other components.
@@ -82,25 +82,24 @@ def find_events( model: LegoModel ) -> List[ FusionEvent ]:
     return results
 
 
-def find_points( model: LegoModel ) -> List[FusionEvent]:
+def find_all_fusion_points( model: LegoModel ) -> List[FusionEvent ]:
     """
     Finds the fusion points in the model.
     i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
-    
     """
     r = []
     
-    for event in find_events( model ):
-        event.points_a = __find_point( event.component_a, event.orig_intersections, array_helper.first( event.intersections ) )
-        event.points_b = __find_point( event.component_b, event.orig_intersections, array_helper.first( event.intersections ) )
+    for event in find_fusion_events( model ):
+        event.points_a = __apply_fusion_points( event.component_a, event.orig_intersections, array_helper.first( event.intersections ) )
+        event.points_b = __apply_fusion_points( event.component_b, event.orig_intersections, array_helper.first( event.intersections ) )
         r.append(event)
         
     return r
 
 
-def __find_point( component: LegoComponent,
-                  lower: Set[ LegoComponent ],
-                  fusion_name: LegoComponent ) -> List[MNode]:
+def __apply_fusion_points( component: LegoComponent,
+                           lower: Set[ LegoComponent ],
+                           fusion_name: LegoComponent ) -> List[MNode]:
     """
     In the tree of `component` we look for the node separating `lower` from everything else.
     If there are multiple nodes, we consider the best match

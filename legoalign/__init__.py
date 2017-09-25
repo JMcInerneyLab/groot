@@ -10,6 +10,6 @@ def __gui_host():
 
 MENV.name = "GR⚆⚆T"
 MENV.abv_name = "groot"
-MENV.plugins.register( mcommand_extensions )
+MENV.load_namespace( mcommand_extensions )
 MENV.root = _current_model()
 MENV.host_provider = create_simple_host_provider_from_class( ConsoleHost, __gui_host )

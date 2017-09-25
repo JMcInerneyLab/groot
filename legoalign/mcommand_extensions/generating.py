@@ -70,7 +70,7 @@ def make_consensus( component: Optional[ LegoComponent ] = None ):
 
 
 
-@command( names = [ "print_fusions", "fusions" ] )
+@command(  )
 def make_fusions():
     """
     Makes the fusion points.
@@ -79,7 +79,7 @@ def make_fusions():
     
     model = cli_view.current_model()
     
-    for fusion in fuse.find_points( model ):
+    for fusion in fuse.find_all_fusion_points( model ):
         results.append( str( fusion ) )
     
     MCMD.information( "\n".join( results ) )

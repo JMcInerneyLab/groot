@@ -154,7 +154,7 @@ def __print_header( x ):
     if isinstance(x, LegoComponent):
         x = "COMPONENT {}".format(x)
     
-    MCMD.information( "\n" + Back.BLUE + Fore.WHITE + "---------- COMPONENT {} ----------".format( x ) + Style.RESET_ALL )
+    MCMD.information( "\n" + Back.BLUE + Fore.WHITE + "---------- {} ----------".format( x ) + Style.RESET_ALL )
 
 
 @command( names = [ "print_interlinks", "interlinks" ] )
@@ -300,7 +300,7 @@ def print_fusions():
     __print_header("FUSIONS")
     model = cli_view.current_model()
     
-    for fusion in fuse.find_events( model ):
+    for fusion in fuse.find_fusion_events( model ):
         results.append( str( fusion ) )
     
     MCMD.information( "\n".join( results ) )
