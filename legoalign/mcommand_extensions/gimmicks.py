@@ -1,10 +1,8 @@
-from editorium import Filename
-from editorium.special_types import EFileMode
 from legoalign.data.lego_model import ESiteType
 from legoalign.frontends.cli import cli_view_utils
 from mcommand.engine.environment import MCMD
 from mcommand.plugins.command_plugin import command
-from mhelper import file_helper
+from mhelper import file_helper, Filename, EFileMode
 
 
 @command(visibility = False)

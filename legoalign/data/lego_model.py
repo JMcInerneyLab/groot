@@ -3,14 +3,13 @@ Holds the Lego model, and its dependencies.
 
 See class `LegoModel`.
 """
+
 from typing import Iterable, Iterator, List, Optional, Set
 
 from colorama import Back, Fore
 
-from editorium import MEnum
 from mcommand import EColour, IVisualisable, UiInfo, resources
-from mcommand.visualisables.visualisable import NamedValue
-from mhelper import Logger, SwitchError, array_helper as ArrayHelper, file_helper as FileHelper, string_helper as StringHelper
+from mhelper import Logger, SwitchError, array_helper, file_helper as FileHelper, string_helper, MEnum
 
 
 LOG = Logger( False )
@@ -54,27 +53,6 @@ class ETristate( MEnum ):
     NO = -1
 
 
-class _NamedList( IVisualisable ):
-    """
-    The list version of `NamedValue`.
-    """
-    
-    
-    def __init__( self, name: str, list: Iterable, element_name: Optional[ str ] = None ):
-        self.name = name
-        self.ext_name = element_name or name
-        self.list = list
-        self.length = ArrayHelper.count( list )
-    
-    
-    def visualisable_info( self ) -> UiInfo:
-        return UiInfo( self.name, None, "List", "{} {}".format( self.length, self.ext_name ), EColour.MAGENTA, resources.folder )
-    
-    
-    def visualisable_items( self ):
-        return self.list
-
-
 class LegoSide( IVisualisable ):
     def __init__( self, is_source: bool ):
         self.__list = [ ]  # type:List[LegoSubsequence]
@@ -82,27 +60,23 @@ class LegoSide( IVisualisable ):
     
     
     def visualisable_info( self ):
-        return UiInfo( "source" if self.is_source else "destination",
-                       None,
-                       "Side",
-                       "{}--{}".format( self.start, self.end ),
-                       EColour.GREEN,
-                       resources.folder )
-    
-    
-    def visualisable_items( self ):
-        yield NamedValue( "start", self.start, is_property = True )
-        yield NamedValue( "end", self.end, is_property = True )
-        yield NamedValue( "length", self.length, is_property = True )
-        yield NamedValue( "sites", self.sites, is_property = True )
-        yield NamedValue( "component", self.component, is_property = True )
-        yield NamedValue( "sequence", self.sequence, is_property = True )
-        
-        yield _NamedList( "subsequences", self.__list )
+        return UiInfo( name = "source" if self.is_source else "destination",
+                       comment = None,
+                       type_name = "Side",
+                       value = "{}--{}".format( self.start, self.end ),
+                       colour = EColour.GREEN,
+                       icon = resources.folder,
+                       extra = { "start"       : self.start,
+                                 "end"         : self.end,
+                                 "length"      : self.length,
+                                 "sites"       : self.sites,
+                                 "component"   : self.component,
+                                 "sequence"    : self.sequence,
+                                 "subsequences": self.__list } )
     
     
     def add( self, subsequence: "LegoSubsequence" ):
-        ArrayHelper.ordered_insert( self.__list, subsequence, lambda x: x.start )
+        array_helper.ordered_insert( self.__list, subsequence, lambda x: x.start )
     
     
     def __len__( self ):
@@ -145,13 +119,14 @@ class LegoSide( IVisualisable ):
         """
         return max( x.end for x in self.__list )
     
+    
     @staticmethod
-    def to_string(sequence, start, end, count):
-        return SIDE_FORMAT.format(sequence.accession, sequence.length, start, end, count)
+    def to_string( sequence, start, end, count ):
+        return SIDE_FORMAT.format( sequence.accession, sequence.length, start, end, count )
     
     
     def __str__( self ):
-        return self.to_string(self.sequence, self.start, self.end, len(self.__list))
+        return self.to_string( self.sequence, self.start, self.end, len( self.__list ) )
     
     
     def __contains__( self, item ):
@@ -193,40 +168,36 @@ class LegoEdge( IVisualisable ):
         """
         CONSTRUCTOR
         """
-        self.left           = LegoSide( True )
-        self.right          = LegoSide( False )
-        self.is_destroyed   = False
-        self.comments       = [ ]  # type: List[str]
+        self.left = LegoSide( True )
+        self.right = LegoSide( False )
+        self.is_destroyed = False
+        self.comments = [ ]  # type: List[str]
     
     
     def visualisable_info( self ):
-        return UiInfo( self,
-                       None,
-                       "Edge",
-                       None,
-                       EColour.CYAN,
-                       resources.folder )
-    
-    
-    def visualisable_items( self ):
-        yield _NamedList( "comments", self.comments, "elements" )
-        yield self.left
-        yield self.right
+        return UiInfo( name = self,
+                       comment = None,
+                       type_name = "Edge",
+                       value = None,
+                       colour = EColour.CYAN,
+                       icon = resources.folder,
+                       extra_iter = (self.left, self.right) )
     
     
     def __contains__( self, item ):
         return item in self.left or item in self.right
     
+    
     @staticmethod
-    def to_string(sequence, start, end, sequence_b, start_b, end_b):
-        return EDGE_FORMAT.format( sequence.accession, sequence.length, start, end, sequence_b.accession, sequence_b.length, start_b, end_b  )
+    def to_string( sequence, start, end, sequence_b, start_b, end_b ):
+        return EDGE_FORMAT.format( sequence.accession, sequence.length, start, end, sequence_b.accession, sequence_b.length, start_b, end_b )
     
     
     def __str__( self ):
         if self.is_destroyed:
             return "DELETED_EDGE"
         
-        return self.to_string(self.left.sequence, self.left.start, self.left.end, self.right.sequence, self.right.start, self.right.end)
+        return self.to_string( self.left.sequence, self.left.start, self.left.end, self.right.sequence, self.right.start, self.right.end )
     
     
     def __repr__( self ):
@@ -317,9 +288,9 @@ class LegoSubsequence( IVisualisable ):
         """
         LOG( "NEW SUBSEQUENCE {} {}".format( start, end ) )
         
-        assert isinstance(sequence, LegoSequence)
-        assert isinstance(start, int)
-        assert isinstance(end, int)
+        assert isinstance( sequence, LegoSequence )
+        assert isinstance( start, int )
+        assert isinstance( end, int )
         
         assert start >= 1
         assert end >= 1
@@ -346,31 +317,28 @@ class LegoSubsequence( IVisualisable ):
     
     
     def visualisable_info( self ) -> UiInfo:
-        return UiInfo( "{}:{}".format( self.__start, self.__end ),
-                       None,
-                       "Subsequence",
-                       "{} sites".format( self.length ),
-                       EColour.RED,
-                       resources.folder )
+        return UiInfo( name = "{}:{}".format( self.__start, self.__end ),
+                       comment = None,
+                       type_name = "Subsequence",
+                       value = "{} sites".format( self.length ),
+                       colour = EColour.RED,
+                       icon = resources.folder,
+                       extra = { "sequence"  : self.sequence,
+                                 "start"     : self.start,
+                                 "end"       : self.end,
+                                 "length"    : self.length,
+                                 "index"     : self.index,
+                                 "sites"     : self.site_array,
+                                 "edges"     : self.edges,
+                                 "components": self.components } )
     
     
-    def visualisable_items( self ):
-        yield NamedValue( "sequence", self.sequence, is_property = True )
-        yield NamedValue( "start", self.start, is_property = True )
-        yield NamedValue( "end", self.end, is_property = True )
-        yield NamedValue( "length", self.length, is_property = True )
-        yield NamedValue( "index", self.index, is_property = True )
-        yield NamedValue( "sites", self.site_array, is_property = True )
-        
-        yield _NamedList( "comments", self.comments, "elements" )
-        yield _NamedList( "edges", self.edges )
-        yield _NamedList( "minor_components", self.components )
-    
-    def to_string(self, sequence, start, end):
+    def to_string( self, sequence, start, end ):
         return SUBSEQUENCE_FORMAT.format( sequence.accession, sequence.length, start, end )
     
+    
     def __str__( self ):
-        return self.to_string(self.sequence, self.start, self.end)
+        return self.to_string( self.sequence, self.start, self.end )
     
     
     @property
@@ -385,7 +353,7 @@ class LegoSubsequence( IVisualisable ):
     
     @start.setter
     def start( self, value: int ):
-        assert isinstance(value, int)
+        assert isinstance( value, int )
         
         if not (0 < value <= self.__end):
             raise ValueError( "Attempt to set `start` to an out-of-bounds value {} in '{}'.".format( value, self ) )
@@ -395,7 +363,7 @@ class LegoSubsequence( IVisualisable ):
     
     @end.setter
     def end( self, value: int ):
-        assert isinstance(value, int)
+        assert isinstance( value, int )
         
         if not (self.__start <= value):
             raise ValueError( "Attempt to set `end` to an out-of-bounds value {} in '{}'.".format( value, self ) )
@@ -457,25 +425,20 @@ class LegoSequence( IVisualisable ):
     
     
     def visualisable_info( self ) -> UiInfo:
-        return UiInfo( self.accession,
-                       None,
-                       "Sequence",
-                       "{} sites in {} parts".format( self.subsequences[ -1 ].end, len( self.subsequences ) ),
-                       EColour.BLUE,
-                       resources.folder )
-    
-    
-    def visualisable_items( self ):
-        yield NamedValue( "id", self.id, is_property = True )
-        yield NamedValue( "accession", self.accession, is_property = True )
-        yield NamedValue( "is_composite", self.is_composite(), is_property = True )
-        yield NamedValue( "is_root", self.is_root, is_property = True )
-        yield NamedValue( "sites", self.site_array, is_property = True )
-        yield NamedValue( "comments", self.comments, is_property = True )
-        
-        yield NamedValue( "major_component", self.component )
-        yield _NamedList( "minor_components", self.minor_components(), "components" )
-        yield _NamedList( "subsequences", self.subsequences, "subsequences" )
+        return UiInfo( name = self.accession,
+                       comment = None,
+                       type_name = "Sequence",
+                       value = "{} sites in {} parts".format( self.subsequences[ -1 ].end, len( self.subsequences ) ),
+                       colour = EColour.BLUE,
+                       icon = resources.folder,
+                       extra = { "id"              : self.id,
+                                 "accession"       : self.accession,
+                                 "is_composite"    : self.is_composite(),
+                                 "is_root"         : self.is_root,
+                                 "sites"           : self.site_array,
+                                 "major_component" : self.component,
+                                 "minor_components": self.minor_components(),
+                                 "subsequences"    : self.subsequences } )
     
     
     def is_composite( self ) -> ETristate:
@@ -502,12 +465,13 @@ class LegoSequence( IVisualisable ):
         
         return result
     
-    def to_string(self, sequence):
-        return SEQ_FORMAT.format(sequence.accession, sequence.length)
+    
+    def to_string( self, sequence ):
+        return SEQ_FORMAT.format( sequence.accession, sequence.length )
     
     
     def __str__( self ):
-        return self.to_string(self)
+        return self.to_string( self )
     
     
     def connected_sequences( self ) -> "Set[LegoSequence]":
@@ -537,8 +501,8 @@ class LegoSequence( IVisualisable ):
         return "{}".format( self.accession )
     
     
-    def _ensure_length( self, new_length : int ):
-        assert isinstance(new_length, int)
+    def _ensure_length( self, new_length: int ):
+        assert isinstance( new_length, int )
         
         if new_length == 0:
             return
@@ -598,18 +562,23 @@ class LegoModel( IVisualisable ):
         self.__incremental_id = 0
         self.sequences = [ ]  # type: List[LegoSequence]
         self.components = [ ]  # type: List[LegoComponent]
-        self.comments = [ "MODEL CREATED AT {}".format( StringHelper.current_time() ) ]
+        self.comments = [ "MODEL CREATED AT {}".format( string_helper.current_time() ) ]
         self.__seq_type = ESiteType.UNKNOWN
         self.file_name = None
     
     
     def visualisable_info( self ) -> UiInfo:
-        return UiInfo( self.name,
-                       self.comments,
-                       "Model",
-                       "{} sequences".format( len( self.sequences ) ),
-                       EColour.YELLOW,
-                       resources.folder )
+        return UiInfo( name = self.name,
+                       comment = self.comments,
+                       type_name = "Model",
+                       value = "{} sequences".format( len( self.sequences ) ),
+                       colour = EColour.YELLOW,
+                       icon = resources.folder,
+                       extra = { "file_name"    : self.file_name,
+                                 "documentation": self.__doc__,
+                                 "site_type"    : self.site_type,
+                                 "sequences"    : self.sequences,
+                                 "components"   : self.components } )
     
     
     @property
@@ -617,15 +586,6 @@ class LegoModel( IVisualisable ):
         return FileHelper.get_filename_without_extension( self.file_name ) if self.file_name else "Unsaved model"
     
     
-    def visualisable_items( self ):
-        yield NamedValue( "name", self.name )
-        yield NamedValue( "file_name", self.file_name )
-        yield NamedValue( "comments", self.comments )
-        yield NamedValue( "documentation", self.__doc__ )
-        yield NamedValue( "site_type", self.site_type )
-        
-        yield _NamedList( "sequences", self.sequences )
-        yield _NamedList( "components", self.components )
     
     
     @property
@@ -700,6 +660,7 @@ class LegoModel( IVisualisable ):
         
         raise KeyError( name )
     
+    
     def find_sequence_by_id( self, id: int ) -> "LegoSequence":
         for x in self.sequences:
             if x.id == id:
@@ -710,19 +671,22 @@ class LegoModel( IVisualisable ):
 
 _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
 
+
 class LegoComponentElement:
-    def __init__(self, is_major, sequence, start, end, subsequences):
+    def __init__( self, is_major, sequence, start, end, subsequences ):
         self.is_major = is_major
-        self.sequence=sequence
-        self.start=start
-        self.end=end
-        self.subsequences=subsequences
-        
-    def __str__(self):
-        return ("⎅" if self.is_major else "⎕") + LegoSide.to_string(self.sequence, self.start, self.end, len(self.subsequences))
+        self.sequence = sequence
+        self.start = start
+        self.end = end
+        self.subsequences = subsequences
     
-    def sites(self):
-        return self.sequence.sub_sites(self.start, self.end)
+    
+    def __str__( self ):
+        return ("⎅" if self.is_major else "⎕") + LegoSide.to_string( self.sequence, self.start, self.end, len( self.subsequences ) )
+    
+    
+    def sites( self ):
+        return self.sequence.sub_sites( self.start, self.end )
 
 
 class LegoComponent( IVisualisable ):
@@ -742,27 +706,22 @@ class LegoComponent( IVisualisable ):
         self.model = model  # Source model
         self.index = index  # Index of component
         self.tree = None  # Tree generated for component, in Newick format
-        self.alignment = None # Alignment generated for component, in FASTA format
-        self.consensus = None # Consensus tree, in Newick format
-        self.consensus_intersection = None #type: List[LegoSequence]
+        self.alignment = None  # Alignment generated for component, in FASTA format
+        self.consensus = None  # Consensus tree, in Newick format
+        self.consensus_intersection = None  # type: List[LegoSequence]
     
     
     def visualisable_info( self ):
-        return UiInfo( self,
-                       self.__doc__,
-                       "Component",
-                       "{} sequences".format( ArrayHelper.count( self.major_sequences() ) ),
-                       EColour.RED,
-                       resources.folder )
-    
-    
-    def visualisable_items( self ):
-        yield NamedValue( "name", str( self ), is_property = True )
-        yield NamedValue( "index", self.index, is_property = True )
-        
-        yield _NamedList( "major", self.major_sequences(), element_name = "major sequences" )
-        yield _NamedList( "minor_s", self.minor_sequences(), element_name = "minor sequences" )
-        yield _NamedList( "minor_ss", self.minor_subsequences(), element_name = "minor subsequences" )
+        return UiInfo( name = self,
+                       comment = self.__doc__,
+                       type_name = "Component",
+                       value = "{} sequences".format( array_helper.count( self.major_sequences() ) ),
+                       colour = EColour.RED,
+                       icon = resources.folder,
+                       extra = {"index":self.index, 
+                                "major":self.major_sequences(),
+                                "minor_s":self.minor_sequences(),
+                                "minor_ss":self.minor_subsequences()})
     
     
     def __str__( self ):
@@ -772,16 +731,17 @@ class LegoComponent( IVisualisable ):
     def __repr__( self ):
         return _GREEK[ self.index % len( _GREEK ) ].lower()
     
-    def elements(self) -> List[LegoComponentElement ]:
-        r= []
-        minor = set(self.minor_sequences())
+    
+    def elements( self ) -> List[ LegoComponentElement ]:
+        r = [ ]
+        minor = set( self.minor_sequences() )
         
         for sequence in self.model.sequences:
             if sequence.component is self:
                 r.append( LegoComponentElement( True, sequence, 1, sequence.length, sequence.subsequences ) )
             elif sequence in minor:
-                rss = [x for x in sequence.subsequences if self in x.components]
-                r.append( LegoComponentElement( False, sequence, rss[0 ].start, rss[-1 ].end, rss ) )
+                rss = [ x for x in sequence.subsequences if self in x.components ]
+                r.append( LegoComponentElement( False, sequence, rss[ 0 ].start, rss[ -1 ].end, rss ) )
         
         return r
     
@@ -792,18 +752,19 @@ class LegoComponent( IVisualisable ):
         """
         return [ subsequence for subsequence in self.model.all_subsequences() if self in subsequence.components ]
     
-    def incoming_components(self)->"List[LegoComponent]":
+    
+    def incoming_components( self ) -> "List[LegoComponent]":
         """
         Returns components which implicitly form part of this component.
         """
-        return [ component for component in self.model.components if any(x in component.minor_sequences() for x in self.major_sequences()) ]
+        return [ component for component in self.model.components if any( x in component.minor_sequences() for x in self.major_sequences() ) ]
     
-    def outgoing_components(self)->"List[LegoComponent]":
+    
+    def outgoing_components( self ) -> "List[LegoComponent]":
         """
         Returns components which implicitly form part of this component.
         """
-        return [ component for component in self.model.components if any(x in component.major_sequences() for x in self.minor_sequences()) ]
-    
+        return [ component for component in self.model.components if any( x in component.major_sequences() for x in self.minor_sequences() ) ]
     
     
     def major_sequences( self ) -> List[ LegoSequence ]:

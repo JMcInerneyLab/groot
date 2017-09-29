@@ -1,10 +1,11 @@
 from collections import OrderedDict
-from typing import Callable, Dict, Iterator, Optional, Set, Tuple
+from typing import Callable, Dict, Iterator, Optional, Set, Tuple, cast, List
 
+from colorama import Fore
 from ete3 import TreeNode
 
 from legoalign.data.lego_model import LegoComponent, LegoModel, LegoSequence
-from mhelper import array_helper as ArrayHelper
+from mhelper import array_helper
 
 
 DFindId = Callable[ [ str ], object ]
@@ -15,6 +16,18 @@ class MClade:
     An empty object that designates a node as a clade (i.e. a point in the tree without sequence data).
     """
     pass
+
+
+class DepthInfo:
+    def __init__( self, node, depth, is_last = True, is_repeat = False ):
+        self.node = node
+        self.depth = depth
+        self.is_last = is_last
+        self.is_repeat = is_repeat
+    
+    
+    def __str__( self ):
+        return "{}{}".format( "*" if self.is_repeat else "", self.node.detail )
 
 
 class MGraph:
@@ -55,15 +68,38 @@ class MGraph:
     
     
     def first( self ) -> "Optional[ MNode ]":
-        return ArrayHelper.first( self._nodes )
+        return array_helper.first( self._nodes )
     
     
     def to_string( self ):
         r = [ ]
         first = self.first()
         
-        for node, depth in first.follow_with_depth().items():
-            r.append( ("  " * depth) + node.name )
+        last_depth = 0
+        prefix = "* "
+        
+        for info in first.follow_with_depth( repeat = True ):
+            delta = info.depth - last_depth
+            
+            if delta > 0:
+                prefix += ("| " * delta)
+            elif delta < 0:
+                prefix = prefix[ :(2 * delta) ]
+            
+            last_depth = info.depth
+            
+            if info.is_last:
+                prefix = prefix[ :-2 ] + "└─"
+            else:
+                prefix = prefix[ :-2 ] + "├─"
+            
+            r.append( prefix + str(info) )
+            print( prefix + str(info) )
+            
+            if info.is_last:
+                prefix = prefix[ :-2 ] + "  "
+            else:
+                prefix = prefix[ :-2 ] + "│ "
         
         return "\n".join( r )
     
@@ -125,7 +161,7 @@ class MGraph:
         return iter( self._nodes )
     
     
-    def _follow( self, source: "MNode", visited: "Dict[ MNode, int ]", depth: int ) -> None:
+    def _follow( self, *, source: "MNode", visited: "Set[ MNode]", res: List[ DepthInfo ], depth: int = 0, sibling = None, repeat = False, parent = None ) -> Optional[ DepthInfo ]:
         """
         Populates the `visited` set with all connected nodes, starting from the `source` node.
         Nodes already in the visited list will not be visited again.
@@ -138,14 +174,27 @@ class MGraph:
         :return: Nothing, the result is stored in `visited`. 
         """
         if source in visited:
-            return
+            if not repeat:
+                return None
+            
+            di = DepthInfo( source, depth, is_repeat = True )
+            res.append( di )
+        else:
+            visited.add( source )
+            di = DepthInfo( source, depth )
+            res.append( di )
+            
+            prev_sibling = None
+            
+            for edge in source.iter_edges():
+                op = edge.opposite( source )
+                if op != parent:
+                    prev_sibling = self._follow( source = op, visited = visited, res = res, depth = depth + 1, sibling = prev_sibling, repeat = repeat, parent = source ) or prev_sibling
         
-        visited[ source ] = depth
+        if sibling is not None:
+            sibling.is_last = False
         
-        for edge in source.iter_edges():
-            op = edge.opposite( source )
-            #print( "*" * depth + " > {} --> {}".format( source, op ) )
-            self._follow( op, visited, depth + 1 )
+        return di
 
 
 class MNode:
@@ -155,7 +204,7 @@ class MNode:
     def __init__( self, graph: MGraph ):
         MNode.__uid_counter += 1
         self._graph = graph
-        self.sequence = None
+        self.sequence = cast( LegoSequence, None )
         self.fusion = None
         self.__uid = MNode.__uid_counter
         self._edges = { }
@@ -169,6 +218,14 @@ class MNode:
     @property
     def name( self ) -> Optional[ str ]:
         return export_name( self.sequence, self.fusion, self.__uid )
+    
+    
+    @property
+    def detail( self ) -> str:
+        if self.sequence is None:
+            return "uid={} fus={}".format( self.__uid, self.sequence, self.fusion )
+        else:
+            return "uid={} seq={} com={}{}{} mcom={}{}{} fus={}".format( self.__uid, self.sequence, Fore.RED, self.sequence.component, Fore.RESET, Fore.YELLOW, self.sequence.minor_components(), Fore.RESET, self.fusion )
     
     
     def iter_edges( self ) -> "Iterator[MEdge]":
@@ -194,17 +251,20 @@ class MNode:
     
     def follow( self, *args, **kwargs ) -> "Set[MNode]":
         d = self.follow_with_depth( *args, **kwargs )
-        return set( d.keys() )
+        return set( x.node for x in d )
     
     
-    def follow_with_depth( self, exclude = None ) -> "OrderedDict[MNode, int]":
+    def follow_with_depth( self, exclude = None, repeat = False ) -> "List[DepthInfo]":
         """
         Get all related nodes recursively
         
         :param exclude: Don't follow these edges
         """
-        visited = OrderedDict()
-        visited[ self ] = 0
+        visited = set()  # type: Set[MNode]
+        res = [ ]  # type:List[DepthInfo]
+        
+        visited.add( self )
+        res.append( DepthInfo( self, 0 ) )
         
         if exclude is None:
             exclude = [ ]
@@ -214,9 +274,9 @@ class MNode:
         
         for edge in self.iter_edges():
             if edge not in exclude:
-                self._graph._follow( edge.opposite( self ), visited, 1 )
+                self._graph._follow( source = edge.opposite( self ), visited = visited, res = res, depth = 1, sibling = None, repeat = repeat, parent = self )
         
-        return visited
+        return res
 
 
 def import_name( model: LegoModel, name: str ) -> Tuple[ Optional[ LegoSequence ], Optional[ LegoComponent ] ]:
@@ -268,8 +328,8 @@ class MEdge:
         a._edges[ b ] = self
         b._edges[ a ] = self
         
-        assert len(a._edges) <= 3
-        assert len(b._edges) <= 3
+        assert len( a._edges ) <= 3
+        assert len( b._edges ) <= 3
     
     
     def remove( self ):
@@ -303,7 +363,7 @@ class MEdge:
     def iter_a( self ):
         visited = set()
         visited.add( self._b )
-        self._graph._follow( self._a, visited )
+        self._graph._follow( source = self._a, visited = visited, res = [ ] )
         visited.remove( self._b )
         return visited
     
@@ -311,6 +371,6 @@ class MEdge:
     def iter_b( self ):
         visited = set()
         visited.add( self._a )
-        self._graph._follow( self._b, visited )
+        self._graph._follow( source = self._b, visited = visited, res = [ ] )
         visited.remove( self._a )
         return visited

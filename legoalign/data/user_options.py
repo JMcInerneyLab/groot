@@ -2,6 +2,10 @@ from mcommand.engine.environment import MENV
 
 
 class GlobalOptions:
+    """
+    :data recent_files: Files recently accessed.
+    """
+    
     def __init__(self):
         self.recent_files = []
         

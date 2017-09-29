@@ -2,8 +2,7 @@ from typing import Callable, Iterable, List, Optional, TypeVar
 
 from colorama import Fore, Style, Back
 
-from editorium import MEnum
-from legoalign.algorithms import components, fastaiser, importation, tree, fuse
+from legoalign.algorithms import components, fastaiser, tree, fuse
 from legoalign.data.lego_model import LegoComponent
 from legoalign.frontends.cli import cli_view, cli_view_utils
 from legoalign.mcommand_extensions import generating, files
@@ -12,7 +11,7 @@ from mcommand.engine.environment import MCMD, MENV
 from mcommand.engine.plugin import Plugin
 from mcommand.helpers.table_draw import Table
 from mcommand.visualisables.visualisable import IVisualisable
-from mhelper import SwitchError
+from mhelper import SwitchError, MEnum
 
 
 T = TypeVar( "T" )

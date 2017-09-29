@@ -81,5 +81,14 @@ def make_fusions():
     
     for fusion in fuse.find_all_fusion_points( model ):
         results.append( str( fusion ) )
+        
+        if fusion.points_a:
+            for x in fusion.points_a:
+                results.append("A:{}".format(x))
+                
+        if fusion.points_b:
+            for x in fusion.points_b:
+                results.append("B:{}".format(x))
+            
     
     MCMD.information( "\n".join( results ) )

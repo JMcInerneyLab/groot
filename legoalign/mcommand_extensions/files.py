@@ -154,24 +154,20 @@ def import_directory( directory: str, reset: bool = True ):
         importation.import_directory( cli_view.current_model(), directory )
     
     if reset:
-        console_explorer.re_cd( PathToVisualisable( [ MENV.root ] ) )
+        console_explorer.re_cd( PathToVisualisable.root_path( MENV.root  ) )
         return EChanges.MODEL | EChanges.FILE | EChanges.ATTRS
     else:
         return EChanges.ATTRS
 
 
 @command(names=["file_load", "load"])
-def file_load( file_name: Optional[ str ] = None ) -> EChanges:
+def file_load( file_name: str) -> EChanges:
     """
     Loads the model from a file
     :param file_name:   File to load.
                         The `sessions` folder will also assumed if you don't specify a path.
                         Prefix `./` to force a write to the working directory instead.
     """
-    if not file_name:
-        file_recent()
-        return EChanges.NONE
-    
     file_name = __fix_path( file_name )
     model = io_helper.load_binary( file_name )
     model.file_name = file_name

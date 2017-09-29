@@ -1,4 +1,4 @@
-from typing import Set, List, Dict, Tuple, Iterable
+from typing import Set, List, Dict, Tuple, Iterable, cast
 
 from legoalign.data.graphing import MGraph, MNode
 from legoalign.data.lego_model import LegoComponent, LegoModel, LegoSequence
@@ -26,8 +26,8 @@ class FusionEvent:
         self.component_b = component_b
         self.intersections = intersections
         self.orig_intersections = set( intersections )
-        self.points_a = None
-        self.points_b = None
+        self.points_a = cast( List[ MNode ], None )
+        self.points_b = cast( List[ MNode ], None )
     
     
     def __str__( self ):
@@ -82,24 +82,24 @@ def find_fusion_events( model: LegoModel ) -> List[ FusionEvent ]:
     return results
 
 
-def find_all_fusion_points( model: LegoModel ) -> List[FusionEvent ]:
+def find_all_fusion_points( model: LegoModel ) -> List[ FusionEvent ]:
     """
     Finds the fusion points in the model.
     i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
     """
-    r = []
+    r = [ ]
     
     for event in find_fusion_events( model ):
-        event.points_a = __apply_fusion_points( event.component_a, event.orig_intersections, array_helper.first( event.intersections ) )
-        event.points_b = __apply_fusion_points( event.component_b, event.orig_intersections, array_helper.first( event.intersections ) )
-        r.append(event)
-        
+        event.points_a = __get_fusion_points( event.component_a, event.orig_intersections, array_helper.first( event.intersections ) )
+        event.points_b = __get_fusion_points( event.component_b, event.orig_intersections, array_helper.first( event.intersections ) )
+        r.append( event )
+    
     return r
 
 
-def __apply_fusion_points( component: LegoComponent,
-                           lower: Set[ LegoComponent ],
-                           fusion_name: LegoComponent ) -> List[MNode]:
+def __get_fusion_points( component: LegoComponent,
+                         lower: Set[ LegoComponent ],
+                         fusion_name: LegoComponent ) -> List[ MNode ]:
     """
     In the tree of `component` we look for the node separating `lower` from everything else.
     If there are multiple nodes, we consider the best match
@@ -107,12 +107,11 @@ def __apply_fusion_points( component: LegoComponent,
     :param component:   Component who's tree to search 
     :param lower:       What to search for 
     :param fusion_name: Name of the fusion
-    :return: 
     """
     model = component.model
     graph = MGraph()
     graph.import_newick( component.tree, model )
-    all_nodes = list(graph.traverse())
+    all_nodes = list( graph.traverse() )
     
     viables = { }  # type: Dict[MNode, Tuple[Set[MNode], int]]
     
@@ -158,4 +157,3 @@ def __get_components( nodes: Iterable[ MNode ] ) -> Tuple[ Set[ LegoComponent ],
             count += 1
     
     return r, count
-

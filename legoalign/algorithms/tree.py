@@ -35,4 +35,3 @@ def tree_from_newick( newick: str ) -> Tree:
         return Tree( newick, format = 0 )
     except:
         return Tree( newick, format = 1 )
-        

@@ -1,9 +1,11 @@
+from typing import cast
+
 from legoalign.data.lego_model import LegoModel
-from mcommand import MENV, console_explorer, PathToVisualisable
+from mcommand import MENV, PathToVisualisable
 from mcommand.hosts.console import ConsoleHost
 
 
-__model = None
+__model = cast( LegoModel, None )
 
 
 def current_model() -> LegoModel:
@@ -16,7 +18,7 @@ def set_model( model ):
     MENV.root = model
     
     if isinstance( MENV.host, ConsoleHost ):
-        MENV.host.browser_path = PathToVisualisable( [ MENV.root ] )
+        MENV.host.browser_path = PathToVisualisable.root_path( MENV.root )
     
     return __model
 
