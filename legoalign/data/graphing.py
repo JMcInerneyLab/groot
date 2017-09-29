@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from typing import Callable, Dict, Iterator, Optional, Set, Tuple, cast, List
 
-from colorama import Fore
+from colorama import Fore, Back, Style
 from ete3 import TreeNode
 
 from legoalign.data.lego_model import LegoComponent, LegoModel, LegoSequence
@@ -19,15 +19,16 @@ class MClade:
 
 
 class DepthInfo:
-    def __init__( self, node, depth, is_last = True, is_repeat = False ):
+    def __init__( self, node, depth, is_last = True, is_repeat = False, parent = None ):
         self.node = node
         self.depth = depth
         self.is_last = is_last
         self.is_repeat = is_repeat
+        self.parent = parent
     
     
     def __str__( self ):
-        return "{}{}".format( "*" if self.is_repeat else "", self.node.detail )
+        return "{}:{}{}".format( "{}".format(self.parent.node.uid) if self.parent else "R", "*" if self.is_repeat else "", self.node.detail )
 
 
 class MGraph:
@@ -93,8 +94,7 @@ class MGraph:
             else:
                 prefix = prefix[ :-2 ] + "├─"
             
-            r.append( prefix + str(info) )
-            print( prefix + str(info) )
+            r.append( prefix + str( info ) )
             
             if info.is_last:
                 prefix = prefix[ :-2 ] + "  "
@@ -161,7 +161,7 @@ class MGraph:
         return iter( self._nodes )
     
     
-    def _follow( self, *, source: "MNode", visited: "Set[ MNode]", res: List[ DepthInfo ], depth: int = 0, sibling = None, repeat = False, parent = None ) -> Optional[ DepthInfo ]:
+    def _follow( self, *, source: "MNode", visited: "Set[ MNode]", res: List[ DepthInfo ], depth: int = 0, sibling = None, repeat = False, parent = None, parent_info = None ) -> Optional[ DepthInfo ]:
         """
         Populates the `visited` set with all connected nodes, starting from the `source` node.
         Nodes already in the visited list will not be visited again.
@@ -177,11 +177,11 @@ class MGraph:
             if not repeat:
                 return None
             
-            di = DepthInfo( source, depth, is_repeat = True )
+            di = DepthInfo( source, depth, is_repeat = True, parent = parent_info )
             res.append( di )
         else:
             visited.add( source )
-            di = DepthInfo( source, depth )
+            di = DepthInfo( source, depth, parent = parent_info )
             res.append( di )
             
             prev_sibling = None
@@ -189,7 +189,7 @@ class MGraph:
             for edge in source.iter_edges():
                 op = edge.opposite( source )
                 if op != parent:
-                    prev_sibling = self._follow( source = op, visited = visited, res = res, depth = depth + 1, sibling = prev_sibling, repeat = repeat, parent = source ) or prev_sibling
+                    prev_sibling = self._follow( source = op, visited = visited, res = res, depth = depth + 1, sibling = prev_sibling, repeat = repeat, parent = source, parent_info = di ) or prev_sibling
         
         if sibling is not None:
             sibling.is_last = False
@@ -211,6 +211,11 @@ class MNode:
         graph._nodes.add( self )
     
     
+    @property
+    def uid( self ):
+        return self.__uid
+    
+    
     def __repr__( self ):
         return self.name
     
@@ -222,14 +227,19 @@ class MNode:
     
     @property
     def detail( self ) -> str:
-        if self.sequence is None:
-            return "uid={} fus={}".format( self.__uid, self.sequence, self.fusion )
+        if self.fusion:
+            fus = " " + Fore.BLUE + Back.YELLOW + str( self.fusion ) + Style.RESET_ALL
         else:
-            return "uid={} seq={} com={}{}{} mcom={}{}{} fus={}".format( self.__uid, self.sequence, Fore.RED, self.sequence.component, Fore.RESET, Fore.YELLOW, self.sequence.minor_components(), Fore.RESET, self.fusion )
+            fus = ""
+        
+        if self.sequence is None:
+            return "{}{}".format( self.__uid, fus )
+        else:
+            return "{} {} {}{}{} {}{}{}{}".format( self.__uid, self.sequence, Fore.RED, self.sequence.component, Fore.RESET, Fore.YELLOW, self.sequence.minor_components(), Fore.RESET, fus )
     
     
     def iter_edges( self ) -> "Iterator[MEdge]":
-        return iter( self._edges.values() )
+        return sorted( self._edges.values(), key = lambda x: "{}-{}".format( x.a.uid, x.b.uid ) )
     
     
     def num_edges( self ) -> int:

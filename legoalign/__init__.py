@@ -7,7 +7,7 @@ def __gui_host():
     from legoalign.frontends.gui.gui_host import LegoGuiHost
     return LegoGuiHost()
 
-MENV.name = "GR⚆⚆T"
+MENV.name = "GROOT : GENOMIC N-ROOTED FUSION GRAPH CREATOR"
 MENV.abv_name = "groot"
 MENV.plugins.load_namespace( mcommand_extensions )
 MENV.root = _current_model()

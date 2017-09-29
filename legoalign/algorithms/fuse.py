@@ -2,6 +2,7 @@ from typing import Set, List, Dict, Tuple, Iterable, cast
 
 from legoalign.data.graphing import MGraph, MNode
 from legoalign.data.lego_model import LegoComponent, LegoModel, LegoSequence
+from mcommand.engine.environment import MCMD
 from mhelper import Logger, array_helper
 
 
@@ -140,9 +141,12 @@ def __get_fusion_points( component: LegoComponent,
                 viables[ node ] = relations, count
     
     for viable in viables:
-        viable.sequence = fusion_name
+        viable.fusion = fusion_name
     
     component.tree = graph.to_newick()
+    
+    MCMD.print(graph.to_string())
+    exit(0)
     
     return list( viables.keys() )
 
