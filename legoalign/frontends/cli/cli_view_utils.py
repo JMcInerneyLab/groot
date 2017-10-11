@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 
-from colorama import Fore, Back, Style
+from colorama import Back, Fore, Style
 
-from legoalign.data.lego_model import LegoModel, ESiteType, LegoComponent
-from legoalign.frontends.cli import cli_view
+from legoalign.data import global_view
+from legoalign.data.lego_model import ESiteType, LegoComponent
 
 
 PROTEIN_COLOUR_TABLE = { "G": Fore.WHITE, "A": Fore.WHITE, "V": Fore.WHITE, "L": Fore.WHITE, "I": Fore.WHITE,
@@ -58,11 +58,11 @@ def __table_from_type( st ):
     return table
 
 
-def get_component_list( component: Optional[ LegoComponent ] ):
+def get_component_list( component: Optional[ List[LegoComponent] ] ):
     if component is not None:
-        to_do = [ component ]
+        to_do = component
     else:
-        to_do = cli_view.current_model().components
+        to_do = global_view.current_model().components
         
         if not to_do:
             raise ValueError("No components available, consider running `make_components`.")

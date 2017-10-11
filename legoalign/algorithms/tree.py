@@ -30,8 +30,4 @@ def generate_tree( component: LegoComponent ) -> None:
             component.tree = component.tree.replace( "S{}:".format( sequence.id ), sequence.accession + ":" )
 
 
-def tree_from_newick( newick: str ) -> Tree:
-    try:
-        return Tree( newick, format = 0 )
-    except:
-        return Tree( newick, format = 1 )
+

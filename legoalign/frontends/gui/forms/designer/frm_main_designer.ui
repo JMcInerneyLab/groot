@@ -1,0 +1,1409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1344</width>
+    <height>964</height>
+   </rect>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::VerticalTabs</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QWidget" name="widget" native="true">
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QSplitter" name="splitter">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="opaqueResize">
+          <bool>false</bool>
+         </property>
+         <property name="childrenCollapsible">
+          <bool>false</bool>
+         </property>
+         <widget class="QWidget" name="verticalLayoutWidget">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background: qlineargradient(spread:pad, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(195, 195, 195, 255), stop:0.0985222 rgba(255, 255, 255, 255), stop:1 rgba(135, 135, 135, 255));
+border-style: inset;
+border-width: 1px;
+border-color: silver;</string>
+             </property>
+             <property name="text">
+              <string>Data</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QToolButton" name="BTN_DATA_SAVE">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>SAVE</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources.qrc">
+                 <normaloff>:/Images/Resources/save-file.svg</normaloff>:/Images/Resources/save-file.svg</iconset>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextBesideIcon</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>2</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QToolButton" name="CHKBTN_DATA_FASTA">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>FASTA</string>
+                 </property>
+                 <property name="text">
+                  <string>FASTA</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources.qrc">
+                   <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="toolButtonStyle">
+                  <enum>Qt::ToolButtonIconOnly</enum>
+                 </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="CHKBTN_DATA_NEWICK">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Newick</string>
+                 </property>
+                 <property name="text">
+                  <string>Newick</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources.qrc">
+                   <normaloff>:/Images/Resources/tree.svg</normaloff>:/Images/Resources/tree.svg</iconset>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="toolButtonStyle">
+                  <enum>Qt::ToolButtonIconOnly</enum>
+                 </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="CHKBTN_DATA_BLAST">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>BLAST</string>
+                 </property>
+                 <property name="text">
+                  <string>BLAST</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources.qrc">
+                   <normaloff>:/Images/Resources/align.svg</normaloff>:/Images/Resources/align.svg</iconset>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="toolButtonStyle">
+                  <enum>Qt::ToolButtonIconOnly</enum>
+                 </property>
+                 <property name="autoRaise">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SELMASK_PREV">
+               <property name="toolTip">
+                <string>Highlight previous</string>
+               </property>
+               <property name="text">
+                <string>&lt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SELMASK_ALL">
+               <property name="toolTip">
+                <string>Highlight all</string>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SELMASK_NEXT">
+               <property name="toolTip">
+                <string>Highlight next</string>
+               </property>
+               <property name="text">
+                <string>&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QScrollArea" name="scrollArea">
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Window">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Window">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+                <colorrole role="Window">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOff</enum>
+             </property>
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="SCR_AREA">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>212</width>
+                <height>821</height>
+               </rect>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_8"/>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="layoutWidget">
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background: qlineargradient(spread:pad, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(195, 195, 195, 255), stop:0.0985222 rgba(255, 255, 255, 255), stop:1 rgba(135, 135, 135, 255));
+border-style: inset;
+border-width: 1px;
+border-color: silver;</string>
+             </property>
+             <property name="text">
+              <string>Diagram</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>36</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SEL_COMPONENT_">
+               <property name="minimumSize">
+                <size>
+                 <width>128</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>128</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="statusTip">
+                <string>Remove sequence</string>
+               </property>
+               <property name="text">
+                <string>Component</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources.qrc">
+                 <normaloff>:/Images/Resources/compartmentalise.svg</normaloff>:/Images/Resources/compartmentalise.svg</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextUnderIcon</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SEL_EDGE_">
+               <property name="minimumSize">
+                <size>
+                 <width>128</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>128</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="statusTip">
+                <string>Remove edge</string>
+               </property>
+               <property name="text">
+                <string>Edge</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources.qrc">
+                 <normaloff>:/Images/Resources/edge.svg</normaloff>:/Images/Resources/edge.svg</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextUnderIcon</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SEL_SEQUENCE_">
+               <property name="minimumSize">
+                <size>
+                 <width>128</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>128</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="statusTip">
+                <string>Remove sequence</string>
+               </property>
+               <property name="text">
+                <string>Sequence</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources.qrc">
+                 <normaloff>:/Images/Resources/sequence.svg</normaloff>:/Images/Resources/sequence.svg</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextUnderIcon</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="BTN_SEL_SUBSEQUENCE_">
+               <property name="minimumSize">
+                <size>
+                 <width>128</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>128</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="statusTip">
+                <string>Remove (merge) splits</string>
+               </property>
+               <property name="text">
+                <string>Subsequence</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources.qrc">
+                 <normaloff>:/Images/Resources/subsequence.svg</normaloff>:/Images/Resources/subsequence.svg</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextUnderIcon</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>182</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QFrame" name="FRA_MAIN">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="DOCK_MOVEMENT">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Movement</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QCheckBox" name="CHK_MOVE">
+       <property name="statusTip">
+        <string>Snap sequences to starts and ends of subsequences</string>
+       </property>
+       <property name="text">
+        <string>Enable movement</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>Snap</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="CHK_MOVE_XSNAP">
+          <property name="statusTip">
+           <string>Snap sequences to starts and ends of subsequences</string>
+          </property>
+          <property name="text">
+           <string>X-snap</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="CHK_MOVE_YSNAP">
+          <property name="statusTip">
+           <string>Snap sequences to Y grid</string>
+          </property>
+          <property name="text">
+           <string>Y-snap</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="DOCK_VIEW">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>View</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="title">
+        <string>Show</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="CHK_VIEW_PIANO_ROLLS">
+          <property name="toolTip">
+           <string>Snap sequences to starts and ends of subsequences</string>
+          </property>
+          <property name="statusTip">
+           <string>View sequence data as piano rolls (partially check to view only when selected)</string>
+          </property>
+          <property name="text">
+           <string>Piano rolls</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="tristate">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="CHK_VIEW_POSITIONS">
+          <property name="toolTip">
+           <string>Snap sequences to starts and ends of subsequences</string>
+          </property>
+          <property name="statusTip">
+           <string>View split positions (partially check to view only when selected)</string>
+          </property>
+          <property name="text">
+           <string>Positions</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="tristate">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="CHK_VIEW_NAMES">
+          <property name="statusTip">
+           <string>View sequence names (partially check to view only when selected)</string>
+          </property>
+          <property name="text">
+           <string>Names</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="tristate">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="CHK_VIEW_EDGES">
+          <property name="toolTip">
+           <string>Snap sequences to starts and ends of subsequences</string>
+          </property>
+          <property name="statusTip">
+           <string>View edges (partially check to view only when selected)</string>
+          </property>
+          <property name="text">
+           <string>Edges</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="tristate">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1344</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <widget class="QMenu" name="MNU_RECENT">
+     <property name="title">
+      <string>&amp;Recent diagrams</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="MNU_EXAMPLES">
+     <property name="title">
+      <string>&amp;Import sample data</string>
+     </property>
+    </widget>
+    <addaction name="ACT_FILE_NEW"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_FILE_OPEN"/>
+    <addaction name="MNU_RECENT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_FILE_SAVE"/>
+    <addaction name="ACT_FILE_SAVE_AS"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_FILE_IMPORT"/>
+    <addaction name="MNU_EXAMPLES"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_FILE_EXPORT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_APP_EXIT"/>
+   </widget>
+   <widget class="QMenu" name="menuSelect">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="ACT_SELECT_ALL"/>
+    <addaction name="ACT_SELECT_NONE"/>
+    <addaction name="ACT_SELECTION_INVERT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_SELECT_EMPTY"/>
+    <addaction name="ACT_SELECT_BY_NAME"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_SELECT_LEFT"/>
+    <addaction name="ACT_SELECT_RIGHT"/>
+    <addaction name="ACT_SELECT_DIRECT_CONNECTIONS"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_EDIT_SUBSEL_ALL"/>
+    <addaction name="ACT_EDIT_SUBSEL_NEXT"/>
+    <addaction name="ACT_EDIT_SUBSEL_PREV"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="ACT_HELP_KEYS"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;Window</string>
+    </property>
+    <addaction name="ACT_WINDOW_MOVE"/>
+    <addaction name="ACT_WINDOW_VIEW"/>
+    <addaction name="ACT_WINDOW_EDIT"/>
+    <addaction name="ACT_WINDOW_SELECTION"/>
+    <addaction name="separator"/>
+    <addaction name="ACTION_VIEW_MCOMMAND"/>
+   </widget>
+   <widget class="QMenu" name="menu_Generating">
+    <property name="title">
+     <string>&amp;Generating</string>
+    </property>
+    <addaction name="ACT_MAKE_COMPONENTS"/>
+    <addaction name="ACT_MAKE_ALIGNMENTS"/>
+    <addaction name="ACT_MAKE_TREE"/>
+    <addaction name="ACT_MAKE_CONSENSUS"/>
+    <addaction name="ACT_MAKE_FUSIONS"/>
+    <addaction name="ACT_MAKE_NRFG"/>
+   </widget>
+   <widget class="QMenu" name="menu_Modifications">
+    <property name="title">
+     <string>&amp;Modifications</string>
+    </property>
+    <addaction name="ACT_MODIFY_CLEAN"/>
+    <addaction name="ACT_MODIFY_SET_TREE"/>
+    <addaction name="ACT_MODIFY_SET_ALIGNMENT"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_MODIFY_QUANTISE"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_MODIFY_NEW_SEQUENCE"/>
+    <addaction name="ACT_MODIFY_NEW_SUBSEQUENCE"/>
+    <addaction name="ACT_MODIFY_NEW_EDGE"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_MODIFY_REMOVE_SEQUENCE"/>
+    <addaction name="ACT_MODIFY_MERGE_SUBSEQUENCES"/>
+    <addaction name="ACT_MODIFY_REMOVE_EDGE"/>
+   </widget>
+   <widget class="QMenu" name="menu_View_2">
+    <property name="title">
+     <string>&amp;Display</string>
+    </property>
+    <addaction name="ACT_PRINT_FASTA"/>
+    <addaction name="ACT_PRINT_STATUS"/>
+    <addaction name="ACT_PRINT_ALIGNMENT"/>
+    <addaction name="ACT_PRINT_CONSENSUS"/>
+    <addaction name="ACT_PRINT_TREE"/>
+    <addaction name="ACT_PRINT_COMPONENT_EDGES"/>
+    <addaction name="ACT_PRINT_COMPONENTS"/>
+    <addaction name="ACT_PRINT_FUSIONS"/>
+    <addaction name="ACT_PRINT_NRFG"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="tearOffEnabled">
+     <bool>true</bool>
+    </property>
+    <property name="title">
+     <string>|</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_View_3">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="ACT_SELECT_COMPONENT"/>
+    <addaction name="ACT_SELECT_SEQUENCE"/>
+    <addaction name="ACT_SELECT_SUBSEQUENCE"/>
+    <addaction name="ACT_SELECT_EDGE"/>
+    <addaction name="separator"/>
+    <addaction name="ACT_VIEW_ALIGN_SUBSEQUENCES"/>
+    <addaction name="ACT_VIEW_ALIGN"/>
+    <addaction name="ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menuSelect"/>
+   <addaction name="menu_View_3"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Help"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_Generating"/>
+   <addaction name="menu_Modifications"/>
+   <addaction name="menu_View_2"/>
+  </widget>
+  <action name="ACT_FILE_NEW">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/new-file.svg</normaloff>:/Images/Resources/new-file.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;New diagram</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="ACT_FILE_IMPORT">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/import-file.svg</normaloff>:/Images/Resources/import-file.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Import custom data...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="ACT_APP_EXIT">
+   <property name="text">
+    <string>E&amp;xit program</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="ACT_FILE_SAVE">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/save-file.svg</normaloff>:/Images/Resources/save-file.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Save diagram...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="ACT_FILE_OPEN">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/open-file.svg</normaloff>:/Images/Resources/open-file.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open diagram...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="ACT_HELP_KEYS">
+   <property name="text">
+    <string>&amp;Keys</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_ALL">
+   <property name="text">
+    <string>Select &amp;all</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_NONE">
+   <property name="text">
+    <string>Select &amp;none</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_EMPTY">
+   <property name="text">
+    <string>&amp;Select items missing sequence data</string>
+   </property>
+  </action>
+  <action name="ACT_SELECTION_INVERT">
+   <property name="text">
+    <string>&amp;Invert selection</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_SEQUENCE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Sequence mode</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_SUBSEQUENCE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Subsequence mode</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_EDGE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Edge mode</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_COMPONENT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Component mode</string>
+   </property>
+  </action>
+  <action name="ACT_FILE_SAVE_AS">
+   <property name="text">
+    <string>Save diagram &amp;as...</string>
+   </property>
+  </action>
+  <action name="ACT_FILE_EXPORT">
+   <property name="text">
+    <string>Export selected data...</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_BY_NAME">
+   <property name="text">
+    <string>Select items by &amp;name</string>
+   </property>
+  </action>
+  <action name="ACT_WINDOW_MOVE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Movement panel</string>
+   </property>
+  </action>
+  <action name="ACT_WINDOW_VIEW">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>View panel</string>
+   </property>
+  </action>
+  <action name="ACT_WINDOW_EDIT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Mode panel</string>
+   </property>
+  </action>
+  <action name="ACT_WINDOW_SELECTION">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/Images/Resources/window.svg</normaloff>:/Images/Resources/window.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Data panel</string>
+   </property>
+  </action>
+  <action name="ACT_VIEW_ALIGN">
+   <property name="text">
+    <string>Align component starts to selected sequence</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_LEFT">
+   <property name="text">
+    <string>Select all subsequences to the left</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Left</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_RIGHT">
+   <property name="text">
+    <string>Select all subsequences to the right</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Right</string>
+   </property>
+  </action>
+  <action name="ACT_SELECT_DIRECT_CONNECTIONS">
+   <property name="text">
+    <string>Select all subsequences with direct connections</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Up</string>
+   </property>
+  </action>
+  <action name="ACT_VIEW_ALIGN_SUBSEQUENCES">
+   <property name="text">
+    <string>Align subsequences to previous sibilings</string>
+   </property>
+  </action>
+  <action name="ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES">
+   <property name="text">
+    <string>Align first subsequences</string>
+   </property>
+  </action>
+  <action name="ACT_EDIT_SUBSEL_ALL">
+   <property name="text">
+    <string>Highlight all in selection</string>
+   </property>
+  </action>
+  <action name="ACT_EDIT_SUBSEL_NEXT">
+   <property name="text">
+    <string>Highlight next in selection</string>
+   </property>
+  </action>
+  <action name="ACT_EDIT_SUBSEL_PREV">
+   <property name="text">
+    <string>Highlight previous in selection</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_COMPONENTS">
+   <property name="text">
+    <string>Make &amp;components</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_ALIGNMENTS">
+   <property name="text">
+    <string>Make &amp;alignments</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_TREE">
+   <property name="text">
+    <string>Make &amp;tree</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_CONSENSUS">
+   <property name="text">
+    <string>Make con&amp;sensus</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_NRFG">
+   <property name="text">
+    <string>Make &amp;NRFG</string>
+   </property>
+  </action>
+  <action name="ACT_MAKE_FUSIONS">
+   <property name="text">
+    <string>Make &amp;fusions</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_CLEAN">
+   <property name="text">
+    <string>&amp;Clean</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_SET_TREE">
+   <property name="text">
+    <string>Set &amp;tree</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_SET_ALIGNMENT">
+   <property name="text">
+    <string>Set &amp;alignment</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_QUANTISE">
+   <property name="text">
+    <string>&amp;Quantise</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_NEW_SEQUENCE">
+   <property name="text">
+    <string>New &amp;sequence</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_NEW_SUBSEQUENCE">
+   <property name="text">
+    <string>New &amp;subsequence</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_NEW_EDGE">
+   <property name="text">
+    <string>New &amp;edge</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_REMOVE_SEQUENCE">
+   <property name="text">
+    <string>Remove &amp;sequence</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_MERGE_SUBSEQUENCES">
+   <property name="text">
+    <string>Remove (merge) su&amp;bsequences</string>
+   </property>
+  </action>
+  <action name="ACT_MODIFY_REMOVE_EDGE">
+   <property name="text">
+    <string>Remove &amp;edge</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_FASTA">
+   <property name="text">
+    <string>View &amp;FASTA</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_STATUS">
+   <property name="text">
+    <string>View &amp;status</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_ALIGNMENT">
+   <property name="text">
+    <string>&amp;View alignment</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_CONSENSUS">
+   <property name="text">
+    <string>&amp;View consensus</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_TREE">
+   <property name="text">
+    <string>View &amp;tree</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_COMPONENT_EDGES">
+   <property name="text">
+    <string>View component &amp;edges</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_COMPONENTS">
+   <property name="text">
+    <string>View &amp;components</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_FUSIONS">
+   <property name="text">
+    <string>View fusions</string>
+   </property>
+  </action>
+  <action name="ACT_PRINT_NRFG">
+   <property name="text">
+    <string>View NRF&amp;G</string>
+   </property>
+  </action>
+  <action name="ACTION_VIEW_MCOMMAND">
+   <property name="text">
+    <string>&amp;MCommand...</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>BTN_SEL_COMPONENT_</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELECT_COMPONENT</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>479</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SEL_EDGE_</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELECT_EDGE</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>863</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SEL_SEQUENCE_</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELECT_SEQUENCE</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>607</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SEL_SUBSEQUENCE_</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_SELECT_SUBSEQUENCE</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>735</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_ALL</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_EDIT_SUBSEL_ALL</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>201</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_NEXT</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_EDIT_SUBSEL_NEXT</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>232</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_SELMASK_PREV</sender>
+   <signal>clicked()</signal>
+   <receiver>ACT_EDIT_SUBSEL_PREV</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>140</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

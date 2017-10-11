@@ -1,3 +1,4 @@
+# noinspection PyUnresolvedReferences
 import legoalign
 import mcommand
 

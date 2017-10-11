@@ -4,6 +4,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QGraphicsView
+from flags import Flags
 
 
 class MyView(QGraphicsView):
@@ -45,3 +46,10 @@ def triangle(sequence):
     for i, a in enumerate(sequence):
         for j in range(0, i):
             yield a, sequence[j]
+            
+class EChanges( Flags ):
+    __no_flags_name__ = "NONE"
+    MODEL = 1  # type:EChanges
+    FILE = 2  # type:EChanges
+    RECENT = 4  # type:EChanges
+    ATTRS = 8  # type:EChanges

@@ -4,15 +4,12 @@ from os import path
 from typing import Optional
 
 from colorama import Fore
-
-from legoalign.algorithms import importation
 from legoalign.data.hints import EChanges
-from legoalign.frontends.cli import cli_view
-from legoalign.data import user_options
-from mcommand import command
-from mcommand.engine.environment import MCMD, MENV
-from mcommand.plugins import console_explorer
-from mcommand.visualisables.visualisable_operations import PathToVisualisable
+
+from legoalign import constants
+from legoalign.algorithms import importation
+from legoalign.data import global_view, user_options, global_view
+from mcommand import MCMD, MENV, PathToVisualisable, command, console_explorer
 from mhelper import file_helper, io_helper
 
 
@@ -25,7 +22,7 @@ def file_sample( name: Optional[ str ] = None, view: bool = False ) -> EChanges:
     :return: 
     """
     if name:
-        file_name = path.join( __sample_data_folder(), name )
+        file_name = path.join( global_view.get_sample_data_folder(), name )
         
         if not path.isdir( file_name ):
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
@@ -36,7 +33,7 @@ def file_sample( name: Optional[ str ] = None, view: bool = False ) -> EChanges:
             MCMD.print( "Loading sample dataset. This is the same as running 'import.directory' on \"{}\".".format( file_name ) )
             return import_directory( file_name )
     else:
-        for sample_dir in _get_samples():
+        for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
         
         return EChanges.NONE
@@ -47,7 +44,7 @@ def file_new() -> EChanges:
     """
     Starts a new model
     """
-    cli_view.new_model()
+    global_view.new_model()
     MCMD.print( "New model instantiated." )
     return EChanges.MODEL | EChanges.FILE | EChanges.ATTRS
 
@@ -60,7 +57,7 @@ def import_blast( file_name: str ) -> EChanges:
     :return: 
     """
     with MCMD.action( "Importing BLAST" ):
-        importation.import_blast( cli_view.current_model(), file_name )
+        importation.import_blast( global_view.current_model(), file_name )
     
     return EChanges.ATTRS
 
@@ -73,7 +70,7 @@ def import_composites( file_name: str ) -> EChanges:
     :return: 
     """
     with MCMD.action( "Importing composites" ):
-        importation.import_composites( cli_view.current_model(), file_name )
+        importation.import_composites( global_view.current_model(), file_name )
     return EChanges.ATTRS
 
 
@@ -85,7 +82,19 @@ def import_fasta( file_name: str ) -> EChanges:
     :return: 
     """
     with MCMD.action( "Importing FASTA" ):
-        importation.import_fasta( cli_view.current_model(), file_name )
+        importation.import_fasta( global_view.current_model(), file_name )
+    
+    return EChanges.ATTRS
+
+@command()
+def import_file( file_name: str ) -> EChanges:
+    """
+    Imports a file into the model
+    :param file_name:   File to import 
+    :return: 
+    """
+    with MCMD.action( "Importing file" ):
+        importation.import_file( global_view.current_model(), file_name )
     
     return EChanges.ATTRS
 
@@ -99,11 +108,13 @@ def file_recent():
     
     r.append( "SESSIONS:" )
     for file in os.listdir( path.join( MENV.local_data.workspace(), "sessions" ) ):
-        r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
+        if file.lower().endswith(constants.BINARY_EXTENSION):
+            r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
     
     r.append( "\nRECENT:" )
     for file in user_options.options().recent_files:
-        r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
+        if file.lower().endswith(constants.BINARY_EXTENSION):
+            r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
     
     MCMD.information( "\n".join( r ) )
 
@@ -116,7 +127,7 @@ def file_save( file_name: Optional[ str ] = None ) -> EChanges:
     :param file_name: Filename. File to load. Either specify a complete path, or the name of the file in the `sessions` folder. If not specified the current filename is used.
     :return: 
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     if file_name:
         file_name = __fix_path( file_name )
@@ -151,7 +162,7 @@ def import_directory( directory: str, reset: bool = True ):
         file_new()
     
     with MCMD.action( "Importing directory" ):
-        importation.import_directory( cli_view.current_model(), directory )
+        importation.import_directory( global_view.current_model(), directory )
     
     if reset:
         console_explorer.re_cd( PathToVisualisable.root_path( MENV.root  ) )
@@ -171,19 +182,14 @@ def file_load( file_name: str) -> EChanges:
     file_name = __fix_path( file_name )
     model = io_helper.load_binary( file_name )
     model.file_name = file_name
-    cli_view.set_model( model )
+    global_view.set_model( model )
     user_options.remember_file( file_name )
     MCMD.print( "Loaded model: {}".format(file_name) )
     
     return EChanges.MODEL | EChanges.RECENT | EChanges.FILE | EChanges.ATTRS
 
 
-def __sample_data_folder():
-    """
-    PRIVATE
-    Obtains the sample data folder
-    """
-    return path.join( file_helper.get_directory( __file__, 2 ), "sampledata" )
+
 
 
 def __fix_path( file_name: str ) -> str:
@@ -191,15 +197,11 @@ def __fix_path( file_name: str ) -> str:
     Adds the directory to the filename, if not specified.
     """
     if path.sep not in file_name:
-        return path.join( MENV.local_data.local_folder( "sessions" ), file_name )
-    else:
-        return file_name
+        file_name = path.join( MENV.local_data.local_folder( "sessions" ), file_name )
+    
+    if not file_helper.get_extension(file_name):
+        file_name += ".groot"
+    
+    return file_name
 
 
-def _get_samples():
-    """
-    INTERNAL
-    Obtains the list of samples
-    """
-    sample_data_folder = __sample_data_folder()
-    return file_helper.sub_dirs( sample_data_folder )

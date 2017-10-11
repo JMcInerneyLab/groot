@@ -1,21 +1,22 @@
 from typing import Callable, Iterable, List, Optional, TypeVar
 
-from colorama import Fore, Style, Back
+from colorama import Back, Fore, Style
 
-from legoalign.algorithms import components, fastaiser, tree, fuse
+from legoalign.algorithms import components, fastaiser, fuse
+from legoalign.data import global_view
 from legoalign.data.lego_model import LegoComponent
-from legoalign.frontends.cli import cli_view, cli_view_utils
-from legoalign.mcommand_extensions import generating, files
+from legoalign.frontends import ete_providers
+from legoalign.frontends.cli import cli_view_utils
+from legoalign.mcommand_extensions import ext_files, ext_generating
 from mcommand import command
 from mcommand.engine.environment import MCMD, MENV
 from mcommand.engine.plugin import Plugin
 from mcommand.helpers.table_draw import Table
 from mcommand.visualisables.visualisable import IVisualisable
-from mhelper import SwitchError, MEnum
+from mhelper import MEnum, SwitchError
 
 
 T = TypeVar( "T" )
-
 
 
 @command( names = [ "print_fasta", "fasta" ] )
@@ -24,7 +25,7 @@ def print_fasta( target: IVisualisable ):
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
     """
-    MCMD.information( cli_view_utils.colour_fasta_ansi( fastaiser.to_fasta( target ), cli_view.current_model().site_type ) )
+    MCMD.information( cli_view_utils.colour_fasta_ansi( fastaiser.to_fasta( target ), global_view.current_model().site_type ) )
 
 
 @command( names = [ "print_status", "status" ] )
@@ -33,7 +34,7 @@ def print_status():
     Prints the status of the model. 
     :return: 
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     p = [ ]
     r = [ ]
@@ -44,20 +45,20 @@ def print_status():
         r.append( "Model not saved." )
     r.append( "" )
     r.append( Fore.MAGENTA + "Sequences" + Fore.RESET )
-    r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, files.import_blast ) ) )
-    r.append( "FASTA:         {}".format( __get_status_line( p, model.sequences, lambda x: x.site_array, files.import_fasta ) ) )
-    r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: x.component, generating.make_components ) ) )
+    r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, ext_files.import_blast ) ) )
+    r.append( "FASTA:         {}".format( __get_status_line( p, model.sequences, lambda x: x.site_array, ext_files.import_fasta ) ) )
+    r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: x.component, ext_generating.make_components ) ) )
     r.append( "" )
     r.append( Fore.MAGENTA + "Components" + Fore.RESET )
-    r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, generating.make_components ) ) )
-    r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, generating.make_alignment ) ) )
-    r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, generating.make_tree ) ) )
-    r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, generating.make_consensus ) ) )
+    r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
+    r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignment ) ) )
+    r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_tree ) ) )
+    r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, ext_generating.make_consensus ) ) )
     MCMD.print( "\n".join( r ) )
 
 
 @command( names = [ "print_alignment", "alignment" ] )
-def print_alignment( component: Optional[ LegoComponent ] = None ):
+def print_alignment( component: Optional[ List[LegoComponent] ] = None ):
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
@@ -69,22 +70,24 @@ def print_alignment( component: Optional[ LegoComponent ] = None ):
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
-            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, cli_view.current_model().site_type ) )
+            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, global_view.current_model().site_type ) )
 
 
 class EPrintTree( MEnum ):
     """
-    :data NEWICK: Newick format
-    :data ASCII:  ASCII diagram
-    :data GUI:    Interactive diagram
+    :data NEWICK:       Newick format
+    :data ASCII:        ASCII diagram
+    :data ETE_GUI:      Interactive diagram, provided by Ete. Is also available in CLI.
+    :data ETE_ASCII:    ASCII, provided by Ete
     """
     NEWICK = 1
     ASCII = 2
-    GUI = 3
+    ETE_GUI = 3
+    ETE_ASCII = 4
 
 
 @command( names = [ "print_consensus", "consensus" ] )
-def print_consensus( component: Optional[ LegoComponent ] = None, view: EPrintTree = EPrintTree.ASCII ):
+def print_consensus( component: Optional[ List[LegoComponent] ] = None, view: EPrintTree = EPrintTree.ASCII ):
     """
     Prints the consensus tree for a component.
     
@@ -95,10 +98,16 @@ def print_consensus( component: Optional[ LegoComponent ] = None, view: EPrintTr
 
 
 @command( names = [ "print_tree", "tree" ] )
-def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII ):
+def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format : str = "a c f" ):
     """
     Prints the tree for a component.
     
+    :param format:      Format string when view = ASCII.
+                        `u`: Node UID
+                        `a`: Sequence accession
+                        `l`: Sequence length
+                        `c`: Component
+                        `f`: Fusion
     :param view:        How to view the tree
     :param consensus:   When set, prints the consensus tree.
     :param component:   Component to print. If not specified prints all trees.
@@ -120,38 +129,23 @@ def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = F
         if target is None:
             raise ValueError( "Cannot draw this tree because the tree has not yet been created. Please create the tree first." )
         
-        model = cli_view.current_model()
+        model = global_view.current_model()
         
         if view == EPrintTree.ASCII:
-            tree_ = tree.tree_from_newick( target ).get_ascii( show_internal = True )
-            colours = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.LIGHTRED_EX, Fore.LIGHTGREEN_EX, Fore.LIGHTBLUE_EX, Fore.LIGHTMAGENTA_EX, Fore.LIGHTCYAN_EX ]
-            
-            for sequence in model.sequences:
-                colour = colours[ sequence.component.index % len( colours ) ]
-                tree_ = tree_.replace( sequence.accession, colour + sequence.accession + Fore.RESET )
-            
-            MCMD.information( tree_ )
+            MCMD.information( target.to_ascii(format) )
+        elif view == EPrintTree.ETE_ASCII:
+            MCMD.information( ete_providers.tree_to_ascii( target, model ) )
         elif view == EPrintTree.NEWICK:
-            MCMD.information( target )
-        elif view == EPrintTree.GUI:
-            tree__ = tree.tree_from_newick( target )
-            colours = [ "#C00000", "#00C000", "#C0C000", "#0000C0", "#C000C0", "#00C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFC0" ]
-            
-            for n in tree__.traverse():
-                n.img_style[ "fgcolor" ] = "#000000"
-            
-            for node in tree__:
-                sequence = model.find_sequence( node.name )
-                node.img_style[ "fgcolor" ] = colours[ sequence.component.index % len( colours ) ]
-            
-            tree__.show()
+            MCMD.information( target.to_newick() )
+        elif view == EPrintTree.ETE_GUI:
+            ete_providers.show_tree( target, model )
         else:
             raise SwitchError( "view", view )
 
 
 def __print_header( x ):
-    if isinstance(x, LegoComponent):
-        x = "COMPONENT {}".format(x)
+    if isinstance( x, LegoComponent ):
+        x = "COMPONENT {}".format( x )
     
     MCMD.information( "\n" + Back.BLUE + Fore.WHITE + "---------- {} ----------".format( x ) + Style.RESET_ALL )
 
@@ -175,7 +169,7 @@ def component_edges( component: Optional[ LegoComponent ] = None ):
 
     :param component: Component to print. If not specified prints a summary of all components.    
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     if not model.components:
         raise ValueError( "Cannot print minor components because components have not been calculated." )
@@ -244,7 +238,7 @@ def print_components():
         `sequences` is the list of components in that sequence
     
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     if not model.components:
         raise ValueError( "Cannot print major components because components have not been calculated." )
@@ -296,11 +290,10 @@ def print_fusions():
     """
     results = [ ]
     
-    __print_header("FUSIONS")
-    model = cli_view.current_model()
+    __print_header( "FUSIONS" )
+    model = global_view.current_model()
     
     for fusion in fuse.find_fusion_events( model ):
         results.append( str( fusion ) )
     
     MCMD.information( "\n".join( results ) )
-    

@@ -1,11 +1,13 @@
-from typing import Optional
+from typing import Optional, List
 
-from legoalign.algorithms import alignment, components, consensus, fuse, quantisation, tree
 from legoalign.data.hints import EChanges
+
+from legoalign.algorithms import alignment, components, consensus, fuse, tree
+from legoalign.data import global_view
 from legoalign.data.lego_model import LegoComponent
+from legoalign.frontends.cli import cli_view_utils
 from mcommand import command
 from mcommand.engine.environment import MCMD
-from legoalign.frontends.cli import cli_view, cli_view_utils
 
 
 @command()
@@ -14,7 +16,7 @@ def make_components( tolerance: int = 0 ) -> EChanges:
     Detects composites in the model.
     :param tolerance:   Tolerance on overlap, in sites.
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     with MCMD.action( "Component detection" ):
         components.detect( MCMD, model, tolerance )
@@ -28,7 +30,7 @@ def make_components( tolerance: int = 0 ) -> EChanges:
 
 
 @command()
-def make_alignment( component: Optional[ LegoComponent ] = None ):
+def make_alignment( component: Optional[ List[LegoComponent] ] = None ):
     """
     Aligns the component. If no component is specified, aligns all components.
     
@@ -43,7 +45,7 @@ def make_alignment( component: Optional[ LegoComponent ] = None ):
 
 
 @command()
-def make_tree( component: Optional[ LegoComponent ] = None ):
+def make_tree( component: Optional[ List[LegoComponent] ] = None ):
     """
     Generates component trees.
     
@@ -57,7 +59,7 @@ def make_tree( component: Optional[ LegoComponent ] = None ):
 
 
 @command()
-def make_consensus( component: Optional[ LegoComponent ] = None ):
+def make_consensus( component: Optional[ List[LegoComponent] ] = None ):
     """
     Fuses the component trees to create the basis for our fusion graph.
     :param component:   Component, or `None` for all.
@@ -69,26 +71,28 @@ def make_consensus( component: Optional[ LegoComponent ] = None ):
         consensus.consensus( component_ )
 
 
-
-@command(  )
+@command()
 def make_fusions():
     """
     Makes the fusion points.
     """
     results = [ ]
     
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     for fusion in fuse.find_all_fusion_points( model ):
         results.append( str( fusion ) )
-        
-        if fusion.points_a:
-            for x in fusion.points_a:
-                results.append("A:{}".format(x))
-                
-        if fusion.points_b:
-            for x in fusion.points_b:
-                results.append("B:{}".format(x))
-            
     
     MCMD.information( "\n".join( results ) )
+
+
+@command()
+def make_nrfg():
+    """
+    Creates the N-rooted fusion graph.
+    """
+    model = global_view.current_model()
+    
+    nrfg = fuse.create_nrfg( model )
+    
+    MCMD.information( nrfg.to_ascii() )

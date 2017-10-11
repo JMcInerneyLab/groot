@@ -1,9 +1,11 @@
-from legoalign.algorithms import deconvolution, verification, quantisation
 from legoalign.data.hints import EChanges
+
+from legoalign.algorithms import deconvolution, quantisation, verification
+from legoalign.data import global_view
 from legoalign.data.lego_model import LegoComponent
-from legoalign.frontends.cli import cli_view
 from mcommand import command
 from mcommand.engine.environment import MCMD
+
 
 @command()
 def clean_edges( edges: bool = True, subsequences: bool = True ) -> EChanges:
@@ -14,7 +16,7 @@ def clean_edges( edges: bool = True, subsequences: bool = True ) -> EChanges:
     :param edges:        When `True`, redundant edges are removed.
     :return: 
     """
-    model = cli_view.current_model()
+    model = global_view.current_model()
     
     if not edges and not subsequences:
         raise ValueError( "You must specify at least one item to clean." )
@@ -35,7 +37,7 @@ def verify() -> None:
     """
     Verifies the integrity of the model.
     """
-    verification.verify( cli_view.current_model() )
+    verification.verify( global_view.current_model() )
     MCMD.print( "Verified OK." )
 
 
@@ -69,8 +71,32 @@ def quantise( level: int ) -> EChanges:
     :return: 
     """
     
-    before, after = quantisation.quantise( cli_view.current_model(), level )
+    before, after = quantisation.quantise( global_view.current_model(), level )
     
     MCMD.print( "Quantised applied. Reduced the model from {} to {} subsequences.".format( before, after ) )
     
     return EChanges.ATTRS
+
+
+def new_subsequence( sequence, split_point ):
+    return None
+
+
+def new_edge( subsequences ):
+    return None
+
+
+def new_sequence():
+    return None
+
+
+def merge_subsequences( subsequences ):
+    return None
+
+
+def remove_sequence( sequences ):
+    return None
+
+
+def remove_edges( subsequences, edges ):
+    return None

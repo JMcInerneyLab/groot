@@ -4,12 +4,12 @@ Holds the Lego model, and its dependencies.
 See class `LegoModel`.
 """
 
-from typing import Iterable, Iterator, List, Optional, Set
+from typing import Iterable, Iterator, List, Optional, Set, cast
 
 from colorama import Back, Fore
 
 from mcommand import EColour, IVisualisable, UiInfo, resources
-from mhelper import Logger, SwitchError, array_helper, file_helper as FileHelper, string_helper, MEnum
+from mhelper import Logger, MEnum, SwitchError, array_helper, file_helper as FileHelper, string_helper
 
 
 LOG = Logger( False )
@@ -61,7 +61,7 @@ class LegoSide( IVisualisable ):
     
     def visualisable_info( self ):
         return UiInfo( name = "source" if self.is_source else "destination",
-                       comment = None,
+                       comment = "",
                        type_name = "Side",
                        value = "{}--{}".format( self.start, self.end ),
                        colour = EColour.GREEN,
@@ -175,13 +175,13 @@ class LegoEdge( IVisualisable ):
     
     
     def visualisable_info( self ):
-        return UiInfo( name = self,
-                       comment = None,
+        return UiInfo( name = str(self),
+                       comment = "",
                        type_name = "Edge",
-                       value = None,
+                       value = "",
                        colour = EColour.CYAN,
                        icon = resources.folder,
-                       extra_iter = (self.left, self.right) )
+                       extra_named = (self.left, self.right) )
     
     
     def __contains__( self, item ):
@@ -318,7 +318,7 @@ class LegoSubsequence( IVisualisable ):
     
     def visualisable_info( self ) -> UiInfo:
         return UiInfo( name = "{}:{}".format( self.__start, self.__end ),
-                       comment = None,
+                       comment = "",
                        type_name = "Subsequence",
                        value = "{} sites".format( self.length ),
                        colour = EColour.RED,
@@ -426,7 +426,7 @@ class LegoSequence( IVisualisable ):
     
     def visualisable_info( self ) -> UiInfo:
         return UiInfo( name = self.accession,
-                       comment = None,
+                       comment = "",
                        type_name = "Sequence",
                        value = "{} sites in {} parts".format( self.subsequences[ -1 ].end, len( self.subsequences ) ),
                        colour = EColour.BLUE,
@@ -565,11 +565,13 @@ class LegoModel( IVisualisable ):
         self.comments = [ "MODEL CREATED AT {}".format( string_helper.current_time() ) ]
         self.__seq_type = ESiteType.UNKNOWN
         self.file_name = None
+        from legoalign.algorithms.fuse import FusionEvent
+        self.fusion_events = cast( List[ FusionEvent ], [ ] )
     
     
     def visualisable_info( self ) -> UiInfo:
         return UiInfo( name = self.name,
-                       comment = self.comments,
+                       comment = "\n".join( self.comments ),
                        type_name = "Model",
                        value = "{} sequences".format( len( self.sequences ) ),
                        colour = EColour.YELLOW,
@@ -583,9 +585,16 @@ class LegoModel( IVisualisable ):
     
     @property
     def name( self ):
-        return FileHelper.get_filename_without_extension( self.file_name ) if self.file_name else "Unsaved model"
-    
-    
+        from legoalign.data import global_view
+        if self is not global_view.current_model():
+            return "Not the current model"
+        
+        if self.file_name:
+            return FileHelper.get_filename_without_extension( self.file_name )
+        elif self.sequences:
+            return "Unsaved model"
+        else:
+            return "Empty model"
     
     
     @property
@@ -600,16 +609,17 @@ class LegoModel( IVisualisable ):
         s = ESiteType.UNKNOWN
         
         for x in self.sequences:
-            for y in x.site_array:
-                if y not in "GAC":
-                    if y == "T":
-                        if s == ESiteType.UNKNOWN:
-                            s = ESiteType.DNA
-                    elif y == "U":
-                        if s == ESiteType.UNKNOWN:
-                            s = ESiteType.RNA
-                    else:
-                        s = ESiteType.PROTEIN
+            if x.site_array:
+                for y in x.site_array:
+                    if y not in "GAC":
+                        if y == "T":
+                            if s == ESiteType.UNKNOWN:
+                                s = ESiteType.DNA
+                        elif y == "U":
+                            if s == ESiteType.UNKNOWN:
+                                s = ESiteType.RNA
+                        else:
+                            s = ESiteType.PROTEIN
         
         self.__seq_type = s
         
@@ -703,25 +713,26 @@ class LegoComponent( IVisualisable ):
     
     
     def __init__( self, model: LegoModel, index: int ):
+        from legoalign.data.graphing import MGraph
         self.model = model  # Source model
         self.index = index  # Index of component
-        self.tree = None  # Tree generated for component, in Newick format
-        self.alignment = None  # Alignment generated for component, in FASTA format
-        self.consensus = None  # Consensus tree, in Newick format
-        self.consensus_intersection = None  # type: List[LegoSequence]
+        self.tree = cast( MGraph, None )
+        self.alignment = cast( str, None )  # Alignment generated for component, in FASTA format
+        self.consensus = cast( MGraph, None )  # Consensus tree
+        self.consensus_intersection = cast( List[ LegoSequence ], None )
     
     
     def visualisable_info( self ):
-        return UiInfo( name = self,
-                       comment = self.__doc__,
+        return UiInfo( name = str(self),
+                       comment = str(self.__doc__),
                        type_name = "Component",
                        value = "{} sequences".format( array_helper.count( self.major_sequences() ) ),
                        colour = EColour.RED,
                        icon = resources.folder,
-                       extra = {"index":self.index, 
-                                "major":self.major_sequences(),
-                                "minor_s":self.minor_sequences(),
-                                "minor_ss":self.minor_subsequences()})
+                       extra = { "index"   : self.index,
+                                 "major"   : self.major_sequences(),
+                                 "minor_s" : self.minor_sequences(),
+                                 "minor_ss": self.minor_subsequences() } )
     
     
     def __str__( self ):
