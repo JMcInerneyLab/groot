@@ -55,7 +55,7 @@ Once in Gʀᴏᴏᴛ, type `help` for help.
 ```bash
 $   help
     ECO help
-    INF   help________________________________
+    INF   help................................
 
           You are in command-line mode.
 ...
@@ -230,17 +230,25 @@ $   print.components
 At a glance it looks better.
 We can see each of the gene families (`A`, `B`, `C`, `D`, `E`) have been grouped into a component, but when you have arbitrary gene names things won't be so obvious, and that's where the GUI can be helpful.
  
-What next? Let's make a basic tree, and some consensus trees for each of the components.
-The following commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although these can be changed.
+What next? Let's make a basic tree. For this we'll need the alignments.
 
 ```bash
 $   make.alignments
-...
-$   make.tree
-...
-$   make.consensus
-...
 ```
+
+You can checkout your alignments by entering `print.alignments`:
+
+```bash
+$   print.alignments
+```
+
+Everything looks okay, so invoke the tree-generation:
+
+```bash
+$   make.tree
+```
+
+Tree generation can take a while, and we probably don't want to do it again, so maker sure to save our model:
 
 The tree-generating step in particular can take a while! Remember to save your model when it's done.
 
@@ -251,6 +259,17 @@ $   save
     PRG  │ -Saving file
     INF Saved model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot
 ```
+
+When all the trees are generated, we'll want to get a consensus.
+
+```bash
+$   make.consensus
+```
+
+This finally leaves us in a position to create the NRFG.
+Note that the above commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although these can be changed.
+
+
 
 Creating the NRFG
 -----------------

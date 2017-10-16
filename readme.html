@@ -386,7 +386,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </head>
 <body>
 <h1 id="groot">Groot</h1>
-<p>Gʀᴏᴏᴛ imports BLAST and produces a genomic N-Rooted Fusion Graph.</p>
+<p>Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic <a href="https://doi.org/10.1093/molbev/mst228">N-Rooted Fusion Graph</a>.</p>
 <ul>
 <li><a href="#groot">Groot</a>
 <ul>
@@ -417,7 +417,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>For other modes, please see the <code>MCᴏᴍᴍᴀɴᴅ</code> documentation.</p>
 <h2 id="tutorial">Tutorial</h2>
 <h3 id="introduction">Introduction</h3>
-<p>Like Bɪᴏ42, Gʀᴏᴏᴛ uses the MCᴏᴍᴍᴀɴᴅ interaction library. This means it can operate from several different perspectives, including a <em>Command Line Interface</em> (CLI) and <em>Graphical User Interface</em> (GUI). For this tutorial, we'll be using the CLI, because it's much easier to explain. When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly.</p>
+<p>Like Bɪᴏ42, Gʀᴏᴏᴛ uses the MCᴏᴍᴍᴀɴᴅ interaction library. This means it can operate from several different perspectives, including a <em>Command Line Interface</em> (CLI) and <em>Graphical User Interface</em> (GUI).</p>
+<p>For this tutorial, we'll be using the CLI, because it's much easier to explain. When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly. Please see the <a href="https://www.bitbucket.org/mjr129/mcommand">MCᴏᴍᴍᴀɴᴅ</a> documentation on how to use the other modes (Pʏᴛʜᴏɴ Interactive and Pʏᴛʜᴏɴ Scripted).</p>
 <h3 id="getting-started">Getting started</h3>
 <p>Make sure Gʀᴏᴏᴛ is started in CLI mode if it isn't already:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">groot</span>
@@ -452,24 +453,24 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the triptych.</p>
 <h3 id="loading-the-sample">Loading the sample</h3>
 <p>The <code>sample</code> command can be used to load the sample files automatically, but for sake of this tutorial, we will be loading the data manually.</p>
-<p>Unless you can remember where you installed the files to earlier, you can find out where the example is located by executing the following command:</p>
+<p>Unless you can remember where you installed the files to earlier, you can find out where the sample is located by executing the following command:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">sample</span> triptych +view
     <span class="ex">ECO</span> sample name=triptych view=True
-    <span class="ex">INF</span> import_directory <span class="st">&quot;/Users/martinrusilowicz/work/apps/legoalign/legoalign/sampledata/triptych&quot;</span></code></pre></div>
-<p>That <em>import_directory</em> line tells us where the sample lives. Your path will look different to mine.</p>
+    <span class="ex">INF</span> import_directory <span class="st">&quot;/blah/blah/blah/triptych&quot;</span></code></pre></div>
+<p>The <code>+view</code> bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves. The <em>import_directory</em> output tells us where the sample lives. Your path will look different to mine.</p>
 <p>You can now load the files into Gʀᴏᴏᴛ:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">import.blast</span> /blah/blah/blah/triptych/triptych.blast
 $   <span class="ex">import.fasta</span> /blah/blah/blah/triptych/triptych.fasta </code></pre></div>
-<p>You should notice at this point the prompt changes from <em>Empty model</em> to <em>Unsaved model</em>.</p>
-<p>We've not done much so far, but let's save our model with a better name:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">file.save</span> tri
+<p>You should notice that at this point the prompt changes from <em>Empty model</em> to <em>Unsaved model</em>.</p>
+<p>Let's save our model with a better name:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">save</span> tri
     <span class="ex">ECO</span> file.save file_name=tri
     <span class="ex">PRG</span>  │ file_save...
     <span class="ex">PRG</span>  │ -Saving file...
     <span class="ex">INF</span> Saved model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot</code></pre></div>
 <p>We didn't specify a path, or an extension, so you'll notice Gʀᴏᴏᴛ has added them for us.</p>
 <h2 id="preparing-your-data">Preparing your data</h2>
-<p>Gʀᴏᴏᴛ follows a pretty linear workflow, the next step can be examined by executing the following command:</p>
+<p>Gʀᴏᴏᴛ follows a pretty-much linear workflow, execute the following command to find out where we're at:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">status</span>
     <span class="ex">ECO</span> print.status
     <span class="ex">INF</span> tri
@@ -491,7 +492,7 @@ $   <span class="ex">import.fasta</span> /blah/blah/blah/triptych/triptych.fasta
     <span class="ex">PRG</span>  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
     <span class="ex">PRG</span>  │ -Component detection                                                             │ DONE                                     │                         │ +00:00      ⏎
     <span class="ex">WRN</span> There are components with just one sequence in them. Maybe you meant to use a tolerance higher than 0?</code></pre></div>
-<p>While not always the case, here we can see Gʀᴏᴏᴛ has already identified a problem. We can confirm this manually:</p>
+<p>While not always the case, here we can see Gʀᴏᴏᴛ has identified a problem. We can confirm this manually:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">print.components</span>
     <span class="ex">ECO</span> print.components
     <span class="ex">INF</span> ┌─────────────────────────────────────────────────────────────────────────┐
@@ -517,12 +518,12 @@ $   <span class="ex">import.fasta</span> /blah/blah/blah/triptych/triptych.fasta
         │ ο                            │ <span class="ex">Ed</span>                                       │
         │ π                            │ <span class="ex">Ee</span>                                       │
         └──────────────────────────────┴──────────────────────────────────────────┘</code></pre></div>
-<p>Our components are pretty messed up, notably Gʀᴏᴏᴛ has found 16 of them, and many only contain one sequence. Try our first command again, with a higher tolerance.</p>
+<p>Our components are messed up; Gʀᴏᴏᴛ has found 16 components, which is excessive, and many of these only contain one sequence. We can use a higher tolerance on the <code>make.components</code> to allow some differences between the similarity regions identified by Bʟᴀꜱᴛ. The default of zero will almost always be too low. Try the command again, but specify a higher tolerance.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">make.components</span> tolerance=10
     <span class="ex">ECO</span> make.components tolerance=10
     <span class="ex">PRG</span>  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
     <span class="ex">PRG</span>  │ -Component detection                                                             │ DONE                                     │                         │ +00:00      ⏎</code></pre></div>
-<p>No error this time, let's see what we have:</p>
+<p>No error this time. let's see what we have:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">print.components</span>
     <span class="ex">ECO</span> print.components
     <span class="ex">INF</span> ┌─────────────────────────────────────────────────────────────────────────┐
@@ -541,7 +542,7 @@ $   <span class="ex">import.fasta</span> /blah/blah/blah/triptych/triptych.fasta
         │ ϵ                            │ <span class="ex">Ea</span>, Eb, Ed, Ee, Ef, Eg, Eh, Ei, Ej, Ek,  │
         │                              │ <span class="ex">El</span>                                       │
         └──────────────────────────────┴──────────────────────────────────────────┘</code></pre></div>
-<p>At a glance it looks better. We can see each of the gene families (A, B, C, D, E) have been grouped into a component, but when you have arbitrary gene names things won't be so obvious, and that's where the GUI can be helpful.</p>
+<p>At a glance it looks better. We can see each of the gene families (<code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code>) have been grouped into a component, but when you have arbitrary gene names things won't be so obvious, and that's where the GUI can be helpful.</p>
 <p>What next? Let's make a basic tree, and some consensus trees for each of the components. The following commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although these can be changed.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">make.alignments</span>
 <span class="ex">...</span>
@@ -549,6 +550,12 @@ $   <span class="ex">make.tree</span>
 <span class="ex">...</span>
 $   <span class="ex">make.consensus</span>
 <span class="ex">...</span></code></pre></div>
+<p>The tree-generating step in particular can take a while! Remember to save your model when it's done.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$   <span class="ex">save</span>
+    <span class="ex">ECO</span> file.save
+    <span class="ex">PRG</span>  │ file_save
+    <span class="ex">PRG</span>  │ -Saving file
+    <span class="ex">INF</span> Saved model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot</code></pre></div>
 <h2 id="creating-the-nrfg">Creating the NRFG</h2>
 <p>TODO</p>
 <h2 id="troubleshooting">Troubleshooting</h2>

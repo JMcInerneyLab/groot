@@ -4,17 +4,17 @@ from os import path
 from typing import Optional
 
 from colorama import Fore
-from legoalign.data.hints import EChanges
 
 from legoalign import constants
 from legoalign.algorithms import importation
 from legoalign.data import global_view, user_options, global_view
+from legoalign.frontends.gui.gui_view_utils import Changes, Changes
 from mcommand import MCMD, MENV, PathToVisualisable, command, console_explorer
 from mhelper import file_helper, io_helper
 
 
 @command(names=["file_sample", "sample"])
-def file_sample( name: Optional[ str ] = None, view: bool = False ) -> EChanges:
+def file_sample( name: Optional[ str ] = None, view: bool = False ) -> Changes:
     """
     Lists the available samples, or loads the specified sample
     :param view:    When set the sample is viewed but not loaded.
@@ -36,21 +36,22 @@ def file_sample( name: Optional[ str ] = None, view: bool = False ) -> EChanges:
         for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
         
-        return EChanges.NONE
+        return Changes( Changes.NONE )
 
 
 @command(names=["file_new", "new"])
-def file_new() -> EChanges:
+def file_new() -> Changes:
     """
     Starts a new model
     """
     global_view.new_model()
     MCMD.print( "New model instantiated." )
-    return EChanges.MODEL | EChanges.FILE | EChanges.ATTRS
+    
+    return Changes( Changes.MODEL_OBJECT )
 
 
 @command()
-def import_blast( file_name: str ) -> EChanges:
+def import_blast( file_name: str ) -> Changes:
     """
     Imports a BLAST file into the model 
     :param file_name:   File to import 
@@ -59,11 +60,11 @@ def import_blast( file_name: str ) -> EChanges:
     with MCMD.action( "Importing BLAST" ):
         importation.import_blast( global_view.current_model(), file_name )
     
-    return EChanges.ATTRS
+    return Changes( Changes.MODEL_ENTITIES )
 
 
 @command()
-def import_composites( file_name: str ) -> EChanges:
+def import_composites( file_name: str ) -> Changes:
     """
     Imports a composites file into the model
     :param file_name:   File to import 
@@ -71,11 +72,12 @@ def import_composites( file_name: str ) -> EChanges:
     """
     with MCMD.action( "Importing composites" ):
         importation.import_composites( global_view.current_model(), file_name )
-    return EChanges.ATTRS
+        
+    return Changes( Changes.MODEL_ENTITIES )
 
 
 @command()
-def import_fasta( file_name: str ) -> EChanges:
+def import_fasta( file_name: str ) -> Changes:
     """
     Imports a FASTA file into the model
     :param file_name:   File to import 
@@ -84,10 +86,10 @@ def import_fasta( file_name: str ) -> EChanges:
     with MCMD.action( "Importing FASTA" ):
         importation.import_fasta( global_view.current_model(), file_name )
     
-    return EChanges.ATTRS
+    return Changes( Changes.MODEL_ENTITIES )
 
 @command()
-def import_file( file_name: str ) -> EChanges:
+def import_file( file_name: str ) -> Changes:
     """
     Imports a file into the model
     :param file_name:   File to import 
@@ -96,7 +98,7 @@ def import_file( file_name: str ) -> EChanges:
     with MCMD.action( "Importing file" ):
         importation.import_file( global_view.current_model(), file_name )
     
-    return EChanges.ATTRS
+    return Changes ( Changes.MODEL_ENTITIES )
 
 
 @command(names=["file_recent", "recent"])
@@ -121,7 +123,7 @@ def file_recent():
 
 
 @command(names=["file_save", "save"])
-def file_save( file_name: Optional[ str ] = None ) -> EChanges:
+def file_save( file_name: Optional[ str ] = None ) -> Changes:
     """
     Saves the model
     :param file_name: Filename. File to load. Either specify a complete path, or the name of the file in the `sessions` folder. If not specified the current filename is used.
@@ -147,7 +149,7 @@ def file_save( file_name: Optional[ str ] = None ) -> EChanges:
     model.file_name = file_name
     MCMD.print("Saved model: {}".format(file_name))
     
-    return EChanges.FILE
+    return Changes( Changes.FILE_NAME )
 
 
 @command()
@@ -166,13 +168,13 @@ def import_directory( directory: str, reset: bool = True ):
     
     if reset:
         console_explorer.re_cd( PathToVisualisable.root_path( MENV.root  ) )
-        return EChanges.MODEL | EChanges.FILE | EChanges.ATTRS
+        return Changes( Changes.MODEL_OBJECT )
     else:
-        return EChanges.ATTRS
+        return Changes( Changes.MODEL_ENTITIES )
 
 
 @command(names=["file_load", "load"])
-def file_load( file_name: str) -> EChanges:
+def file_load( file_name: str) -> Changes:
     """
     Loads the model from a file
     :param file_name:   File to load.
@@ -186,7 +188,7 @@ def file_load( file_name: str) -> EChanges:
     user_options.remember_file( file_name )
     MCMD.print( "Loaded model: {}".format(file_name) )
     
-    return EChanges.MODEL | EChanges.RECENT | EChanges.FILE | EChanges.ATTRS
+    return Changes( Changes.MODEL_OBJECT )
 
 
 

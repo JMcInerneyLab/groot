@@ -11,12 +11,9 @@ from PyQt5.QtCore       import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui        import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets    import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from mhelper                    import ArrayHelper, QtColourHelper
-from mhelper.CommentHelper      import override
-from mhelper.ExceptionHelper    import SwitchError
-from mhelper.QtColourHelper     import Colours, Pens
-
-from legoalign.lego_models       import ESiteType, LegoSsComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from mhelper                    import array_helper , qt_colour_helper , override, SwitchError
+from mhelper.qt_colour_helper import Pens, Colours
+from legoalign.data.lego_model import ESiteType, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoComponent
 
 
 class ESequenceColour( Enum ):
@@ -60,11 +57,11 @@ class ESelect( Enum ):
 
 # Order of proteins in piano roll
 # noinspection PyTypeChecker
-PROTEIN_ORDER_TABLE = ArrayHelper.create_index_lookup( "IVLFCMAGTSWYPHEQDNKR" )
+PROTEIN_ORDER_TABLE = array_helper.create_index_lookup( "IVLFCMAGTSWYPHEQDNKR" )
 # noinspection PyTypeChecker
-DNA_ORDER_TABLE     = ArrayHelper.create_index_lookup( "ATCG" )
+DNA_ORDER_TABLE     = array_helper.create_index_lookup( "ATCG" )
 # noinspection PyTypeChecker
-RNA_ORDER_TABLE     = ArrayHelper.create_index_lookup( "AUCG" )
+RNA_ORDER_TABLE     = array_helper.create_index_lookup( "AUCG" )
 
 # Colour of proteins in piano roll
 PROTEIN_COLOUR_TABLE = { "G": Pens.WHITE,  "A": Pens.WHITE,  "V": Pens.WHITE, "L": Pens.WHITE, "I": Pens.WHITE,
@@ -159,7 +156,7 @@ class ColourBlock:
     
     
     def blend( self, colour: QColor, amount ):
-        new_colour = QtColourHelper.interpolate_colours( self.colour, colour, amount )
+        new_colour = qt_colour_helper.interpolate_colours( self.colour, colour, amount )
         
         return ColourBlock( new_colour )
 
@@ -174,7 +171,7 @@ class LegoEdgeViewTarget:
     
     
     def __average_colour( self ):
-        return QtColourHelper.average_colour( list( x.colour.colour for x in self.list ) )
+        return qt_colour_helper.average_colour( list( x.colour.colour for x in self.list ) )
     
     
     def __extract_points( self, backwards ):
@@ -307,7 +304,7 @@ class LegoViewComponent:
     """
     
     
-    def __init__( self, owner: "LegoViewAllEdges", component: LegoSsComponent ):
+    def __init__( self, owner: "LegoViewAllEdges", component: LegoComponent ):
         subsequence_views = [ owner.view_model.find_subsequence_view( x ) for x in component.minor_subsequences() ]
         
         self.owner = owner
@@ -336,8 +333,8 @@ class LegoViewComponent:
             edge_view = LegoEdgeView.from_edge( self, edge )
             self.edge_views.append( edge_view )
         
-        for line in component.lines:
-            self.line_view_targets.append( LegoEdgeViewTarget( [ owner.view_model.find_subsequence_view( x ) for x in line ] ) )
+        for line in component.minor_sequences():
+            self.line_view_targets.append( LegoEdgeViewTarget( [ owner.view_model.find_subsequence_view( x ) for x in component.minor_subsequences() if x.sequence is line ] ) )
     
     
     def paint( self, painter: QPainter ):
@@ -360,7 +357,7 @@ class LegoViewComponent:
             #
             sorted_edge_targets = sorted( self.line_view_targets, key = lambda x: x.top() )
             
-            for upper, lower in ArrayHelper.lagged_iterate( sorted_edge_targets ):
+            for upper, lower in array_helper.lagged_iterate( sorted_edge_targets ):
                 assert isinstance(lower, LegoEdgeViewTarget)
                 assert isinstance(upper, LegoEdgeViewTarget)
                 LegoEdgeViewTarget.paint_to( painter, options.view_edges, upper, lower, False, False )
@@ -826,7 +823,7 @@ class LegoViewAllEdges( QGraphicsItem ):
         self.view_model = view_model
         self.component_views = [ ]  # type: List[LegoViewComponent]
         
-        for component in view_model.model.subsequence_components:
+        for component in view_model.model.components:
             self.component_views.append( LegoViewComponent( self, component ) )
         
         self.rect = QRectF( 0, 0, 0, 0 )
@@ -1025,7 +1022,7 @@ class LegoViewModel:
     
     
     def selected_subsequence_view( self ) -> Optional[ LegoViewSubsequence ]:
-        return ArrayHelper.only_first( self.selected_subsequence_views() )
+        return array_helper.only_first( self.selected_subsequence_views() )
     
     
     def selected_subsequences( self, mask = True ) -> Set[ LegoSubsequence ]:
@@ -1038,7 +1035,7 @@ class LegoViewModel:
     
     
     def selected_subsequence( self, mask = True ) -> Optional[ LegoSubsequence ]:
-        return ArrayHelper.only_first( self.selected_subsequences(mask = mask) )
+        return array_helper.only_first( self.selected_subsequences( mask = mask ) )
     
     
     def selected_sequences( self, mask = True ) -> Set[ LegoSequence ]:
@@ -1069,11 +1066,11 @@ class LegoViewModel:
     
     
     def selected_complete_sequence( self ) -> Optional[ LegoSequence ]:
-        return ArrayHelper.only_first( self.selected_complete_sequences() )
+        return array_helper.only_first( self.selected_complete_sequences() )
     
     
     def selected_sequence( self ) -> Optional[ LegoSequence ]:
-        return ArrayHelper.only_first( self.selected_sequences() )
+        return array_helper.only_first( self.selected_sequences() )
     
     
     def selected_edges( self, mask = True ) -> Set[ LegoEdge ]:
@@ -1100,7 +1097,7 @@ class LegoViewModel:
     
     
     def selected_edge( self ) -> Optional[ LegoEdge ]:
-        return ArrayHelper.only_first( self.selected_edges() )
+        return array_helper.only_first( self.selected_edges() )
     
     
     def selected_entities( self, mask = True ) -> Set[object ]:
@@ -1118,14 +1115,14 @@ class LegoViewModel:
             raise SwitchError("self.options.mode", mode)
 
 
-    def selected_components( self, mask = True ) -> Set[LegoSsComponent ]:
+    def selected_components( self, mask = True ) -> Set[LegoComponent ]:
         """
         Components selected by the user (complete)
         """
         
         r = set()
         selected_subsequences = self.selected_subsequences(mask = False)
-        for component in self.model.subsequence_components:
+        for component in self.model.components:
             if all( subsequence in selected_subsequences for subsequence in component.minor_subsequences() ):
                 r.add( component )
                 
@@ -1323,7 +1320,7 @@ class LegoViewModel:
         self._call_selection_changed()
     
     
-    def select_component( self, component: LegoSsComponent, select: ESelect = ESelect.ONLY ):
+    def select_component( self, component: LegoComponent, select: ESelect = ESelect.ONLY ):
         """
         Selects the specified `component`.
         """
@@ -1376,26 +1373,26 @@ class LegoViewModel:
         """
         Positions sequence views sharing components with `sel_sequence` so that their components align with those in `sel_sequence`.
         """
-        components = [ x for x in self.model.subsequence_components if sel_sequence in x.all_sequences() ]
+        components = [ x for x in self.model.components if sel_sequence in x.major_sequences() ]
         starts = {}
         
         for component in components:
-            for line in component.lines:
-                if line[0].sequence is sel_sequence:
-                    starts[component] = self.find_subsequence_view(line[0]).window_rect().left()
+            for line in component.minor_subsequences():
+                if line.sequence is sel_sequence:
+                    starts[component] = self.find_subsequence_view(line).window_rect().left()
                     
         touched = set()
                 
         for component in components:
             start = starts[component]
             
-            for line in component.lines:
-                sequence = line[0].sequence
+            for line in component.minor_subsequences():
+                sequence = line.sequence
                 
                 if sequence is sel_sequence:
                     continue
                     
-                self.align_sequence(line[0], start, touched)
+                self.align_sequence(line, start, touched)
                 
     def align_sequence( self, specified_subsequence:LegoSubsequence, target_x:int, touched:Set[LegoViewSubsequence ] ):
         """

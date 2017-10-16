@@ -1,6 +1,5 @@
 from legoalign.mcommand_extensions import ext_viewing
 from legoalign import mcommand_extensions
-from legoalign.mcommand_extensions.old import _current_model
 from mcommand import MENV, create_simple_host_provider_from_class, ConsoleHost
 
 def __gui_host():

@@ -7,6 +7,7 @@ from legoalign.data import global_view
 from legoalign.data.lego_model import LegoComponent
 from legoalign.frontends import ete_providers
 from legoalign.frontends.cli import cli_view_utils
+from legoalign.frontends.gui.gui_view_utils import Changes, Changes
 from legoalign.mcommand_extensions import ext_files, ext_generating
 from mcommand import command
 from mcommand.engine.environment import MCMD, MENV
@@ -20,16 +21,17 @@ T = TypeVar( "T" )
 
 
 @command( names = [ "print_fasta", "fasta" ] )
-def print_fasta( target: IVisualisable ):
+def print_fasta( target: IVisualisable ) -> Changes:
     """
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
     """
     MCMD.information( cli_view_utils.colour_fasta_ansi( fastaiser.to_fasta( target ), global_view.current_model().site_type ) )
+    return Changes( Changes.INFORMATION )
 
 
 @command( names = [ "print_status", "status" ] )
-def print_status():
+def print_status() -> Changes:
     """
     Prints the status of the model. 
     :return: 
@@ -55,10 +57,11 @@ def print_status():
     r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_tree ) ) )
     r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, ext_generating.make_consensus ) ) )
     MCMD.print( "\n".join( r ) )
+    return Changes( Changes.INFORMATION )
 
 
 @command( names = [ "print_alignment", "alignment" ] )
-def print_alignment( component: Optional[ List[LegoComponent] ] = None ):
+def print_alignment( component: Optional[ List[ LegoComponent ] ] = None ) -> Changes:
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
@@ -71,6 +74,8 @@ def print_alignment( component: Optional[ List[LegoComponent] ] = None ):
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
             MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, global_view.current_model().site_type ) )
+    
+    return Changes( Changes.INFORMATION )
 
 
 class EPrintTree( MEnum ):
@@ -87,7 +92,7 @@ class EPrintTree( MEnum ):
 
 
 @command( names = [ "print_consensus", "consensus" ] )
-def print_consensus( component: Optional[ List[LegoComponent] ] = None, view: EPrintTree = EPrintTree.ASCII ):
+def print_consensus( component: Optional[ List[ LegoComponent ] ] = None, view: EPrintTree = EPrintTree.ASCII ) -> Changes:
     """
     Prints the consensus tree for a component.
     
@@ -95,10 +100,12 @@ def print_consensus( component: Optional[ List[LegoComponent] ] = None, view: EP
     :param component:   Component to print. If not specified prints all trees.
     """
     print_tree( component = component, consensus = True, view = view )
+    
+    return Changes( Changes.INFORMATION )
 
 
 @command( names = [ "print_tree", "tree" ] )
-def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format : str = "a c f" ):
+def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c f" ) -> Changes:
     """
     Prints the tree for a component.
     
@@ -132,7 +139,7 @@ def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = F
         model = global_view.current_model()
         
         if view == EPrintTree.ASCII:
-            MCMD.information( target.to_ascii(format) )
+            MCMD.information( target.to_ascii( format ) )
         elif view == EPrintTree.ETE_ASCII:
             MCMD.information( ete_providers.tree_to_ascii( target, model ) )
         elif view == EPrintTree.NEWICK:
@@ -141,6 +148,8 @@ def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = F
             ete_providers.show_tree( target, model )
         else:
             raise SwitchError( "view", view )
+    
+    return Changes( Changes.INFORMATION )
 
 
 def __print_header( x ):
@@ -151,7 +160,7 @@ def __print_header( x ):
 
 
 @command( names = [ "print_interlinks", "interlinks" ] )
-def component_edges( component: Optional[ LegoComponent ] = None ):
+def component_edges( component: Optional[ LegoComponent ] = None ) -> Changes:
     """
     Prints the edges between the component subsequences.
     
@@ -221,10 +230,11 @@ def component_edges( component: Optional[ LegoComponent ] = None ):
             message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[ major ] ), round( start ), round( end ) )
     
     MCMD.print( message.to_string() )
+    return Changes( Changes.INFORMATION )
 
 
 @command( names = [ "print_components", "components" ] )
-def print_components():
+def print_components() -> Changes:
     """
     Prints the major components.
     
@@ -253,6 +263,7 @@ def print_components():
         message.add_row( component, ", ".join( x.accession for x in component.major_sequences() ) )
     
     MCMD.print( message.to_string() )
+    return Changes( Changes.INFORMATION )
 
 
 def __get_status_line( target: List[ Plugin ], the_list: Iterable[ T ], test: Callable[ [ T ], bool ], plugin: Plugin ) -> str:
@@ -284,7 +295,7 @@ def __get_status_line( target: List[ Plugin ], the_list: Iterable[ T ], test: Ca
 
 
 @command( names = [ "print_fusions", "fusions" ] )
-def print_fusions():
+def print_fusions() -> Changes:
     """
     Estimates model fusions. Does not affect the model.
     """
@@ -297,3 +308,13 @@ def print_fusions():
         results.append( str( fusion ) )
     
     MCMD.information( "\n".join( results ) )
+    
+    return Changes( Changes.INFORMATION )
+
+
+@command( names = [ "print_fusions", "fusions" ] )
+def print_nrfg() -> Changes:
+    """
+    Prints the NRFG
+    """
+    pass

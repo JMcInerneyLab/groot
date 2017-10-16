@@ -2,26 +2,29 @@ from legoalign.data import global_view
 from legoalign.data.graphing import MGraph
 from legoalign.data.lego_model import ESiteType
 from legoalign.frontends.cli import cli_view_utils
+from legoalign.frontends.gui.gui_view_utils import Changes
 from mcommand.engine.environment import MCMD
 from mcommand.plugins.command_plugin import command
 from mhelper import EFileMode, Filename, file_helper
 
 
 @command( visibility = False )
-def print_sites( type: ESiteType, text: str ):
+def print_sites( type: ESiteType, text: str ) -> Changes:
     """
     Prints a sequence in colour
     :param type: Type of sites to display.
     :param text: Sequence (raw data without headers) 
     """
     MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
+    
+    return Changes( Changes.NONE )
 
 
 __EXT_FASTA = ".fasta"
 
 
 @command( visibility = False )
-def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ):
+def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ) -> Changes:
     """
     Prints a FASTA file in colour
     :param type: Type of sites to display.
@@ -29,10 +32,12 @@ def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] )
     """
     text = file_helper.read_all_text( file )
     MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
+    
+    return Changes( Changes.NONE )
 
 
 @command( visibility = False )
-def update_model():
+def update_model() -> Changes:
     """
     Update model to new version.
     """
@@ -48,3 +53,5 @@ def update_model():
             g = MGraph()
             g.import_newick( x.consensus, global_view.current_model() )
             x.consensus = g
+    
+    return Changes( Changes.COMP_DATA )

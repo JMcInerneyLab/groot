@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './Designer/FrmListSelector_designer.ui'
+# Form implementation generated from reading ui file '/Users/martinrusilowicz/work/apps/legoalign/legoalign/frontends/gui/forms/designer/frm_list_selector_designer.ui'
 #
 # Created by: PyQt5 UI code generator 5.7
 #
