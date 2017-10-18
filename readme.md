@@ -10,13 +10,19 @@ Installation
 Please download Gʀᴏᴏᴛ using [Pɪᴩ](https://packaging.python.org/tutorials/installing-packages).
 
 ```bash
-pip install groot
+$   pip install groot
 ```
 
-You can create an alias to make launching Gʀᴏᴏᴛ easier:
+For convenience, you can create an alias for Gʀᴏᴏᴛ by adding the following to your `~/.bash_profile` on Uɴɪx:
 
 ```bash
-alias groot="python -m groot"
+$   alias groot="python -m groot"
+```
+
+_...or, for Wɪɴᴅᴏᴡꜱ, create an executable `.bat` file on your Desktop:_
+
+```bash
+$   python -m groot %*
 ```
 
 Once the alias is created, you can start Gʀᴏᴏᴛ in _Command Line Interactive_ (CLI) mode:
@@ -25,10 +31,16 @@ Once the alias is created, you can start Gʀᴏᴏᴛ in _Command Line Interacti
 $   groot
 ```
 
-Or in _Graphical User Interface_ (GUI) mode:
+_...or in _Graphical User Interface_ (GUI) mode:_
 
 ```bash
 $   groot "ui gui"
+```
+
+You can also use Gʀᴏᴏᴛ in your own Python applications:
+
+```python
+$   import groot
 ```
 
 For other modes, please see the `MCᴏᴍᴍᴀɴᴅ` documentation.
@@ -66,12 +78,12 @@ $   help
 Gʀᴏᴏᴛ comes with a sample library, let's get started by seeing what's available:
  
 ```bash
->>> Empty model>file.sample
-ECO file.sample
-INF seqgen
-    sera
-    simple
-    triptych
+$   file.sample
+    ECO file.sample
+    INF seqgen
+        sera
+        simple
+        triptych
 ```
 
 The _triptych_ sample contains a gene family which has undergone two recombination events "X" and "Y":
@@ -90,9 +102,7 @@ The _triptych_ sample contains a gene family which has undergone two recombinati
 
 The final gene family, _EPSILON_, therefore looks something like this:
 
-```bash
-<--5' (----ALPHA----)(----BETA----)(----GAMMA----) 3'-->
-```
+        __5'(ALPHA)(BETA)(GAMMA)3'__
 
 Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the triptych.
 
@@ -286,6 +296,51 @@ Image copyrights
 
 Freepik
 
+Installation from source
+------------------------
+
+You will need to clone the following repositories using Git:
+
+```bash
+git clone https://www.bitbucket.org/mjr129/mcommand.git
+git clone https://www.bitbucket.org/mjr129/mhelper.git
+git clone https://www.bitbucket.org/mjr129/editorium.git
+git clone https://www.bitbucket.org/mjr129/stringcoercion.git
+git clone https://www.bitbucket.org/mjr129/groot.git
+```
+
+_...or, if not using Git, download the source directly from Bitbucket, e.g. https://www.bitbucket.org/mjr129/mcommand_
+
+Install the root of each repository in development mode via:
+
+```bash
+pip install -e .
+```
+
+_...or, if not using Pip, add the repository root to your `PYTHONPATH` environment variable._
+
+You will also need to download and install the `requirements.txt` listed in each repository:
+
+```bash
+pip install -r requirements.txt 
+```
+
+_...or, if not using Pip, check the `requirements.txt` file and download and install the packages from their respective authors manually._
+
+For convenience, you can create an alias for Gʀᴏᴏᴛ by adding the following to your `~/.bash_profile` on Uɴɪx:
+
+```bash
+$   alias groot="python -m groot"
+```
+
+_...or, for Wɪɴᴅᴏᴡꜱ, create an executable `.bat` file on your Desktop:_
+
+```bash
+$   python -m groot %*
+```
+
+You should then be able to run the projects as normal.
+
 Meta-data
 ---------
 
@@ -294,4 +349,6 @@ language= python3
 author= martin rusilowicz
 date= 2017
 keywords= blast, genomics, genome, gene, nrgf, graphs, mcommand
+host= bitbucket
+type=application,application-gui,application-cli
 ```
