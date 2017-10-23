@@ -3,4 +3,12 @@ import groot
 import mcommand
 
 
-mcommand.start( __name__ )
+def main():
+    """
+    Entry point.
+    """
+    mcommand.start()
+
+
+if __name__ == "__main__":
+    main()

@@ -8,4 +8,5 @@ setup( name = "groot",
        long_description = open( "readme.md" ).read(),
        license = "GPLv3",
        packages = [ "groot" ],
+       entry_points= { "console_scripts": [ "groot = groot.__main__:main" ] }
        )
