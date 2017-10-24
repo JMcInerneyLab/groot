@@ -133,7 +133,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
             self.statusBar().showMessage( "SELECTED: <<NOTHING>>" )
             return
         elif len( entities ) == 1:
-            self.statusBar().showMessage( "SELECTED: <<{}>> {}".format( type_name, first ) )
+            self.statusBar().showMessage( "SELECTED: <«{}»> {}".format( type_name, first ) )
         else:
             self.statusBar().showMessage( "SELECTED: <<MULTIPLE ITEMS>> ({} {})".format( len( entities ), type_name ) )
         
