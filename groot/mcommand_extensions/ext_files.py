@@ -109,7 +109,7 @@ def file_recent():
     r = [ ]
     
     r.append( "SESSIONS:" )
-    for file in os.listdir( path.join( MENV.local_data.workspace(), "sessions" ) ):
+    for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
         if file.lower().endswith(constants.BINARY_EXTENSION):
             r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
     
