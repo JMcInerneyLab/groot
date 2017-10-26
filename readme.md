@@ -349,6 +349,6 @@ language= python3
 author= martin rusilowicz
 date= 2017
 keywords= blast, genomics, genome, gene, nrgf, graphs, intermake
-host= bitbucket,pypi
+host= bitbucket
 type=application,application-gui,application-cli
 ```
