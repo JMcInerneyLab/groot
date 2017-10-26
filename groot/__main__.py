@@ -1,13 +1,13 @@
 # noinspection PyUnresolvedReferences
 import groot
-import mcommand
+import intermake
 
 
 def main():
     """
     Entry point.
     """
-    mcommand.start()
+    intermake.start()
 
 
 if __name__ == "__main__":

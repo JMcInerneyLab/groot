@@ -1,4 +1,4 @@
-from mcommand.engine.environment import MENV
+from intermake.engine.environment import MENV
 
 
 class GlobalOptions:

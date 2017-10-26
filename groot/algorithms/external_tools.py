@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from mcommand import MENV, constants
+from intermake import MENV, constants
 from mhelper import bio_helper, exception_helper, file_helper
 
 

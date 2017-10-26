@@ -1,4 +1,0 @@
-ANSI
-Loaded model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot
-HTML
-<span style="background:#000000; color:#FFFFFF; font-style:normal; font-family:sans-serif;">Loaded model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot</span>

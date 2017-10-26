@@ -3,8 +3,8 @@ from typing import cast
 from os import path
 
 from groot.data.lego_model import LegoModel
-from mcommand import MENV, PathToVisualisable
-from mcommand.hosts.console import ConsoleHost
+from intermake import MENV, PathToVisualisable
+from intermake.hosts.console import ConsoleHost
 from mhelper import file_helper
 
 

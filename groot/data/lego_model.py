@@ -8,7 +8,7 @@ from typing import Iterable, Iterator, List, Optional, Set, cast
 
 from colorama import Back, Fore
 
-from mcommand import EColour, IVisualisable, UiInfo, resources
+from intermake import EColour, IVisualisable, UiInfo, resources
 from mhelper import Logger, MEnum, SwitchError, array_helper, file_helper as FileHelper, string_helper
 
 

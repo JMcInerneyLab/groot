@@ -9,7 +9,7 @@ from groot import constants
 from groot.algorithms import importation
 from groot.data import global_view, user_options
 from groot.frontends.gui.gui_view_utils import Changes
-from mcommand import MCMD, MENV, PathToVisualisable, command, console_explorer
+from intermake import MCMD, MENV, PathToVisualisable, command, console_explorer
 from mhelper import file_helper, io_helper
 
 

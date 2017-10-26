@@ -8,12 +8,12 @@ from groot.data.lego_model import LegoComponent
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
-from groot.mcommand_extensions import ext_files, ext_generating
-from mcommand import command
-from mcommand.engine.environment import MCMD, MENV
-from mcommand.engine.plugin import Plugin
-from mcommand.helpers.table_draw import Table
-from mcommand.visualisables.visualisable import IVisualisable
+from groot.extensions import ext_files, ext_generating
+from intermake import command
+from intermake.engine.environment import MCMD, MENV
+from intermake.engine.plugin import Plugin
+from intermake.helpers.table_draw import Table
+from intermake.visualisables.visualisable import IVisualisable
 from mhelper import MEnum, SwitchError
 
 

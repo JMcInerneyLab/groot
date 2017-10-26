@@ -1,4 +1,4 @@
-from mcommand.hosts.gui import GuiHost
+from intermake.hosts.gui import GuiHost
 
 
 class LegoGuiHost(GuiHost):

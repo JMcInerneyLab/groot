@@ -8,7 +8,7 @@ from typing import Tuple, Set
 
 from groot.algorithms import editor
 from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoSide, LegoEdge
-from mcommand.engine.mandate import Mandate
+from intermake.engine.mandate import Mandate
 from mhelper import Logger, ImplementationError, array_helper
 from mhelper.component_helper import ComponentFinder
 

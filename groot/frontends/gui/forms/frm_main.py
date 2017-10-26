@@ -9,16 +9,16 @@ from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QCheckBox, QFileDialog, QGraphicsScene, QGridLayout, QGroupBox, QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 
-from groot import constants, mcommand_extensions as COMMANDS
+from groot import constants, extensions as COMMANDS
 from groot.data import global_view, user_options
 from groot.data.lego_model import LegoComponent
 from groot.frontends.gui.forms.designer.frm_main_designer import Ui_MainWindow
 from groot.frontends.gui.gui_view import EMode, ESelect, ILegoViewModelObserver, LegoViewModel, LegoViewSubsequence
 from groot.frontends.gui.gui_view_utils import Changes, MyView
 from groot.frontends.cli import cli_view_utils
-from mcommand.engine.async_result import AsyncResult
-from mcommand.engine.environment import MENV
-from mcommand.hosts.frontends.gui_qt.frm_arguments import FrmArguments
+from intermake.engine.async_result import AsyncResult
+from intermake.engine.environment import MENV
+from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
 from mhelper import SwitchError, array_helper, file_helper, qt_gui_helper
 from mhelper.qt_gui_helper import exceptToGui, exqtSlot
 
@@ -837,11 +837,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     
     
     @exqtSlot()
-    def on_ACTION_VIEW_MCOMMAND_triggered( self ) -> None:
+    def on_ACTION_VIEW_INTERMAKE_triggered( self ) -> None:
         """
         Signal handler:
         """
-        from mcommand.hosts.frontends.gui_qt.frm_main import FrmMain as McFrmMain
+        from intermake.hosts.frontends.gui_qt.frm_main import FrmMain as McFrmMain
         frm = McFrmMain( True )
         frm.show()
     

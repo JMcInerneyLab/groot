@@ -5,8 +5,8 @@ from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
-from mcommand import command
-from mcommand.engine.environment import MCMD
+from intermake import command
+from intermake.engine.environment import MCMD
 
 
 @command()

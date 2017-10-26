@@ -43,15 +43,15 @@ You can also use Gʀᴏᴏᴛ in your own Python applications:
 $   import groot
 ```
 
-For other modes, please see the `MCᴏᴍᴍᴀɴᴅ` documentation.
+For other modes, please see the `Iɴᴛᴇʀᴍᴀᴋᴇ` documentation.
 
 Tutorial
 --------
 
 ### Introduction ###
-Like Bɪᴏ42, Gʀᴏᴏᴛ uses the MCᴏᴍᴍᴀɴᴅ interaction library. This means it can operate from several different perspectives, including a _Command Line Interface_ (CLI) and _Graphical User Interface_ (GUI).
+Like Bɪᴏ42, Gʀᴏᴏᴛ uses the Iɴᴛᴇʀᴍᴀᴋᴇ interaction library. This means it can operate from several different perspectives, including a _Command Line Interface_ (CLI) and _Graphical User Interface_ (GUI).
 
-For this tutorial, we'll be using the CLI, because it's much easier to explain. When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly. Please see the [MCᴏᴍᴍᴀɴᴅ](https://www.bitbucket.org/mjr129/mcommand) documentation on how to use the other modes (Pʏᴛʜᴏɴ Interactive and Pʏᴛʜᴏɴ Scripted).
+For this tutorial, we'll be using the CLI, because it's much easier to explain. When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly. Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) documentation on how to use the other modes (Pʏᴛʜᴏɴ Interactive and Pʏᴛʜᴏɴ Scripted).
 
 ### Getting started ###
 
@@ -136,7 +136,7 @@ $   save tri
     ECO file.save file_name=tri
     PRG  │ file_save...
     PRG  │ -Saving file...
-    INF Saved model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot
+    INF Saved model: /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
 ```
 
 We didn't specify a path, or an extension, so you'll notice Gʀᴏᴏᴛ has added them for us.
@@ -150,7 +150,7 @@ Gʀᴏᴏᴛ follows a pretty-much linear workflow, execute the following comman
 $   status
     ECO print.status
     INF tri
-        /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot
+        /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
     
         Sequences
         Sequences:     55/55
@@ -267,7 +267,7 @@ $   save
     ECO file.save
     PRG  │ file_save
     PRG  │ -Saving file
-    INF Saved model: /Users/martinrusilowicz/.mcommand-data/groot/sessions/tri.groot
+    INF Saved model: /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
 ```
 
 When all the trees are generated, we'll want to get a consensus.
@@ -289,7 +289,7 @@ TODO
 Troubleshooting
 ---------------
 
-Please see the [MCᴏᴍᴍᴀɴᴅ](https://www.bitbucket.org/mjr129/mcommand) troubleshooting section.
+Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section.
 
 Image copyrights
 ----------------
@@ -302,14 +302,14 @@ Installation from source
 You will need to clone the following repositories using Git:
 
 ```bash
-git clone https://www.bitbucket.org/mjr129/mcommand.git
+git clone https://www.bitbucket.org/mjr129/intermake.git
 git clone https://www.bitbucket.org/mjr129/mhelper.git
 git clone https://www.bitbucket.org/mjr129/editorium.git
 git clone https://www.bitbucket.org/mjr129/stringcoercion.git
 git clone https://www.bitbucket.org/mjr129/groot.git
 ```
 
-_...or, if not using Git, download the source directly from Bitbucket, e.g. https://www.bitbucket.org/mjr129/mcommand_
+_...or, if not using Git, download the source directly from Bitbucket, e.g. https://www.bitbucket.org/mjr129/intermake_
 
 Install the root of each repository in development mode via:
 
@@ -348,7 +348,7 @@ Meta-data
 language= python3
 author= martin rusilowicz
 date= 2017
-keywords= blast, genomics, genome, gene, nrgf, graphs, mcommand
-host= bitbucket
+keywords= blast, genomics, genome, gene, nrgf, graphs, intermake
+host= bitbucket,pypi
 type=application,application-gui,application-cli
 ```

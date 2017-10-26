@@ -3,8 +3,8 @@ from groot.data.graphing import MGraph
 from groot.data.lego_model import ESiteType
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
-from mcommand.engine.environment import MCMD
-from mcommand.plugins.command_plugin import command
+from intermake.engine.environment import MCMD
+from intermake.plugins.command_plugin import command
 from mhelper import EFileMode, Filename, file_helper
 
 
