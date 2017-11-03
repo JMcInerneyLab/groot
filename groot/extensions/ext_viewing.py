@@ -1,6 +1,7 @@
 from typing import Callable, Iterable, List, Optional, TypeVar
-
 from colorama import Back, Fore, Style
+from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
+from mhelper import MEnum, SwitchError
 
 from groot.algorithms import components, fastaiser, fuse
 from groot.data import global_view
@@ -9,12 +10,7 @@ from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
 from groot.extensions import ext_files, ext_generating
-from intermake import command
-from intermake.engine.environment import MCMD, MENV
-from intermake.engine.plugin import Plugin
-from intermake.helpers.table_draw import Table
-from intermake.visualisables.visualisable import IVisualisable
-from mhelper import MEnum, SwitchError
+
 
 
 T = TypeVar( "T" )
