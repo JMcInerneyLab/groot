@@ -37,7 +37,7 @@ def make_alignment( component: Optional[ List[ LegoComponent ] ] = None ) -> Cha
     """
     to_do = cli_view_utils.get_component_list( component )
     
-    for component_ in MCMD.iterate( to_do, "Aligning", interesting = True ):
+    for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
         alignment.align( component_ )
     
     MCMD.print( "{} {} aligned.".format( len( to_do ), "components" if len( to_do ) != 1 else "component" ) )
@@ -55,7 +55,7 @@ def make_tree( component: Optional[ List[ LegoComponent ] ] = None ):
     """
     to_do = cli_view_utils.get_component_list( component )
     
-    for component_ in MCMD.iterate( to_do, "Generating trees", interesting = True ):
+    for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
         tree.generate_tree( component_ )
     
     return Changes( Changes.COMP_DATA )
