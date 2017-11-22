@@ -1,10 +1,18 @@
-from groot.algorithms import deconvolution, quantisation, verification
+from typing import List, Optional
+
+import re
+
+from groot.algorithms import deconvolution, quantisation, verification, editor
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent
+from groot.data.graphing import MGraph
+from groot.data.lego_model import LegoComponent, LegoSequence
 from groot.frontends.gui.gui_view_utils import Changes
 from intermake import command
 from intermake.engine.environment import MCMD
 from mhelper import ignore
+
+
+__mcmd_folder_name__ = "Modifications"
 
 
 @command()
@@ -51,13 +59,15 @@ def set_tree( component: LegoComponent, tree: str ) -> Changes:
     :param component:   Component 
     :param tree:        Tree to set. In newick format. 
     """
-    component.tree = tree
+    g = MGraph()
+    g.import_newick( tree, component.model )
+    component.tree = g
     
     return Changes( Changes.COMP_DATA )
 
 
 @command()
-def set_alignment( component: LegoComponent, alignment: str )->Changes:
+def set_alignment( component: LegoComponent, alignment: str ) -> Changes:
     """
     Sets a component tree manually.
     
@@ -67,6 +77,7 @@ def set_alignment( component: LegoComponent, alignment: str )->Changes:
     component.alignment = alignment
     
     return Changes( Changes.COMP_DATA )
+
 
 @command()
 def quantise( level: int ) -> Changes:
@@ -84,30 +95,73 @@ def quantise( level: int ) -> Changes:
     return Changes( Changes.MODEL_ENTITIES )
 
 
-def new_subsequence( sequence, split_point )->Changes:
-    ignore(sequence, split_point)
-    return Changes(Changes.NONE) #TODO
+def new_subsequence( sequence, split_point ) -> Changes:
+    ignore( sequence, split_point )
+    return Changes( Changes.NONE )  # TODO
 
 
-def new_edge( subsequences )->Changes:
-    ignore(subsequences)
-    return Changes(Changes.NONE)  #TODO
+def new_edge( subsequences ) -> Changes:
+    ignore( subsequences )
+    return Changes( Changes.NONE )  # TODO
 
 
-def new_sequence()->Changes:
-    return Changes(Changes.NONE)  #TODO
+def new_sequence() -> Changes:
+    return Changes( Changes.NONE )  # TODO
 
 
-def merge_subsequences( subsequences )->Changes:
-    ignore(subsequences)
-    return Changes(Changes.NONE) #TODO
+def merge_subsequences( subsequences ) -> Changes:
+    ignore( subsequences )
+    return Changes( Changes.NONE )  # TODO
 
 
-def remove_sequence( sequences )->Changes:
-    ignore(sequences)
-    return Changes(Changes.NONE) #TODO
+@command()
+def find_sequences( find: str ) -> Changes:
+    """
+    Lists the sequences whose accession matches the specified regular expression.
+    :param find:    Regular expression
+    """
+    for sequence in __find_sequences( find ):
+        MCMD.print( sequence )
+    
+    return Changes( Changes.NONE )
 
 
-def remove_edges( subsequences, edges )->Changes:
-    ignore(subsequences, edges)
-    return Changes(Changes.NONE)    #TODO
+@command()
+def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Optional[str] = None ) -> Changes:
+    """
+    Removes one or more sequences from the model.
+    :param find:      Optional regular expression specifying the sequence(s) to remove, by accession.
+    :param sequences: The sequences to remove
+    """
+    if sequences is None:
+        sequences = []
+    
+    model = global_view.current_model()
+    
+    if find:
+        sequences.extend( __find_sequences( find ) )
+        
+    
+    for sequence in sequences:
+        MCMD.print( "READY TO DROP {}".format(sequence ))
+        
+    editor.remove_sequences( model, sequences )
+    
+    return Changes( Changes.MODEL_ENTITIES )
+
+
+def __find_sequences( find ):
+    model = global_view.current_model()
+    
+    sequences = []
+    rx = re.compile( find, re.IGNORECASE )
+    for s in model.sequences:
+        if rx.search( s.accession ):
+            sequences.append( s )
+    
+    return sequences
+
+
+def remove_edges( subsequences, edges ) -> Changes:
+    ignore( subsequences, edges )
+    return Changes( Changes.NONE )  # TODO

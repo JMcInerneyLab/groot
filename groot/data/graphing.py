@@ -1,15 +1,16 @@
-from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict
+from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict, List
 
-from colorama import Fore, Back, Style
 from ete3 import TreeNode
 
 from groot import constants
 
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
+from intermake.engine.theme import Theme
+
 from mhelper import array_helper
 
 
-DFindId = Callable[ [ str ], object ]
+DFindId = Callable[[str], object]
 
 
 class MClade:
@@ -35,8 +36,8 @@ class DepthInfo:
         self.has_children = has_children
     
     
-    def full_path( self ):
-        r = [ ]
+    def full_path( self ) -> "List[DepthInfo]":
+        r = []
         parent = self.parent_info
         
         while parent:
@@ -46,10 +47,10 @@ class DepthInfo:
         return list( reversed( r ) )
     
     
-    def describe( self, format_str ):
+    def describe( self, format_str: str ) -> str:
         # return "{}:{}{}".format( "{}".format(self.parent.node.uid) if self.parent else "R", "*" if self.is_repeat else "", self.node.detail )
         # return "{}{}->{}".format( "{}".format( self.parent.node.uid ) if self.parent else "(NO_PARENT)", "(POINTER)" if self.is_repeat else "", self.node.detail )
-        ss = [ ]
+        ss = []
         
         for parent in self.full_path():
             ss.append( "    " if parent.is_last else "│   " )
@@ -74,10 +75,10 @@ class FollowParams:
                   exclude_edges: "Iterable[MEdge]" = None,
                   exclude_nodes: "Iterable[MNode]" = None ):
         if exclude_edges is None:
-            exclude_edges = [ ]
+            exclude_edges = []
         
         if exclude_nodes is None:
-            exclude_nodes = [ ]
+            exclude_nodes = []
         
         for x in cast( list, exclude_edges ):
             assert isinstance( x, MEdge )
@@ -85,27 +86,32 @@ class FollowParams:
         for x in cast( list, exclude_nodes ):
             assert isinstance( x, MNode )
         
-        self.include_repeats = include_repeats
-        self.exclude_nodes = set( exclude_nodes )
-        self.results = [ ]
-        self.exclude_edges = set( exclude_edges )
-        self.root_info = DepthInfo( node = root,
-                                    is_last = True,
-                                    is_repeat = False,
-                                    parent_info = None,
-                                    has_children = False )
+        self.include_repeats: bool = include_repeats
+        self.exclude_nodes: Set[MNode] = set( exclude_nodes )
+        self.visited: List[DepthInfo] = []
+        self.exclude_edges: Set[MEdge] = set( exclude_edges )
+        self.root_info: DepthInfo = DepthInfo( node = root,
+                                               is_last = True,
+                                               is_repeat = False,
+                                               parent_info = None,
+                                               has_children = False )
         
-        self.results.append( self.root_info )
+        self.visited.append( self.root_info )
         self.exclude_nodes.add( self.root_info.node )
+    
+    
+    @property
+    def visited_nodes( self ) -> "Iterator[MNode]":
+        return (x.node for x in self.visited)
 
 
 class MGraph:
-    def __init__( self ):
+    def __init__( self ) -> None:
         """
         CONSTRUCTOR
         """
-        self._nodes = set()
-        self.uid_counter = 1
+        self._nodes: "Set[MNode]" = set()
+        self.uid_counter: int = 1
     
     
     def import_newick( self, newick_tree: str, model: LegoModel ) -> None:
@@ -128,7 +134,7 @@ class MGraph:
         root = MNode( self )
         
         
-        def ___recurse( m_node_start, e_node_start, depth ):
+        def ___recurse( m_node_start, e_node_start, depth ) -> None:
             for e_node_next in e_node_start.get_children():
                 m_node_next = self._node_from_ete( e_node_next, model )
                 
@@ -140,23 +146,32 @@ class MGraph:
         ___recurse( root, ete_tree, 0 )
     
     
-    def to_ascii( self, format_str = "a c f" ):
+    def to_csv( self, format_str: str = "a c f" ):
+        r = []
+        
+        for edge in self.get_edges():
+            r.append( "{},{}".format( edge.a.describe( format_str ), edge.b.describe( format_str ) ) )
+        
+        return "\n".join( r )
+    
+    
+    def to_ascii( self, format_str: str = "a c f" ):
         """
         Shows the graph as ASCII-art, which is actually in UTF8.
         """
-        results = [ ]
-        visited = cast(Set[MNode], set())
+        results: List[str] = []
+        visited: Set[MNode] = set()
         
         while True:
-            first = array_helper.first(x for x in self._nodes if x not in visited)
+            first = array_helper.first( x for x in self._nodes if x not in visited )
             
             if first is None:
                 break
             
-            params = FollowParams(root = first, include_repeats = True)
-            self.follow(params)
-            visited.update(params.exclude_nodes)
-            results.extend( x.describe( format_str ) for x in params.results )
+            params = FollowParams( root = first, include_repeats = True )
+            self.follow( params )
+            visited.update( params.exclude_nodes )
+            results.extend( x.describe( format_str ) for x in params.visited )
         
         return "\n".join( results )
     
@@ -175,9 +190,10 @@ class MGraph:
         """
         
         
-        def __recurse( m_node, ete_node, visited ):
+        def __recurse( m_node: MNode, ete_node: TreeNode, visited: Set ):
             visited.add( m_node )
-            new_ete_node = ete_node.add_child( name = m_node.name )
+            # noinspection PyTypeChecker
+            new_ete_node = ete_node.add_child( name = m_node.describe( "a" ) )
             
             for child in m_node.iter_relations():
                 if child not in visited:
@@ -185,7 +201,8 @@ class MGraph:
             
             return ete_node
         
-        first = array_helper.first(self._nodes)
+        
+        first = array_helper.first_unsafe( self._nodes )
         
         return __recurse( first, TreeNode(), set() )
     
@@ -226,14 +243,16 @@ class MGraph:
         """
         return iter( self._nodes )
     
-    def follow(self, params: FollowParams):
+    
+    def follow( self, params: FollowParams ) -> FollowParams:
         self.__follow( params = params, parent_info = params.root_info )
         return params
     
+    
     def __follow( self,
-                 *,
-                 params: FollowParams,
-                 parent_info: DepthInfo ) -> None:
+                  *,
+                  params: FollowParams,
+                  parent_info: DepthInfo ) -> None:
         """
         Populates the `visited` set with all connected nodes, starting from the `source` node.
         Nodes already in the visited list will not be visited again.
@@ -242,10 +261,10 @@ class MGraph:
         this allows the caller to iterate from a node to the exclusion of a specified branch(es).
         """
         parent = parent_info.node
-        targets = [ edge.opposite( parent ) for edge in parent.iter_edges() if edge not in params.exclude_edges ]
+        targets = [edge.opposite( parent ) for edge in parent.iter_edges() if edge not in params.exclude_edges]
         
         if parent_info.parent_info is not None:
-            targets = [ node for node in targets if node is not parent_info.parent_info.node ]
+            targets = [node for node in targets if node is not parent_info.parent_info.node]
         
         depth_info = None
         
@@ -260,7 +279,7 @@ class MGraph:
                                         is_last = False,
                                         has_children = False )
                 
-                params.results.append( depth_info )
+                params.visited.append( depth_info )
                 
                 continue
             
@@ -272,10 +291,10 @@ class MGraph:
                                     is_repeat = False,
                                     has_children = False )
             
-            params.results.append( depth_info )
+            params.visited.append( depth_info )
             
             self.__follow( params = params,
-                          parent_info = depth_info )
+                           parent_info = depth_info )
         
         if depth_info is not None:
             parent_info.has_children = True
@@ -289,7 +308,7 @@ class MGraph:
             a = self.__import_node( lookup_table, edge.a )
             b = self.__import_node( lookup_table, edge.b )
             MEdge( self, a, b )
-            
+        
         return lookup_table
     
     
@@ -299,7 +318,7 @@ class MGraph:
         if result is None:
             result = MNode( self )
             result.sequence = node.sequence
-            lookup_table[ node ] = result
+            lookup_table[node] = result
         
         return result
 
@@ -314,19 +333,22 @@ class MNode:
         """
         CONSTRUCTOR 
         """
-        if not hasattr(graph, "uid_counter"):
+        from groot.algorithms.fuse import FusionPoint
+        
+        if not hasattr( graph, "uid_counter" ):
             graph.uid_counter = 1
         
-        self.__uid = graph.uid_counter
-        graph.uid_counter += 1
-        self._graph = graph
-        self.sequence = cast( Optional[ LegoSequence ], None )
-        self._edges = cast( Dict[ MNode, MEdge ], { } )
-        self.fusion_comment = None
+        self.__uid: int = graph.uid_counter
+        self._graph: MGraph = graph
+        self.sequence: Optional[LegoSequence] = None
+        self._edges: Dict[MNode, MEdge] = { }
+        self.fusion_comment: Optional[FusionPoint] = None
+        
         graph._nodes.add( self )
+        graph.uid_counter += 1
     
     
-    def uid( self ):
+    def uid( self ) -> int:
         return self.__uid
     
     
@@ -334,19 +356,31 @@ class MNode:
         """
         A descriptive comment on the node.
         """
-        ss = [ ]
+        ss = []
         
         for x in format_str:
-            if x == "f":
+            if x == "t":
+                if self.sequence:
+                    ss.append( "seq:{}".format( self.sequence.accession ) )
+                elif self.fusion_comment:
+                    ss.append( "fus:{}:{}".format( self.fusion_comment.opposite_component, self.fusion_comment.count ) )
+                else:
+                    ss.append( "cla:{}".format( self.__uid ) )
+            elif x == "f":
                 if self.fusion_comment:
-                    ss.append( Fore.BLUE + Back.YELLOW + str( self.fusion_comment ) + Style.RESET_ALL )
+                    ss.append( Theme.BOLD + str( self.fusion_comment ) + Theme.RESET )
             elif x == "u":
                 ss.append( self.__uid )
             elif x == "c":
                 if self.sequence and self.sequence.component:
-                    ss.append( constants.COMPONENT_COLOURS_ANSI[ self.sequence.component.index % len( constants.COMPONENT_COLOURS_ANSI ) ] )
-                    ss.append( self.sequence.component )
-                    ss.append( Style.RESET_ALL )
+                    ss.append( str( self.sequence.component ) )
+            elif x == "m":
+                if self.sequence:
+                    minor_components = self.sequence.minor_components()
+                    
+                    if minor_components:
+                        for minor_component in sorted( minor_components, key = str ):
+                            ss.append( str( minor_component ) )
             elif x == "a":
                 if self.sequence:
                     ss.append( self.sequence.accession )
@@ -373,7 +407,7 @@ class MNode:
         return len( self._edges )
     
     
-    def remove( self ):
+    def remove( self ) -> None:
         """
         Removes this node from the graph.
         
@@ -395,7 +429,7 @@ class MNode:
             yield edge.opposite( self )
 
 
-def import_name( model: LegoModel, name: str ) -> Tuple[ Optional[ LegoSequence ], Optional[ LegoComponent ] ]:
+def import_name( model: LegoModel, name: str ) -> Tuple[Optional[LegoSequence], Optional[LegoComponent]]:
     if not name:
         return None, None
     
@@ -404,9 +438,9 @@ def import_name( model: LegoModel, name: str ) -> Tuple[ Optional[ LegoSequence 
     
     for value in name.split( "_" ):
         if value.startswith( "S" ):
-            sequence = model.find_sequence_by_id( int( value[ 1: ] ) )
+            sequence = model.find_sequence_by_id( int( value[1:] ) )
         elif value.startswith( "F" ):
-            component = model.components[ int( value[ 1: ] ) ]
+            component = model.components[int( value[1:] )]
         elif value.startswith( "X" ):
             pass
         else:
@@ -416,8 +450,8 @@ def import_name( model: LegoModel, name: str ) -> Tuple[ Optional[ LegoSequence 
     return sequence, component
 
 
-def export_name( *args ) -> Optional[ str ]:
-    r = [ ]
+def export_name( *args ) -> Optional[str]:
+    r = []
     
     for arg in args:
         if isinstance( arg, LegoSequence ):
@@ -445,26 +479,26 @@ class MEdge:
         self._a = a
         self._b = b
         
-        a._edges[ b ] = self
-        b._edges[ a ] = self
+        a._edges[b] = self
+        b._edges[a] = self
     
     
-    def remove( self ):
-        del self._a._edges[ self._b ]
-        del self._b._edges[ self._a ]
+    def remove( self ) -> None:
+        del self._a._edges[self._b]
+        del self._b._edges[self._a]
     
     
-    def __repr__( self ):
+    def __repr__( self ) -> str:
         return "{}-->{}".format( self._a, self._b )
     
     
     @property
-    def a( self ):
+    def a( self ) -> MNode:
         return self._a
     
     
     @property
-    def b( self ):
+    def b( self ) -> MNode:
         return self._b
     
     
@@ -477,9 +511,9 @@ class MEdge:
             raise KeyError( "Cannot find opposite side to '{}' because that isn't part of this edge '{}'.".format( node, self ) )
     
     
-    def iter_a( self ):
-        return self._graph.follow( FollowParams( root = self._a, exclude_nodes = [ self._b ] ) ).exclude_nodes
+    def iter_a( self ) -> Set[MNode]:
+        return self._graph.follow( FollowParams( root = self._a, exclude_nodes = [self._b] ) ).exclude_nodes
     
     
-    def iter_b( self ):
-        return self._graph.follow( FollowParams( root = self._b, exclude_nodes = [ self._a ] ) ).exclude_nodes
+    def iter_b( self ) -> Set[MNode]:
+        return self._graph.follow( FollowParams( root = self._b, exclude_nodes = [self._a] ) ).exclude_nodes

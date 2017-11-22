@@ -1,7 +1,9 @@
 from typing import Callable, Iterable, List, Optional, TypeVar
-from colorama import Back, Fore, Style
+
 from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
-from mhelper import MEnum, SwitchError
+from intermake.engine.theme import Theme
+
+from mhelper import MEnum, SwitchError, string_helper, ByRef
 
 from groot.algorithms import components, fastaiser, fuse
 from groot.data import global_view
@@ -12,11 +14,12 @@ from groot.frontends.gui.gui_view_utils import Changes
 from groot.extensions import ext_files, ext_generating
 
 
+__mcmd_folder_name__ = "Viewing"
 
 T = TypeVar( "T" )
 
 
-@command( names = [ "print_fasta", "fasta" ] )
+@command( names = ["print_fasta", "fasta"] )
 def print_fasta( target: IVisualisable ) -> Changes:
     """
     Presents the FASTA sequences for an object.
@@ -26,7 +29,7 @@ def print_fasta( target: IVisualisable ) -> Changes:
     return Changes( Changes.INFORMATION )
 
 
-@command( names = [ "print_status", "status" ] )
+@command( names = ["print_status", "status"] )
 def print_status() -> Changes:
     """
     Prints the status of the model. 
@@ -34,30 +37,31 @@ def print_status() -> Changes:
     """
     model = global_view.current_model()
     
-    p = [ ]
-    r = [ ]
-    r.append( Fore.MAGENTA + model.name + Fore.RESET )
-    if model.file_name:
-        r.append( model.file_name )
-    else:
-        r.append( "Model not saved." )
+    p = ByRef[bool]( False )
+    r = []
+    r.append( Theme.HEADING + "Model" + Theme.RESET )
+    r.append( "Project name:  {}".format( __get_status_line_comment( bool(model.sequences), p, ext_files.import_blast, model.name ) ) )
+    r.append( "File name:     {}".format( __get_status_line_comment( model.file_name is not None, p, ext_files.file_save, model.file_name if model.file_name else "Unsaved" ) ) )
     r.append( "" )
-    r.append( Fore.MAGENTA + "Sequences" + Fore.RESET )
+    r.append( Theme.HEADING + "Sequences" + Theme.RESET )
     r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, ext_files.import_blast ) ) )
     r.append( "FASTA:         {}".format( __get_status_line( p, model.sequences, lambda x: x.site_array, ext_files.import_fasta ) ) )
     r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: x.component, ext_generating.make_components ) ) )
     r.append( "" )
-    r.append( Fore.MAGENTA + "Components" + Fore.RESET )
+    r.append( Theme.HEADING + "Components" + Theme.RESET )
     r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
     r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignment ) ) )
     r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_tree ) ) )
     r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, ext_generating.make_consensus ) ) )
+    r.append( "" )
+    r.append( Theme.HEADING + "NRFG" + Theme.RESET )
+    r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
     MCMD.print( "\n".join( r ) )
     return Changes( Changes.INFORMATION )
 
 
-@command( names = [ "print_alignment", "alignment" ] )
-def print_alignment( component: Optional[ List[ LegoComponent ] ] = None ) -> Changes:
+@command( names = ["print_alignment", "alignment"] )
+def print_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
@@ -87,8 +91,8 @@ class EPrintTree( MEnum ):
     ETE_ASCII = 4
 
 
-@command( names = [ "print_consensus", "consensus" ] )
-def print_consensus( component: Optional[ List[ LegoComponent ] ] = None, view: EPrintTree = EPrintTree.ASCII ) -> Changes:
+@command( names = ["print_consensus", "consensus"] )
+def print_consensus( component: Optional[List[LegoComponent]] = None, view: EPrintTree = EPrintTree.ASCII ) -> Changes:
     """
     Prints the consensus tree for a component.
     
@@ -100,8 +104,8 @@ def print_consensus( component: Optional[ List[ LegoComponent ] ] = None, view: 
     return Changes( Changes.INFORMATION )
 
 
-@command( names = [ "print_tree", "tree" ] )
-def print_tree( component: Optional[ LegoComponent ] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c f" ) -> Changes:
+@command( names = ["print_tree", "tree"] )
+def print_tree( component: Optional[LegoComponent] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c m f" ) -> Changes:
     """
     Prints the tree for a component.
     
@@ -152,11 +156,11 @@ def __print_header( x ):
     if isinstance( x, LegoComponent ):
         x = "COMPONENT {}".format( x )
     
-    MCMD.information( "\n" + Back.BLUE + Fore.WHITE + "---------- {} ----------".format( x ) + Style.RESET_ALL )
+    MCMD.information( "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET )
 
 
-@command( names = [ "print_interlinks", "interlinks" ] )
-def component_edges( component: Optional[ LegoComponent ] = None ) -> Changes:
+@command( names = ["print_interlinks", "interlinks"] )
+def component_edges( component: Optional[LegoComponent] = None ) -> Changes:
     """
     Prints the edges between the component subsequences.
     
@@ -206,14 +210,14 @@ def component_edges( component: Optional[ LegoComponent ] = None ) -> Changes:
             failed = False
             
             for sequence in major_sequences:
-                subsequences = [ x for x in sequence.subsequences if minor in x.components ]
+                subsequences = [x for x in sequence.subsequences if minor in x.components]
                 
                 if subsequences:
-                    start += subsequences[ 0 ].start
-                    end += subsequences[ -1 ].end
+                    start += subsequences[0].start
+                    end += subsequences[-1].end
                     
                     if component is not None:
-                        message.add_row( minor, major, sequence.accession, sequence.length, subsequences[ 0 ].start, subsequences[ -1 ].end )
+                        message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end )
                 else:
                     failed = True
             
@@ -223,13 +227,13 @@ def component_edges( component: Optional[ LegoComponent ] = None ) -> Changes:
             start /= len( major_sequences )
             end /= len( major_sequences )
             
-            message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[ major ] ), round( start ), round( end ) )
+            message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ) )
     
     MCMD.print( message.to_string() )
     return Changes( Changes.INFORMATION )
 
 
-@command( names = [ "print_components", "components" ] )
+@command( names = ["print_components", "components"] )
 def print_components() -> Changes:
     """
     Prints the major components.
@@ -262,7 +266,7 @@ def print_components() -> Changes:
     return Changes( Changes.INFORMATION )
 
 
-def __get_status_line( target: List[ Plugin ], the_list: Iterable[ T ], test: Callable[ [ T ], bool ], plugin: Plugin ) -> str:
+def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:
     assert isinstance( plugin, Plugin ), plugin
     total = 0
     filtered = 0
@@ -272,43 +276,49 @@ def __get_status_line( target: List[ Plugin ], the_list: Iterable[ T ], test: Ca
         if test( x ):
             filtered += 1
     
-    if filtered and filtered == total:
-        style = Fore.GREEN
-        suffix = ""
+    return __get_status_line_comment( filtered and filtered == total, warned, plugin, "{}/{}".format( filtered, total ) )
+
+
+def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optional[Plugin], message ):
+    if not is_done:
+        if not warned.value and plugin is not None:
+            warned.value = True
+            return Theme.STATUS_NO + message + Theme.COMMENT + " - Consider running " + Theme.COMMAND_NAME + MENV.host.translate_name( plugin.name ) + Theme.RESET
+        else:
+            return Theme.STATUS_NO + message + Theme.RESET
     else:
-        if filtered == 0:
-            style = Fore.RED
-        else:
-            style = Fore.YELLOW
-        
-        if not target:
-            suffix = Fore.WHITE + Style.DIM + " - Consider running '{}'.".format( MENV.host.translate_name( plugin.name ) )
-            target.append( plugin )
-        else:
-            suffix = ""
-    
-    return style + "{}/{}".format( filtered, total ) + suffix + Style.RESET_ALL
+        return Theme.STATUS_YES + message + Theme.RESET
 
 
-@command( names = [ "print_fusions", "fusions" ] )
+@command( names = ["print_fusions", "fusions"] )
 def print_fusions() -> Changes:
     """
     Estimates model fusions. Does not affect the model.
     """
-    results = [ ]
+    results: List[str] = []
     
-    __print_header( "FUSIONS" )
     model = global_view.current_model()
     
-    for fusion in fuse.find_fusion_events( model ):
-        results.append( str( fusion ) )
+    for fusion_event in model.fusion_events:
+        results.append( "{}".format( fusion_event ) )
+        results.append( "" )
+        
+        for fusion_point in fusion_event.points_a:
+            results.append( "  •  {}".format( fusion_point ) )
+        
+        results.append( "" )
+        
+        for fusion_point in fusion_event.points_b:
+            results.append( "  •  {}".format( fusion_point ) )
+        
+        results.append( "" )
+        results.append( "" )
     
     MCMD.information( "\n".join( results ) )
-    
     return Changes( Changes.INFORMATION )
 
 
-@command( names = [ "print_fusions", "fusions" ] )
+@command( names = ["print_nrfg", "nrfg"] )
 def print_nrfg() -> Changes:
     """
     Prints the NRFG

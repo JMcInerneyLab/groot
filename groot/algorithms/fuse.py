@@ -1,6 +1,5 @@
-from typing import Dict, List, Set, cast
-
-from groot.data.graphing import MEdge, MGraph, MNode
+from typing import Dict, List, Set, cast, Sequence
+from groot.data.graphing import MEdge, MGraph, MNode, FollowParams
 from groot.data.lego_model import LegoComponent, LegoModel
 from mhelper import Logger, array_helper
 from mhelper.component_helper import ComponentFinder
@@ -23,23 +22,17 @@ class FusionEvent:
     
     
     def __init__( self, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ):
-        self.component_a = component_a
-        self.component_b = component_b
-        self.intersections = intersections
-        self.orig_intersections = set( intersections )
-        self.points_a = None  # type: List[ FusionPoint ]
-        self.points_b = None  # type: List[ FusionPoint ]
+        self.component_a: LegoComponent = component_a
+        self.component_b: LegoComponent = component_b
+        self.intersections: Set[LegoComponent] = intersections
+        self.orig_intersections: Set[LegoComponent] = set( intersections )
+        self.points_a: List[FusionPoint] = None
+        self.points_b: List[FusionPoint] = None
     
     
     def __str__( self ):
-        intersections = ", ".join( str( x ) for x in self.intersections )
-        
-        if self.orig_intersections != self.intersections:
-            orig_intersections = " ({})".format( "+".join( str( x ) for x in self.orig_intersections ) )
-        else:
-            orig_intersections = ""
-        
-        return "{} ({} points) + {} ({} points) = {}{}".format( self.component_a, len( self.points_a ), self.component_b, len( self.points_b ), intersections, orig_intersections )
+        intersections = ", ".join( x.__str__() for x in self.intersections )
+        return "{} COMBINES WITH {} TO FORM {}".format( self.component_a, self.component_b, intersections )
 
 
 def find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
@@ -87,7 +80,7 @@ def find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
     return results
 
 
-def find_all_fusion_points( model: LegoModel ) -> List[FusionEvent]:
+def find_all_fusion_points( model: LegoModel ) -> None:
     """
     Finds the fusion points in the model.
     i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
@@ -100,8 +93,6 @@ def find_all_fusion_points( model: LegoModel ) -> List[FusionEvent]:
         r.append( event )
     
     model.fusion_events = r
-    
-    return model.fusion_events
 
 
 class FusionPoint:
@@ -111,65 +102,91 @@ class FusionPoint:
         self.component = component
         self.event = event
         self.count = count
+    
+    
+    def __str__( self ):
+        return "EVENT JOINING {} GENES IN {} TO {}".format( self.count, self.component, self.opposite_component )
 
 
 class _FusionPointCandidate:
-    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, count ):
-        self.edge = edge
-        self.node_a = node_1
-        self.node_b = node_2
-        self.count = count
+    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, count: int ) -> None:
+        self.edge: MEdge = edge
+        self.node_a: MNode = node_1
+        self.node_b: MNode = node_2
+        self.count: int = count
 
 
 def __get_fusion_points( fusion_event: FusionEvent,
                          component: LegoComponent ) -> List[FusionPoint]:
     """
     In the tree of `component` we look for the node separating the event's intersections from everything else.
+    
+    We have a tree (which hopefully looks something like...)
+    
+         ┌── ▒▒▒▒      α        ╗
+         │                      ║
+      ┌──┤                      ║ our non-composite genes
+      │  │                      ║
+      │  └── ▒▒▒▒      α        ╝
+    ──┤
+      │  ┌── ▒▒▒▒░░░░  αβγδ     ╗
+      │1 │2                     ║
+      └──┤                      ║ our composite genes
+         │3                     ║
+         └── ▒▒▒▒░░░░  αβγδ     ╝
+    
+    # `α` we are working on (which is in all nodes)
+    # `β` is the component that identifies the "fusion" part of the tree
+    # `β` itself may be made up of multiple other components (`βγδ`)
     """
+    
+    # Get the component tree
+    # The `intersection_aliases` correspond to βγδ in the above diagram
     graph = component.tree
     
-    for node in graph.get_nodes():
-        if node.fusion is not None:
-            if node.fusion.event.component_a == fusion_event.component_a and node.fusion.event.component_b == fusion_event.component_b:
-                node.fusion = None
+    intersection_roots = fusion_event.intersections
+    intersection_aliases = set()
     
-    lower = fusion_event.intersections
-    subset = set()
+    for intersection_root in intersection_roots:
+        for intersection_alias in intersection_root.outgoing_components():
+            intersection_aliases.add( intersection_alias )
     
-    for x in lower:
-        for y in x.outgoing_components():
-            subset.add( y )
-    
-    fusions = cast( List[_FusionPointCandidate], [] )
+    # Iterate over all the edges to make a list of `candidate` edges
+    # - those separating βγδ from everything else
+    candidates: List[_FusionPointCandidate] = []
     
     for edge in graph.get_edges():
-        for node in (edge.a, edge.b):
-            relations = node.follow( exclude_edges = [edge] )
+        for node in cast( Sequence[MNode], (edge.a, edge.b) ):
+            params = FollowParams( root = node, exclude_edges = [edge] )
+            graph.follow( params )
             count = 0
             
-            for relative in relations:
+            # Count the number of fusion sequences in the subgraph
+            for relative in params.visited_nodes:
                 if relative.sequence is not None:
                     count += 1
                     
-                    if relative.sequence.component not in subset:
+                    if relative.sequence.component not in intersection_aliases:
+                        # Fusion sequence are not alone - disregard
                         count = 0
                         break
             
-            if count == 0:
-                continue
-            
-            fusions.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
+            if count != 0:
+                candidates.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
     
-    comp = ComponentFinder()
+    # Connected candidates (such as 1,2,3 in the diagram above) need to be reduced to just the one encompassing them all
+    # - To do this, make a CC set of the candidates
+    cc_finder = ComponentFinder()
     
-    for fp1 in fusions:
-        for fp2 in fusions:
-            if fp1.node_a is fp2.node_a or fp1.node_b is fp2.node_a:
-                comp.equate( fp1, fp2 )
+    for candidate_1 in candidates:
+        for candidate_2 in candidates:
+            if candidate_1.node_a is candidate_2.node_a or candidate_1.node_b is candidate_2.node_a:
+                cc_finder.join( candidate_1, candidate_2 )
     
+    # - Now for each CC, just use the candidate encompassing the most composites
     fusions_refined = []  # type: List[_FusionPointCandidate]
     
-    for component_ in comp.tabulate():  # type: List[_FusionPointCandidate]
+    for component_ in cc_finder.tabulate():  # type: List[_FusionPointCandidate]
         fusions_refined.append( max( component_, key = lambda x: x.count ) )
     
     results = []
@@ -197,7 +214,7 @@ def __get_fusion_points( fusion_event: FusionEvent,
 def create_nrfg( model: LegoModel ) -> MGraph:
     result = MGraph()
     
-    lookup_table = cast( Dict[MNode, MNode], { } )
+    lookup_table: Dict[MNode, MNode] = { }
     
     for c in model.components:
         lookup_table.update( result.import_graph( c.tree ) )

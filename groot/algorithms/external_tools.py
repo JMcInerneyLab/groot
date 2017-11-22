@@ -40,7 +40,7 @@ def tree( alignment ):
     file_helper.write_all_text( "in_file.fasta", alignment )
     bio_helper.convert_file( "in_file.fasta", "in_file.phy", "fasta", "phylip" )
     
-    exception_helper.run_subprocess( "raxml -m PROTGAMMAWAG -p 1 -s in_file.phy -# 20 -n t" )
+    exception_helper.run_subprocess( "raxml -T 4 -m PROTGAMMAWAG -p 1 -s in_file.phy -# 20 -n t" )
     
     return file_helper.read_all_text( "RAxML_bestTree.t" )
 

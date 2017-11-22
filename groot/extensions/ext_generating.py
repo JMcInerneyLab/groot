@@ -9,6 +9,9 @@ from intermake import command
 from intermake.engine.environment import MCMD
 
 
+__mcmd_folder_name__ = "Generating"
+
+
 @command()
 def make_components( tolerance: int = 0 ) -> Changes:
     """
@@ -29,7 +32,7 @@ def make_components( tolerance: int = 0 ) -> Changes:
 
 
 @command()
-def make_alignment( component: Optional[ List[ LegoComponent ] ] = None ) -> Changes:
+def make_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Aligns the component. If no component is specified, aligns all components.
     
@@ -46,7 +49,7 @@ def make_alignment( component: Optional[ List[ LegoComponent ] ] = None ) -> Cha
 
 
 @command()
-def make_tree( component: Optional[ List[ LegoComponent ] ] = None ):
+def make_tree( component: Optional[List[LegoComponent]] = None ):
     """
     Generates component trees.
     
@@ -62,7 +65,7 @@ def make_tree( component: Optional[ List[ LegoComponent ] ] = None ):
 
 
 @command()
-def make_consensus( component: Optional[ List[ LegoComponent ] ] = None ):
+def make_consensus( component: Optional[List[LegoComponent]] = None ):
     """
     Fuses the component trees to create the basis for our fusion graph.
     :param component:   Component, or `None` for all.
@@ -81,27 +84,26 @@ def make_fusions():
     """
     Makes the fusion points.
     """
-    results = [ ]
-    
     model = global_view.current_model()
+    fuse.find_all_fusion_points( model )
     
-    for fusion in fuse.find_all_fusion_points( model ):
-        results.append( str( fusion ) )
-    
-    MCMD.information( "\n".join( results ) )
+    n = len( model.fusion_events )
+    MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
     
     return Changes( Changes.MODEL_DATA )
 
 
 @command()
-def make_nrfg():
+def make_nrfg( format_str: str = "t" ):
     """
     Creates the N-rooted fusion graph.
+    
+    :param format_str: Format for output
     """
     model = global_view.current_model()
     
     nrfg = fuse.create_nrfg( model )
     
-    MCMD.information( nrfg.to_ascii() )
+    MCMD.information( nrfg.to_csv( format_str ) )
     
     return Changes( Changes.MODEL_DATA )

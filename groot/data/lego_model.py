@@ -8,16 +8,13 @@ from typing import Iterable, Iterator, List, Optional, Set, cast
 
 from colorama import Back, Fore
 
+from groot import constants
 from intermake import EColour, IVisualisable, UiInfo, resources
+from intermake.engine.theme import Theme
 from mhelper import Logger, MEnum, SwitchError, array_helper, file_helper as FileHelper, string_helper
 
 
 LOG = Logger( False )
-
-# EDGE_FORMAT = "❮ {}·𝑛{} {}…{} ❮❯ {}·𝑛{} {}…{} ❯"
-# SIDE_FORMAT = "{}·𝑛{}~{}…{}·𝓂{}"
-# SEQ_FORMAT = "{}·𝑛{}"
-# SUBSEQUENCE_FORMAT = "{}·𝑛{}~{}…{}"
 
 SIDE_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·𝑛" + Fore.GREEN + "{} " + Fore.LIGHTYELLOW_EX + "{}" + Fore.WHITE + "…" + Fore.YELLOW + "{}" + Fore.WHITE + "·𝓂" + Fore.GREEN + "{}" + Fore.RESET
 SUBSEQUENCE_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·𝑛" + Fore.GREEN + "{} " + Fore.LIGHTYELLOW_EX + "{}" + Fore.WHITE + "…" + Fore.YELLOW + "{}" + Fore.RESET
@@ -55,11 +52,11 @@ class ETristate( MEnum ):
 
 class LegoSide( IVisualisable ):
     def __init__( self, is_source: bool ):
-        self.__list = [ ]  # type:List[LegoSubsequence]
-        self.is_source = is_source
+        self.__list: "List[LegoSubsequence]" = []
+        self.is_source: bool = is_source
     
     
-    def visualisable_info( self ):
+    def visualisable_info( self ) -> UiInfo:
         return UiInfo( name = "source" if self.is_source else "destination",
                        comment = "",
                        type_name = "Side",
@@ -79,33 +76,33 @@ class LegoSide( IVisualisable ):
         array_helper.ordered_insert( self.__list, subsequence, lambda x: x.start )
     
     
-    def __len__( self ):
+    def __len__( self ) -> int:
         return len( self.__list )
     
     
     @property
-    def sequence( self ):
+    def sequence( self ) -> "LegoSequence":
         """
         Sequence of the subsequences
         """
-        return self.__list[ 0 ].sequence
+        return self.__list[0].sequence
     
     
     @property
-    def component( self ):
+    def component( self ) -> "LegoComponent":
         """
         Major component of the sequence
         """
-        return self.__list[ 0 ].sequence.component
+        return self.__list[0].sequence.component
     
     
     @property
-    def sites( self ):
+    def sites( self ) -> str:
         return self.sequence.sub_sites( self.start, self.end )
     
     
     @property
-    def start( self ):
+    def start( self ) -> int:
         """
         Index of the leftmost subsequence
         """
@@ -113,7 +110,7 @@ class LegoSide( IVisualisable ):
     
     
     @property
-    def end( self ):
+    def end( self ) -> int:
         """
         Index of the rightmost subsequence
         """
@@ -121,22 +118,22 @@ class LegoSide( IVisualisable ):
     
     
     @staticmethod
-    def to_string( sequence, start, end, count ):
+    def to_string( sequence: "LegoSequence", start: int, end: int, count: int ) -> str:
         return SIDE_FORMAT.format( sequence.accession, sequence.length, start, end, count )
     
     
-    def __str__( self ):
+    def __str__( self ) -> str:
         return self.to_string( self.sequence, self.start, self.end, len( self.__list ) )
     
     
-    def __contains__( self, item ):
+    def __contains__( self, item ) -> bool:
         if isinstance( item, LegoSubsequence ):
             return item in self.__list
         
         raise TypeError( "Cannot tell if LegoSide contains the item because the item is of type '{}', not '{}'.".format( type( item ).__name__, LegoSubsequence.__name__ ) )
     
     
-    def remove( self, subsequence: "LegoSubsequence" ):
+    def remove( self, subsequence: "LegoSubsequence" ) -> None:
         self.__list.remove( subsequence )
     
     
@@ -144,12 +141,12 @@ class LegoSide( IVisualisable ):
         return iter( self.__list )
     
     
-    def __getitem__( self, item ):
-        return self.__list[ item ]
+    def __getitem__( self, item ) -> "LegoSubsequence":
+        return self.__list[item]
     
     
     @property
-    def length( self ):
+    def length( self ) -> int:
         return 1 + self.end - self.start
 
 
@@ -164,18 +161,18 @@ class LegoEdge( IVisualisable ):
     """
     
     
-    def __init__( self ):
+    def __init__( self ) -> None:
         """
         CONSTRUCTOR
         """
         self.left = LegoSide( True )
         self.right = LegoSide( False )
         self.is_destroyed = False
-        self.comments = [ ]  # type: List[str]
+        self.comments = []  # type: List[str]
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str(self),
+    def visualisable_info( self ) -> UiInfo:
+        return UiInfo( name = str( self ),
                        comment = "",
                        type_name = "Edge",
                        value = "",
@@ -184,23 +181,23 @@ class LegoEdge( IVisualisable ):
                        extra_named = (self.left, self.right) )
     
     
-    def __contains__( self, item ):
+    def __contains__( self, item ) -> bool:
         return item in self.left or item in self.right
     
     
     @staticmethod
-    def to_string( sequence, start, end, sequence_b, start_b, end_b ):
+    def to_string( sequence: "LegoSequence", start: int, end: int, sequence_b: "LegoSequence", start_b: int, end_b: int ) -> str:
         return EDGE_FORMAT.format( sequence.accession, sequence.length, start, end, sequence_b.accession, sequence_b.length, start_b, end_b )
     
     
-    def __str__( self ):
+    def __str__( self ) -> str:
         if self.is_destroyed:
             return "DELETED_EDGE"
         
         return self.to_string( self.left.sequence, self.left.start, self.left.end, self.right.sequence, self.right.start, self.right.end )
     
     
-    def __repr__( self ):
+    def __repr__( self ) -> str:
         """
         OVERRIDE 
         """
@@ -301,14 +298,14 @@ class LegoSubsequence( IVisualisable ):
         self.sequence = sequence  # type: LegoSequence
         self.__start = start  # Start position
         self.__end = end  # End position
-        self.edges = [ ]  # type: List[LegoEdge] # Edge list
+        self.edges = []  # type: List[LegoEdge] # Edge list
         
         self.ui_position = None
         self.ui_colour = None
         
         self.is_destroyed = False
         
-        self.comments = [ ]  # type:List[str]
+        self.comments = []  # type:List[str]
         
         if components:
             self.components = set( components )  # type: Set[LegoComponent]
@@ -334,11 +331,11 @@ class LegoSubsequence( IVisualisable ):
     
     
     @staticmethod
-    def to_string( sequence, start, end ):
+    def to_string( sequence, start, end ) -> str:
         return SUBSEQUENCE_FORMAT.format( sequence.accession, sequence.length, start, end )
     
     
-    def __str__( self ):
+    def __str__( self ) -> str:
         return self.to_string( self.sequence, self.start, self.end )
     
     
@@ -353,7 +350,7 @@ class LegoSubsequence( IVisualisable ):
     
     
     @start.setter
-    def start( self, value: int ):
+    def start( self, value: int ) -> None:
         assert isinstance( value, int )
         
         if not (0 < value <= self.__end):
@@ -363,7 +360,7 @@ class LegoSubsequence( IVisualisable ):
     
     
     @end.setter
-    def end( self, value: int ):
+    def end( self, value: int ) -> None:
         assert isinstance( value, int )
         
         if not (self.__start <= value):
@@ -373,7 +370,7 @@ class LegoSubsequence( IVisualisable ):
     
     
     @property
-    def index( self ):
+    def index( self ) -> int:
         """
         Finds the index of this subsequence in the owning sequence
         (Only works after deconvolution of the owning sequence)
@@ -383,25 +380,25 @@ class LegoSubsequence( IVisualisable ):
     
     
     @property
-    def site_array( self ):
+    def site_array( self ) -> Optional[str]:
         """
         Obtains the slice of the sequence array pertinent to this subsequence
         """
         if self.sequence.site_array:
-            return self.sequence.site_array[ self.start:self.end + 1 ]
+            return self.sequence.site_array[self.start:self.end + 1]
         else:
             return None
     
     
     @property
-    def length( self ):
+    def length( self ) -> int:
         """
         Calculates the length of this subsequence
         """
         return self.end - self.start + 1
     
     
-    def __repr__( self ):
+    def __repr__( self ) -> str:
         if self.is_destroyed:
             return "DELETED_SUBSEQUENCE"
         
@@ -415,21 +412,24 @@ class LegoSequence( IVisualisable ):
     
     
     def __init__( self, model: "LegoModel", accession: str, id: int ):
-        self.id = id
-        self.accession = accession  # Database accession (ID)
-        self.subsequences = [ ]  # type: List[LegoSubsequence]
-        self.model = model
-        self.site_array = None
-        self.is_root = False
-        self.comments = [ ]  # List[str]
-        self.component = None  # type: Optional[LegoComponent]
+        self.id: int = id
+        self.accession: str = accession  # Database accession (ID)
+        self.subsequences: List[LegoSubsequence] = []
+        self.model: "LegoModel" = model
+        self.site_array: str = None
+        self.is_root: bool = False
+        self.comments: List[str] = []
+        self.component: LegoComponent = None
     
     
     def visualisable_info( self ) -> UiInfo:
+        """
+        OVERRIDE 
+        """
         return UiInfo( name = self.accession,
                        comment = "",
                        type_name = "Sequence",
-                       value = "{} sites in {} parts".format( self.subsequences[ -1 ].end, len( self.subsequences ) ),
+                       value = "{} sites in {} parts".format( self.subsequences[-1].end, len( self.subsequences ) ),
                        colour = EColour.BLUE,
                        icon = resources.folder,
                        extra = { "id"              : self.id,
@@ -443,6 +443,9 @@ class LegoSequence( IVisualisable ):
     
     
     def is_composite( self ) -> ETristate:
+        """
+        Returns if this has been determined to be a composite gene
+        """
         l = len( self.minor_components() )
         
         if l == 1:
@@ -453,11 +456,17 @@ class LegoSequence( IVisualisable ):
             return ETristate.YES
     
     
-    def minor_components( self ):
+    def minor_components( self ) -> "Set[LegoComponent]":
+        """
+        Obtains the set of components that encompass this sequence as a minor element
+        """
         return set( y for x in self.subsequences for y in x.components )
     
     
-    def all_edges( self ) -> Set[ LegoEdge ]:
+    def all_edges( self ) -> Set[LegoEdge]:
+        """
+        Obtains all edges touching this sequence
+        """
         result = set()
         
         for ss in self.subsequences:
@@ -467,16 +476,17 @@ class LegoSequence( IVisualisable ):
         return result
     
     
-    @staticmethod
-    def to_string( sequence ):
-        return SEQ_FORMAT.format( sequence.accession, sequence.length )
-    
-    
-    def __str__( self ):
-        return self.to_string( self )
+    def __str__( self ) -> str:
+        """
+        OVERRIDE 
+        """
+        return SEQ_FORMAT.format( self.accession, self.length )
     
     
     def connected_sequences( self ) -> "Set[LegoSequence]":
+        """
+        Obtains the set of sequences to which this is connected
+        """
         result = set()
         
         for edge in self.all_edges():
@@ -487,23 +497,32 @@ class LegoSequence( IVisualisable ):
     
     
     @property
-    def length( self ):
+    def length( self ) -> int:
+        """
+        Gets the length of this sequence
+        """
         if len( self.subsequences ) == 0:
             return 0
         
-        return self.subsequences[ -1 ].end
+        return self.subsequences[-1].end
     
     
     @property
-    def index( self ):
+    def index( self ) -> int:
+        """
+        Gets the index of this sequence within the model
+        """
         return self.model.sequences.index( self )
     
     
-    def __repr__( self ):
+    def __repr__( self ) -> str:
+        """
+        OVERRIDE 
+        """
         return "{}".format( self.accession )
     
     
-    def _ensure_length( self, new_length: int ):
+    def _ensure_length( self, new_length: int ) -> None:
         assert isinstance( new_length, int )
         
         if new_length == 0:
@@ -514,7 +533,7 @@ class LegoSequence( IVisualisable ):
             self.subsequences.append( ss )
     
     
-    def _find( self, start: int, end: int ):
+    def _find( self, start: int, end: int ) -> "LegoSubsequence":
         for x in self.subsequences:
             if x.start == start and x.end == end:
                 return x
@@ -522,7 +541,7 @@ class LegoSequence( IVisualisable ):
         raise KeyError( "No such subsequence as {0}-{1}".format( start, end ) )
     
     
-    def sub_sites( self, start, end ):
+    def sub_sites( self, start: int, end: int ) -> Optional[str]:
         if self.site_array is None:
             return None
         
@@ -530,7 +549,7 @@ class LegoSequence( IVisualisable ):
         assert 0 < start <= len( self.site_array ), "{} {} {}".format( start, end, len( self.site_array ) )
         assert 0 < end <= len( self.site_array ), "{} {} {}".format( start, end, len( self.site_array ) )
         
-        return self.site_array[ start:end ]
+        return self.site_array[start:end]
 
 
 class LegoModel( IVisualisable ):
@@ -555,20 +574,20 @@ class LegoModel( IVisualisable ):
     """
     
     
-    def __init__( self ):
+    def __init__( self ) -> None:
         """
         CONSTRUCTOR
         Creates a new model with no data
         Use the `import_*` functions to add data from a file.
         """
         self.__incremental_id = 0
-        self.sequences = [ ]  # type: List[LegoSequence]
-        self.components = [ ]  # type: List[LegoComponent]
-        self.comments = [ "MODEL CREATED AT {}".format( string_helper.current_time() ) ]
+        self.sequences = []  # type: List[LegoSequence]
+        self.components = []  # type: List[LegoComponent]
+        self.comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
         self.__seq_type = ESiteType.UNKNOWN
         self.file_name = None
         from groot.algorithms.fuse import FusionEvent
-        self.fusion_events = cast( List[ FusionEvent ], [ ] )
+        self.fusion_events = cast( List[FusionEvent], [] )
     
     
     def visualisable_info( self ) -> UiInfo:
@@ -586,7 +605,7 @@ class LegoModel( IVisualisable ):
     
     
     @property
-    def name( self ):
+    def name( self ) -> str:
         from groot.data import global_view
         if self is not global_view.current_model():
             return "Not the current model"
@@ -628,7 +647,7 @@ class LegoModel( IVisualisable ):
         return s
     
     
-    def _get_incremental_id( self ):
+    def _get_incremental_id( self ) -> int:
         """
         Obtains a unique identifier.
         """
@@ -637,7 +656,7 @@ class LegoModel( IVisualisable ):
     
     
     @property
-    def all_edges( self ) -> Set[ LegoEdge ]:
+    def all_edges( self ) -> Set[LegoEdge]:
         """
         API
         Returns the set of all edges in the model.
@@ -652,16 +671,16 @@ class LegoModel( IVisualisable ):
         return r
     
     
-    def all_subsequences( self ) -> Iterator[ LegoSubsequence ]:
+    def all_subsequences( self ) -> Iterator[LegoSubsequence]:
         for sequence in self.sequences:
             yield from sequence.subsequences
     
     
-    def _has_data( self ):
+    def _has_data( self ) -> bool:
         return bool( self.sequences )
     
     
-    def count_subsequences( self ):
+    def count_subsequences( self ) -> int:
         return sum( len( sequence.subsequences ) for sequence in self.sequences )
     
     
@@ -685,7 +704,7 @@ _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
 
 
 class LegoComponentElement:
-    def __init__( self, is_major, sequence, start, end, subsequences ):
+    def __init__( self, is_major, sequence, start, end, subsequences ) -> None:
         self.is_major = is_major
         self.sequence = sequence
         self.start = start
@@ -693,11 +712,11 @@ class LegoComponentElement:
         self.subsequences = subsequences
     
     
-    def __str__( self ):
+    def __str__( self ) -> str:
         return ("⎅" if self.is_major else "⎕") + LegoSide.to_string( self.sequence, self.start, self.end, len( self.subsequences ) )
     
     
-    def sites( self ):
+    def sites( self ) -> str:
         return self.sequence.sub_sites( self.start, self.end )
 
 
@@ -716,17 +735,17 @@ class LegoComponent( IVisualisable ):
     
     def __init__( self, model: LegoModel, index: int ):
         from groot.data.graphing import MGraph
-        self.model = model  # Source model
-        self.index = index  # Index of component
-        self.tree = cast( MGraph, None )
-        self.alignment = cast( str, None )  # Alignment generated for component, in FASTA format
-        self.consensus = cast( MGraph, None )  # Consensus tree
-        self.consensus_intersection = cast( List[ LegoSequence ], None )
+        self.model: LegoModel = model  # Source model
+        self.index: int = index  # Index of component
+        self.tree: MGraph = None
+        self.alignment: str = None  # Alignment generated for component, in FASTA format
+        self.consensus: MGraph = None  # Consensus tree
+        self.consensus_intersection: List[LegoSequence] = None
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str(self),
-                       comment = str(self.__doc__),
+    def visualisable_info( self ) -> UiInfo:
+        return UiInfo( name = str( self ),
+                       comment = str( self.__doc__ ),
                        type_name = "Component",
                        value = "{} sequences".format( array_helper.count( self.major_sequences() ) ),
                        colour = EColour.RED,
@@ -737,59 +756,63 @@ class LegoComponent( IVisualisable ):
                                  "minor_ss": self.minor_subsequences() } )
     
     
-    def __str__( self ):
+    def __str__( self ) -> str:
         return repr( self )
     
     
-    def __repr__( self ):
-        return _GREEK[ self.index % len( _GREEK ) ].lower()
+    def str_ansi( self ) -> str:
+        return constants.COMPONENT_COLOURS_ANSI[self.index % len( constants.COMPONENT_COLOURS_ANSI )] + str( self ) + Theme.RESET
     
     
-    def elements( self ) -> List[ LegoComponentElement ]:
-        r = [ ]
+    def __repr__( self ) -> str:
+        return _GREEK[self.index % len( _GREEK )].lower()
+    
+    
+    def elements( self ) -> List[LegoComponentElement]:
+        r = []
         minor = set( self.minor_sequences() )
         
         for sequence in self.model.sequences:
             if sequence.component is self:
                 r.append( LegoComponentElement( True, sequence, 1, sequence.length, sequence.subsequences ) )
             elif sequence in minor:
-                rss = [ x for x in sequence.subsequences if self in x.components ]
-                r.append( LegoComponentElement( False, sequence, rss[ 0 ].start, rss[ -1 ].end, rss ) )
+                rss = [x for x in sequence.subsequences if self in x.components]
+                r.append( LegoComponentElement( False, sequence, rss[0].start, rss[-1].end, rss ) )
         
         return r
     
     
-    def minor_subsequences( self ) -> List[ LegoSubsequence ]:
+    def minor_subsequences( self ) -> List[LegoSubsequence]:
         """
         Finds subsequences related by this component.
         """
-        return [ subsequence for subsequence in self.model.all_subsequences() if self in subsequence.components ]
+        return [subsequence for subsequence in self.model.all_subsequences() if self in subsequence.components]
     
     
     def incoming_components( self ) -> "List[LegoComponent]":
         """
         Returns components which implicitly form part of this component.
         """
-        return [ component for component in self.model.components if any( x in component.minor_sequences() for x in self.major_sequences() ) ]
+        return [component for component in self.model.components if any( x in component.minor_sequences() for x in self.major_sequences() )]
     
     
     def outgoing_components( self ) -> "List[LegoComponent]":
         """
         Returns components which implicitly form part of this component.
         """
-        return [ component for component in self.model.components if any( x in component.major_sequences() for x in self.minor_sequences() ) ]
+        return [component for component in self.model.components if any( x in component.major_sequences() for x in self.minor_sequences() )]
     
     
-    def major_sequences( self ) -> List[ LegoSequence ]:
+    def major_sequences( self ) -> List[LegoSequence]:
         """
         Returns the major sequences.
         Sequences in the major set.
         See `__detect_major` for the definition. 
         """
-        return [ sequence for sequence in self.model.sequences if sequence.component is self ]
+        return [sequence for sequence in self.model.sequences if sequence.component is self]
     
     
-    def minor_sequences( self ) -> List[ LegoSequence ]:
+    def minor_sequences( self ) -> List[LegoSequence]:
         """
         Returns the minor sequences.
         Sequences with at least one subsequence in the minor set.

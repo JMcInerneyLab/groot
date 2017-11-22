@@ -3,15 +3,18 @@ import sys
 from os import path
 from typing import Optional
 
-from colorama import Fore
+
 
 from groot import constants
 from groot.algorithms import importation
 from groot.data import global_view, user_options
 from groot.frontends.gui.gui_view_utils import Changes
 from intermake import MCMD, MENV, PathToVisualisable, command, console_explorer
+from intermake.engine.theme import Theme
+
 from mhelper import file_helper, io_helper
 
+__mcmd_folder_name__ = "Files"
 
 @command(names=["file_sample", "sample"])
 def file_sample( name: Optional[ str ] = None, view: bool = False ) -> Changes:
@@ -111,12 +114,12 @@ def file_recent():
     r.append( "SESSIONS:" )
     for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
         if file.lower().endswith(constants.BINARY_EXTENSION):
-            r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
+            r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     r.append( "\nRECENT:" )
     for file in user_options.options().recent_files:
         if file.lower().endswith(constants.BINARY_EXTENSION):
-            r.append( file_helper.highlight_file_name_without_extension( file, Fore.YELLOW, Fore.RESET ) )
+            r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     MCMD.information( "\n".join( r ) )
 
@@ -178,8 +181,8 @@ def file_load( file_name: str) -> Changes:
     """
     Loads the model from a file
     :param file_name:   File to load.
-                        The `sessions` folder will also assumed if you don't specify a path.
-                        Prefix `./` to force a write to the working directory instead.
+                        If you don't specify a path, the `$(DATA_FOLDER)sessions` folder will be assumed
+                        (If you'd like to use the current "working" directory, use the prefix `./`)
     """
     file_name = __fix_path( file_name )
     model = io_helper.load_binary( file_name )

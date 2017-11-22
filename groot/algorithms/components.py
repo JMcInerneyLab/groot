@@ -84,7 +84,7 @@ def __detect_major(_:Mandate, model: LegoModel, tolerance: int ) -> None:
 
             beta = edge.opposite( sequence_alpha ).sequence
             LOG_MAJOR( "-- LINKS {} AND {}", sequence_alpha, beta )
-            components.equate( sequence_alpha, beta )
+            components.join( sequence_alpha, beta )
 
     for index, sequence_list in enumerate( components.tabulate() ):
         component = LegoComponent( model, index )

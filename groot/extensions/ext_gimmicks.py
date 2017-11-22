@@ -1,14 +1,15 @@
+from intermake import MCMD, visibilities, command
+from mhelper import EFileMode, Filename, file_helper
+
 from groot.data import global_view
 from groot.data.graphing import MGraph
 from groot.data.lego_model import ESiteType
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
-from intermake.engine.environment import MCMD
-from intermake.plugins.command_plugin import command
-from mhelper import EFileMode, Filename, file_helper
 
+__mcmd_folder_name__ = "Gimmicks"
 
-@command( visibility = False )
+@command( visibility = visibilities.ADVANCED )
 def print_sites( type: ESiteType, text: str ) -> Changes:
     """
     Prints a sequence in colour
@@ -23,7 +24,7 @@ def print_sites( type: ESiteType, text: str ) -> Changes:
 __EXT_FASTA = ".fasta"
 
 
-@command( visibility = False )
+@command( visibility = visibilities.ADVANCED )
 def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ) -> Changes:
     """
     Prints a FASTA file in colour
@@ -36,7 +37,7 @@ def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] )
     return Changes( Changes.NONE )
 
 
-@command( visibility = False )
+@command( visibility = visibilities.ADVANCED )
 def update_model() -> Changes:
     """
     Update model to new version.

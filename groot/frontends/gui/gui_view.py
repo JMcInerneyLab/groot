@@ -1023,7 +1023,7 @@ class LegoViewModel:
     
     
     def selected_subsequence_view( self ) -> Optional[ LegoViewSubsequence ]:
-        return array_helper.only_first( self.selected_subsequence_views() )
+        return array_helper.extract_single_item( self.selected_subsequence_views() )
     
     
     def selected_subsequences( self, mask = True ) -> Set[ LegoSubsequence ]:
@@ -1036,7 +1036,7 @@ class LegoViewModel:
     
     
     def selected_subsequence( self, mask = True ) -> Optional[ LegoSubsequence ]:
-        return array_helper.only_first( self.selected_subsequences( mask = mask ) )
+        return array_helper.extract_single_item( self.selected_subsequences( mask = mask ) )
     
     
     def selected_sequences( self, mask = True ) -> Set[ LegoSequence ]:
@@ -1067,11 +1067,11 @@ class LegoViewModel:
     
     
     def selected_complete_sequence( self ) -> Optional[ LegoSequence ]:
-        return array_helper.only_first( self.selected_complete_sequences() )
+        return array_helper.extract_single_item( self.selected_complete_sequences() )
     
     
     def selected_sequence( self ) -> Optional[ LegoSequence ]:
-        return array_helper.only_first( self.selected_sequences() )
+        return array_helper.extract_single_item( self.selected_sequences() )
     
     
     def selected_edges( self, mask = True ) -> Set[ LegoEdge ]:
@@ -1098,7 +1098,7 @@ class LegoViewModel:
     
     
     def selected_edge( self ) -> Optional[ LegoEdge ]:
-        return array_helper.only_first( self.selected_edges() )
+        return array_helper.extract_single_item( self.selected_edges() )
     
     
     def selected_entities( self, mask = True ) -> Set[object ]:

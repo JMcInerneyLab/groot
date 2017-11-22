@@ -288,7 +288,6 @@ def __destroy_subsequence( subsequence : LegoSubsequence ):
         
 def add_new_sequence( model : LegoModel ) -> LegoSequence:
     """
-    API
     Creates a new sequence
     """
     sequence = LegoSequence( model, "Untitled", model._get_incremental_id() )
@@ -298,7 +297,6 @@ def add_new_sequence( model : LegoModel ) -> LegoSequence:
     
 def add_new_edge( subsequences: List[ LegoSubsequence ] ) -> LegoEdge:
     """
-    API
     Creates a new edge between the specified subsequences.
     The specified subsequences should span two, and only two, sequences.
     """
@@ -323,7 +321,6 @@ def add_new_edge( subsequences: List[ LegoSubsequence ] ) -> LegoEdge:
 
 def add_new_subsequence( sequence: LegoSequence, split_point: int ) -> None:
     """
-    API
     Splits a sequence, creating a new subsequence
     """
     split_sequence(sequence, split_point )
@@ -331,12 +328,9 @@ def add_new_subsequence( sequence: LegoSequence, split_point: int ) -> None:
 
 def remove_sequences( model : LegoModel, sequences: Iterable[ LegoSequence ] ):
     """
-    API
     Removes the specified sequences
     """
     for sequence in sequences:
-        print( "REMOVING SEQUENCE '{}'".format( sequence ) )
-        
         for subsequence in sequence.subsequences:
             __destroy_subsequence( subsequence )
         
@@ -345,7 +339,6 @@ def remove_sequences( model : LegoModel, sequences: Iterable[ LegoSequence ] ):
 
 def remove_edges( subsequences: Iterable[ LegoSubsequence ], edges: Iterable[ LegoEdge ] ):
     """
-    API
     Removes the specified edges from the specified subsequences
     """
     for subsequence in subsequences:
