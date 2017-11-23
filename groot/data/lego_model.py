@@ -295,22 +295,22 @@ class LegoSubsequence( IVisualisable ):
         if start > end:
             raise ValueError( "Attempt to create a subsequence in '{0}' where start ({1}) > end ({2}).".format( sequence, start, end ) )
         
-        self.sequence = sequence  # type: LegoSequence
-        self.__start = start  # Start position
-        self.__end = end  # End position
-        self.edges = []  # type: List[LegoEdge] # Edge list
+        self.sequence: LegoSequence = sequence
+        self.__start: int = start  # Start position
+        self.__end: int = end  # End position
+        self.edges: List[LegoEdge] = []  # Edge list
         
         self.ui_position = None
         self.ui_colour = None
         
-        self.is_destroyed = False
+        self.is_destroyed: bool = False
         
-        self.comments = []  # type:List[str]
+        self.comments: List[str] = []
         
         if components:
-            self.components = set( components )  # type: Set[LegoComponent]
+            self.components: Set[LegoComponent] = set( components )  # type: 
         else:
-            self.components = set()  # type: Set[LegoComponent]
+            self.components: Set[LegoComponent] = set()
     
     
     def visualisable_info( self ) -> UiInfo:
@@ -480,7 +480,7 @@ class LegoSequence( IVisualisable ):
         """
         OVERRIDE 
         """
-        return SEQ_FORMAT.format( self.accession, self.length )
+        return self.accession
     
     
     def connected_sequences( self ) -> "Set[LegoSequence]":
@@ -760,10 +760,18 @@ class LegoComponent( IVisualisable ):
         return repr( self )
     
     
+    @property
     def str_ansi( self ) -> str:
-        return constants.COMPONENT_COLOURS_ANSI[self.index % len( constants.COMPONENT_COLOURS_ANSI )] + str( self ) + Theme.RESET
+        return self.str_ansi_fore() + str( self ) + Theme.RESET
+
+
+    def str_ansi_fore( self ):
+        return constants.COMPONENT_COLOURS_ANSI_FORE[self.index % len( constants.COMPONENT_COLOURS_ANSI_FORE )]
     
-    
+    def str_ansi_back( self ):
+        return constants.COMPONENT_COLOURS_ANSI_BACK[self.index % len( constants.COMPONENT_COLOURS_ANSI_BACK )]
+
+
     def __repr__( self ) -> str:
         return _GREEK[self.index % len( _GREEK )].lower()
     

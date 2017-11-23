@@ -1,6 +1,6 @@
 from typing import Dict, List, Set, cast, Sequence
 from groot.data.graphing import MEdge, MGraph, MNode, FollowParams
-from groot.data.lego_model import LegoComponent, LegoModel
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from mhelper import Logger, array_helper
 from mhelper.component_helper import ComponentFinder
 
@@ -87,6 +87,8 @@ def find_all_fusion_points( model: LegoModel ) -> None:
     """
     r: List[FusionEvent] = []
     
+    remove_fusions( model )
+    
     for event in find_fusion_events( model ):
         event.points_a = __get_fusion_points( event, event.component_a )
         event.points_b = __get_fusion_points( event, event.component_b )
@@ -96,24 +98,69 @@ def find_all_fusion_points( model: LegoModel ) -> None:
 
 
 class FusionPoint:
-    def __init__( self, node: MNode, event: FusionEvent, count: int, component: LegoComponent, opposite_component: LegoComponent ):
+    def __init__( self, node: MNode, direction: MNode, event: FusionEvent, genes: List[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
         self.node = node
+        self.direction = direction
         self.opposite_component = opposite_component
         self.component = component
         self.event = event
-        self.count = count
+        self.genes = genes
+    
+    
+    @property
+    def count( self ):
+        return len( self.genes )
     
     
     def __str__( self ):
-        return "EVENT JOINING {} GENES IN {} TO {}".format( self.count, self.component, self.opposite_component )
+        return "EVENT JOINING {} GENES IN {} TO {} FORMING {} : {}".format( self.count, self.component, self.opposite_component, ", ".join( sorted( str( x ) for x in self.event.intersections ) ), ", ".join( sorted( str( x ) for x in self.genes ) ) )
 
 
 class _FusionPointCandidate:
-    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, count: int ) -> None:
+    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, genes: List[LegoSequence] ) -> None:
         self.edge: MEdge = edge
         self.node_a: MNode = node_1
         self.node_b: MNode = node_2
-        self.count: int = count
+        self.genes: List[LegoSequence] = genes
+    
+    
+    @property
+    def count( self ):
+        return len( self.genes )
+
+
+def remove_fusions( model : LegoModel ) -> int:
+    """
+    Removes all fusion points from the specified component.
+    """
+    removed_count = 0
+    
+    model.fusion_events.clear()
+    
+    for component in model.components:
+        graph = component.tree
+        to_delete: List[MNode] = []
+        
+        for node in graph.get_nodes():
+            if node.fusion_comment is not None:
+                assert node.num_edges() == 2
+                edges = list( node.iter_edges() )
+                
+                d1 = edges[0].opposite( node )
+                d2 = edges[1].opposite( node )
+                
+                # Create the new edge
+                MEdge( graph, d1, d2 )
+                
+                # Remove the old node
+                to_delete.append( node )
+        
+        for node in to_delete:
+            node.remove()
+            
+        removed_count += len( to_delete )
+    
+    return removed_count 
 
 
 def __get_fusion_points( fusion_event: FusionEvent,
@@ -159,19 +206,19 @@ def __get_fusion_points( fusion_event: FusionEvent,
         for node in cast( Sequence[MNode], (edge.a, edge.b) ):
             params = FollowParams( root = node, exclude_edges = [edge] )
             graph.follow( params )
-            count = 0
+            count = []
             
             # Count the number of fusion sequences in the subgraph
             for relative in params.visited_nodes:
                 if relative.sequence is not None:
-                    count += 1
+                    count.append( relative.sequence )
                     
                     if relative.sequence.component not in intersection_aliases:
                         # Fusion sequence are not alone - disregard
-                        count = 0
+                        count.clear()
                         break
             
-            if count != 0:
+            if count:
                 candidates.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
     
     # Connected candidates (such as 1,2,3 in the diagram above) need to be reduced to just the one encompassing them all
@@ -184,27 +231,34 @@ def __get_fusion_points( fusion_event: FusionEvent,
                 cc_finder.join( candidate_1, candidate_2 )
     
     # - Now for each CC, just use the candidate encompassing the most composites
-    fusions_refined = []  # type: List[_FusionPointCandidate]
+    fusions_refined: List[_FusionPointCandidate] = []
+    tabulation: List[List[_FusionPointCandidate]] = cc_finder.tabulate()
     
-    for component_ in cc_finder.tabulate():  # type: List[_FusionPointCandidate]
+    for component_ in tabulation:
         fusions_refined.append( max( component_, key = lambda x: x.count ) )
     
     results = []
     
+    # Add the fusions to the graph
+    
+    # Replace the edge :              #
+    #   Ⓧ───🅰───Ⓨ                   #
+    #                                 #
+    # with:                           #
+    #   Ⓧ───🅱───Ⓐ───🅲───Ⓨ         #
+    #                                 #
     for fusion in fusions_refined:
-        if fusion.node_a.num_edges() == 2:
-            fusion_node = fusion.node_a
-        elif fusion.node_b.num_edges() == 2:
-            fusion_node = fusion.node_b
-        else:
-            fusion_node = MNode( graph )
-            
-            MEdge( graph, fusion_node, fusion.node_a )
-            MEdge( graph, fusion_node, fusion.node_b )
-            
-            fusion.edge.remove()
+        # Remove the existing edge
+        fusion.edge.remove()
         
-        fusion = FusionPoint( fusion_node, fusion_event, fusion.count, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
+        # Create the fusion-point node
+        fusion_node = MNode( graph )
+        
+        # Create the edges
+        MEdge( graph, fusion_node, fusion.node_a )
+        MEdge( graph, fusion_node, fusion.node_b )
+        
+        fusion = FusionPoint( fusion_node, fusion.node_a, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
         fusion_node.fusion_comment = fusion
         results.append( fusion )
     

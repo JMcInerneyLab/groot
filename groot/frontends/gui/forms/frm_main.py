@@ -809,7 +809,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.component_edges, defaults = [ array_helper.first( self._view.selected_components() ) ] )
+        FrmArguments.request( self, COMMANDS.ext_viewing.print_component_edges, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()

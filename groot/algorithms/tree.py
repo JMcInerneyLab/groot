@@ -25,3 +25,11 @@ def generate_tree( component: LegoComponent ) -> None:
     g = MGraph()
     g.import_newick( newick, component.model )
     component.tree = g
+
+
+def drop( component: LegoComponent ) -> bool:
+    if component.tree is not None:
+        component.tree = None
+        return True
+    
+    return False

@@ -1,13 +1,13 @@
-from typing import Callable, Iterable, List, Optional, TypeVar
+from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
 from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
 from intermake.engine.theme import Theme
 
-from mhelper import MEnum, SwitchError, string_helper, ByRef
+from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi
 
 from groot.algorithms import components, fastaiser, fuse
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent
+from groot.data.lego_model import LegoComponent, LegoSubsequence
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
@@ -40,7 +40,7 @@ def print_status() -> Changes:
     p = ByRef[bool]( False )
     r = []
     r.append( Theme.HEADING + "Model" + Theme.RESET )
-    r.append( "Project name:  {}".format( __get_status_line_comment( bool(model.sequences), p, ext_files.import_blast, model.name ) ) )
+    r.append( "Project name:  {}".format( __get_status_line_comment( bool( model.sequences ), p, ext_files.import_blast, model.name ) ) )
     r.append( "File name:     {}".format( __get_status_line_comment( model.file_name is not None, p, ext_files.file_save, model.file_name if model.file_name else "Unsaved" ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
@@ -160,7 +160,7 @@ def __print_header( x ):
 
 
 @command( names = ["print_interlinks", "interlinks"] )
-def component_edges( component: Optional[LegoComponent] = None ) -> Changes:
+def print_component_edges( component: Optional[LegoComponent] = None ) -> Changes:
     """
     Prints the edges between the component subsequences.
     
@@ -233,6 +233,66 @@ def component_edges( component: Optional[LegoComponent] = None ) -> Changes:
     return Changes( Changes.INFORMATION )
 
 
+@command( names = ["print_sequences", "sequences"] )
+def print_sequences() -> Changes:
+    """
+    Prints the sequences (as components)
+    """
+    
+    model = global_view.current_model()
+    longest = max( x.length for x in model.sequences )
+    r = []
+    
+    
+    def ___get_seq_msg( num: int, counter: int, component: LegoComponent, last_components: Set[LegoComponent] ):
+        if counter == 0:
+            return
+        
+        if component in last_components:
+            x = component.str_ansi_back()
+        else:
+            x = ansi.BACK_LIGHT_BLACK
+        
+        size = max( 1, int( (counter / longest) * 80 ) )
+        
+        r.append( x + ansi.DIM + ansi.FORE_BLACK + ("▏" if num else " ") + ansi.NORMAL + string_helper.centre_align(str( counter ), size ) + " " )
+    
+    
+    for sequence in model.sequences:
+        for ci, component in enumerate( sequence.minor_components() ):
+            if ci == 0:
+                r.append( sequence.accession.ljust( 20 ) )
+            else:
+                r.append( "".ljust( 20 ) )
+            
+            r.append( component.str_ansi + " " )
+            
+            last_components = None
+            counter = 0
+            num = 0
+            
+            for subsequence in sequence.subsequences:
+                if last_components is None:
+                    last_components = subsequence.components
+                
+                if subsequence.components != last_components:
+                    ___get_seq_msg( num, counter, component, last_components )
+                    num += 1
+                    last_components = subsequence.components
+                    counter = 0
+                else:
+                    counter += subsequence.length
+            
+            ___get_seq_msg( num, counter, component, last_components )
+            
+            r.append( Theme.RESET + "\n" )
+        
+        r.append( "\n" )
+    
+    MCMD.information( "".join( r ) )
+    return Changes( Changes.INFORMATION )
+
+
 @command( names = ["print_components", "components"] )
 def print_components() -> Changes:
     """
@@ -263,6 +323,9 @@ def print_components() -> Changes:
         message.add_row( component, ", ".join( x.accession for x in component.major_sequences() ) )
     
     MCMD.print( message.to_string() )
+    
+    print_component_edges()
+    
     return Changes( Changes.INFORMATION )
 
 

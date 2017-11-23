@@ -51,3 +51,10 @@ def consensus( component: LegoComponent ):
         component.consensus = external_tools.run_in_temporary( external_tools.consensus, trees_text )
     else:
         component.consensus = trees_text
+
+def drop(component:LegoComponent):
+    if component.consensus is not None:
+        component.consensus = None
+        return True
+    
+    return False

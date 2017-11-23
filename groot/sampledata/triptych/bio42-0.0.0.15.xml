@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rdf:RDF xmlns="http://usefulinc.com/ns/doap#" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><Project><name>bio42</name>
+<shortdesc>BIO42. Analyser and database manager and for large biological networks stored in Neo4j.</shortdesc>
+<homepage rdf:resource="https://bitbucket.org/mjr129/bio42" />
+<maintainer><foaf:Person><foaf:name>Martin Rusilowicz</foaf:name>
+</foaf:Person></maintainer>
+<release><Version><revision>0.0.0.15</revision></Version></release>
+</Project></rdf:RDF>

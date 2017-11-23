@@ -354,12 +354,57 @@ class MNode:
     
     def describe( self, format_str ) -> str:
         """
-        A descriptive comment on the node.
+        Describes the nodes.
+        The following format strings are accepted:
+        
+        `t` -   type-based description:
+                    "seq:accession" for sequences
+                    "fus:fusion"    for fusions
+                    "cla:uid"       for nodes with neither sequences nor fusions ("clades")
+        `f` -   fusion                      (or empty)
+        `u` -   node     uid
+        `c` -   sequence major component    (or empty)
+        `m` -   sequence minor components   (or empty)
+        `a` -   sequence accession          (or empty)
+        `l` -   sequence length             (or empty)
+        `<` -   following characters are verbatim
+        `>` -   stop verbatim / skip
+        `S` -   skip if not in sequence
+        `F` -   skip if not in fusion
+        `C` -   skip if not in clade
+        `T` -   skip if in sequence
+        `G` -   skip if in fusion
+        `D` -   skip if in clade
+        -   -   anything else is verbatim
         """
         ss = []
+        verbatim = False
+        skip = False
         
         for x in format_str:
-            if x == "t":
+            if skip:
+                if x == ">":
+                    skip = False
+            elif verbatim:
+                if x == ">":
+                    verbatim = False
+                else:
+                    ss.append( x )
+            elif x == "<":
+                verbatim = True
+            elif x == "S":
+                skip = self.sequence is None
+            elif x == "F":
+                skip = self.fusion_comment is None
+            elif x == "C":
+                skip = self.fusion_comment is None
+            elif x == "T":
+                skip = self.sequence is not None
+            elif x == "G":
+                skip = self.fusion_comment is not None
+            elif x == "D":
+                skip = self.fusion_comment is not None
+            elif x == "t":
                 if self.sequence:
                     ss.append( "seq:{}".format( self.sequence.accession ) )
                 elif self.fusion_comment:

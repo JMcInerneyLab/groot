@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url="https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.8",
+       version = "0.0.0.9",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "GPLv3",
@@ -18,5 +18,6 @@ setup( name = "groot",
                     "groot.frontends.gui.forms.designer",
                     ],
        entry_points= { "console_scripts": [ "groot = groot.__main__:main" ] },
-       install_requires = ["ete3"]
+       install_requires = ["ete3"],
+       python_requires = ">=3.6"
        )

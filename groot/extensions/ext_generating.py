@@ -21,7 +21,7 @@ def make_components( tolerance: int = 0 ) -> Changes:
     model = global_view.current_model()
     
     with MCMD.action( "Component detection" ):
-        components.detect( MCMD, model, tolerance )
+        components.detect( model, tolerance )
     
     for component in model.components:
         if len( component.major_sequences() ) == 1:
@@ -43,7 +43,7 @@ def make_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
         alignment.align( component_ )
     
-    MCMD.print( "{} {} aligned.".format( len( to_do ), "components" if len( to_do ) != 1 else "component" ) )
+    MCMD.print( "{} components aligned.".format( len( to_do ) ) )
     
     return Changes( Changes.COMP_DATA )
 
@@ -71,16 +71,16 @@ def make_consensus( component: Optional[List[LegoComponent]] = None ):
     :param component:   Component, or `None` for all.
     :return: 
     """
-    components = cli_view_utils.get_component_list( component )
+    to_do = cli_view_utils.get_component_list( component )
     
-    for component_ in MCMD.iterate( components, "Consensus" ):
+    for component_ in MCMD.iterate( to_do, "Consensus" ):
         consensus.consensus( component_ )
     
     return Changes( Changes.COMP_DATA )
 
 
 @command()
-def make_fusions():
+def make_fusions() -> Changes:
     """
     Makes the fusion points.
     """
@@ -94,7 +94,7 @@ def make_fusions():
 
 
 @command()
-def make_nrfg( format_str: str = "t" ):
+def make_nrfg( format_str: str = "t" ) -> Changes:
     """
     Creates the N-rooted fusion graph.
     
