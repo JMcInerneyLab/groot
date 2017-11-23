@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, cast, Sequence
+from typing import Dict, List, Set, cast, Sequence, Iterator, Tuple
 from groot.data.graphing import MEdge, MGraph, MNode, FollowParams
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from mhelper import Logger, array_helper
@@ -6,6 +6,10 @@ from mhelper.component_helper import ComponentFinder
 
 
 __LOG = Logger( "fusion", False )
+
+
+class NotCommensurateError( Exception ):
+    pass
 
 
 class FusionEvent:
@@ -30,7 +34,38 @@ class FusionEvent:
         self.points_b: List[FusionPoint] = None
     
     
-    def __str__( self ):
+    def get_commensurate_points( self ) -> List[Tuple[FusionPoint, FusionPoint]]:
+        """
+        Gets tuples of points that look like they are commensurate, or raises a `NotCommensurateError`. 
+        """
+        if len( self.points_a ) != len( self.points_b ):
+            raise NotCommensurateError( "The two sets of fusion points for this event are not the same length, so at least one will be non-commensurate.".format( len( self.points_a ), len( self.points_b ) ) )
+        
+        results = []
+        
+        for point_a in self.points_a:
+            found = False
+            
+            for point_b in self.points_b:
+                if point_a.genes == point_b.genes:
+                    if found:
+                        raise NotCommensurateError( "In the fusion point A «{}» there are multiple commensurate points in the B set «{}».".format( point_a, self.points_b ) )
+                    
+                    results.append( (point_a, point_b) )
+                    found = True
+            
+            if not found:
+                raise NotCommensurateError( "In the fusion point A «{}» there is no commensurate point in the B set «{}».".format( point_a, self.points_b ) )
+        
+        return results
+    
+    
+    @property
+    def component_c( self ) -> LegoComponent:
+        return array_helper.extract_single_item_or_error( self.intersections )
+    
+    
+    def __str__( self ) -> str:
         intersections = ", ".join( x.__str__() for x in self.intersections )
         return "{} COMBINES WITH {} TO FORM {}".format( self.component_a, self.component_b, intersections )
 
@@ -129,7 +164,7 @@ class _FusionPointCandidate:
         return len( self.genes )
 
 
-def remove_fusions( model : LegoModel ) -> int:
+def remove_fusions( model: LegoModel ) -> int:
     """
     Removes all fusion points from the specified component.
     """
@@ -157,10 +192,10 @@ def remove_fusions( model : LegoModel ) -> int:
         
         for node in to_delete:
             node.remove()
-            
+        
         removed_count += len( to_delete )
     
-    return removed_count 
+    return removed_count
 
 
 def __get_fusion_points( fusion_event: FusionEvent,
@@ -266,22 +301,31 @@ def __get_fusion_points( fusion_event: FusionEvent,
 
 
 def create_nrfg( model: LegoModel ) -> MGraph:
+    """
+    Creates the N-rooted fusion graph. Huzzah!
+    
+    :param model:   Model to create the graph for.
+    """
     result = MGraph()
     
-    lookup_table: Dict[MNode, MNode] = { }
-    
-    for c in model.components:
-        lookup_table.update( result.import_graph( c.tree ) )
-    
-    for fe in model.fusion_events:
-        join = [lookup_table[x.node] for x in fe.points_a + fe.points_b]
+    for fusion_event in model.fusion_events:
+        a = fusion_event.component_a.tree
+        b = fusion_event.component_b.tree
+        c = fusion_event.component_c.tree
         
-        if len( join ) == 2:
-            MEdge( result, join[0], join[1] )
-        else:
-            centre = MNode( result )
+        for point_a, point_b in fusion_event.get_commensurate_points():
+            genes = point_a.genes
+            aʹ, ca = a.cut( point_a.node, point_a.direction )
+            bʹ, cb = b.cut( point_b.node, point_b.direction )
+            cs = c.slice( genes )
             
-            for x in join:
-                MEdge( result, centre, x )
+            cʹ = MGraph.consensus( (ca, cb, cs) )
+            
+            result.incorporate( aʹ )
+            result.incorporate( bʹ )
+            result.incorporate( cʹ )
+            
+            MEdge( result, result.find_node( point_a.node ), result.find_node( point_a.direction ) )
+            MEdge( result, result.find_node( point_b.node ), result.find_node( point_b.direction ) )
     
     return result

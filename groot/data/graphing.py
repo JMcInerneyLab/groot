@@ -105,6 +105,17 @@ class FollowParams:
         return (x.node for x in self.visited)
 
 
+class CutPoint:
+    def __init__( self, left_subgraph: MGraph, left_node: MNode, right_subgraph: MGraph, right_node: MNode ):
+        self.left_subgraph: MGraph = left_subgraph
+        self.left_node: MNode = left_node
+        self.right_subgraph: MGraph = right_subgraph
+        self.right_node: MNode = right_node
+
+
+_MGraph = "MGraph"
+
+
 class MGraph:
     def __init__( self ) -> None:
         """
@@ -112,6 +123,49 @@ class MGraph:
         """
         self._nodes: "Set[MNode]" = set()
         self.uid_counter: int = 1
+    
+    
+    def cut( self, left_node: MNode, right_node: MNode ) -> Tuple[_MGraph,_MGraph]:
+        """
+        Cuts the graph along the edge between the specified nodes, yielding two new graphs.
+        Note this function accepts two nodes, rather than an edge, so that the assignment of
+        "left" and "right" is always explicit, which wouldn't be obvious for undirected edges. 
+        
+        :param left_node:  Node that will form the "left" half of the cut 
+        :param right_node: Node that will form the "right" half of the cut. 
+        :return: A tuple containing the two new graphs, first left and then right. 
+        """
+        raise NotImplementedError( "TODO" )
+    
+    
+    @classmethod
+    def consensus( cls, graphs: Iterable[_MGraph] ) -> _MGraph:
+        """
+        Creates the consensus of two trees.
+        NOTE: The graphs must be trees!
+        
+        :param graphs:  An iterable containing two or more graphs. 
+        :return:        A new graph describing the consensus. 
+        """
+        raise NotImplementedError( "TODO" )
+    
+    
+    def incorporate( self, graph: MGraph ) -> None:
+        """
+        Clones an existing graph into this one.
+        Note that node information and UIDs are copied, which prevents accidentally incorporating the same set of nodes twice.
+        :param graph:   The graph to incorporate.
+        """
+        raise NotImplementedError( "TODO" )
+    
+    
+    def find_node( self, node: MNode ) -> MNode:
+        """
+        Finds the equivalent node in this graph, to one that exists in a different graph. 
+        :param node:    Node to find. 
+        :return:        Node in this graph. 
+        """
+        raise NotImplementedError( "TODO" )
     
     
     def import_newick( self, newick_tree: str, model: LegoModel ) -> None:
@@ -202,7 +256,7 @@ class MGraph:
             return ete_node
         
         
-        first = array_helper.first_unsafe( self._nodes )
+        first = array_helper.first_or_error( self._nodes )
         
         return __recurse( first, TreeNode(), set() )
     
@@ -299,28 +353,6 @@ class MGraph:
         if depth_info is not None:
             parent_info.has_children = True
             depth_info.is_last = True
-    
-    
-    def import_graph( self, graph: "MGraph" ):
-        lookup_table = { }
-        
-        for edge in graph.get_edges():
-            a = self.__import_node( lookup_table, edge.a )
-            b = self.__import_node( lookup_table, edge.b )
-            MEdge( self, a, b )
-        
-        return lookup_table
-    
-    
-    def __import_node( self, lookup_table: "Dict[ MNode, MNode ]", node: "MNode" ) -> "MNode":
-        result = lookup_table.get( node )
-        
-        if result is None:
-            result = MNode( self )
-            result.sequence = node.sequence
-            lookup_table[node] = result
-        
-        return result
 
 
 class MNode:

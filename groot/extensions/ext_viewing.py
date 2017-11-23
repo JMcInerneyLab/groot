@@ -244,7 +244,7 @@ def print_sequences() -> Changes:
     r = []
     
     
-    def ___get_seq_msg( num: int, counter: int, component: LegoComponent, last_components: Set[LegoComponent] ):
+    def ___get_seq_msg( component_index: int, num: int, counter: int, component: LegoComponent, last_components: Set[LegoComponent] ):
         if counter == 0:
             return
         
@@ -255,12 +255,12 @@ def print_sequences() -> Changes:
         
         size = max( 1, int( (counter / longest) * 80 ) )
         
-        r.append( x + ansi.DIM + ansi.FORE_BLACK + ("▏" if num else " ") + ansi.NORMAL + string_helper.centre_align(str( counter ), size ) + " " )
+        r.append( x + ansi.DIM + ansi.FORE_BLACK + ("▏" if num else " ") + ansi.NORMAL + string_helper.centre_align( str( counter ) if component_index == 0 else (" " * len( str( counter ) )), size ) + " " )
     
     
     for sequence in model.sequences:
-        for ci, component in enumerate( sequence.minor_components() ):
-            if ci == 0:
+        for component_index, component in enumerate( sequence.minor_components() ):
+            if component_index == 0:
                 r.append( sequence.accession.ljust( 20 ) )
             else:
                 r.append( "".ljust( 20 ) )
@@ -276,14 +276,14 @@ def print_sequences() -> Changes:
                     last_components = subsequence.components
                 
                 if subsequence.components != last_components:
-                    ___get_seq_msg( num, counter, component, last_components )
+                    ___get_seq_msg( component_index, num, counter, component, last_components )
                     num += 1
                     last_components = subsequence.components
                     counter = 0
                 else:
                     counter += subsequence.length
             
-            ___get_seq_msg( num, counter, component, last_components )
+            ___get_seq_msg( component_index, num, counter, component, last_components )
             
             r.append( Theme.RESET + "\n" )
         
@@ -379,11 +379,3 @@ def print_fusions() -> Changes:
     
     MCMD.information( "\n".join( results ) )
     return Changes( Changes.INFORMATION )
-
-
-@command( names = ["print_nrfg", "nrfg"] )
-def print_nrfg() -> Changes:
-    """
-    Prints the NRFG
-    """
-    pass

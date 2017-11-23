@@ -32,9 +32,11 @@ def make_components( tolerance: int = 0 ) -> Changes:
 
 
 @command()
-def make_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Aligns the component. If no component is specified, aligns all components.
+    
+    Requisites: The FASTA sequences. You must have called `load_fasta` first.
     
     :param component: Component to align, or `None` for all.
     """
@@ -49,9 +51,11 @@ def make_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes
 
 
 @command()
-def make_tree( component: Optional[List[LegoComponent]] = None ):
+def make_trees( component: Optional[List[LegoComponent]] = None ):
     """
     Generates component trees.
+    
+    Requisites: The alignments. You must have called `make_alignments` first.
     
     :param component:   Component, or `None` for all.
     :return: 
@@ -83,6 +87,8 @@ def make_consensus( component: Optional[List[LegoComponent]] = None ):
 def make_fusions() -> Changes:
     """
     Makes the fusion points.
+    
+    Requisites: The trees. You must have called `make_trees` first.
     """
     model = global_view.current_model()
     fuse.find_all_fusion_points( model )
@@ -97,6 +103,8 @@ def make_fusions() -> Changes:
 def make_nrfg( format_str: str = "t" ) -> Changes:
     """
     Creates the N-rooted fusion graph.
+    
+    Requisites: The fusions. You must have called `make_fusions` first.
     
     :param format_str: Format for output
     """
