@@ -9,11 +9,12 @@ from intermake.engine.theme import Theme
 from mhelper import array_helper, ComponentFinder
 
 
-DFindId = Callable[[str], object]
-
 _MGraph = "MGraph"
 _MNode = "MNode"
 _MEdge = "MEdge"
+
+DFindId = Callable[[str], object]
+DNodePredicate = Callable[[_MNode], bool]
 
 
 class MClade:
@@ -114,7 +115,8 @@ class CutPoint:
         self.left_node: MNode = left_node
         self.right_subgraph: MGraph = right_subgraph
         self.right_node: MNode = right_node
-        
+
+
 class _FusionPointCandidate:
     def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, genes: List[LegoSequence] ) -> None:
         self.edge: MEdge = edge
@@ -134,12 +136,22 @@ class MGraph:
         CONSTRUCTOR
         """
         self._nodes: Dict[int, MNode] = { }
+    
+    
+    def extract_isolation( self, predicate: DNodePredicate ) -> _MGraph:
+        points = self.find_isolation_points( predicate )
         
-    def find_isolation_points( self, test: Callable[[MNode], bool] ) -> List[_FusionPointCandidate]:
+        if len( points ) != 1:
+            raise ValueError( "Cannot extract the isolation from the graph because the specified points are not uniquely isolated." )
+        
+        retrn sel
+    
+    
+    def find_isolation_points( self, predicate: DNodePredicate ) -> List[_FusionPointCandidate]:
         """
         Finds the points on the graph that separate the specified nodes from everything else.
          
-        :param test:    A delegate expression yielding `True` for nodes inside the set to be separated, and `False` for all other nodes. 
+        :param predicate:    A delegate expression yielding `True` for nodes inside the set to be separated, and `False` for all other nodes. 
         :return:        A list of `_FusionPointCandidate` detailing the isolation points. 
         """
         # Iterate over all the edges to make a list of `candidate` edges
@@ -156,7 +168,7 @@ class MGraph:
                     if relative.sequence is not None:
                         count.append( relative.sequence )
                         
-                        if not test( relative ):
+                        if not predicate( relative ):
                             # Fusion sequence are not alone - disregard
                             count.clear()
                             break
@@ -177,7 +189,7 @@ class MGraph:
         tabulation: List[List[_FusionPointCandidate]] = cc_finder.tabulate()
         for component_ in tabulation:
             fusions_refined.append( max( component_, key = lambda x: x.count ) )
-            
+        
         return fusions_refined
     
     

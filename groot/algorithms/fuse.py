@@ -225,7 +225,7 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    fusions_refined = graph.find_isolation_points( lambda x: x.sequence.component in intersection_aliases )
+    fusions_refined = graph.find_isolation_points( lambda node: node.sequence.component in intersection_aliases )
     
     results = []
     
@@ -276,7 +276,7 @@ def create_nrfg( model: LegoModel ) -> None:
             genes_plus_none = point_a.genes + [None]
             aʹ, ca = a.cut( point_a.node, point_a.direction )
             bʹ, cb = b.cut( point_b.node, point_b.direction )
-            cs = c.slice( x for x in c if x.sequence in genes_plus_none )
+            cs = c.find_isolation_points( lambda node: node.sequence in genes_plus_none )
             
             cʹ = MGraph.consensus( (ca, cb, cs) )
             
