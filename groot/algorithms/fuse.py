@@ -245,10 +245,10 @@ def __get_fusion_points( fusion_event: FusionEvent,
         fusion_node = MNode( graph )
         
         # Create the edges
-        MEdge( graph, fusion_node, fusion.node_a )
-        MEdge( graph, fusion_node, fusion.node_b )
+        MEdge( graph, fusion_node, fusion.internal_node )
+        MEdge( graph, fusion_node, fusion.external_node )
         
-        fusion = FusionPoint( fusion_node.uid, fusion.node_a.uid, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
+        fusion = FusionPoint( fusion_node.uid, fusion.internal_node.uid, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
         fusion_node.fusion = fusion
         results.append( fusion )
     

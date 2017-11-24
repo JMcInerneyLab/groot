@@ -118,10 +118,10 @@ class CutPoint:
 
 
 class _FusionPointCandidate:
-    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, genes: List[LegoSequence] ) -> None:
+    def __init__( self, edge: MEdge, internal_node: MNode, external_node: MNode, genes: List[LegoSequence] ) -> None:
         self.edge: MEdge = edge
-        self.node_a: MNode = node_1
-        self.node_b: MNode = node_2
+        self.internal_node: MNode = internal_node
+        self.external_node: MNode = external_node
         self.genes: List[LegoSequence] = genes
     
     
@@ -138,21 +138,58 @@ class MGraph:
         self._nodes: Dict[int, MNode] = { }
     
     
-    def extract_isolation( self, predicate: DNodePredicate ) -> _MGraph:
-        points = self.find_isolation_points( predicate )
+    def extract_isolation( self, inside: DNodePredicate, outside : DNodePredicate ) -> _MGraph:
+        """
+        A combination of `find_isolation_points` and `cut_one`.
+        
+        :except ValueError: More than one isolation point is found
+        """
+        points = self.find_isolation_points( inside, outside )
         
         if len( points ) != 1:
             raise ValueError( "Cannot extract the isolation from the graph because the specified points are not uniquely isolated." )
         
-        retrn sel
+        point = points[0]
+        
+        return self.cut_one( point.internal_node, point.external_node )
     
     
-    def find_isolation_points( self, predicate: DNodePredicate ) -> List[_FusionPointCandidate]:
+    def find_isolation_points( self, inside: DNodePredicate, outside : DNodePredicate ) -> List[_FusionPointCandidate]:
         """
-        Finds the points on the graph that separate the specified nodes from everything else.
+        Finds the points on the graph that separate the specified `inside` nodes from the `outside` nodes.
+        
+              --------I
+          ----X1
+          |   --------I
+          |
+         -X2
+          |
+          |   --------O
+          ----X3
+              --------O
+             
+        
+        Nodes (X) not in the `inside` (I) and `outside` (O) sets are can be either inside or outside the isolated subgraph, however this
+        algorithm will attempt to keep as many as possible outside, so in the diagram about, the point that isolates I from O is X1. 
+        
+        Ideally, there will just be one point in the results list, but if the inside points are scattered, more than one point will be
+        returned, e.g. X1 and X3 separate I from O:
+        
+              --------I
+          ----X1
+          |   --------I
+          |
+         -X2
+          |           --------I
+          |   --------X3
+          ----X4      --------I
+              |
+              --------O
          
-        :param predicate:    A delegate expression yielding `True` for nodes inside the set to be separated, and `False` for all other nodes. 
-        :return:        A list of `_FusionPointCandidate` detailing the isolation points. 
+         
+        :param outside:   A delegate expression yielding `True` for nodes outside the set to be separated, and `False` for all other nodes. 
+        :param inside:    A delegate expression yielding `True` for nodes inside the set to be separated,  and `False` for all other nodes. 
+        :return:          A list of `_FusionPointCandidate` detailing the isolation points. 
         """
         # Iterate over all the edges to make a list of `candidate` edges
         # - those separating βγδ from everything else
@@ -168,7 +205,7 @@ class MGraph:
                     if relative.sequence is not None:
                         count.append( relative.sequence )
                         
-                        if not predicate( relative ):
+                        if not inside( relative ):
                             # Fusion sequence are not alone - disregard
                             count.clear()
                             break
@@ -181,7 +218,7 @@ class MGraph:
         cc_finder = ComponentFinder()
         for candidate_1 in candidates:
             for candidate_2 in candidates:
-                if candidate_1.node_a is candidate_2.node_a or candidate_1.node_b is candidate_2.node_a:
+                if candidate_1.internal_node is candidate_2.internal_node or candidate_1.external_node is candidate_2.internal_node:
                     cc_finder.join( candidate_1, candidate_2 )
         
         # - Now for each CC, just use the candidate encompassing the most composites
@@ -202,22 +239,22 @@ class MGraph:
         return left_graph, right_graph
     
     
-    def cut_one( self, containing_node: _MNode, missing_node: _MNode ) -> _MGraph:
+    def cut_one( self, internal_node: _MNode, external_node: _MNode ) -> _MGraph:
         """
         Cuts the graph along the edge between the specified nodes, yielding a new subset graph.
         
         The new subset contains `containing_node`, and all its relations, excluding those crossing `missing_node`. 
         
         Note this function accepts two nodes, rather than an edge, so that the assignment of
-        "containing_node" and "missing_node" is always explicit, which wouldn't be obvious for undirected edges. 
+        `containing_node` and `missing_node` is always explicit, which wouldn't be obvious for undirected edges. 
         
-        :param containing_node:     Node that will form the "left" half of the cut 
-        :param missing_node:        Node that will form the "right" half of the cut. 
-        :return:                    The new graph
+        :param internal_node:     Node that will form the inside (accepted) half of the cut 
+        :param external_node:     Node that will form the outside (rejected) half of the cut. 
+        :return:                  The new graph
         """
         new = MGraph()
         
-        fp = FollowParams( root = containing_node, exclude_nodes = [missing_node] )
+        fp = FollowParams( root = internal_node, exclude_nodes = [external_node] )
         self.follow( fp )
         
         for node in fp.visited_nodes:
