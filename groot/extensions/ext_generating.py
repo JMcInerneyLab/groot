@@ -7,6 +7,7 @@ from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
 from intermake import command
 from intermake.engine.environment import MCMD
+from mhelper import string_helper
 
 
 __mcmd_folder_name__ = "Generating"
@@ -28,6 +29,8 @@ def make_components( tolerance: int = 0 ) -> Changes:
             MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tolerance ) )
             break
     
+    MCMD.progress( "{} components detected.".format( len( model.components ) ) )
+    
     return Changes( Changes.COMPONENTS )
 
 
@@ -40,12 +43,15 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Change
     
     :param component: Component to align, or `None` for all.
     """
+    model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )
+    before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
         alignment.align( component_ )
     
-    MCMD.print( "{} components aligned.".format( len( to_do ) ) )
+    after = sum( x.tree is not None for x in model.components )
+    MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return Changes( Changes.COMP_DATA )
 
@@ -60,10 +66,15 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
     :param component:   Component, or `None` for all.
     :return: 
     """
+    model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )
+    before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
         tree.generate_tree( component_ )
+    
+    after = sum( x.tree is not None for x in model.components )
+    MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return Changes( Changes.COMP_DATA )
 
@@ -75,10 +86,15 @@ def make_consensus( component: Optional[List[LegoComponent]] = None ):
     :param component:   Component, or `None` for all.
     :return: 
     """
+    model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )
+    before = sum( x.consensus is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Consensus" ):
         consensus.consensus( component_ )
+    
+    after = sum( x.consensus is not None for x in model.components )
+    MCMD.progress( "{} consensuses generated. {} of {} components have a consensus tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return Changes( Changes.COMP_DATA )
 
@@ -100,18 +116,16 @@ def make_fusions() -> Changes:
 
 
 @command()
-def make_nrfg( format_str: str = "t" ) -> Changes:
+def make_nrfg() -> Changes:
     """
     Creates the N-rooted fusion graph.
     
     Requisites: The fusions. You must have called `make_fusions` first.
-    
-    :param format_str: Format for output
     """
     model = global_view.current_model()
     
-    nrfg = fuse.create_nrfg( model )
+    fuse.create_nrfg( model )
     
-    MCMD.information( nrfg.to_csv( format_str ) )
+    MCMD.progress( "NRFG created OK." )
     
     return Changes( Changes.MODEL_DATA )

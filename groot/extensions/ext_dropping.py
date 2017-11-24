@@ -94,3 +94,21 @@ def drop_fusions() -> Changes:
     MCMD.information( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
     return Changes( Changes.COMP_DATA )
+
+
+@command()
+def drop_nrfg() -> Changes:
+    """
+    Removes the NRFG from the model.
+    """
+    model = global_view.current_model()
+    
+    if model.nrfg is None:
+        MCMD.information( "The model doesn't have an NRFG. No action performed." )
+        return
+    
+    model.nrfg = None
+    
+    MCMD.information( "The NRFG has been removed from the model." )
+    
+    return Changes( Changes.COMP_DATA )

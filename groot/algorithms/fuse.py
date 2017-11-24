@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, cast, Sequence, Iterator, Tuple
+from typing import Dict, List, Set, cast, Sequence, Iterator, Tuple, Callable
 from groot.data.graphing import MEdge, MGraph, MNode, FollowParams
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from mhelper import Logger, array_helper
@@ -133,9 +133,9 @@ def find_all_fusion_points( model: LegoModel ) -> None:
 
 
 class FusionPoint:
-    def __init__( self, node: MNode, direction: MNode, event: FusionEvent, genes: List[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
-        self.node = node
-        self.direction = direction
+    def __init__( self, node: int, direction_uid: int, event: FusionEvent, genes: List[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
+        self.node_uid = node
+        self.direction_uid = direction_uid
         self.opposite_component = opposite_component
         self.component = component
         self.event = event
@@ -151,17 +151,7 @@ class FusionPoint:
         return "EVENT JOINING {} GENES IN {} TO {} FORMING {} : {}".format( self.count, self.component, self.opposite_component, ", ".join( sorted( str( x ) for x in self.event.intersections ) ), ", ".join( sorted( str( x ) for x in self.genes ) ) )
 
 
-class _FusionPointCandidate:
-    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, genes: List[LegoSequence] ) -> None:
-        self.edge: MEdge = edge
-        self.node_a: MNode = node_1
-        self.node_b: MNode = node_2
-        self.genes: List[LegoSequence] = genes
-    
-    
-    @property
-    def count( self ):
-        return len( self.genes )
+
 
 
 def remove_fusions( model: LegoModel ) -> int:
@@ -224,7 +214,7 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Get the component tree
     # The `intersection_aliases` correspond to βγδ in the above diagram
-    graph = component.tree
+    graph : MGraph = component.tree
     
     intersection_roots = fusion_event.intersections
     intersection_aliases = set()
@@ -235,42 +225,7 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    candidates: List[_FusionPointCandidate] = []
-    
-    for edge in graph.get_edges():
-        for node in cast( Sequence[MNode], (edge.a, edge.b) ):
-            params = FollowParams( root = node, exclude_edges = [edge] )
-            graph.follow( params )
-            count = []
-            
-            # Count the number of fusion sequences in the subgraph
-            for relative in params.visited_nodes:
-                if relative.sequence is not None:
-                    count.append( relative.sequence )
-                    
-                    if relative.sequence.component not in intersection_aliases:
-                        # Fusion sequence are not alone - disregard
-                        count.clear()
-                        break
-            
-            if count:
-                candidates.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
-    
-    # Connected candidates (such as 1,2,3 in the diagram above) need to be reduced to just the one encompassing them all
-    # - To do this, make a CC set of the candidates
-    cc_finder = ComponentFinder()
-    
-    for candidate_1 in candidates:
-        for candidate_2 in candidates:
-            if candidate_1.node_a is candidate_2.node_a or candidate_1.node_b is candidate_2.node_a:
-                cc_finder.join( candidate_1, candidate_2 )
-    
-    # - Now for each CC, just use the candidate encompassing the most composites
-    fusions_refined: List[_FusionPointCandidate] = []
-    tabulation: List[List[_FusionPointCandidate]] = cc_finder.tabulate()
-    
-    for component_ in tabulation:
-        fusions_refined.append( max( component_, key = lambda x: x.count ) )
+    fusions_refined = graph.find_isolation_points( lambda x: x.sequence.component in intersection_aliases )
     
     results = []
     
@@ -293,19 +248,23 @@ def __get_fusion_points( fusion_event: FusionEvent,
         MEdge( graph, fusion_node, fusion.node_a )
         MEdge( graph, fusion_node, fusion.node_b )
         
-        fusion = FusionPoint( fusion_node, fusion.node_a, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
-        fusion_node.fusion_comment = fusion
+        fusion = FusionPoint( fusion_node.uid, fusion.node_a.uid, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
+        fusion_node.fusion = fusion
         results.append( fusion )
     
     return results
 
 
-def create_nrfg( model: LegoModel ) -> MGraph:
+def create_nrfg( model: LegoModel ) -> None:
     """
     Creates the N-rooted fusion graph. Huzzah!
+    The graph is saved to the model's appropriate field.
     
     :param model:   Model to create the graph for.
     """
+    if model.nrfg is not None:
+        raise ValueError( "The model's NRFG already exists. Did you mean to remove the existing NRFG first?" )
+    
     result = MGraph()
     
     for fusion_event in model.fusion_events:
@@ -314,10 +273,10 @@ def create_nrfg( model: LegoModel ) -> MGraph:
         c = fusion_event.component_c.tree
         
         for point_a, point_b in fusion_event.get_commensurate_points():
-            genes = point_a.genes
+            genes_plus_none = point_a.genes + [None]
             aʹ, ca = a.cut( point_a.node, point_a.direction )
             bʹ, cb = b.cut( point_b.node, point_b.direction )
-            cs = c.slice( genes )
+            cs = c.slice( x for x in c if x.sequence in genes_plus_none )
             
             cʹ = MGraph.consensus( (ca, cb, cs) )
             
@@ -328,4 +287,4 @@ def create_nrfg( model: LegoModel ) -> MGraph:
             MEdge( result, result.find_node( point_a.node ), result.find_node( point_a.direction ) )
             MEdge( result, result.find_node( point_b.node ), result.find_node( point_b.direction ) )
     
-    return result
+    model.nrfg = result

@@ -1,16 +1,19 @@
-from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict, List
+from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict, List, Sequence
+from uuid import uuid4
 
 from ete3 import TreeNode
-
-from groot import constants
 
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from intermake.engine.theme import Theme
 
-from mhelper import array_helper
+from mhelper import array_helper, ComponentFinder
 
 
 DFindId = Callable[[str], object]
+
+_MGraph = "MGraph"
+_MNode = "MNode"
+_MEdge = "MEdge"
 
 
 class MClade:
@@ -111,9 +114,18 @@ class CutPoint:
         self.left_node: MNode = left_node
         self.right_subgraph: MGraph = right_subgraph
         self.right_node: MNode = right_node
-
-
-_MGraph = "MGraph"
+        
+class _FusionPointCandidate:
+    def __init__( self, edge: MEdge, node_1: MNode, node_2: MNode, genes: List[LegoSequence] ) -> None:
+        self.edge: MEdge = edge
+        self.node_a: MNode = node_1
+        self.node_b: MNode = node_2
+        self.genes: List[LegoSequence] = genes
+    
+    
+    @property
+    def count( self ):
+        return len( self.genes )
 
 
 class MGraph:
@@ -121,21 +133,101 @@ class MGraph:
         """
         CONSTRUCTOR
         """
-        self._nodes: "Set[MNode]" = set()
-        self.uid_counter: int = 1
-    
-    
-    def cut( self, left_node: MNode, right_node: MNode ) -> Tuple[_MGraph,_MGraph]:
-        """
-        Cuts the graph along the edge between the specified nodes, yielding two new graphs.
-        Note this function accepts two nodes, rather than an edge, so that the assignment of
-        "left" and "right" is always explicit, which wouldn't be obvious for undirected edges. 
+        self._nodes: Dict[int, MNode] = { }
         
-        :param left_node:  Node that will form the "left" half of the cut 
-        :param right_node: Node that will form the "right" half of the cut. 
-        :return: A tuple containing the two new graphs, first left and then right. 
+    def find_isolation_points( self, test: Callable[[MNode], bool] ) -> List[_FusionPointCandidate]:
         """
-        raise NotImplementedError( "TODO" )
+        Finds the points on the graph that separate the specified nodes from everything else.
+         
+        :param test:    A delegate expression yielding `True` for nodes inside the set to be separated, and `False` for all other nodes. 
+        :return:        A list of `_FusionPointCandidate` detailing the isolation points. 
+        """
+        # Iterate over all the edges to make a list of `candidate` edges
+        # - those separating βγδ from everything else
+        candidates: List[_FusionPointCandidate] = []
+        for edge in self.get_edges():
+            for node in cast( Sequence[MNode], (edge.left, edge.right) ):
+                params = FollowParams( root = node, exclude_edges = [edge] )
+                self.follow( params )
+                count = []
+                
+                # Count the number of fusion sequences in the subgraph
+                for relative in params.visited_nodes:
+                    if relative.sequence is not None:
+                        count.append( relative.sequence )
+                        
+                        if not test( relative ):
+                            # Fusion sequence are not alone - disregard
+                            count.clear()
+                            break
+                
+                if count:
+                    candidates.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
+        
+        # Connected candidates (such as 1,2,3 in the diagram above) need to be reduced to just the one encompassing them all
+        # - To do this, make a CC set of the candidates
+        cc_finder = ComponentFinder()
+        for candidate_1 in candidates:
+            for candidate_2 in candidates:
+                if candidate_1.node_a is candidate_2.node_a or candidate_1.node_b is candidate_2.node_a:
+                    cc_finder.join( candidate_1, candidate_2 )
+        
+        # - Now for each CC, just use the candidate encompassing the most composites
+        fusions_refined: List[_FusionPointCandidate] = []
+        tabulation: List[List[_FusionPointCandidate]] = cc_finder.tabulate()
+        for component_ in tabulation:
+            fusions_refined.append( max( component_, key = lambda x: x.count ) )
+            
+        return fusions_refined
+    
+    
+    def cut( self, left_node: MNode, right_node: MNode ) -> Tuple[_MGraph, _MGraph]:
+        """
+        This is the same as `cut_one`, but returns both the left and the right halves of the cut.
+        """
+        left_graph = self.cut_one( left_node, right_node )
+        right_graph = self.cut_one( right_node, left_node )
+        return left_graph, right_graph
+    
+    
+    def cut_one( self, containing_node: _MNode, missing_node: _MNode ) -> _MGraph:
+        """
+        Cuts the graph along the edge between the specified nodes, yielding a new subset graph.
+        
+        The new subset contains `containing_node`, and all its relations, excluding those crossing `missing_node`. 
+        
+        Note this function accepts two nodes, rather than an edge, so that the assignment of
+        "containing_node" and "missing_node" is always explicit, which wouldn't be obvious for undirected edges. 
+        
+        :param containing_node:     Node that will form the "left" half of the cut 
+        :param missing_node:        Node that will form the "right" half of the cut. 
+        :return:                    The new graph
+        """
+        new = MGraph()
+        
+        fp = FollowParams( root = containing_node, exclude_nodes = [missing_node] )
+        self.follow( fp )
+        
+        for node in fp.visited_nodes:
+            node.copy_into( new )
+        
+        for node in fp.visited_nodes:
+            for edge in node.iter_edges():
+                edge.copy_into( new )
+        
+        return new
+    
+    
+    def find_connected_components( self ) -> List[List[_MNode]]:
+        """
+        Calculates and returns the list of connected components.
+        """
+        cf = ComponentFinder()
+        
+        for edge in self.get_edges():
+            cf.join( edge.left, edge.right )
+        
+        return cast( List[List[_MNode]], cf.tabulate() )
     
     
     @classmethod
@@ -150,22 +242,22 @@ class MGraph:
         raise NotImplementedError( "TODO" )
     
     
-    def incorporate( self, graph: MGraph ) -> None:
+    def incorporate( self, graph: _MGraph ) -> None:
         """
         Clones an existing graph into this one.
         Note that node information and UIDs are copied, which prevents accidentally incorporating the same set of nodes twice.
         :param graph:   The graph to incorporate.
         """
-        raise NotImplementedError( "TODO" )
+        self.incorporate_nodes( graph._nodes.values() )
     
     
-    def find_node( self, node: MNode ) -> MNode:
+    def find_node( self, uid: int ) -> Optional[MNode]:
         """
         Finds the equivalent node in this graph, to one that exists in a different graph. 
-        :param node:    Node to find. 
+        :param uid:    UID of node to find. 
         :return:        Node in this graph. 
         """
-        raise NotImplementedError( "TODO" )
+        return self._nodes.get( uid )
     
     
     def import_newick( self, newick_tree: str, model: LegoModel ) -> None:
@@ -204,7 +296,7 @@ class MGraph:
         r = []
         
         for edge in self.get_edges():
-            r.append( "{},{}".format( edge.a.describe( format_str ), edge.b.describe( format_str ) ) )
+            r.append( "{},{}".format( edge.left.describe( format_str ), edge.right.describe( format_str ) ) )
         
         return "\n".join( r )
     
@@ -361,25 +453,35 @@ class MNode:
     """
     
     
-    def __init__( self, graph: MGraph ):
+    def __init__( self, graph: MGraph, uid: int = None ):
         """
         CONSTRUCTOR 
         """
         from groot.algorithms.fuse import FusionPoint
         
-        if not hasattr( graph, "uid_counter" ):
-            graph.uid_counter = 1
+        if uid is None:
+            uid = uuid4().int
         
-        self.__uid: int = graph.uid_counter
+        self.__uid: int = uid
         self._graph: MGraph = graph
         self.sequence: Optional[LegoSequence] = None
         self._edges: Dict[MNode, MEdge] = { }
-        self.fusion_comment: Optional[FusionPoint] = None
+        self.fusion: Optional[FusionPoint] = None
         
         graph._nodes.add( self )
-        graph.uid_counter += 1
     
     
+    def copy_into( self, target_graph: MGraph ) -> _MNode:
+        """
+        Copies the node (but not the edges!)
+        """
+        new = MNode( target_graph, self.__uid )
+        new.sequence = self.sequence
+        new.fusion = self.fusion
+        return new
+    
+    
+    @property
     def uid( self ) -> int:
         return self.__uid
     
@@ -427,25 +529,25 @@ class MNode:
             elif x == "S":
                 skip = self.sequence is None
             elif x == "F":
-                skip = self.fusion_comment is None
+                skip = self.fusion is None
             elif x == "C":
-                skip = self.fusion_comment is None
+                skip = self.fusion is None
             elif x == "T":
                 skip = self.sequence is not None
             elif x == "G":
-                skip = self.fusion_comment is not None
+                skip = self.fusion is not None
             elif x == "D":
-                skip = self.fusion_comment is not None
+                skip = self.fusion is not None
             elif x == "t":
                 if self.sequence:
                     ss.append( "seq:{}".format( self.sequence.accession ) )
-                elif self.fusion_comment:
-                    ss.append( "fus:{}:{}".format( self.fusion_comment.opposite_component, self.fusion_comment.count ) )
+                elif self.fusion:
+                    ss.append( "fus:{}:{}".format( self.fusion.opposite_component, self.fusion.count ) )
                 else:
                     ss.append( "cla:{}".format( self.__uid ) )
             elif x == "f":
-                if self.fusion_comment:
-                    ss.append( Theme.BOLD + str( self.fusion_comment ) + Theme.RESET )
+                if self.fusion:
+                    ss.append( Theme.BOLD + str( self.fusion ) + Theme.RESET )
             elif x == "u":
                 ss.append( self.__uid )
             elif x == "c":
@@ -474,7 +576,7 @@ class MNode:
         """
         Iterates over the edges on this node.
         """
-        return sorted( self._edges.values(), key = lambda x: "{}-{}".format( id( x.a ), id( x.b ) ) )
+        return sorted( self._edges.values(), key = lambda x: "{}-{}".format( id( x.left ), id( x.right ) ) )
     
     
     def num_edges( self ) -> int:
@@ -545,52 +647,72 @@ def export_name( *args ) -> Optional[str]:
 
 
 class MEdge:
-    def __init__( self, graph: MGraph, a: MNode, b: MNode ):
-        if a is b:
+    def __init__( self, graph: MGraph, left: MNode, right: MNode ):
+        if left is right:
             raise ValueError( "Cannot create an edge to the same node." )
         
-        if b in a._edges or a in b._edges:
+        if right in left._edges or left in right._edges:
             raise ValueError( "Cannot add an edge from node to node because these nodes already share an edge." )
         
         self._graph = graph
-        self._a = a
-        self._b = b
+        self._left = left
+        self._right = right
         
-        a._edges[b] = self
-        b._edges[a] = self
+        left._edges[right] = self
+        right._edges[left] = self
+    
+    
+    def copy_into( self, target_graph: MGraph ) -> Optional[_MEdge]:
+        """
+        Copies this edge into the target graph.
+        
+        If the same nodes do not exist in the target graph, no edge is created and the function returns `None`.
+        """
+        left = target_graph.find_node( self._left.uid )
+        
+        if left is None:
+            return None
+        
+        right = target_graph.find_node( self._right.uid )
+        
+        if right is None:
+            return None
+        
+        new_edge = MEdge( target_graph, left, right )
+        return new_edge
     
     
     def remove( self ) -> None:
-        del self._a._edges[self._b]
-        del self._b._edges[self._a]
+        del self._left._edges[self._right]
+        del self._right._edges[self._left]
     
     
     def __repr__( self ) -> str:
-        return "{}-->{}".format( self._a, self._b )
+        return "{}-->{}".format( self._left, self._right )
     
     
     @property
-    def a( self ) -> MNode:
-        return self._a
+    def left( self ) -> MNode:
+        return self._left
     
     
     @property
-    def b( self ) -> MNode:
-        return self._b
+    def right( self ) -> MNode:
+        return self._right
     
     
     def opposite( self, node: MNode ) -> MNode:
-        if self._a is node:
-            return self._b
-        elif self._b is node:
-            return self._a
+        if self._left is node:
+            return self._right
+        elif self._right is node:
+            return self._left
         else:
             raise KeyError( "Cannot find opposite side to '{}' because that isn't part of this edge '{}'.".format( node, self ) )
     
     
     def iter_a( self ) -> Set[MNode]:
-        return self._graph.follow( FollowParams( root = self._a, exclude_nodes = [self._b] ) ).exclude_nodes
+        return self._graph.follow( FollowParams( root = self._left, exclude_nodes = [self._right] ) ).exclude_nodes
     
     
     def iter_b( self ) -> Set[MNode]:
-        return self._graph.follow( FollowParams( root = self._b, exclude_nodes = [self._a] ) ).exclude_nodes
+        return self._graph.follow( FollowParams( root = self._right, exclude_nodes = [self._left] ) ).exclude_nodes
