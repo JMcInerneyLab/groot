@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url="https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.14",
+       version = "0.0.0.15",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "GPLv3",

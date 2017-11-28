@@ -689,7 +689,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler: Make - components
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_components )
+        self.request_plugin( self, COMMANDS.ext_generating.make_components )
     
     
     @exqtSlot()
@@ -697,7 +697,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_alignment, defaults = [ list( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_generating.make_alignment, defaults = [ list( self._view.selected_components() ) ] )
     
     
     @exqtSlot()
@@ -705,7 +705,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_tree, defaults = [ list( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_generating.make_tree, defaults = [ list( self._view.selected_components() ) ] )
     
     
     @exqtSlot()
@@ -713,7 +713,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_consensus, defaults = [ list( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_generating.make_consensus, defaults = [ list( self._view.selected_components() ) ] )
     
     
     @exqtSlot()
@@ -721,7 +721,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_nrfg )
+        self.request_plugin( self, COMMANDS.ext_generating.make_nrfg )
     
     
     @exqtSlot()
@@ -729,7 +729,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_generating.make_fusions )
+        self.request_plugin( self, COMMANDS.ext_generating.make_fusions )
     
     
     @exqtSlot()
@@ -745,7 +745,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_modifications.set_tree )
+        self.request_plugin( self, COMMANDS.ext_modifications.set_tree )
     
     
     @exqtSlot()
@@ -753,7 +753,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_modifications.set_alignment )
+        self.request_plugin( self, COMMANDS.ext_modifications.set_alignment )
     
     
     @exqtSlot()
@@ -761,7 +761,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_modifications.quantise )
+        self.request_plugin( self, COMMANDS.ext_modifications.quantise )
     
     
     @exqtSlot()
@@ -769,7 +769,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_fasta, defaults = [ array_helper.first( self._view.selected_entities() ) ] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_fasta, defaults = [array_helper.first( self._view.selected_entities() )] )
     
     
     @exqtSlot()
@@ -777,7 +777,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_status )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_status )
     
     
     @exqtSlot()
@@ -785,7 +785,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_alignment, defaults = [ array_helper.first( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_alignment, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()
@@ -793,7 +793,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_consensus, defaults = [ array_helper.first( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_consensus, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()
@@ -801,7 +801,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_tree, defaults = [ array_helper.first( self._view.selected_components() ) ] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_tree, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()
@@ -809,7 +809,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_component_edges, defaults = [array_helper.first( self._view.selected_components() )] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_component_edges, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()
@@ -817,7 +817,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_components )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_components )
     
     
     @exqtSlot()
@@ -825,7 +825,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_fusions )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_fusions )
     
     
     @exqtSlot()
@@ -833,7 +833,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, COMMANDS.ext_viewing.print_nrfg )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_nrfg )
     
     
     @exqtSlot()
@@ -1063,3 +1063,9 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
     @exqtSlot( int )
     def on_CHK_MOVE_YSNAP_stateChanged( self, _: int ):
         self.update_options()
+
+    def request_plugin( self, ignored, plugin, defaults =None):
+        arguments = FrmArguments.request(self, plugin, defaults)
+        
+        if arguments is not None:
+            plugin.run( **arguments )
