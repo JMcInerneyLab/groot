@@ -1,8 +1,10 @@
-from typing import Dict, List, Set, cast, Sequence, Iterator, Tuple, Callable
-from groot.data.graphing import MEdge, MGraph, MNode, FollowParams
+from typing import List, Set, Tuple
+
+from groot.algorithms import consensus
+from groot.data.graphing import MEdge, MGraph, MNode, IsolationError, IsolationPoint
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
+from intermake.engine.environment import MCMD
 from mhelper import Logger, array_helper
-from mhelper.component_helper import ComponentFinder
 
 
 __LOG = Logger( "fusion", False )
@@ -34,7 +36,7 @@ class FusionEvent:
         self.points_b: List[FusionPoint] = None
     
     
-    def get_commensurate_points( self ) -> List[Tuple[FusionPoint, FusionPoint]]:
+    def get_commensurate_points( self ) -> List[Tuple[IsolationPoint, IsolationPoint]]:
         """
         Gets tuples of points that look like they are commensurate, or raises a `NotCommensurateError`. 
         """
@@ -45,17 +47,16 @@ class FusionEvent:
         
         for point_a in self.points_a:
             found = False
-            
             for point_b in self.points_b:
                 if point_a.genes == point_b.genes:
                     if found:
-                        raise NotCommensurateError( "In the fusion point A «{}» there are multiple commensurate points in the B set «{}».".format( point_a, self.points_b ) )
+                        raise NotCommensurateError( "In the fusion point A there are multiple commensurate points in the B set. A = «{}», B = «{}».".format( point_a, self.points_b ) )
                     
                     results.append( (point_a, point_b) )
                     found = True
             
             if not found:
-                raise NotCommensurateError( "In the fusion point A «{}» there is no commensurate point in the B set «{}».".format( point_a, self.points_b ) )
+                raise NotCommensurateError( "In the fusion point A there is no commensurate point in the B set. A = «{}», B = «{}».".format( point_a, self.points_b ) )
         
         return results
     
@@ -122,7 +123,8 @@ def find_all_fusion_points( model: LegoModel ) -> None:
     """
     r: List[FusionEvent] = []
     
-    remove_fusions( model )
+    if model.fusion_events:
+        raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
     
     for event in find_fusion_events( model ):
         event.points_a = __get_fusion_points( event, event.component_a )
@@ -133,7 +135,7 @@ def find_all_fusion_points( model: LegoModel ) -> None:
 
 
 class FusionPoint:
-    def __init__( self, node: int, direction_uid: int, event: FusionEvent, genes: List[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
+    def __init__( self, node: int, direction_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
         self.node_uid = node
         self.direction_uid = direction_uid
         self.opposite_component = opposite_component
@@ -147,11 +149,12 @@ class FusionPoint:
         return len( self.genes )
     
     
-    def __str__( self ):
-        return "EVENT JOINING {} GENES IN {} TO {} FORMING {} : {}".format( self.count, self.component, self.opposite_component, ", ".join( sorted( str( x ) for x in self.event.intersections ) ), ", ".join( sorted( str( x ) for x in self.genes ) ) )
-
-
-
+    def __repr__( self ):
+        return "({})-AND-({})-FORM-({}):{}_GENES=[{}]".format( self.component,
+                                                               self.opposite_component,
+                                                               ",".join( sorted( str( x ) for x in self.event.intersections ) ),
+                                                               self.count,
+                                                               ",".join( sorted( str( x ) for x in self.genes ) ) )
 
 
 def remove_fusions( model: LegoModel ) -> int:
@@ -167,7 +170,7 @@ def remove_fusions( model: LegoModel ) -> int:
         to_delete: List[MNode] = []
         
         for node in graph.get_nodes():
-            if node.fusion_comment is not None:
+            if node.fusion is not None:
                 assert node.num_edges() == 2
                 edges = list( node.iter_edges() )
                 
@@ -214,7 +217,7 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Get the component tree
     # The `intersection_aliases` correspond to βγδ in the above diagram
-    graph : MGraph = component.tree
+    graph: MGraph = component.tree
     
     intersection_roots = fusion_event.intersections
     intersection_aliases = set()
@@ -225,7 +228,8 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    fusions_refined = graph.find_isolation_points( lambda node: node.sequence.component in intersection_aliases )
+    isolation_points = graph.find_isolation_points( is_inside = lambda node: node.sequence is not None and node.sequence.component in intersection_aliases,
+                                                    is_outside = lambda node: node.sequence is not None and node.sequence.component not in intersection_aliases )
     
     results = []
     
@@ -237,20 +241,26 @@ def __get_fusion_points( fusion_event: FusionEvent,
     # with:                           #
     #   Ⓧ───🅱───Ⓐ───🅲───Ⓨ         #
     #                                 #
-    for fusion in fusions_refined:
+    for isolation_point in isolation_points:
         # Remove the existing edge
-        fusion.edge.remove()
+        isolation_point.edge.remove()
         
         # Create the fusion-point node
         fusion_node = MNode( graph )
         
         # Create the edges
-        MEdge( graph, fusion_node, fusion.internal_node )
-        MEdge( graph, fusion_node, fusion.external_node )
+        MEdge( graph, fusion_node, isolation_point.internal_node )
+        MEdge( graph, fusion_node, isolation_point.external_node )
         
-        fusion = FusionPoint( fusion_node.uid, fusion.internal_node.uid, fusion_event, fusion.genes, component, fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
-        fusion_node.fusion = fusion
-        results.append( fusion )
+        genes = set( x.sequence for x in isolation_point.inside_nodes if x.sequence is not None )
+        fusion_point = FusionPoint( fusion_node.uid,
+                                    isolation_point.internal_node.uid,
+                                    fusion_event,
+                                    genes,
+                                    component,
+                                    fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
+        fusion_node.fusion = fusion_point
+        results.append( fusion_point )
     
     return results
 
@@ -263,28 +273,60 @@ def create_nrfg( model: LegoModel ) -> None:
     :param model:   Model to create the graph for.
     """
     if model.nrfg is not None:
-        raise ValueError( "The model's NRFG already exists. Did you mean to remove the existing NRFG first?" )
+        raise ValueError( "The model's NRFG already exists. If your intention was to replace it you should remove the existing NRFG first." )
     
-    result = MGraph()
+    ωψ = MGraph()
     
     for fusion_event in model.fusion_events:
-        a = fusion_event.component_a.tree
-        b = fusion_event.component_b.tree
-        c = fusion_event.component_c.tree
+        aψ = fusion_event.component_a.tree
+        bψ = fusion_event.component_b.tree
+        cψ = fusion_event.component_c.tree
+        dψ = fusion_event.component_c.consensus
         
-        for point_a, point_b in fusion_event.get_commensurate_points():
-            genes_plus_none = point_a.genes + [None]
-            aʹ, ca = a.cut( point_a.node, point_a.direction )
-            bʹ, cb = b.cut( point_b.node, point_b.direction )
-            cs = c.find_isolation_points( lambda node: node.sequence in genes_plus_none )
+        # Iterate our commensurate points 
+        # - Points that isolate the same sequences in both graphs
+        # - Ideally there will just be one, but there might be more if multiple fusion events occurred
+        for aπ, bπ in fusion_event.get_commensurate_points():
+            MCMD.progress( "PROCESSING {} SUBSET [ ({})--({}) ]".format( fusion_event, aπ, bπ ) )
             
-            cʹ = MGraph.consensus( (ca, cb, cs) )
+            assert isinstance( aπ, FusionPoint )
+            assert isinstance( bπ, FusionPoint )
             
-            result.incorporate( aʹ )
-            result.incorporate( bʹ )
-            result.incorporate( cʹ )
+            #  Get the genes isolated by the fusion
+            genes = aπ.genes
             
-            MEdge( result, result.find_node( point_a.node ), result.find_node( point_a.direction ) )
-            MEdge( result, result.find_node( point_b.node ), result.find_node( point_b.direction ) )
+            # Create our sub-graphs by cutting the original graph at these points
+            # aΛ/bΛ/cΛ : The graphs excluding our genes
+            # aΔ/bΔ/cΔ : The graphs including our genes 
+            aΛ, aΔ = aψ.cut( aπ.node_uid, aπ.direction_uid )
+            bΛ, bΔ = bψ.cut( bπ.node_uid, bπ.direction_uid )
+            
+            # Attempt to pull the same slice out of our consensus graph
+            try:
+                dΛ, dΔ = dψ.cut_at_isolation( is_inside = lambda node: node.sequence is not None and node.sequence in genes,
+                                              is_outside = lambda node: node.sequence is not None and node.sequence not in genes )
+            except IsolationError:
+                # If they can't be pulled out we can still make a new consensus
+                dΔ = __make_new_consensus( model, aΔ, bΔ, cψ, genes )
+            
+            aΛ.copy_into( ωψ )
+            bΛ.copy_into( ωψ )
+            dΔ.copy_into( ωψ )
+            
+            ωψ.add_edge( aπ.node_uid, aπ.direction_uid )
+            ωψ.add_edge( bπ.node_uid, bπ.direction_uid )
     
-    model.nrfg = result
+    model.nrfg = ωψ
+
+
+def __make_new_consensus( model, aΔ, bΔ, cψ, genes ):
+    # Show a warning
+    MCMD.warning( "Cannot pull the fused gene subset out of the consensus tree. I'm going to have to create a new consensus using just the fused gene subset." )
+    
+    # Attempt to make the same slice in our graph of the fused part only
+    cΛ, cΔ = cψ.cut_at_isolation( is_inside = lambda node: node.sequence is not None and node.sequence in genes,
+                                  is_outside = lambda node: node.sequence is not None and node.sequence not in genes )
+    
+    # Make a consensus of the three graphs
+    dΔ = consensus.tree_consensus( model, (aΔ, bΔ, cΔ) )
+    return dΔ

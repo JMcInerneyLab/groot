@@ -1,5 +1,6 @@
 from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
+from groot.algorithms.fuse import FusionPoint
 from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
 from intermake.engine.theme import Theme
 
@@ -50,18 +51,19 @@ def print_status() -> Changes:
     r.append( "" )
     r.append( Theme.HEADING + "Components" + Theme.RESET )
     r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
-    r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignment ) ) )
-    r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_tree ) ) )
+    r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignments ) ) )
+    r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_trees ) ) )
     r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, ext_generating.make_consensus ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "NRFG" + Theme.RESET )
     r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
+    r.append( "Fusion graph : {}".format( __get_status_line( p, [model], lambda x: x.nrfg, ext_generating.make_nrfg ) ) )
     MCMD.print( "\n".join( r ) )
     return Changes( Changes.INFORMATION )
 
 
-@command( names = ["print_alignment", "alignment"] )
-def print_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes:
+@command( names = ["print_alignments", "alignments"] )
+def print_alignments( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
@@ -99,13 +101,13 @@ def print_consensus( component: Optional[List[LegoComponent]] = None, view: EPri
     :param view:        How to view the tree
     :param component:   Component to print. If not specified prints all trees.
     """
-    print_tree( component = component, consensus = True, view = view )
+    print_trees( component = component, consensus = True, view = view )
     
     return Changes( Changes.INFORMATION )
 
 
-@command( names = ["print_tree", "tree"] )
-def print_tree( component: Optional[LegoComponent] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c m f" ) -> Changes:
+@command( names = ["print_trees", "trees", "print_tree", "tree"] )
+def print_trees( component: Optional[LegoComponent] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c m f" ) -> Changes:
     """
     Prints the tree for a component.
     
@@ -259,6 +261,9 @@ def print_sequences() -> Changes:
     
     
     for sequence in model.sequences:
+        if not sequence.minor_components():
+            r.append( "{} - no components".format( sequence ) )
+        
         for component_index, component in enumerate( sequence.minor_components() ):
             if component_index == 0:
                 r.append( sequence.accession.ljust( 20 ) )
@@ -354,9 +359,11 @@ def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optio
 
 
 @command( names = ["print_fusions", "fusions"] )
-def print_fusions() -> Changes:
+def print_fusions( verbose: bool = False ) -> Changes:
     """
     Estimates model fusions. Does not affect the model.
+    
+    :param verbose: Verbose output
     """
     results: List[str] = []
     
@@ -367,15 +374,28 @@ def print_fusions() -> Changes:
         results.append( "" )
         
         for fusion_point in fusion_event.points_a:
-            results.append( "  •  {}".format( fusion_point ) )
+            __format_fusion_point( fusion_point, results, verbose )
         
         results.append( "" )
         
         for fusion_point in fusion_event.points_b:
-            results.append( "  •  {}".format( fusion_point ) )
+            __format_fusion_point( fusion_point, results, verbose )
         
         results.append( "" )
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
     return Changes( Changes.INFORMATION )
+
+
+def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
+    if not verbose:
+        results.append( "  •  {}".format( str( fusion_point ) ) )
+        return
+    
+    results.append( "  •  component  {}".format( fusion_point.component ) )
+    results.append( "     component  {}".format( fusion_point.opposite_component ) )
+    results.append( "     intersect  {}".format( fusion_point.event.intersections ) )
+    results.append( "     intersect  {}".format( fusion_point.event.orig_intersections ) )
+    results.append( "     sequences  {}".format( fusion_point.genes ) )
+    results.append( "     node_uid   {}".format( fusion_point.node_uid ) )

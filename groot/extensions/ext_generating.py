@@ -13,7 +13,7 @@ from mhelper import string_helper
 __mcmd_folder_name__ = "Generating"
 
 
-@command()
+@command( names = ["make_components", "create_components", "find_components"] )
 def make_components( tolerance: int = 0 ) -> Changes:
     """
     Detects composites in the model.
@@ -34,7 +34,7 @@ def make_components( tolerance: int = 0 ) -> Changes:
     return Changes( Changes.COMPONENTS )
 
 
-@command()
+@command( names = ["make_alignments", "create_alignments", "make_alignment", "create_alignment"] )
 def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Aligns the component. If no component is specified, aligns all components.
@@ -56,7 +56,7 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Change
     return Changes( Changes.COMP_DATA )
 
 
-@command()
+@command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
 def make_trees( component: Optional[List[LegoComponent]] = None ):
     """
     Generates component trees.
@@ -79,7 +79,7 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
     return Changes( Changes.COMP_DATA )
 
 
-@command()
+@command( names = ["make_consensus", "create_consensus"] )
 def make_consensus( component: Optional[List[LegoComponent]] = None ):
     """
     Fuses the component trees to create the basis for our fusion graph.
@@ -99,14 +99,20 @@ def make_consensus( component: Optional[List[LegoComponent]] = None ):
     return Changes( Changes.COMP_DATA )
 
 
-@command()
-def make_fusions() -> Changes:
+@command( names = ["make_fusions", "make_fusion", "create_fusions", "create_fusion", "find_fusions", "find_fusion"] )
+def make_fusions( overwrite: bool = False ) -> Changes:
     """
     Makes the fusion points.
     
     Requisites: The trees. You must have called `make_trees` first.
+    
+    :param overwrite: Drop existing trees first
     """
     model = global_view.current_model()
+    
+    if overwrite:
+        fuse.remove_fusions( model )
+    
     fuse.find_all_fusion_points( model )
     
     n = len( model.fusion_events )
@@ -115,7 +121,7 @@ def make_fusions() -> Changes:
     return Changes( Changes.MODEL_DATA )
 
 
-@command()
+@command( names = ["make_nrfg", "create_nrfg"] )
 def make_nrfg() -> Changes:
     """
     Creates the N-rooted fusion graph.

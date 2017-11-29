@@ -605,6 +605,9 @@ class LegoModel( IVisualisable ):
                                  "sequences"    : self.sequences,
                                  "components"   : self.components } )
     
+    def __str__(self):
+        return self.name
+    
     
     @property
     def name( self ) -> str:

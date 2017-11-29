@@ -1,20 +1,21 @@
-from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict, List, Sequence
+from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dict, List, Sequence, Union
 from uuid import uuid4
-
 from ete3 import TreeNode
 
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
-from intermake.engine.theme import Theme
-
-from mhelper import array_helper, ComponentFinder
+from mhelper import array_helper, ComponentFinder, exception_helper, SwitchError
+from intermake import Theme
 
 
-_MGraph = "MGraph"
-_MNode = "MNode"
-_MEdge = "MEdge"
-
+_LegoComponent_ = "groot.data.lego_model.LegoComponent"
+_LegoModel_ = "groot.data.lego_model.LegoModel"
+_LegoSequence_ = "groot.data.lego_model.LegoSequence"
+_MGraph_ = "groot.data.graphing.MGraph"
+_MNode_ = "groot.data.graphing.MNode"
+_MEdge_ = "groot.data.graphing.MEdge"
+TUid = int
+TNodeOrUid = Union[TUid, _MNode_]  # A node in the graph, or a UID allowing the node to be found, or a node in another graph that can also be found in this graph
 DFindId = Callable[[str], object]
-DNodePredicate = Callable[[_MNode], bool]
+DNodePredicate = Callable[[_MNode_], bool]
 
 
 class MClade:
@@ -110,24 +111,33 @@ class FollowParams:
 
 
 class CutPoint:
-    def __init__( self, left_subgraph: MGraph, left_node: MNode, right_subgraph: MGraph, right_node: MNode ):
+    def __init__( self, left_subgraph: _MGraph_, left_node: _MNode_, right_subgraph: _MGraph_, right_node: _MNode_ ):
         self.left_subgraph: MGraph = left_subgraph
         self.left_node: MNode = left_node
         self.right_subgraph: MGraph = right_subgraph
         self.right_node: MNode = right_node
 
 
-class _FusionPointCandidate:
-    def __init__( self, edge: MEdge, internal_node: MNode, external_node: MNode, genes: List[LegoSequence] ) -> None:
+class IsolationPoint:
+    def __init__( self, edge: _MEdge_, internal_node: _MNode_, external_node: _MNode_, inside_nodes: Set[_MNode_], cladistic_nodes: Set[_MNode_] ) -> None:
         self.edge: MEdge = edge
         self.internal_node: MNode = internal_node
         self.external_node: MNode = external_node
-        self.genes: List[LegoSequence] = genes
+        self.inside_nodes: Set[_MNode_] = inside_nodes
+        self.cladistic_nodes: Set[_MNode_] = cladistic_nodes
     
     
     @property
     def count( self ):
-        return len( self.genes )
+        return len( self.inside_nodes )
+    
+    
+    def __str__( self ):
+        return "<ISOLATES {} GIVEN {}>".format( self.inside_nodes, self.cladistic_nodes )
+
+
+class IsolationError( Exception ):
+    pass
 
 
 class MGraph:
@@ -138,23 +148,46 @@ class MGraph:
         self._nodes: Dict[int, MNode] = { }
     
     
-    def extract_isolation( self, inside: DNodePredicate, outside : DNodePredicate ) -> _MGraph:
+    @property
+    def nodes( self ):
+        return self._nodes.values()
+    
+    
+    def cut_one_at_isolation( self, is_inside: DNodePredicate, is_outside: DNodePredicate ) -> _MGraph_:
         """
-        A combination of `find_isolation_points` and `cut_one`.
+        A combination of `find_isolation_point` and `cut_one`.
         
-        :except ValueError: More than one isolation point is found
+        :except IsolationError: More than one isolation point is found
         """
-        points = self.find_isolation_points( inside, outside )
-        
-        if len( points ) != 1:
-            raise ValueError( "Cannot extract the isolation from the graph because the specified points are not uniquely isolated." )
-        
-        point = points[0]
-        
+        point = self.find_isolation_point( is_inside, is_outside )
         return self.cut_one( point.internal_node, point.external_node )
     
     
-    def find_isolation_points( self, inside: DNodePredicate, outside : DNodePredicate ) -> List[_FusionPointCandidate]:
+    def cut_at_isolation( self, is_inside: DNodePredicate, is_outside: DNodePredicate ) -> Tuple[_MGraph_, _MGraph_]:
+        """
+        A combination of `find_isolation_point` and `cut`.
+        
+        :except IsolationError: More than one isolation point is found
+        """
+        point = self.find_isolation_point( is_inside, is_outside )
+        return self.cut( point.internal_node, point.external_node )
+    
+    
+    def find_isolation_point( self, is_inside: DNodePredicate, is_outside: DNodePredicate ) -> IsolationPoint:
+        """
+        Convenience function that calls `find_isolation_points`, returning the resultant point or raising an error.
+        
+        :except IsolationError: Points are not isolated.
+        """
+        points = self.find_isolation_points( is_inside, is_outside )
+        
+        if len( points ) != 1:
+            raise IsolationError( "Cannot extract the isolation from the graph because the specified points are not uniquely isolated." )
+        
+        return points[0]
+    
+    
+    def find_isolation_points( self, is_inside: DNodePredicate, is_outside: DNodePredicate ) -> List[IsolationPoint]:
         """
         Finds the points on the graph that separate the specified `inside` nodes from the `outside` nodes.
         
@@ -162,7 +195,7 @@ class MGraph:
           ----X1
           |   --------I
           |
-         -X2
+        --X2
           |
           |   --------O
           ----X3
@@ -179,7 +212,7 @@ class MGraph:
           ----X1
           |   --------I
           |
-         -X2
+        --X2
           |           --------I
           |   --------X3
           ----X4      --------I
@@ -187,59 +220,81 @@ class MGraph:
               --------O
          
          
-        :param outside:   A delegate expression yielding `True` for nodes outside the set to be separated, and `False` for all other nodes. 
-        :param inside:    A delegate expression yielding `True` for nodes inside the set to be separated,  and `False` for all other nodes. 
-        :return:          A list of `_FusionPointCandidate` detailing the isolation points. 
+        :param is_outside:   A delegate expression yielding `True` for nodes outside the set to be separated, and `False` for all other nodes. 
+        :param is_inside:    A delegate expression yielding `True` for nodes inside the set to be separated,  and `False` for all other nodes. 
+        :return:          A list of `IsolationPoint` detailing the isolation points. 
         """
         # Iterate over all the edges to make a list of `candidate` edges
-        # - those separating βγδ from everything else
-        candidates: List[_FusionPointCandidate] = []
+        # - those separating INSIDE from OUTSIDE
+        candidates: List[IsolationPoint] = []
+        
         for edge in self.get_edges():
             for node in cast( Sequence[MNode], (edge.left, edge.right) ):
                 params = FollowParams( root = node, exclude_edges = [edge] )
                 self.follow( params )
-                count = []
+                outside_nodes = False
+                inside_nodes = set()
+                cladistic_nodes = set()
                 
                 # Count the number of fusion sequences in the subgraph
-                for relative in params.visited_nodes:
-                    if relative.sequence is not None:
-                        count.append( relative.sequence )
-                        
-                        if not inside( relative ):
-                            # Fusion sequence are not alone - disregard
-                            count.clear()
-                            break
+                for visited_node in params.visited_nodes:
+                    if is_inside( visited_node ):
+                        inside_nodes.add( visited_node )
+                    elif is_outside( visited_node ):
+                        outside_nodes = True
+                        break  # we can stop
+                    else:
+                        cladistic_nodes.add( visited_node )
                 
-                if count:
-                    candidates.append( _FusionPointCandidate( edge, node, edge.opposite( node ), count ) )
+                if not outside_nodes:
+                    candidates.append( IsolationPoint( edge, node, edge.opposite( node ), inside_nodes, cladistic_nodes ) )
         
-        # Connected candidates (such as 1,2,3 in the diagram above) need to be reduced to just the one encompassing them all
-        # - To do this, make a CC set of the candidates
-        cc_finder = ComponentFinder()
+        # Our candidates overlap, so remove the redundant ones
+        drop_candidates = []
+        
         for candidate_1 in candidates:
             for candidate_2 in candidates:
-                if candidate_1.internal_node is candidate_2.internal_node or candidate_1.external_node is candidate_2.internal_node:
-                    cc_finder.join( candidate_1, candidate_2 )
+                if candidate_1 is candidate_2:
+                    continue
+                
+                is_subset = candidate_1.inside_nodes.issubset( candidate_2.inside_nodes )
+                
+                # If the candidates encompass different sequences don't bother
+                if not is_subset:
+                    continue
+                
+                # Any candidates that are a _strict_ subset of another can be dropped
+                if len( candidate_1.inside_nodes ) < len( candidate_2.inside_nodes ):
+                    drop_candidates.append( candidate_1 )
+                    break
+                
+                # Any candidates equal to another, but have a greater number of cladistic nodes, can be dropped
+                if len( candidate_1.cladistic_nodes ) > len( candidate_2.cladistic_nodes ):
+                    drop_candidates.append( candidate_1 )
+                    break
         
-        # - Now for each CC, just use the candidate encompassing the most composites
-        fusions_refined: List[_FusionPointCandidate] = []
-        tabulation: List[List[_FusionPointCandidate]] = cc_finder.tabulate()
-        for component_ in tabulation:
-            fusions_refined.append( max( component_, key = lambda x: x.count ) )
+        for candidate in drop_candidates:
+            candidates.remove( candidate )
         
-        return fusions_refined
+        return candidates
     
     
-    def cut( self, left_node: MNode, right_node: MNode ) -> Tuple[_MGraph, _MGraph]:
+    def cut( self, left_node: TNodeOrUid, right_node: TNodeOrUid ) -> Tuple[_MGraph_, _MGraph_]:
         """
         This is the same as `cut_one`, but returns both the left and the right halves of the cut.
         """
+        left_node = self.find_node( left_node )
+        right_node = self.find_node( right_node )
+        
+        exception_helper.assert_type( "left_node", left_node, MNode )
+        exception_helper.assert_type( "right_node", right_node, MNode )
+        
         left_graph = self.cut_one( left_node, right_node )
         right_graph = self.cut_one( right_node, left_node )
         return left_graph, right_graph
     
     
-    def cut_one( self, internal_node: _MNode, external_node: _MNode ) -> _MGraph:
+    def cut_one( self, internal_node: _MNode_, external_node: _MNode_ ) -> _MGraph_:
         """
         Cuts the graph along the edge between the specified nodes, yielding a new subset graph.
         
@@ -267,7 +322,7 @@ class MGraph:
         return new
     
     
-    def find_connected_components( self ) -> List[List[_MNode]]:
+    def find_connected_components( self ) -> List[List[_MNode_]]:
         """
         Calculates and returns the list of connected components.
         """
@@ -276,11 +331,11 @@ class MGraph:
         for edge in self.get_edges():
             cf.join( edge.left, edge.right )
         
-        return cast( List[List[_MNode]], cf.tabulate() )
+        return cast( List[List[_MNode_]], cf.tabulate() )
     
     
     @classmethod
-    def consensus( cls, graphs: Iterable[_MGraph] ) -> _MGraph:
+    def consensus( cls, graphs: Iterable[_MGraph_] ) -> _MGraph_:
         """
         Creates the consensus of two trees.
         NOTE: The graphs must be trees!
@@ -291,25 +346,76 @@ class MGraph:
         raise NotImplementedError( "TODO" )
     
     
-    def incorporate( self, graph: _MGraph ) -> None:
+    def add_node( self ) -> _MNode_:
         """
-        Clones an existing graph into this one.
+        Convenience function that creates a node with this graph as the owner.
+        :return:     The added node 
+        """
+        return MNode( self )
+    
+    
+    def add_edge( self, left: TNodeOrUid, right: TNodeOrUid ) -> _MEdge_:
+        """
+        Convenience function that creates an edge with this graph as the owner.
+        :param left:    Left node of edge (or a TNodeOrUid allowing the left node to be found)     
+        :param right:   Right node of edge (or a TNodeOrUid allowing the right node to be found) 
+        :return:        Resulting edge 
+        """
+        return MEdge( self, self.find_node( left ), self.find_node( right ) )
+    
+    
+    def copy( self ) -> _MGraph_:
+        """
+        Makes a deep copy of this graph.
+        """
+        result = MGraph()
+        self.copy_into( result )
+        return result
+    
+    
+    def copy_into( self, target: _MGraph_ ) -> None:
+        """
+        Copies all nodes and edges from this graph into another.
         Note that node information and UIDs are copied, which prevents accidentally incorporating the same set of nodes twice.
-        :param graph:   The graph to incorporate.
+        :param target:   The graph to incorporate this graph into.
         """
-        self.incorporate_nodes( graph._nodes.values() )
+        for node in self._nodes.values():
+            node.copy_into( target )
+        
+        for edge in self.get_edges():
+            edge.copy_into( target )
     
     
-    def find_node( self, uid: int ) -> Optional[MNode]:
+    def find_node( self, node: TNodeOrUid ) -> _MNode_:
         """
-        Finds the equivalent node in this graph, to one that exists in a different graph. 
-        :param uid:    UID of node to find. 
+        Finds a node in this graph, to one that exists in a different graph.
+         
+        :param node:    Node or UID of node to find. 
         :return:        Node in this graph. 
         """
-        return self._nodes.get( uid )
+        if isinstance( node, MNode ):
+            if node._graph is self:
+                return node
+            else:
+                node = node.uid
+        
+        if isinstance( node, TUid ):
+            return self._nodes.get( node )
+        
+        raise SwitchError( "node", node, instance = True )
     
     
-    def import_newick( self, newick_tree: str, model: LegoModel ) -> None:
+    @classmethod
+    def from_newick( cls, newick_tree: str, model: _LegoModel_ ) -> _MGraph_:
+        """
+        Calls `import_newick` on a new graph.
+        """
+        result = cls()
+        result.import_newick( newick_tree, model )
+        return result
+    
+    
+    def import_newick( self, newick_tree: str, model: _LegoModel_ ) -> None:
         """
         Imports a newick tree.
         :param model:           Model to find sequences in
@@ -319,7 +425,7 @@ class MGraph:
         self.import_ete( tree__, model )
     
     
-    def import_ete( self, ete_tree: TreeNode, model: LegoModel ) -> None:
+    def import_ete( self, ete_tree: TreeNode, model: _LegoModel_ ) -> None:
         """
         Imports an Ete tree
         
@@ -358,7 +464,8 @@ class MGraph:
         visited: Set[MNode] = set()
         
         while True:
-            first = array_helper.first( x for x in self._nodes if x not in visited )
+            # Choose an arbitrary root
+            first = array_helper.first( x for x in self._nodes.values() if x not in visited )
             
             if first is None:
                 break
@@ -397,12 +504,13 @@ class MGraph:
             return ete_node
         
         
-        first = array_helper.first_or_error( self._nodes )
+        # Choose an arbitrary starting point
+        first = array_helper.first_or_error( self._nodes.values() )
         
         return __recurse( first, TreeNode(), set() )
     
     
-    def _node_from_ete( self, tree: TreeNode, model: LegoModel ):
+    def _node_from_ete( self, tree: TreeNode, model: _LegoModel_ ):
         """
         Imports an Ete tree into the graph.
         """
@@ -426,7 +534,7 @@ class MGraph:
         """
         result = set()
         
-        for node in self._nodes:
+        for node in self._nodes.values():
             result.update( node.iter_edges() )
         
         return result
@@ -436,7 +544,7 @@ class MGraph:
         """
         Iterates over all the nodes.
         """
-        return iter( self._nodes )
+        return iter( self._nodes.values() )
     
     
     def follow( self, params: FollowParams ) -> FollowParams:
@@ -513,14 +621,16 @@ class MNode:
         
         self.__uid: int = uid
         self._graph: MGraph = graph
-        self.sequence: Optional[LegoSequence] = None
+        self.sequence: Optional[_LegoSequence_] = None
         self._edges: Dict[MNode, MEdge] = { }
         self.fusion: Optional[FusionPoint] = None
         
-        graph._nodes.add( self )
+        assert self.__uid not in graph._nodes
+        
+        graph._nodes[self.__uid] = self
     
     
-    def copy_into( self, target_graph: MGraph ) -> _MNode:
+    def copy_into( self, target_graph: MGraph ) -> _MNode_:
         """
         Copies the node (but not the edges!)
         """
@@ -533,6 +643,10 @@ class MNode:
     @property
     def uid( self ) -> int:
         return self.__uid
+    
+    
+    def __repr__( self ):
+        return self.describe( "u" )
     
     
     def describe( self, format_str ) -> str:
@@ -594,6 +708,13 @@ class MNode:
                     ss.append( "fus:{}:{}".format( self.fusion.opposite_component, self.fusion.count ) )
                 else:
                     ss.append( "cla:{}".format( self.__uid ) )
+            elif x == "u":
+                if self.sequence:
+                    ss.append( "seq:{}".format( self.sequence.accession ) )
+                elif self.fusion:
+                    ss.append( "fus:{}:{}".format( self.fusion.opposite_component, self.fusion.count ) )
+                else:
+                    ss.append( "~" )
             elif x == "f":
                 if self.fusion:
                     ss.append( Theme.BOLD + str( self.fusion ) + Theme.RESET )
@@ -646,7 +767,7 @@ class MNode:
                 x.remove()
                 break
         
-        self._graph._nodes.remove( self )
+        del self._graph._nodes[self.__uid]
     
     
     def iter_relations( self ) -> "Iterator[MNode]":
@@ -657,7 +778,7 @@ class MNode:
             yield edge.opposite( self )
 
 
-def import_name( model: LegoModel, name: str ) -> Tuple[Optional[LegoSequence], Optional[LegoComponent]]:
+def import_name( model: _LegoModel_, name: str ) -> Tuple[Optional[_LegoSequence_], Optional[_LegoComponent_]]:
     if not name:
         return None, None
     
@@ -679,6 +800,8 @@ def import_name( model: LegoModel, name: str ) -> Tuple[Optional[LegoSequence], 
 
 
 def export_name( *args ) -> Optional[str]:
+    from groot.data.lego_model import LegoSequence, LegoComponent
+    
     r = []
     
     for arg in args:
@@ -711,7 +834,7 @@ class MEdge:
         right._edges[left] = self
     
     
-    def copy_into( self, target_graph: MGraph ) -> Optional[_MEdge]:
+    def copy_into( self, target_graph: MGraph ) -> Optional[_MEdge_]:
         """
         Copies this edge into the target graph.
         

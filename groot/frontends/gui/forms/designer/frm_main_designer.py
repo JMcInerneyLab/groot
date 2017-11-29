@@ -625,4 +625,4 @@ class Ui_MainWindow(object):
         self.ACT_PRINT_NRFG.setText(_translate("MainWindow", "View NRF&G"))
         self.ACTION_VIEW_MCOMMAND.setText(_translate("MainWindow", "&MCommand..."))
 
-import resources_rc
+

@@ -105,7 +105,7 @@ def drop_nrfg() -> Changes:
     
     if model.nrfg is None:
         MCMD.information( "The model doesn't have an NRFG. No action performed." )
-        return
+        return Changes( Changes.NONE )
     
     model.nrfg = None
     

@@ -801,7 +801,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver ):
         """
         Signal handler:
         """
-        self.request_plugin( self, COMMANDS.ext_viewing.print_tree, defaults = [array_helper.first( self._view.selected_components() )] )
+        self.request_plugin( self, COMMANDS.ext_viewing.print_trees, defaults = [array_helper.first( self._view.selected_components() )] )
     
     
     @exqtSlot()
