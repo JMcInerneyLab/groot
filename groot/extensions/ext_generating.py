@@ -64,7 +64,6 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
     Requisites: The alignments. You must have called `make_alignments` first.
     
     :param component:   Component, or `None` for all.
-    :return: 
     """
     model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )
@@ -82,9 +81,9 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
 @command( names = ["make_consensus", "create_consensus"] )
 def make_consensus( component: Optional[List[LegoComponent]] = None ):
     """
-    Fuses the component trees to create the basis for our fusion graph.
-    :param component:   Component, or `None` for all.
-    :return: 
+    Fuses the component trees to create the basis for the fusion graph.
+    
+    :param component:   Component to generate consensus for, or the default, `None`, to generate the consensus for all components.
     """
     model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )

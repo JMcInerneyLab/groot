@@ -7,25 +7,13 @@ Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion G
 Installation
 ------------
 
-Please download Gʀᴏᴏᴛ using [Pɪᴩ](https://packaging.python.org/tutorials/installing-packages).
+Please download Gʀᴏᴏᴛ using [Pɪᴩ](https://packaging.python.org/tutorials/installing-packages), i.e. from Bᴀꜱʜ:
 
 ```bash
-$   pip install groot
+$   sudo pip install groot
 ```
 
-For convenience, you can create an alias for Gʀᴏᴏᴛ by adding the following to your `~/.bash_profile` on Uɴɪx:
-
-```bash
-$   alias groot="python -m groot"
-```
-
-_...or, for Wɪɴᴅᴏᴡꜱ, create an executable `.bat` file on your Desktop:_
-
-```bash
-$   python -m groot %*
-```
-
-Once the alias is created, you can start Gʀᴏᴏᴛ in _Command Line Interactive_ (CLI) mode:
+You can then start Gʀᴏᴏᴛ in _Command Line Interactive_ (CLI) mode:
 
 ```bash
 $   groot
@@ -34,7 +22,7 @@ $   groot
 _...or in _Graphical User Interface_ (GUI) mode:_
 
 ```bash
-$   groot "ui gui"
+$   groot gui
 ```
 
 You can also use Gʀᴏᴏᴛ in your own Python applications:
@@ -45,17 +33,18 @@ $   import groot
 
 For other modes, please see the `Iɴᴛᴇʀᴍᴀᴋᴇ` documentation.
 
+If the `groot` command does not start Gʀᴏᴏᴛ then you have not set Pʏᴛʜᴏɴ up correctly.
+
 Tutorial
 --------
 
 ### Introduction ###
-Like Bɪᴏ42, Gʀᴏᴏᴛ uses the Iɴᴛᴇʀᴍᴀᴋᴇ interaction library. This means it can operate from several different perspectives, including a _Command Line Interface_ (CLI) and _Graphical User Interface_ (GUI).
-
-For this tutorial, we'll be using the CLI, because it's much easier to explain. When it comes to your own projects, the GUI has the same commands, but provides a much easier way to visually check everything is going smoothly. Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) documentation on how to use the other modes (Pʏᴛʜᴏɴ Interactive and Pʏᴛʜᴏɴ Scripted).
 
 ### Getting started ###
 
-Make sure Gʀᴏᴏᴛ is started in CLI mode if it isn't already:
+For this tutorial, we'll be using the CLI, because it's much easier to explain.
+
+Start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
 
 ```bash
 $   groot
@@ -65,12 +54,12 @@ $   groot
 Once in Gʀᴏᴏᴛ, type `help` for help.
 
 ```bash
-$   help
-    ECO help
-    INF   help................................
+$  help
+   ECO help
+   INF   help................................
 
-          You are in command-line mode.
-...
+   You are in command-line mode.
+   ...
 ```
 
 ### Introduction to the sample data ###
@@ -86,7 +75,7 @@ $   file.sample
         triptych
 ```
 
-The _triptych_ sample contains a gene family which has undergone two recombination events "X" and "Y":
+The _triptych_ sample contains a set genes which have undergone two recombination events "X" and "Y":
 
 ```bash
     ALPHA      BETA
@@ -102,13 +91,15 @@ The _triptych_ sample contains a gene family which has undergone two recombinati
 
 The final gene family, _EPSILON_, therefore looks something like this:
 
-        __5'(ALPHA)(BETA)(GAMMA)3'__
+```
+        __5'[ALPHA][BETA][GAMMA]3'__
+```
 
 Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the triptych.
 
 ### Loading the sample ###
 
-The `sample` command can be used to load the sample files automatically, but for sake of this tutorial, we will be loading the data manually.
+The `sample` command can be used to load the sample files automatically, but for sake of this tutorial, we will load the data manually.
 
 Unless you can remember where you installed the files to earlier, you can find out where the sample is located by executing the following command:
 
@@ -118,7 +109,7 @@ $   sample triptych +view
     INF import_directory "/blah/blah/blah/triptych"
 ```
 
-The `+view` bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves. The _import_directory_ output tells us where the sample lives. Your path will look different to mine. 
+The `+view` bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves. The _import_directory_ bit of the output tells us where the sample lives. Your path will look different to mine.
 
 You can now load the files into Gʀᴏᴏᴛ:
 

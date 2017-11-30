@@ -587,7 +587,7 @@ class LegoModel( IVisualisable ):
         self.comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
         self.__seq_type = ESiteType.UNKNOWN
         self.file_name = None
-        from groot.algorithms.fuse import FusionEvent
+        from groot.algorithms.classes import FusionEvent
         self.fusion_events = cast( List[FusionEvent], [] )
         self.nrfg : MGraph = None
     

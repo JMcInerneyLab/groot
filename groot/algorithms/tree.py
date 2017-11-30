@@ -20,6 +20,16 @@ def generate_tree( component: LegoComponent ) -> None:
 
 
 def drop( component: LegoComponent ) -> bool:
+    if component.consensus:
+        raise ValueError("Refusing to drop the tree because there is already a consensus tree for this component. Did you mean to drop the consensus first?")
+    
+    if component.model.fusion_events:
+        raise ValueError("Refusing to drop the tree because there are fusion events which may be using it. Did you mean to drop the fusion events first?")
+    
+    if component.model.nrfg:
+        raise ValueError("Refusing to drop the tree because there is an NRFG which may be using it. Did you mean to drop the NRFG first?")
+    
+    
     if component.tree is not None:
         component.tree = None
         return True

@@ -3,11 +3,12 @@ from groot.data.lego_model import LegoModel, LOG
 from mhelper import array_helper
 
 
-def remove_redundant_subsequences( model : LegoModel ):
+def remove_redundant_subsequences( model: LegoModel ):
     """
     API
     Merges adjacent subsequences with identical edges
     """
+    editor.assert_model_freshness( model )
     
     
     def it():
@@ -33,11 +34,13 @@ def remove_redundant_subsequences( model : LegoModel ):
         return removed
 
 
-def remove_redundant_edges( model : LegoModel ):
+def remove_redundant_edges( model: LegoModel ):
     """
     API
     Removes edges that have copies elsewhere (either forward or back)
     """
+    editor.assert_model_freshness( model )
+    
     the_list = list( model.all_edges )
     
     with LOG( "REMOVE REDUNDANT EDGES" ):
@@ -55,7 +58,7 @@ def remove_redundant_edges( model : LegoModel ):
                         with LOG( "EQUIVALENT:" ):
                             LOG( "X = {}".format( edge_1 ) )
                             LOG( "Y = {}".format( edge_2 ) )
-                            editor.unlink_all_edges(edge_2)
+                            editor.unlink_all_edges( edge_2 )
                             removed += 1
         
         return removed

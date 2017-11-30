@@ -13,6 +13,9 @@ def align( component: LegoComponent ):
 
 
 def drop( component: LegoComponent ):
+    if component.tree:
+        raise ValueError("Refusing to drop the alignment because there is already a tree for this component. Did you mean to drop the tree first?")
+    
     if component.alignment is not None:
         component.alignment = None
         return True

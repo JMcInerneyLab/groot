@@ -33,6 +33,12 @@ def drop( model: LegoModel ) -> int:
     """
     Drops all components from the model.
     """
+    if model.fusion_events:
+        raise ValueError( "Refusing to drop the components because there are already fusion events which depend on them. Did you mean to drop the fusion events first?" )
+    
+    if model.nrfg:
+        raise ValueError( "Refusing to drop the components because there is already an NRFG which depends on them. Did you mean to drop the NRFG first?" )
+    
     previous = len(model.components)
     __clear( model )
     return previous

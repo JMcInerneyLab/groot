@@ -490,6 +490,13 @@ class MGraph:
         return ete_tree.write( format = 1 )
     
     
+    def count_nodes( self, predicate: DNodePredicate ) -> int:
+        """
+        Returns the number of matching nodes.
+        """
+        return sum( 1 for x in self.nodes if predicate( x ) )
+    
+    
     def to_ete( self, get_text: DNodeToText ) -> TreeNode:
         """
         Converts the graph to an Ete tree.
@@ -514,22 +521,20 @@ class MGraph:
         return __recurse( first, TreeNode(), set() )
     
     
-    def _node_from_ete( self, tree: TreeNode, model: _LegoModel_ ):
+    def _node_from_ete( self, ete_node: TreeNode, model: _LegoModel_ ):
         """
         Imports an Ete tree into the graph.
         """
         from ete3 import TreeNode
-        assert isinstance( tree, TreeNode )
+        assert isinstance( ete_node, TreeNode )
         
-        if not hasattr( tree, "tag_node" ):
-            sequence, fusion = import_name( model, tree.name )
-            
+        if not hasattr( ete_node, "tag_node" ):
             result = MNode( self )
-            result.sequence = sequence
-            result.fusion = fusion
-            tree.tag_node = result
+            result.data = import_name( model, ete_node.name )
+            
+            ete_node.tag_node = result
         
-        return tree.tag_node
+        return ete_node.tag_node
     
     
     def get_edges( self ) -> "Set[ MEdge ]":
@@ -688,44 +693,14 @@ class MNode:
             yield edge.opposite( self )
 
 
-def import_name( model: _LegoModel_, name: str ) -> Tuple[Optional[_LegoSequence_], Optional[_LegoComponent_]]:
+def import_name( model: _LegoModel_, name: str ) -> Optional[_LegoSequence_]:
     if not name:
-        return None, None
+        return None
     
-    sequence = None
-    component = None
+    if name.startswith( "S" ):
+        return model.find_sequence_by_id( int( name[1:] ) )
     
-    for value in name.split( "_" ):
-        if value.startswith( "S" ):
-            sequence = model.find_sequence_by_id( int( value[1:] ) )
-        elif value.startswith( "F" ):
-            component = model.components[int( value[1:] )]
-        elif value.startswith( "X" ):
-            pass
-        else:
-            # LEGACY-ONLY (TODO)
-            sequence = model.find_sequence( value )
-    
-    return sequence, component
-
-
-def export_name( *args ) -> Optional[str]:
-    from groot.data.lego_model import LegoSequence, LegoComponent
-    
-    r = []
-    
-    for arg in args:
-        if isinstance( arg, LegoSequence ):
-            r.append( "S" )
-            r.append( str( arg.id ) )
-        elif isinstance( arg, LegoComponent ):
-            r.append( "F" )
-            r.append( str( arg.index ) )
-        elif isinstance( arg, int ):
-            r.append( "X" )
-            r.append( str( arg ) )
-    
-    return "_".join( r )
+    return None
 
 
 class MEdge:

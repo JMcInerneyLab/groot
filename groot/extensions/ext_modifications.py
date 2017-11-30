@@ -5,7 +5,7 @@ import re
 from groot.algorithms import deconvolution, quantisation, verification, editor
 from groot.data import global_view
 from groot.data.graphing import MGraph
-from groot.data.lego_model import LegoComponent, LegoSequence
+from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence, LegoEdge
 from groot.frontends.gui.gui_view_utils import Changes
 from intermake import command
 from intermake.engine.environment import MCMD
@@ -46,7 +46,7 @@ def verify() -> Changes:
     Verifies the integrity of the model.
     """
     verification.verify( global_view.current_model() )
-    MCMD.print( "Verified OK." )
+    MCMD.print( "Verified model OK." )
     
     return Changes( Changes.NONE )
 
@@ -59,6 +59,9 @@ def set_tree( component: LegoComponent, tree: str ) -> Changes:
     :param component:   Component 
     :param tree:        Tree to set. In newick format. 
     """
+    if component.tree:
+        raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
+    
     g = MGraph()
     g.import_newick( tree, component.model )
     component.tree = g
@@ -74,6 +77,9 @@ def set_alignment( component: LegoComponent, alignment: str ) -> Changes:
     :param component:        Component. 
     :param alignment:        Alignment to set. 
     """
+    if component.alignment:
+        raise ValueError( "This component already has an alignment. Did you mean to drop the existing alignment first?" )
+    
     component.alignment = alignment
     
     return Changes( Changes.COMP_DATA )
@@ -85,7 +91,6 @@ def quantise( level: int ) -> Changes:
     Quantises the model.
     
     :param level:   Quantisation level, in sites 
-    :return: 
     """
     
     before, after = quantisation.quantise( global_view.current_model(), level )
@@ -95,34 +100,54 @@ def quantise( level: int ) -> Changes:
     return Changes( Changes.MODEL_ENTITIES )
 
 
-def new_subsequence( sequence, split_point ) -> Changes:
-    ignore( sequence, split_point )
-    return Changes( Changes.NONE )  # TODO
+def new_subsequence( sequence: LegoSequence, split_point: int ) -> Changes:
+    """
+    Splits a sequence, thus creating two new subsequences.
+    :param sequence:        Sequence to split 
+    :param split_point:     The point to split about
+    """
+    editor.split_sequence( sequence, split_point )
+    return Changes( Changes.MODEL_ENTITIES )
 
 
-def new_edge( subsequences ) -> Changes:
+def new_edge( subsequences: List[LegoSubsequence] ) -> Changes:
+    """
+    Adds a new edge to the model.
+    :param subsequences:    Subsequences to create the edge across 
+    """
+    editor.add_new_edge( subsequences )
     ignore( subsequences )
-    return Changes( Changes.NONE )  # TODO
+    return Changes( Changes.MODEL_ENTITIES )
 
 
+@command()
 def new_sequence() -> Changes:
-    return Changes( Changes.NONE )  # TODO
+    """
+    Adds a new sequence to the model
+    """
+    model = global_view.current_model()
+    editor.add_new_sequence( model )
+    return Changes( Changes.MODEL_ENTITIES )
 
 
-def merge_subsequences( subsequences ) -> Changes:
-    ignore( subsequences )
-    return Changes( Changes.NONE )  # TODO
+def merge_subsequences( subsequences: List[LegoSubsequence] ) -> Changes:
+    """
+    Merges the specified subsequences, combining them into one, bigger, subsequence.
+    :param subsequences:    Subsequences to merge
+    """
+    model = global_view.current_model()
+    editor.merge_subsequences( model, subsequences )
+    return Changes( Changes.MODEL_ENTITIES )
 
 
 @command()
 def find_sequences( find: str ) -> Changes:
     """
     Lists the sequences whose accession matches the specified regular expression.
+    
     :param find:    Regular expression
     """
-    for sequence in __find_sequences( find ):
-        MCMD.print( sequence )
-    
+    __find_sequences( find )
     return Changes( Changes.NONE )
 
 
@@ -136,16 +161,12 @@ def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Opti
     if sequences is None:
         sequences = []
     
-    model = global_view.current_model()
-    
     if find:
         sequences.extend( __find_sequences( find ) )
-        
     
-    for sequence in sequences:
-        MCMD.print( "READY TO DROP {}".format(sequence ))
-        
-    editor.remove_sequences( model, sequences )
+    editor.remove_sequences( sequences )
+    
+    MCMD.print( "Dropped {} sequences.".format( len( sequences ) ) )
     
     return Changes( Changes.MODEL_ENTITIES )
 
@@ -159,9 +180,23 @@ def __find_sequences( find ):
         if rx.search( s.accession ):
             sequences.append( s )
     
+    if not sequences:
+        MCMD.print( "No matching sequences." )
+    else:
+        for sequence in sequences:
+            MCMD.print( sequence )
+        
+        MCMD.print( "Found {} sequences.".format( len( sequences ) ) )
+    
     return sequences
 
 
-def remove_edges( subsequences, edges ) -> Changes:
-    ignore( subsequences, edges )
-    return Changes( Changes.NONE )  # TODO
+def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ) -> Changes:
+    """
+    Detaches the specified edges from the specified subsequences.
+    
+    :param subsequences:    Subsequences to unlink
+    :param edges:           Edges to affect
+    """
+    editor.remove_edges( subsequences, edges )
+    return Changes( Changes.MODEL_ENTITIES )

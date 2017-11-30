@@ -1,12 +1,12 @@
 from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
-from groot.algorithms.fuse import FusionPoint
+from groot.algorithms.classes import FusionPoint
 from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
 from intermake.engine.theme import Theme
 
 from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi
 
-from groot.algorithms import components, fastaiser, fuse
+from groot.algorithms import components, fastaiser, fuse, graph_viewing
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoSubsequence
 from groot.frontends import ete_providers
@@ -94,7 +94,8 @@ class EPrintTree( MEnum ):
 
 
 @command( names = ["print_consensus", "consensus"] )
-def print_consensus( component: Optional[List[LegoComponent]] = None, view: EPrintTree = EPrintTree.ASCII ) -> Changes:
+def print_consensus( component: Optional[List[LegoComponent]] = None,
+                     view: EPrintTree = EPrintTree.ASCII ) -> Changes:
     """
     Prints the consensus tree for a component.
     
@@ -107,7 +108,10 @@ def print_consensus( component: Optional[List[LegoComponent]] = None, view: EPri
 
 
 @command( names = ["print_trees", "trees", "print_tree", "tree"] )
-def print_trees( component: Optional[LegoComponent] = None, consensus: bool = False, view: EPrintTree = EPrintTree.ASCII, format: str = "a c m f" ) -> Changes:
+def print_trees( component: Optional[LegoComponent] = None,
+                 consensus: bool = False,
+                 view: EPrintTree = EPrintTree.ASCII,
+                 format: str = None ) -> Changes:
     """
     Prints the tree for a component.
     
@@ -123,6 +127,7 @@ def print_trees( component: Optional[LegoComponent] = None, consensus: bool = Fa
     :return: 
     """
     to_do = cli_view_utils.get_component_list( component )
+    formatter = graph_viewing.create_user_formatter( format )
     
     for component_ in to_do:
         __print_header( component_ )
@@ -141,13 +146,13 @@ def print_trees( component: Optional[LegoComponent] = None, consensus: bool = Fa
         model = global_view.current_model()
         
         if view == EPrintTree.ASCII:
-            MCMD.information( target.to_ascii( format ) )
+            MCMD.information( target.to_ascii( formatter ) )
         elif view == EPrintTree.ETE_ASCII:
-            MCMD.information( ete_providers.tree_to_ascii( target, model ) )
+            MCMD.information( ete_providers.tree_to_ascii( target, model, formatter ) )
         elif view == EPrintTree.NEWICK:
-            MCMD.information( target.to_newick() )
+            MCMD.information( target.to_newick( formatter ) )
         elif view == EPrintTree.ETE_GUI:
-            ete_providers.show_tree( target, model )
+            ete_providers.show_tree( target, model, formatter )
         else:
             raise SwitchError( "view", view )
     

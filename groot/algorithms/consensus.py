@@ -1,49 +1,43 @@
-from typing import List, Iterable
-
+from typing import Iterable, List
+from intermake import MCMD
 from ete3 import Tree
 
-from groot.algorithms import external_tools
+from groot.algorithms import external_tools, graph_viewing
 from groot.data.graphing import MGraph
-from groot.data.lego_model import LegoComponent, LegoModel
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
-from intermake.engine.environment import MCMD
 
 
 def consensus( component: LegoComponent ):
+    """
+    Generates the consensus tree for a component.
+    """
     if not component.tree:
         raise ValueError( "Trees not available. Cannot generate fusion, please generate trees first." )
     
+    if component.consensus:
+        raise ValueError( "Refusing to generate a consensus because a consensus for this component already exists. Did you mean to drop the existing consensus first?" )
+    
+    # Get the IDs of of the genes we need the consensus for (`major_gene_ids`)
     all_trees_ete = []  # type: List[Tree]
+    major_gene_ids = set( (x.id for x in component.major_sequences()) )
     
-    incoming = component.incoming_components()
-    intersection = set( (x.accession for x in component.major_sequences()) )
-    
-    for i, component_b in enumerate( incoming ):
-        newick = component_b.tree.to_newick()
-        tree_b = ete_providers.tree_from_newick( newick )
+    for incoming_component in component.incoming_components():
+        incoming_newick = incoming_component.tree.to_newick( graph_viewing.FORMATTER.sequence_internal_id )
+        incoming_tree = ete_providers.tree_from_newick( incoming_newick )
+        incoming_genes = [λnode.data.id for λnode in incoming_component.tree.nodes if isinstance( λnode.data, LegoSequence )]
         
-        all_nodes = [x.name for x in tree_b.traverse() if x.name]
+        major_gene_ids.intersection_update( set( incoming_genes ) )
         
-        intersection.intersection_update( set( all_nodes ) )
-        
-        all_trees_ete.append( tree_b )
+        all_trees_ete.append( incoming_tree )
     
-    FORMAT = 9
-    
-    component.consensus_intersection = intersection
+    component.consensus_intersection = major_gene_ids
     
     for ete_tree in all_trees_ete:
         assert isinstance( ete_tree, Tree )
-        
-        MCMD.print( "" )
-        MCMD.print( "PRUNE: " + str( intersection ) )
-        MCMD.print( "BEFORE PRUNE:" )
-        MCMD.print( ete_tree.write( format = FORMAT ) )
-        ete_tree.prune( intersection )
-        MCMD.print( "AFTER PRUNE:" )
-        MCMD.print( ete_tree.write( format = FORMAT ) )
+        ete_tree.prune( [str( x ) for x in major_gene_ids] )
     
-    all_trees_newick = "\n".join( (x.write( format = FORMAT ) for x in all_trees_ete) )
+    all_trees_newick = "\n".join( (x.write( format = 9 ) for x in all_trees_ete) )
     
     if not all_trees_newick:
         raise ValueError( "Cannot perform consensus, trees are empty." )
@@ -57,10 +51,13 @@ def consensus( component: LegoComponent ):
 
 
 def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> MGraph:
+    """
+    Generates a consensus tree.
+    """
     newick = []
     
     for graph in graphs:
-        newick.append( graph.to_newick() )
+        newick.append( graph.to_newick( graph_viewing.FORMATTER.sequence_internal_id ) )
     
     consensus_newick = external_tools.run_in_temporary( external_tools.consensus, "\n".join( newick ) )
     
@@ -68,8 +65,12 @@ def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> MGraph:
 
 
 def drop( component: LegoComponent ):
+    if component.model.nrfg:
+        raise ValueError( "Refusing to drop consensus because they may be in use by the NRFG. Did you mean to drop the NRFG first?" )
+    
     if component.consensus is not None:
         component.consensus = None
+        component.consensus_intersection = None
         return True
     
     return False

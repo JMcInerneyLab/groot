@@ -3,6 +3,7 @@ Quantise implementation.
 
 See `quantise` function.
 """
+from groot.algorithms import editor
 from groot.data.lego_model import LegoModel, LegoSequence, LOG
 from mhelper import array_helper
 
@@ -11,6 +12,8 @@ def quantise( model : LegoModel, level ):
     """
     Quantises the subsequence start/end positions in the model
     """
+    editor.assert_model_freshness( model )
+    
     before = model.count_subsequences()
     
     for sequence in model.sequences:
