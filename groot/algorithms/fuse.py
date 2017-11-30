@@ -228,8 +228,8 @@ def __get_fusion_points( fusion_event: FusionEvent,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    isolation_points = graph.find_isolation_points( is_inside = lambda node: node.sequence is not None and node.sequence.component in intersection_aliases,
-                                                    is_outside = lambda node: node.sequence is not None and node.sequence.component not in intersection_aliases )
+    isolation_points = graph.find_isolation_points( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data.component in intersection_aliases,
+                                                    is_outside = lambda node: isinstance( node.data, LegoSequence ) is not None and node.data.component not in intersection_aliases )
     
     results = []
     
@@ -285,7 +285,7 @@ def create_nrfg( model: LegoModel ) -> None:
         
         # Iterate our commensurate points 
         # - Points that isolate the same sequences in both graphs
-        # - Ideally there will just be one, but there might be more if multiple fusion events occurred
+        # - Ideally there will just be one of these points, but there might be more if multiple fusion events occurred
         for aπ, bπ in fusion_event.get_commensurate_points():
             MCMD.progress( "PROCESSING {} SUBSET [ ({})--({}) ]".format( fusion_event, aπ, bπ ) )
             
@@ -303,8 +303,8 @@ def create_nrfg( model: LegoModel ) -> None:
             
             # Attempt to pull the same slice out of our consensus graph
             try:
-                dΛ, dΔ = dψ.cut_at_isolation( is_inside = lambda node: node.sequence is not None and node.sequence in genes,
-                                              is_outside = lambda node: node.sequence is not None and node.sequence not in genes )
+                dΛ, dΔ = dψ.cut_at_isolation( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data in genes,
+                                              is_outside = lambda node: isinstance( node.data, LegoSequence ) and node.data not in genes )
             except IsolationError:
                 # If they can't be pulled out we can still make a new consensus
                 dΔ = __make_new_consensus( model, aΔ, bΔ, cψ, genes )
@@ -324,8 +324,8 @@ def __make_new_consensus( model, aΔ, bΔ, cψ, genes ):
     MCMD.warning( "Cannot pull the fused gene subset out of the consensus tree. I'm going to have to create a new consensus using just the fused gene subset." )
     
     # Attempt to make the same slice in our graph of the fused part only
-    cΛ, cΔ = cψ.cut_at_isolation( is_inside = lambda node: node.sequence is not None and node.sequence in genes,
-                                  is_outside = lambda node: node.sequence is not None and node.sequence not in genes )
+    cΛ, cΔ = cψ.cut_at_isolation( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data in genes,
+                                  is_outside = lambda node: isinstance( node.data, LegoSequence ) and node.data not in genes )
     
     # Make a consensus of the three graphs
     dΔ = consensus.tree_consensus( model, (aΔ, bΔ, cΔ) )

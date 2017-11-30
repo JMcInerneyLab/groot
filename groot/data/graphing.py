@@ -3,7 +3,6 @@ from uuid import uuid4
 from ete3 import TreeNode
 
 from mhelper import array_helper, ComponentFinder, exception_helper, SwitchError
-from intermake import Theme
 
 
 _LegoComponent_ = "groot.data.lego_model.LegoComponent"
@@ -16,13 +15,7 @@ TUid = int
 TNodeOrUid = Union[TUid, _MNode_]  # A node in the graph, or a UID allowing the node to be found, or a node in another graph that can also be found in this graph
 DFindId = Callable[[str], object]
 DNodePredicate = Callable[[_MNode_], bool]
-
-
-class MClade:
-    """
-    An empty object that designates a node as a clade (i.e. a point in the tree without sequence data).
-    """
-    pass
+DNodeToText = Callable[[_MNode_], str]
 
 
 class DepthInfo:
@@ -52,7 +45,7 @@ class DepthInfo:
         return list( reversed( r ) )
     
     
-    def describe( self, format_str: str ) -> str:
+    def describe( self, get_text: DNodeToText ) -> str:
         # return "{}:{}{}".format( "{}".format(self.parent.node.uid) if self.parent else "R", "*" if self.is_repeat else "", self.node.detail )
         # return "{}{}->{}".format( "{}".format( self.parent.node.uid ) if self.parent else "(NO_PARENT)", "(POINTER)" if self.is_repeat else "", self.node.detail )
         ss = []
@@ -67,7 +60,7 @@ class DepthInfo:
             ss.append( "(REPEAT)" )
         
         ss.append( "┮" if self.has_children else "╼" )
-        ss.append( self.node.describe( format_str ) )
+        ss.append( get_text( self.node ) )
         
         return "".join( ss )
 
@@ -78,7 +71,7 @@ class FollowParams:
                   root: "MNode",
                   include_repeats: bool = False,
                   exclude_edges: "Iterable[MEdge]" = None,
-                  exclude_nodes: "Iterable[MNode]" = None ):
+                  exclude_nodes: "Iterable[MNode]" = None ) -> None:
         if exclude_edges is None:
             exclude_edges = []
         
@@ -111,7 +104,7 @@ class FollowParams:
 
 
 class CutPoint:
-    def __init__( self, left_subgraph: _MGraph_, left_node: _MNode_, right_subgraph: _MGraph_, right_node: _MNode_ ):
+    def __init__( self, left_subgraph: _MGraph_, left_node: _MNode_, right_subgraph: _MGraph_, right_node: _MNode_ ) -> None:
         self.left_subgraph: MGraph = left_subgraph
         self.left_node: MNode = left_node
         self.right_subgraph: MGraph = right_subgraph
@@ -307,19 +300,25 @@ class MGraph:
         :param external_node:     Node that will form the outside (rejected) half of the cut. 
         :return:                  The new graph
         """
-        new = MGraph()
+        new_graph = MGraph()
         
-        fp = FollowParams( root = internal_node, exclude_nodes = [external_node] )
-        self.follow( fp )
+        params = FollowParams( root = internal_node, exclude_nodes = [external_node] )
+        self.follow( params )
         
-        for node in fp.visited_nodes:
-            node.copy_into( new )
+        visited_nodes = set( params.visited_nodes )
+        visited_edges = set()  # use a set because every edge appears twice (TODO: fix using a directional query)
         
-        for node in fp.visited_nodes:
+        for node in visited_nodes:
+            node.copy_into( new_graph )
+            
             for edge in node.iter_edges():
-                edge.copy_into( new )
+                if edge.left in visited_nodes and edge.right in visited_nodes:
+                    visited_edges.add( edge )  # add the edges after when all the nodes exist
         
-        return new
+        for edge in visited_edges:
+            edge.copy_into( new_graph )
+        
+        return new_graph
     
     
     def find_connected_components( self ) -> List[List[_MNode_]]:
@@ -400,7 +399,12 @@ class MGraph:
                 node = node.uid
         
         if isinstance( node, TUid ):
-            return self._nodes.get( node )
+            result = self._nodes.get( node )
+            
+            if result is not None:
+                return result
+            
+            raise ValueError( "Cannot find the requested node («{}») in this graph.".format( node ) )
         
         raise SwitchError( "node", node, instance = True )
     
@@ -447,16 +451,16 @@ class MGraph:
         ___recurse( root, ete_tree, 0 )
     
     
-    def to_csv( self, format_str: str = "a c f" ):
+    def to_csv( self, get_text: DNodeToText ):
         r = []
         
         for edge in self.get_edges():
-            r.append( "{},{}".format( edge.left.describe( format_str ), edge.right.describe( format_str ) ) )
+            r.append( "{},{}".format( get_text( edge.left ), get_text( edge.right ) ) )
         
         return "\n".join( r )
     
     
-    def to_ascii( self, format_str: str = "a c f" ):
+    def to_ascii( self, get_text: DNodeToText ):
         """
         Shows the graph as ASCII-art, which is actually in UTF8.
         """
@@ -473,20 +477,20 @@ class MGraph:
             params = FollowParams( root = first, include_repeats = True )
             self.follow( params )
             visited.update( params.exclude_nodes )
-            results.extend( x.describe( format_str ) for x in params.visited )
+            results.extend( x.describe( get_text ) for x in params.visited )
         
         return "\n".join( results )
     
     
-    def to_newick( self ) -> str:
+    def to_newick( self, get_text: DNodeToText ) -> str:
         """
         Converts the graph to a Newick tree.
         """
-        ete_tree = self.to_ete()
+        ete_tree = self.to_ete( get_text )
         return ete_tree.write( format = 1 )
     
     
-    def to_ete( self ) -> TreeNode:
+    def to_ete( self, get_text: DNodeToText ) -> TreeNode:
         """
         Converts the graph to an Ete tree.
         """
@@ -495,7 +499,7 @@ class MGraph:
         def __recurse( m_node: MNode, ete_node: TreeNode, visited: Set ):
             visited.add( m_node )
             # noinspection PyTypeChecker
-            new_ete_node = ete_node.add_child( name = m_node.describe( "a" ) )
+            new_ete_node = ete_node.add_child( name = get_text( m_node ) )
             
             for child in m_node.iter_relations():
                 if child not in visited:
@@ -607,23 +611,25 @@ class MGraph:
 class MNode:
     """
     Nodes of the MGraph.
+    
+    :attr __uid:    UID of node
+    :attr _graph:   Graph this node is contained within
+    :attr _edges:   Edges on this node (in any direction)
+    :attr data:     User (arbitrary) data associated with this node
     """
     
     
-    def __init__( self, graph: MGraph, uid: int = None ):
+    def __init__( self, graph: MGraph, uid: int = None, data: object = None ):
         """
         CONSTRUCTOR 
         """
-        from groot.algorithms.fuse import FusionPoint
-        
         if uid is None:
             uid = uuid4().int
         
         self.__uid: int = uid
         self._graph: MGraph = graph
-        self.sequence: Optional[_LegoSequence_] = None
         self._edges: Dict[MNode, MEdge] = { }
-        self.fusion: Optional[FusionPoint] = None
+        self.data: object = data
         
         assert self.__uid not in graph._nodes
         
@@ -634,10 +640,7 @@ class MNode:
         """
         Copies the node (but not the edges!)
         """
-        new = MNode( target_graph, self.__uid )
-        new.sequence = self.sequence
-        new.fusion = self.fusion
-        return new
+        return MNode( target_graph, self.__uid, self.data )
     
     
     @property
@@ -646,100 +649,7 @@ class MNode:
     
     
     def __repr__( self ):
-        return self.describe( "u" )
-    
-    
-    def describe( self, format_str ) -> str:
-        """
-        Describes the nodes.
-        The following format strings are accepted:
-        
-        `t` -   type-based description:
-                    "seq:accession" for sequences
-                    "fus:fusion"    for fusions
-                    "cla:uid"       for nodes with neither sequences nor fusions ("clades")
-        `f` -   fusion                      (or empty)
-        `u` -   node     uid
-        `c` -   sequence major component    (or empty)
-        `m` -   sequence minor components   (or empty)
-        `a` -   sequence accession          (or empty)
-        `l` -   sequence length             (or empty)
-        `<` -   following characters are verbatim
-        `>` -   stop verbatim / skip
-        `S` -   skip if not in sequence
-        `F` -   skip if not in fusion
-        `C` -   skip if not in clade
-        `T` -   skip if in sequence
-        `G` -   skip if in fusion
-        `D` -   skip if in clade
-        -   -   anything else is verbatim
-        """
-        ss = []
-        verbatim = False
-        skip = False
-        
-        for x in format_str:
-            if skip:
-                if x == ">":
-                    skip = False
-            elif verbatim:
-                if x == ">":
-                    verbatim = False
-                else:
-                    ss.append( x )
-            elif x == "<":
-                verbatim = True
-            elif x == "S":
-                skip = self.sequence is None
-            elif x == "F":
-                skip = self.fusion is None
-            elif x == "C":
-                skip = self.fusion is None
-            elif x == "T":
-                skip = self.sequence is not None
-            elif x == "G":
-                skip = self.fusion is not None
-            elif x == "D":
-                skip = self.fusion is not None
-            elif x == "t":
-                if self.sequence:
-                    ss.append( "seq:{}".format( self.sequence.accession ) )
-                elif self.fusion:
-                    ss.append( "fus:{}:{}".format( self.fusion.opposite_component, self.fusion.count ) )
-                else:
-                    ss.append( "cla:{}".format( self.__uid ) )
-            elif x == "u":
-                if self.sequence:
-                    ss.append( "seq:{}".format( self.sequence.accession ) )
-                elif self.fusion:
-                    ss.append( "fus:{}:{}".format( self.fusion.opposite_component, self.fusion.count ) )
-                else:
-                    ss.append( "~" )
-            elif x == "f":
-                if self.fusion:
-                    ss.append( Theme.BOLD + str( self.fusion ) + Theme.RESET )
-            elif x == "u":
-                ss.append( self.__uid )
-            elif x == "c":
-                if self.sequence and self.sequence.component:
-                    ss.append( str( self.sequence.component ) )
-            elif x == "m":
-                if self.sequence:
-                    minor_components = self.sequence.minor_components()
-                    
-                    if minor_components:
-                        for minor_component in sorted( minor_components, key = str ):
-                            ss.append( str( minor_component ) )
-            elif x == "a":
-                if self.sequence:
-                    ss.append( self.sequence.accession )
-            elif x == "l":
-                if self.sequence:
-                    ss.append( self.sequence.length )
-            else:
-                ss.append( x )
-        
-        return "".join( str( x ) for x in ss ).strip()
+        return "MNode( {} )".format( self.data )
     
     
     def iter_edges( self ) -> "Iterator[MEdge]":
@@ -820,6 +730,10 @@ def export_name( *args ) -> Optional[str]:
 
 class MEdge:
     def __init__( self, graph: MGraph, left: MNode, right: MNode ):
+        assert isinstance( graph, MGraph )
+        assert isinstance( left, MNode )
+        assert isinstance( right, MNode )
+        
         if left is right:
             raise ValueError( "Cannot create an edge to the same node." )
         

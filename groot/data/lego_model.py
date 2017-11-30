@@ -52,7 +52,7 @@ class ETristate( MEnum ):
 
 
 class LegoSide( IVisualisable ):
-    def __init__( self, is_source: bool ):
+    def __init__( self, is_source: bool ) -> None:
         self.__list: "List[LegoSubsequence]" = []
         self.is_source: bool = is_source
     
