@@ -1,8 +1,8 @@
+import inspect
 from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
 from groot.algorithms.classes import FusionPoint
-from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable
-from intermake.engine.theme import Theme
+from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable, visibilities, Theme, help_command
 
 from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi
 
@@ -30,7 +30,7 @@ def print_fasta( target: IVisualisable ) -> Changes:
     return Changes( Changes.INFORMATION )
 
 
-@command( names = ["print_status", "status"] )
+@command( names = ["print_status", "status"], visibility = visibilities.HIGHLIGHT )
 def print_status() -> Changes:
     """
     Prints the status of the model. 
@@ -80,7 +80,20 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> Chang
     return Changes( Changes.INFORMATION )
 
 
-class EPrintTree( MEnum ):
+class ETree( MEnum ):
+    """
+    What to print.
+    
+    :data COMPONENT:    Standard component tree
+    :data CONSENSUS:    Component consensus tree
+    :data NRFG:         The N-rooted fusion graph
+    """
+    COMPONENT = 1
+    CONSENSUS = 2
+    NRFG = 3
+
+
+class EFormat( MEnum ):
     """
     :data NEWICK:       Newick format
     :data ASCII:        ASCII diagram
@@ -94,65 +107,82 @@ class EPrintTree( MEnum ):
 
 
 @command( names = ["print_consensus", "consensus"] )
-def print_consensus( component: Optional[List[LegoComponent]] = None,
-                     view: EPrintTree = EPrintTree.ASCII ) -> Changes:
+def print_consensus( component: Optional[List[LegoComponent]] = None ) -> Changes:
     """
     Prints the consensus tree for a component.
+    See also `print_trees`, which permits more advanced options.
     
-    :param view:        How to view the tree
     :param component:   Component to print. If not specified prints all trees.
     """
-    print_trees( component = component, consensus = True, view = view )
+    print_trees( component = component, consensus = True )
     
     return Changes( Changes.INFORMATION )
 
 
+@help_command()
+def print_trees_help() -> str:
+    """
+    Help on tree-node formatting.
+    """
+    r = ["The following substitutions are made in the node format string.", ""]
+    
+    for method_name in dir( graph_viewing.FORMATTER ):
+        if not method_name.startswith( "_" ) and callable( getattr( graph_viewing.FORMATTER, method_name ) ):
+            r.append( "`[{}]`".format( method_name ) )
+            doc = (getattr( graph_viewing.FORMATTER, method_name ).__doc__ or "Not documented :(").strip()
+            r.extend( doc.split( "\n" ) )
+    
+    for i in range( len( r ) ):
+        r[i] = r[i].strip()
+    
+    return "\n".join( r )
+
+
 @command( names = ["print_trees", "trees", "print_tree", "tree"] )
-def print_trees( component: Optional[LegoComponent] = None,
-                 consensus: bool = False,
-                 view: EPrintTree = EPrintTree.ASCII,
+def print_trees( what: ETree = ETree.COMPONENT,
+                 component: Optional[LegoComponent] = None,
+                 view: EFormat = EFormat.ASCII,
                  format: str = None ) -> Changes:
     """
     Prints the tree for a component.
     
-    :param format:      Format string when view = ASCII.
-                        `u`: Node UID
-                        `a`: Sequence accession
-                        `l`: Sequence length
-                        `c`: Component
-                        `f`: Fusion
-    :param view:        How to view the tree
-    :param consensus:   When set, prints the consensus tree.
-    :param component:   Component to print. If not specified prints all trees.
+    :param what:        What to print.
+    :param format:      How to format the nodes. See `graph_viewing.py`.
+    :param view:        How to view the tree.
+    :param component:   Component to print.
+                        If `None` prints all trees.
+                        This parameter is ignored when printing the NRFG.
     :return: 
     """
     to_do = cli_view_utils.get_component_list( component )
     formatter = graph_viewing.create_user_formatter( format )
+    model = global_view.current_model()
+    trees = []
     
-    for component_ in to_do:
-        __print_header( component_ )
-        target = component_.consensus if consensus else component_.tree
+    if what == ETree.COMPONENT or what == ETree.CONSENSUS:
+        for component_ in to_do:
+            tree = component_.consensus if what == ETree.CONSENSUS else component_.tree
+            trees.append( (str( component ), tree) )
+    elif what == ETree.NRFG:
+        trees.append( ("NRFG", model.nrfg.graph if model.nrfg is not None else None) )
+    else:
+        raise SwitchError( "what", what )
+    
+    for name, tree in trees:
+        __print_header( name )
         
-        if consensus:
-            if not component_.consensus:
-                MCMD.print( "No consensus tree for this component." )
-                continue
-            
-            MCMD.information( "Consensus tree:\nSources     : '{}'\nIntersection: '{}'\n".format( ", ".join( str( x ) for x in component_.incoming_components() ), ", ".join( str( x ) for x in component_.consensus_intersection ) ) )
+        if tree is None:
+            MCMD.print( "I cannot draw this tree because it has not yet been generated." )
+            continue
         
-        if target is None:
-            raise ValueError( "Cannot draw this tree because the tree has not yet been created. Please create the tree first." )
-        
-        model = global_view.current_model()
-        
-        if view == EPrintTree.ASCII:
-            MCMD.information( target.to_ascii( formatter ) )
-        elif view == EPrintTree.ETE_ASCII:
-            MCMD.information( ete_providers.tree_to_ascii( target, model, formatter ) )
-        elif view == EPrintTree.NEWICK:
-            MCMD.information( target.to_newick( formatter ) )
-        elif view == EPrintTree.ETE_GUI:
-            ete_providers.show_tree( target, model, formatter )
+        if view == EFormat.ASCII:
+            MCMD.information( tree.to_ascii( formatter ) )
+        elif view == EFormat.ETE_ASCII:
+            MCMD.information( ete_providers.tree_to_ascii( tree, model, formatter ) )
+        elif view == EFormat.NEWICK:
+            MCMD.information( tree.to_newick( formatter ) )
+        elif view == EFormat.ETE_GUI:
+            ete_providers.show_tree( tree, model, formatter )
         else:
             raise SwitchError( "view", view )
     
@@ -403,4 +433,13 @@ def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
     results.append( "     intersect  {}".format( fusion_point.event.intersections ) )
     results.append( "     intersect  {}".format( fusion_point.event.orig_intersections ) )
     results.append( "     sequences  {}".format( fusion_point.genes ) )
-    results.append( "     node_uid   {}".format( fusion_point.node_uid ) )
+    results.append( "     fusion_node_uid   {}".format( fusion_point.fusion_node_uid ) )
+
+
+@command( names = ("print_nrfg", "nrfg") )
+def print_nrfg():
+    """
+    Prints the NRFG.
+    See also `print_trees`, which permits more advanced options.
+    """
+    return print_trees( what = ETree.NRFG )

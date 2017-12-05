@@ -2,7 +2,8 @@ from typing import Callable, Iterator, Optional, Set, Tuple, cast, Iterable, Dic
 from uuid import uuid4
 from ete3 import TreeNode
 
-from mhelper import array_helper, ComponentFinder, exception_helper, SwitchError
+from mhelper import array_helper, ComponentFinder, exception_helper, SwitchError, ByRef
+from mhelper.special_types import NOT_PROVIDED
 
 
 _LegoComponent_ = "groot.data.lego_model.LegoComponent"
@@ -385,10 +386,11 @@ class MGraph:
             edge.copy_into( target )
     
     
-    def find_node( self, node: TNodeOrUid ) -> _MNode_:
+    def find_node( self, node: TNodeOrUid, default: object = NOT_PROVIDED ) -> _MNode_:
         """
         Finds a node in this graph, to one that exists in a different graph.
          
+        :param default: Default value (otherwise error) 
         :param node:    Node or UID of node to find. 
         :return:        Node in this graph. 
         """
@@ -396,45 +398,56 @@ class MGraph:
             if node._graph is self:
                 return node
             else:
-                node = node.uid
+                uid = node.uid
+        elif isinstance( node, TUid ):
+            uid = node
+            node = None
+        else:
+            raise SwitchError( "node", node, instance = True )
         
-        if isinstance( node, TUid ):
-            result = self._nodes.get( node )
-            
-            if result is not None:
-                return result
-            
-            raise ValueError( "Cannot find the requested node («{}») in this graph.".format( node ) )
+        result = self._nodes.get( uid )
         
-        raise SwitchError( "node", node, instance = True )
+        if result is not None:
+            return result
+        
+        if default is not NOT_PROVIDED:
+            return default
+        
+        raise ValueError( "Cannot find the requested node (uid = «{}», original = «{}») in this graph.".format( uid, node or "unknown" ) )
     
     
     @classmethod
-    def from_newick( cls, newick_tree: str, model: _LegoModel_ ) -> _MGraph_:
+    def from_newick( cls, newick_tree: str, model: _LegoModel_, root_ref: ByRef[_MNode_] = None ) -> _MGraph_:
         """
         Calls `import_newick` on a new graph.
         """
         result = cls()
-        result.import_newick( newick_tree, model )
+        root = result.import_newick( newick_tree, model )
+        
+        if root_ref is not None:
+            root_ref.value = root
+        
         return result
     
     
-    def import_newick( self, newick_tree: str, model: _LegoModel_ ) -> None:
+    def import_newick( self, newick_tree: str, model: _LegoModel_ ) -> _MNode_:
         """
         Imports a newick tree.
         :param model:           Model to find sequences in
         :param newick_tree:     Newick format tree (ETE format #1)
+        :returns: Tree root
         """
         tree__ = TreeNode( newick_tree, format = 1 )
-        self.import_ete( tree__, model )
+        return self.import_ete( tree__, model )
     
     
-    def import_ete( self, ete_tree: TreeNode, model: _LegoModel_ ) -> None:
+    def import_ete( self, ete_tree: TreeNode, model: _LegoModel_ ) -> _MNode_:
         """
         Imports an Ete tree
         
         :param model:       Model to find sequences in
         :param ete_tree:    Ete tree 
+        :returns: Tree root
         """
         root = MNode( self )
         
@@ -449,6 +462,8 @@ class MGraph:
         
         
         ___recurse( root, ete_tree, 0 )
+        
+        return root
     
     
     def to_csv( self, get_text: DNodeToText ):
@@ -460,11 +475,15 @@ class MGraph:
         return "\n".join( r )
     
     
-    def to_ascii( self, get_text: DNodeToText ):
+    def to_ascii( self, get_text: DNodeToText, name: str = None ):
         """
         Shows the graph as ASCII-art, which is actually in UTF8.
         """
         results: List[str] = []
+        
+        if name:
+            results.append( name )
+        
         visited: Set[MNode] = set()
         
         while True:
@@ -516,7 +535,7 @@ class MGraph:
         
         
         # Choose an arbitrary starting point
-        first = array_helper.first_or_error( self._nodes.values() )
+        first = array_helper.first_or_error( (x for x in self.nodes if x.data is None) )  # todo: hack
         
         return __recurse( first, TreeNode(), set() )
     
@@ -636,7 +655,8 @@ class MNode:
         self._edges: Dict[MNode, MEdge] = { }
         self.data: object = data
         
-        assert self.__uid not in graph._nodes
+        if self.__uid in graph._nodes:
+            raise ValueError( "Attempt to add a node («{}») to the graph but a node with the same UID already exists in the graph («{}»).".format( self, graph._nodes[self.__uid] ) )
         
         graph._nodes[self.__uid] = self
     

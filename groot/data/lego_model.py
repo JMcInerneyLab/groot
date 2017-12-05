@@ -22,6 +22,7 @@ SUBSEQUENCE_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·𝑛" + Fore.GREEN + "{}
 EDGE_FORMAT = Back.BLUE + "❮ " + SUBSEQUENCE_FORMAT + " ❮ " + Back.RED + "❯ " + SUBSEQUENCE_FORMAT + " ❯" + Back.RESET
 SEQ_FORMAT = Fore.CYAN + "{}" + Fore.WHITE + "·" + Fore.GREEN + "{}" + Fore.RESET
 
+_Nrfg_ = "groot.algorithms.classes.Nrfg"
 
 class ESiteType( MEnum ):
     """
@@ -589,7 +590,7 @@ class LegoModel( IVisualisable ):
         self.file_name = None
         from groot.algorithms.classes import FusionEvent
         self.fusion_events = cast( List[FusionEvent], [] )
-        self.nrfg : MGraph = None
+        self.nrfg : _Nrfg_ = None
     
     
     def visualisable_info( self ) -> UiInfo:

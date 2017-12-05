@@ -3,8 +3,6 @@ import sys
 from os import path
 from typing import Optional
 
-
-
 from groot import constants
 from groot.algorithms import importation
 from groot.data import global_view, user_options
@@ -14,10 +12,12 @@ from intermake.engine.theme import Theme
 
 from mhelper import file_helper, io_helper
 
+
 __mcmd_folder_name__ = "Files"
 
-@command(names=["file_sample", "sample"])
-def file_sample( name: Optional[ str ] = None, view: bool = False ) -> Changes:
+
+@command( names = ["file_sample", "sample"] )
+def file_sample( name: Optional[str] = None, view: bool = False ) -> Changes:
     """
     Lists the available samples, or loads the specified sample
     :param view:    When set the sample is viewed but not loaded.
@@ -42,7 +42,7 @@ def file_sample( name: Optional[ str ] = None, view: bool = False ) -> Changes:
         return Changes( Changes.NONE )
 
 
-@command(names=["file_new", "new"])
+@command( names = ["file_new", "new"] )
 def file_new() -> Changes:
     """
     Starts a new model
@@ -75,7 +75,7 @@ def import_composites( file_name: str ) -> Changes:
     """
     with MCMD.action( "Importing composites" ):
         importation.import_composites( global_view.current_model(), file_name )
-        
+    
     return Changes( Changes.MODEL_ENTITIES )
 
 
@@ -91,6 +91,7 @@ def import_fasta( file_name: str ) -> Changes:
     
     return Changes( Changes.MODEL_ENTITIES )
 
+
 @command()
 def import_file( file_name: str ) -> Changes:
     """
@@ -101,32 +102,42 @@ def import_file( file_name: str ) -> Changes:
     with MCMD.action( "Importing file" ):
         importation.import_file( global_view.current_model(), file_name )
     
-    return Changes ( Changes.MODEL_ENTITIES )
+    return Changes( Changes.MODEL_ENTITIES )
 
 
-@command(names=["file_recent", "recent"])
+@command( names = ("file_load_last", "last") )
+def file_load_last():
+    """
+    Loads the last file from the recent list.
+    """
+    if not user_options.options().recent_files:
+        raise ValueError( "Cannot load the last session because there are no recent sessions." )
+    
+    file_load( user_options.options().recent_files[-1] )
+
+
+@command( names = ["file_recent", "recent"] )
 def file_recent():
     """
     Prints the contents of the `sessions` folder
     """
-    r = [ ]
+    r = []
     
     r.append( "SESSIONS:" )
     for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
-        if file.lower().endswith(constants.BINARY_EXTENSION):
+        if file.lower().endswith( constants.BINARY_EXTENSION ):
             r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     r.append( "\nRECENT:" )
     for file in user_options.options().recent_files:
-        if file.lower().endswith(constants.BINARY_EXTENSION):
+        if file.lower().endswith( constants.BINARY_EXTENSION ):
             r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     MCMD.information( "\n".join( r ) )
 
 
-
-@command(names=["file_save", "save"])
-def file_save( file_name: Optional[ str ] = None ) -> Changes:
+@command( names = ["file_save", "save"] )
+def file_save( file_name: Optional[str] = None ) -> Changes:
     """
     Saves the model
     :param file_name: Filename. File to load. Either specify a complete path, or the name of the file in the `sessions` folder. If not specified the current filename is used.
@@ -150,7 +161,7 @@ def file_save( file_name: Optional[ str ] = None ) -> Changes:
         io_helper.save_binary( file_name, model )
     
     model.file_name = file_name
-    MCMD.print("Saved model: {}".format(file_name))
+    MCMD.print( "Saved model: {}".format( file_name ) )
     
     return Changes( Changes.FILE_NAME )
 
@@ -170,14 +181,14 @@ def import_directory( directory: str, reset: bool = True ):
         importation.import_directory( global_view.current_model(), directory )
     
     if reset:
-        console_explorer.re_cd( PathToVisualisable.root_path( MENV.root  ) )
+        console_explorer.re_cd( PathToVisualisable.root_path( MENV.root ) )
         return Changes( Changes.MODEL_OBJECT )
     else:
         return Changes( Changes.MODEL_ENTITIES )
 
 
-@command(names=["file_load", "load"])
-def file_load( file_name: str) -> Changes:
+@command( names = ["file_load", "load"] )
+def file_load( file_name: str ) -> Changes:
     """
     Loads the model from a file
     :param file_name:   File to load.
@@ -189,12 +200,9 @@ def file_load( file_name: str) -> Changes:
     model.file_name = file_name
     global_view.set_model( model )
     user_options.remember_file( file_name )
-    MCMD.print( "Loaded model: {}".format(file_name) )
+    MCMD.print( "Loaded model: {}".format( file_name ) )
     
     return Changes( Changes.MODEL_OBJECT )
-
-
-
 
 
 def __fix_path( file_name: str ) -> str:
@@ -204,9 +212,7 @@ def __fix_path( file_name: str ) -> str:
     if path.sep not in file_name:
         file_name = path.join( MENV.local_data.local_folder( "sessions" ), file_name )
     
-    if not file_helper.get_extension(file_name):
+    if not file_helper.get_extension( file_name ):
         file_name += ".groot"
     
     return file_name
-
-

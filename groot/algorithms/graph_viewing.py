@@ -114,6 +114,14 @@ class __Formatter:
             return node.data.id
     
     
+    def prefixed_sequence_internal_id( self, node: MNode ) -> str:
+        """
+        Internal ID of the sequence, prefixed with an "S", or empty if not a sequence.
+        """
+        if isinstance( node.data, LegoSequence ):
+            return "S{}".format( node.data.id )
+    
+    
     def is_sequence( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is a sequence.
@@ -162,6 +170,13 @@ FORMATTER = __Formatter()
 def create_user_formatter( format_str: str = None ) -> DNodeToText:
     """
     Creates a formatter function based on the specified format string.
+    
+    The format strings are specified as follows: 
+    
+    `[xxx]`         - use special entry xxx (taken from __Formatter's methods)
+    `|`             - stop skipping a section (after __Formatter's methods that return a bool)
+                      if not in a section this character is ignored
+    anything else   - verbatim
     """
     if format_str is None:
         return FORMATTER.short
@@ -171,14 +186,11 @@ def create_user_formatter( format_str: str = None ) -> DNodeToText:
 
 def __format_node( node: MNode, format_str: str ) -> str:
     """
-    Describes the nodes.
+    Describes the nodes. 
+    See `create_user_formatter` for format details.
     
     :param node: Node to format
-    :param format_str: Format to use:
-                            `[xxx]`         - use special entry xxx (taken from __Formatter's methods)
-                            `|`             - stop skipping a section (after __Formatter's methods that return a bool)
-                                              if not in a section this character is ignored
-                            anything else   - verbatim 
+    :param format_str: Format to use. 
     """
     ss = []
     skip = False

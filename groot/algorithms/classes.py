@@ -1,9 +1,11 @@
-from typing import Set, List, Tuple
+from typing import List, Set, Tuple
 
-from groot.data.graphing import IsolationPoint, MGraph
+from groot.data.graphing import MGraph
 from groot.data.lego_model import LegoComponent, LegoSequence
 from mhelper import array_helper
 
+
+_FusionPoint_ = "FusionPoint"
 
 class NotCommensurateError( Exception ):
     pass
@@ -31,7 +33,7 @@ class FusionEvent:
         self.points_b: List[FusionPoint] = None
     
     
-    def get_commensurate_points( self ) -> List[Tuple[IsolationPoint, IsolationPoint]]:
+    def get_commensurate_points( self ) -> List[Tuple[_FusionPoint_, _FusionPoint_]]:
         """
         Gets tuples of points that look like they are commensurate, or raises a `NotCommensurateError`. 
         """
@@ -67,9 +69,9 @@ class FusionEvent:
 
 
 class FusionPoint:
-    def __init__( self, node: int, direction_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
-        self.node_uid = node
-        self.direction_uid = direction_uid
+    def __init__( self, fusion_node_uid: int, internal_node_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
+        self.fusion_node_uid = fusion_node_uid
+        self.internal_node_uid = internal_node_uid
         self.opposite_component = opposite_component
         self.component = component
         self.event = event

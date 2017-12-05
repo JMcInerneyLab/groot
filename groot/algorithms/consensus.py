@@ -1,9 +1,14 @@
 from typing import Iterable, List
+
+from ete3.evol import model
+
+from mhelper import array_helper, ByRef
+
 from intermake import MCMD
 from ete3 import Tree
 
 from groot.algorithms import external_tools, graph_viewing
-from groot.data.graphing import MGraph
+from groot.data.graphing import MGraph, MNode
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
 
@@ -23,7 +28,7 @@ def consensus( component: LegoComponent ):
     major_gene_ids = set( (x.id for x in component.major_sequences()) )
     
     for incoming_component in component.incoming_components():
-        incoming_newick = incoming_component.tree.to_newick( graph_viewing.FORMATTER.sequence_internal_id )
+        incoming_newick = incoming_component.tree.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id )
         incoming_tree = ete_providers.tree_from_newick( incoming_newick )
         incoming_genes = [λnode.data.id for λnode in incoming_component.tree.nodes if isinstance( λnode.data, LegoSequence )]
         
@@ -50,18 +55,32 @@ def consensus( component: LegoComponent ):
     component.consensus = MGraph.from_newick( consensus_newick, component.model )
 
 
-def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> MGraph:
+def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
     """
     Generates a consensus tree.
     """
     newick = []
     
+    for a, b in array_helper.lagged_iterate( graphs ):
+        aa = set( x.data for x in a.nodes if isinstance( x.data, LegoSequence ) )
+        bb = set( x.data for x in b.nodes if isinstance( x.data, LegoSequence ) )
+        
+        if aa != bb:
+            raise ValueError( "Refusing to generate a consensus because the sets of at least two of the graphs are dissimilar. First set = «{}», second set = «{}», difference = «{}».".format( aa, bb, aa.difference( bb ) ) )
+    
     for graph in graphs:
-        newick.append( graph.to_newick( graph_viewing.FORMATTER.sequence_internal_id ) )
+        aa = set( x for x in graph.nodes if isinstance( x.data, LegoSequence ) )
+        
+        if not aa:
+            raise ValueError( "Refusing to generate a consensus because at least one graph has no sequence data: {}".format( graph ) )
+        
+        newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
     
-    consensus_newick = external_tools.run_in_temporary( external_tools.consensus, "\n".join( newick ) )
+    consensus_newick = external_tools.run_in_temporary( external_tools.consensus, "\n".join( newick ) + "\n" )
     
-    return MGraph.from_newick( consensus_newick, model )
+    root_ref = ByRef[MNode]( None )
+    result = MGraph.from_newick( consensus_newick, model, root_ref )
+    return result, root_ref.value
 
 
 def drop( component: LegoComponent ):

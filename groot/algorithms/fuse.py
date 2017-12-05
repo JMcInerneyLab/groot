@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Set, Tuple
 
 from groot.algorithms import consensus, graph_viewing
 from groot.algorithms.classes import FusionEvent, FusionPoint, Nrfg, NrfgEvent
-from groot.data.graphing import IsolationError, MEdge, MGraph, MNode
+from groot.data.graphing import MEdge, MGraph, MNode
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from intermake.engine.environment import MCMD
-from mhelper import Logger, array_helper
+from mhelper import ImplementationError, Logger, array_helper
 
 
 __LOG = Logger( "fusion", False )
@@ -200,57 +200,92 @@ def create_nrfg( model: LegoModel ) -> None:
     
     for event in model.fusion_events:
         MCMD.information( "Processing event: {}".format( event ) )
-        aψ = event.component_a.tree
-        bψ = event.component_b.tree
-        cψ = event.component_c.tree
+        aψ: MGraph = event.component_a.tree
+        bψ: MGraph = event.component_b.tree
+        cψ: MGraph = event.component_c.tree
         
         # Iterate our commensurate points 
         # - Points that isolate the same sequences in both graphs
         # - Ideally there will just be one of these points, but there might be more if multiple fusion events occurred
-        for aπ, bπ in event.get_commensurate_points():
+        points: List[Tuple[FusionPoint, FusionPoint]] = event.get_commensurate_points()
+        queued_edges = []
+        
+        for aπ, bπ in points:
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FUSION GENES ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
             MCMD.progress( "Fusing commensurate points: ({})--({})".format( aπ, bπ ) )
-            
-            assert isinstance( aπ, FusionPoint )
-            assert isinstance( bπ, FusionPoint )
-            
-            #  Get the genes isolated by the fusion
             genes = aπ.genes
+            MCMD.progress( "Genes are: «{}»".format( genes ) )
             
-            # Create our sub-graphs by cutting the original graph at these points
-            # aΛ/bΛ/cΛ : The graphs excluding our genes
-            # aΔ/bΔ/cΔ : The graphs including our genes
-            MCMD.progress( "Cutting out A: {} | {}".format( aπ.node_uid, aπ.direction_uid ) )
-            MCMD.progress( aψ.to_ascii( graph_viewing.create_user_formatter( "[uid]" ) ) )
-            aΛ, aΔ = aψ.cut( aπ.node_uid, aπ.direction_uid )
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ SUB GRAPHS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+            # ▒ Create our sub-graphs by cutting the original graph at these points        ▒
+            # ▒ aΛ/bΛ/cΛ : The graphs excluding our genes                                  ▒
+            # ▒ aΔ/bΔ/cΔ : The graphs including our genes                                  ▒
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
             
+            # Cut out A
+            MCMD.progress( "Cutting out A: {} | {}".format( aπ.fusion_node_uid, aπ.internal_node_uid ) )
+            aΛ, aΔ = aψ.cut( aπ.fusion_node_uid, aπ.internal_node_uid )
+            MCMD.progress( aΔ.to_ascii( graph_viewing.create_user_formatter(), name = "aΔ" ) )
+            
+            if __genes_in( aΔ ) != genes:
+                raise ImplementationError( "Refusing to continue because the genes in the cut graph 'aΔ' («{}») do not match the requested genes («{}»).".format( __genes_in( aΔ ), genes ) )
+            
+            # Cut out B
             MCMD.progress( "Cutting out B" )
-            bΛ, bΔ = bψ.cut( bπ.node_uid, bπ.direction_uid )
+            bΛ, bΔ = bψ.cut( bπ.fusion_node_uid, bπ.internal_node_uid )
+            MCMD.progress( bΔ.to_ascii( graph_viewing.create_user_formatter(), name = "bΔ" ) )
             
+            if __genes_in( bΔ ) != genes:
+                raise ImplementationError( "Refusing to continue because the genes in the cut graph 'bΔ' («{}») do not match the requested genes («{}»).".format( __genes_in( bΔ ), genes ) )
+            
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CONSENSUS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
             # Make consensus of our three trees
-            dΔ = __make_new_consensus( model, aΔ, bΔ, cψ, genes )
+            dΔ, dΔ_root = __make_new_consensus( model, aΔ, bΔ, cψ, genes )
             
             MCMD.progress( "Copying A, B, C into Z" )
-            aΛ.copy_into( zψ )
-            bΛ.copy_into( zψ )
+            MCMD.progress( aΛ.to_ascii( graph_viewing.create_user_formatter(), name = "aΛ" ) )
+            MCMD.progress( bΛ.to_ascii( graph_viewing.create_user_formatter(), name = "bΛ" ) )
+            MCMD.progress( dΔ.to_ascii( graph_viewing.create_user_formatter(), name = "dΔ" ) )
+            aψ = aΛ
+            bψ = bΛ
             dΔ.copy_into( zψ )
             
-            MCMD.progress( "Creating edges in Z" )
-            zψ.add_edge( aπ.node_uid, aπ.direction_uid )
-            zψ.add_edge( bπ.node_uid, bπ.direction_uid )
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FINAL "FUSION" EDGE ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+            MCMD.progress( "Preparing edges" )
+            queued_edges.append( (aπ.fusion_node_uid, dΔ_root) )
+            queued_edges.append( (bπ.fusion_node_uid, dΔ_root) )
             
+            # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ RESULT ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
             details.append( NrfgEvent( event, aπ, bπ, aΛ, aΔ, bΛ, bΔ, dΔ ) )
+        
+        MCMD.progress( "Adding remainder of A and B to Z" )
+        aψ.copy_into( zψ )
+        bψ.copy_into( zψ )
+        
+        MCMD.progress( "Adding edges to Z" )
+        for left, right in queued_edges:
+            zψ.add_edge( left, right )
     
     MCMD.progress( "Returning Z" )
     model.nrfg = Nrfg( zψ, details )
 
 
+def __genes_in( graph: MGraph ) -> Set[LegoSequence]:
+    return set( x.data for x in graph.nodes if isinstance( x.data, LegoSequence ) )
+
+
 def __make_new_consensus( model, aΔ, bΔ, cψ, genes ):
     # Attempt to make the same slice in our graph of the fused part only
     MCMD.progress( "Isolating and cutting C" )
-    cΛ, cΔ = cψ.cut_at_isolation( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data in genes,
+    cΔ, cΛ = cψ.cut_at_isolation( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data in genes,
                                   is_outside = lambda node: isinstance( node.data, LegoSequence ) and node.data not in genes )
+    
+    MCMD.progress( cΔ.to_ascii( graph_viewing.create_user_formatter(), name = "cΔ" ) )
+    
+    if __genes_in( cΔ ) != genes:
+        raise ImplementationError( "Refusing to continue because the genes in the cut graph 'cΔ' («{}») do not match the requested genes («{}»).".format( __genes_in( cΔ ), genes ) )
     
     # Make a consensus of the three graphs
     MCMD.progress( "Making consensus" )
-    dΔ = consensus.tree_consensus( model, (aΔ, bΔ, cΔ) )
-    return dΔ
+    dΔ, dΔ_root = consensus.tree_consensus( model, (aΔ, bΔ, cΔ) )
+    return dΔ, dΔ_root

@@ -125,7 +125,7 @@ def make_nrfg() -> Changes:
     """
     Creates the N-rooted fusion graph.
     
-    Requisites: The fusions. You must have called `make_fusions` first.
+    Requisites: The fusions. You must have called `make_fusions` first!
     """
     model = global_view.current_model()
     
