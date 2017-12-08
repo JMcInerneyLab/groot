@@ -2,8 +2,8 @@ from typing import List, Set, Tuple
 
 from groot.algorithms import consensus, graph_viewing
 from groot.algorithms.classes import FusionEvent, FusionPoint, Nrfg, NrfgEvent
-from groot.data.graphing import MEdge, MGraph, MNode
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
+from groot.graphing.graphing import MEdge, MGraph, MNode
 from intermake.engine.environment import MCMD
 from mhelper import ImplementationError, Logger, array_helper
 

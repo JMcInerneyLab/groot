@@ -1,16 +1,12 @@
 from typing import Iterable, List
 
-from ete3.evol import model
-
-from mhelper import array_helper, ByRef
-
-from intermake import MCMD
 from ete3 import Tree
 
 from groot.algorithms import external_tools, graph_viewing
-from groot.data.graphing import MGraph, MNode
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
+from groot.graphing.graphing import MGraph, MNode
+from mhelper import ByRef, array_helper
 
 
 def consensus( component: LegoComponent ):

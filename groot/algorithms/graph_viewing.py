@@ -1,9 +1,8 @@
-from mhelper import SwitchError
-
 from groot.algorithms.classes import FusionPoint
-from groot.data.graphing import MNode, DNodeToText
 from groot.data.lego_model import LegoSequence
+from groot.graphing.graphing import DNodeToText, MNode
 from intermake.engine.theme import Theme
+from mhelper import SwitchError
 
 
 NEXT_SPECIAL = "["

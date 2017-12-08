@@ -1,7 +1,7 @@
 from typing import List, Set, Tuple
 
-from groot.data.graphing import MGraph
 from groot.data.lego_model import LegoComponent, LegoSequence
+from groot.graphing.graphing import MGraph
 from mhelper import array_helper
 
 

@@ -1,11 +1,11 @@
-from intermake import MCMD, visibilities, command
-from mhelper import EFileMode, Filename, file_helper
-
 from groot.data import global_view
-from groot.data.graphing import MGraph
 from groot.data.lego_model import ESiteType
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import Changes
+from groot.graphing.graphing import MGraph
+from intermake import MCMD, command, visibilities
+from mhelper import EFileMode, Filename, file_helper
+
 
 __mcmd_folder_name__ = "Gimmicks"
 

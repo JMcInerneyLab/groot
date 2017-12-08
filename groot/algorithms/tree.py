@@ -1,6 +1,6 @@
 from groot.algorithms import external_tools
-from groot.data.graphing import MGraph
 from groot.data.lego_model import LegoComponent
+from groot.graphing.graphing import MGraph
 
 
 def generate_tree( component: LegoComponent ) -> None:

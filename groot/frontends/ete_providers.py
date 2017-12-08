@@ -2,9 +2,8 @@ from colorama import Fore
 from ete3 import Tree
 
 from groot import constants
-from groot.algorithms import graph_viewing
-from groot.data.graphing import MGraph, DNodeToText
 from groot.data.lego_model import LegoModel
+from groot.graphing.graphing import DNodeToText, MGraph
 
 
 def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):

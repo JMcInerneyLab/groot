@@ -1,10 +1,11 @@
 import inspect
+import pyperclip
 from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
 from groot.algorithms.classes import FusionPoint
 from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable, visibilities, Theme, help_command
 
-from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi
+from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi, Filename, file_helper, MOptional
 
 from groot.algorithms import components, fastaiser, fuse, graph_viewing
 from groot.data import global_view
@@ -71,7 +72,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> Chang
     to_do = cli_view_utils.get_component_list( component )
     
     for component_ in to_do:
-        __print_header( component_ )
+        MCMD.print( __print_header( component_ ) )
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
@@ -104,6 +105,16 @@ class EFormat( MEnum ):
     ASCII = 2
     ETE_GUI = 3
     ETE_ASCII = 4
+    SVG = 5
+    HTML = 6
+    CSV = 7
+
+
+class EOut( MEnum ):
+    NORMAL = 1
+    STDOUT = 2
+    CLIP = 3
+    FILE = 4
 
 
 @command( names = ["print_consensus", "consensus"] )
@@ -140,14 +151,18 @@ def print_trees_help() -> str:
 
 @command( names = ["print_trees", "trees", "print_tree", "tree"] )
 def print_trees( what: ETree = ETree.COMPONENT,
-                 component: Optional[LegoComponent] = None,
                  view: EFormat = EFormat.ASCII,
-                 format: str = None ) -> Changes:
+                 format: str = None,
+                 component: Optional[LegoComponent] = None,
+                 out: EOut = EOut.NORMAL,
+                 file: MOptional[Filename] = None ) -> Changes:
     """
     Prints the tree for a component.
     
+    :param file:        File to write the output to.
+    :param out:         Output. Ignored if `out_file` is set.
     :param what:        What to print.
-    :param format:      How to format the nodes. See `graph_viewing.py`.
+    :param format:      How to format the nodes. See `print_trees_help`.
     :param view:        How to view the tree.
     :param component:   Component to print.
                         If `None` prints all trees.
@@ -159,6 +174,9 @@ def print_trees( what: ETree = ETree.COMPONENT,
     model = global_view.current_model()
     trees = []
     
+    if file:
+        out = EOut.FILE
+    
     if what == ETree.COMPONENT or what == ETree.CONSENSUS:
         for component_ in to_do:
             tree = component_.consensus if what == ETree.CONSENSUS else component_.tree
@@ -168,23 +186,44 @@ def print_trees( what: ETree = ETree.COMPONENT,
     else:
         raise SwitchError( "what", what )
     
+    text = []
+    
     for name, tree in trees:
-        __print_header( name )
+        if len( trees ) != 1:
+            text.append( __print_header( name ) )
         
         if tree is None:
             MCMD.print( "I cannot draw this tree because it has not yet been generated." )
             continue
         
         if view == EFormat.ASCII:
-            MCMD.information( tree.to_ascii( formatter ) )
+            text.append( tree.to_ascii( formatter ) )
         elif view == EFormat.ETE_ASCII:
-            MCMD.information( ete_providers.tree_to_ascii( tree, model, formatter ) )
+            text.append( ete_providers.tree_to_ascii( tree, model, formatter ) )
         elif view == EFormat.NEWICK:
-            MCMD.information( tree.to_newick( formatter ) )
+            text.append( tree.to_newick( formatter ) )
         elif view == EFormat.ETE_GUI:
             ete_providers.show_tree( tree, model, formatter )
+        elif view == EFormat.SVG:
+            text.append( tree.to_svg( formatter ) )
+        elif view == EFormat.HTML:
+            text.append( tree.to_svg( formatter, html = True ) )
+        elif view == EFormat.CSV:
+            text.append( tree.to_csv( formatter ) )
         else:
             raise SwitchError( "view", view )
+    
+    text = "\n".join( text )
+    
+    if out == EOut.NORMAL:
+        MCMD.information( text )
+    elif out == EOut.STDOUT:
+        print( text )
+    elif out == EOut.CLIP:
+        pyperclip.copy( text )
+        MCMD.information( "Output copied to clipboard." )
+    elif out == EOut.FILE:
+        file_helper.write_all_text( file, text )
     
     return Changes( Changes.INFORMATION )
 
@@ -193,7 +232,7 @@ def __print_header( x ):
     if isinstance( x, LegoComponent ):
         x = "COMPONENT {}".format( x )
     
-    MCMD.information( "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET )
+    return "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET
 
 
 @command( names = ["print_interlinks", "interlinks"] )

@@ -1,12 +1,11 @@
+import re
 from typing import List, Optional
 
-import re
-
-from groot.algorithms import deconvolution, quantisation, verification, editor
+from groot.algorithms import deconvolution, editor, quantisation, verification
 from groot.data import global_view
-from groot.data.graphing import MGraph
-from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence, LegoEdge
+from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import Changes
+from groot.graphing.graphing import MGraph
 from intermake import command
 from intermake.engine.environment import MCMD
 from mhelper import ignore
