@@ -233,7 +233,7 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
                 # Fix any small discrepancies
                 destination_end, destination_start = __fit_to_range( destination_seq.length, destination_start, destination_end, tolerance )
                 
-                subsequence_list = editor.make_subsequence( destination_seq, destination_start, destination_end, None, allow_resize = False )
+                subsequence_list = editor.make_subsequence( destination_seq, destination_start, destination_end, None, allow_resize = False, no_fresh = True )
                 
                 LOG_MINOR( "flw. -- SHIFTED {} {}", offset_start, offset_end )
                 

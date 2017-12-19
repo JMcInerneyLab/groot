@@ -7,7 +7,7 @@ def clear( component: LegoComponent ):
 
 
 def align( component: LegoComponent ):
-    fasta = fastaiser.component_to_fasta( component, simplify = True )
+    fasta = fastaiser.component_to_fasta( component, simplify_ids = True )
     
     component.alignment = external_tools.run_in_temporary( external_tools.align, fasta )
 

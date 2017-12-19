@@ -19,21 +19,21 @@ DNA_COLOUR_TABLE = { "A": Fore.YELLOW, "T": Fore.RED, "C": Fore.GREEN, "G": Fore
 RNA_COLOUR_TABLE = { "A": Fore.YELLOW, "U": Fore.RED, "C": Fore.GREEN, "G": Fore.LIGHTBLUE_EX }
 
 
-def colour_fasta_ansi( array, site_type : Optional[ESiteType ] = None ):
+def colour_fasta_ansi( array : str, site_type : Optional[ESiteType ] = None ):
     table = __table_from_type( site_type )
     
     result = [ ]
     
     first = True
     
-    for line in array.split( "\n" ): #type: str
+    for line in array.split( "\n" ):
         if line.startswith( ">" ):
             if first:
                 first = False
             else:
                 result.append("\n")
             
-            result.append( Back.LIGHTBLACK_EX + line.ljust(20) + Back.RESET )
+            result.append( Back.LIGHTBLACK_EX + line.ljust(20) + Back.RESET + "\n" )
         else:
             result_line = [ ]
             

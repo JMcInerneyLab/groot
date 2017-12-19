@@ -1,7 +1,7 @@
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_utils import Changes
+from groot.frontends.gui.gui_view_utils import EChanges
 from groot.graphing.graphing import MGraph
 from intermake import MCMD, command, visibilities
 from mhelper import EFileMode, Filename, file_helper
@@ -10,7 +10,7 @@ from mhelper import EFileMode, Filename, file_helper
 __mcmd_folder_name__ = "Gimmicks"
 
 @command( visibility = visibilities.ADVANCED )
-def print_sites( type: ESiteType, text: str ) -> Changes:
+def print_sites( type: ESiteType, text: str ) -> EChanges:
     """
     Prints a sequence in colour
     :param type: Type of sites to display.
@@ -18,14 +18,14 @@ def print_sites( type: ESiteType, text: str ) -> Changes:
     """
     MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
     
-    return Changes( Changes.NONE )
+    return EChanges.NONE
 
 
 __EXT_FASTA = ".fasta"
 
 
 @command( visibility = visibilities.ADVANCED )
-def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ) -> Changes:
+def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ) -> EChanges:
     """
     Prints a FASTA file in colour
     :param type: Type of sites to display.
@@ -34,11 +34,11 @@ def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] )
     text = file_helper.read_all_text( file )
     MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
     
-    return Changes( Changes.NONE )
+    return EChanges.NONE
 
 
 @command( visibility = visibilities.ADVANCED )
-def update_model() -> Changes:
+def update_model() -> EChanges:
     """
     Update model to new version.
     """
@@ -55,4 +55,4 @@ def update_model() -> Changes:
             g.import_newick( x.consensus, global_view.current_model() )
             x.consensus = g
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA

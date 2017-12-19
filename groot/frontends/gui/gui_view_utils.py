@@ -3,6 +3,9 @@ from random import randint
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QWheelEvent
 from PyQt5.QtWidgets import QGraphicsView
+from typing import Tuple
+
+from mhelper import MFlags
 
 
 class MyView( QGraphicsView ):
@@ -42,16 +45,13 @@ def triangle( sequence ):
     """
     for i, a in enumerate( sequence ):
         for j in range( 0, i ):
-            yield a, sequence[ j ]
+            yield a, sequence[j]
 
 
-class Changes:
+class EChanges( MFlags ):
     """
     Describes the changes after a command has been issued.
     Used by the GUI.
-    """
-    """
-    Change states.
     
     :data MODEL_OBJECT:     The model object itself has changed.
                             Implies FILE_NAME, MODEL_ENTITIES
@@ -62,15 +62,13 @@ class Changes:
     :data MODEL_DAT:        Meta-data (e.g. the NRFG) on the model has changed
     :data INFORMATION:      The text printed during the command's execution is of primary concern to the user.
     """
-    NONE = object()
-    MODEL_OBJECT = object()
-    FILE_NAME = object()
-    MODEL_ENTITIES = object()
-    COMPONENTS = object()  # components themselves
-    COMP_DATA = object()  # data on components
-    MODEL_DATA = object()  # data on model (NRFG)
-    INFORMATION = object()
+    __no_flags_name__ = "NONE"
     
+    MODEL_OBJECT = 1 << 0
+    FILE_NAME = 1 << 1
+    MODEL_ENTITIES = 1 << 2
+    COMPONENTS = 1 << 3
+    COMP_DATA = 1 << 4
+    MODEL_DATA = 1 << 5
+    INFORMATION = 1 << 6
     
-    def __init__( self, *args ):
-        self.changes = args

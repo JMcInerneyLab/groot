@@ -18,6 +18,11 @@ setup( name = "groot",
                    "groot.frontends.gui.forms.designer",
                    ],
        entry_points = { "console_scripts": ["groot = groot.__main__:main"] },
-       install_requires = ["ete3", "intermake", "mhelper", 'pyperclip'],
+       install_requires = ["ete3",  # graphs
+                           "intermake",  # architecture
+                           "mhelper",  # general
+                           'pyperclip',  # clipboard
+                           'colorama',  # ui (cli)
+                           'PyQt5', 'sip'],  # ui
        python_requires = ">=3.6"
        )

@@ -1,19 +1,17 @@
-import inspect
+from typing import Callable, Iterable, List, Optional, Set, TypeVar
+
 import pyperclip
-from typing import Callable, Iterable, List, Optional, TypeVar, Set
 
+from groot.algorithms import components, fastaiser, graph_viewing
 from groot.algorithms.classes import FusionPoint
-from intermake import command, MCMD, MENV, Plugin, Table, IVisualisable, visibilities, Theme, help_command
-
-from mhelper import MEnum, SwitchError, string_helper, ByRef, ansi, Filename, file_helper, MOptional
-
-from groot.algorithms import components, fastaiser, fuse, graph_viewing
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoSubsequence
+from groot.data.lego_model import LegoComponent
+from groot.extensions import ext_files, ext_generating
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_utils import Changes
-from groot.extensions import ext_files, ext_generating
+from groot.frontends.gui.gui_view_utils import EChanges
+from intermake import IVisualisable, MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
+from mhelper import ByRef, Filename, MEnum, MOptional, SwitchError, ansi, file_helper, string_helper
 
 
 __mcmd_folder_name__ = "Viewing"
@@ -22,17 +20,17 @@ T = TypeVar( "T" )
 
 
 @command( names = ["print_fasta", "fasta"] )
-def print_fasta( target: IVisualisable ) -> Changes:
+def print_fasta( target: IVisualisable ) -> EChanges:
     """
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
     """
     MCMD.information( cli_view_utils.colour_fasta_ansi( fastaiser.to_fasta( target ), global_view.current_model().site_type ) )
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION
 
 
 @command( names = ["print_status", "status"], visibility = visibilities.HIGHLIGHT )
-def print_status() -> Changes:
+def print_status() -> EChanges:
     """
     Prints the status of the model. 
     :return: 
@@ -60,11 +58,11 @@ def print_status() -> Changes:
     r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
     r.append( "Fusion graph : {}".format( __get_status_line( p, [model], lambda x: x.nrfg, ext_generating.make_nrfg ) ) )
     MCMD.print( "\n".join( r ) )
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 @command( names = ["print_alignments", "alignments"] )
-def print_alignments( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
@@ -78,7 +76,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> Chang
         else:
             MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, global_view.current_model().site_type ) )
     
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 class ETree( MEnum ):
@@ -118,7 +116,7 @@ class EOut( MEnum ):
 
 
 @command( names = ["print_consensus", "consensus"] )
-def print_consensus( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def print_consensus( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Prints the consensus tree for a component.
     See also `print_trees`, which permits more advanced options.
@@ -127,7 +125,7 @@ def print_consensus( component: Optional[List[LegoComponent]] = None ) -> Change
     """
     print_trees( component = component, consensus = True )
     
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 @help_command()
@@ -155,7 +153,7 @@ def print_trees( what: ETree = ETree.COMPONENT,
                  format: str = None,
                  component: Optional[LegoComponent] = None,
                  out: EOut = EOut.NORMAL,
-                 file: MOptional[Filename] = None ) -> Changes:
+                 file: MOptional[Filename] = None ) -> EChanges:
     """
     Prints the tree for a component.
     
@@ -225,7 +223,7 @@ def print_trees( what: ETree = ETree.COMPONENT,
     elif out == EOut.FILE:
         file_helper.write_all_text( file, text )
     
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 def __print_header( x ):
@@ -236,7 +234,7 @@ def __print_header( x ):
 
 
 @command( names = ["print_interlinks", "interlinks"] )
-def print_component_edges( component: Optional[LegoComponent] = None ) -> Changes:
+def print_component_edges( component: Optional[LegoComponent] = None ) -> EChanges:
     """
     Prints the edges between the component subsequences.
     
@@ -306,11 +304,11 @@ def print_component_edges( component: Optional[LegoComponent] = None ) -> Change
             message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ) )
     
     MCMD.print( message.to_string() )
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 @command( names = ["print_sequences", "sequences"] )
-def print_sequences() -> Changes:
+def print_sequences() -> EChanges:
     """
     Prints the sequences (as components)
     """
@@ -369,11 +367,11 @@ def print_sequences() -> Changes:
         r.append( "\n" )
     
     MCMD.information( "".join( r ) )
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 @command( names = ["print_components", "components"] )
-def print_components() -> Changes:
+def print_components() -> EChanges:
     """
     Prints the major components.
     
@@ -405,7 +403,7 @@ def print_components() -> Changes:
     
     print_component_edges()
     
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:
@@ -433,7 +431,7 @@ def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optio
 
 
 @command( names = ["print_fusions", "fusions"] )
-def print_fusions( verbose: bool = False ) -> Changes:
+def print_fusions( verbose: bool = False ) -> EChanges:
     """
     Estimates model fusions. Does not affect the model.
     
@@ -459,7 +457,7 @@ def print_fusions( verbose: bool = False ) -> Changes:
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
-    return Changes( Changes.INFORMATION )
+    return EChanges.INFORMATION 
 
 
 def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):

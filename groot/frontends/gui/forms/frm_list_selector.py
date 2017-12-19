@@ -1,11 +1,10 @@
-from typing import Any, Optional, Callable, List, Iterable
+from typing import Any, Callable, Iterable, List, Optional
 
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtWidgets import QDialog, QTreeWidgetItem, QDialogButtonBox
-
-from mhelper import qt_gui_helper as QtGuiHelper
-
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QTreeWidgetItem
 from groot.frontends.gui.forms.designer.frm_list_selector_designer import Ui_Dialog
+
+from mhelper_qt import qt_gui_helper as QtGuiHelper
 
 
 class FrmListSelector( QDialog ):

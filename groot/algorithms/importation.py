@@ -47,7 +47,7 @@ def import_fasta( model : LegoModel, file_name: str ):
         extra_data = "FASTA from '{}'".format(file_name)
         
         for record in SeqIO.parse( file_name, "fasta" ):
-            sequence = editor.make_sequence( model, str( record.id ), obtain_only, len( record.seq ), extra_data )
+            sequence = editor.make_sequence( model, str( record.id ), obtain_only, len( record.seq ), extra_data, False )
             
             if sequence:
                 LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( record.seq ) ) )
@@ -114,14 +114,14 @@ def import_blast( model : LegoModel, file_name: str ):
                     if not (subject_length - TOL) <= query_length <= (subject_length+TOL):
                         raise ValueError("Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format(query_length, subject_length, line))
                     
-                    query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line )
-                    subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line )
+                    query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line, False )
+                    subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False )
                     
                     if query_s and subject_s and query_s is not subject_s:
-                        query = editor.make_subsequence( query_s, query_start, query_end, line ) if query_s else None
-                        subject = editor.make_subsequence(subject_s, subject_start, subject_end, line ) if subject_s else None
+                        query = editor.make_subsequence( query_s, query_start, query_end, line, True, False ) if query_s else None
+                        subject = editor.make_subsequence(subject_s, subject_start, subject_end, line, True, False ) if subject_s else None
                         LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
-                        edge = editor.make_edge( model, query, subject, line )
+                        edge = editor.make_edge( model, query, subject, line, False )
                         edge.comments.append( line )
         
         for z in [x for x in model.sequences if not x.subsequences]:
@@ -152,7 +152,7 @@ def import_composites( model : LegoModel, file_name: str ):
                         
                     # COMPOSITE!
                     composite_name = line[ 1: ]
-                    composite_sequence = editor.make_sequence( model, composite_name, False, 0, line )
+                    composite_sequence = editor.make_sequence( model, composite_name, False, 0, line, False )
                     composite_sequence.comments.append( "FILE '{}' LINE {}".format( file_name, line_number ) )
                 elif "\t" in line:
                     # FAMILY!
@@ -167,10 +167,10 @@ def import_composites( model : LegoModel, file_name: str ):
                     # fam_mean_pident = float(e[4])
                     fam_mean_length = int( float( e[ 5 ] ) )
                     
-                    composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line )
+                    composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
-                    sequence = editor.make_sequence( model, line, False, fam_mean_length, line )
+                    sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False )
                     sequence.comments.append( "Family '{}'".format( fam_name ) )
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     

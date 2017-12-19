@@ -39,7 +39,7 @@ def remove_redundant_edges( model: LegoModel ):
     API
     Removes edges that have copies elsewhere (either forward or back)
     """
-    editor.assert_model_freshness( model )
+    editor.assert_model_freshness( model, False )
     
     the_list = list( model.all_edges )
     

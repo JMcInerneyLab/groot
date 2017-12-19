@@ -1,8 +1,8 @@
-from groot.data.lego_model import LegoSequence, LegoSubsequence, LegoEdge, LegoComponent
+from groot.data.lego_model import LegoSequence, LegoSubsequence, LegoEdge, LegoComponent, ILegoVisualisable
 from mhelper import SwitchError
 
 
-def to_fasta( item ):
+def to_fasta( item: ILegoVisualisable ):
     """
     Converts the component to FASTA
     :param item: 
@@ -20,20 +20,15 @@ def to_fasta( item ):
         raise SwitchError( "item", item, instance = True )
 
 
-def component_to_fasta( component: LegoComponent, simplify : bool = False ):
-    fasta = [ ]
-    
-    if not simplify:
-        fasta.append( ";" )
-        fasta.append( "; COMPONENT: {}".format( component ) )
-        fasta.append( ";" )
+def component_to_fasta( component: LegoComponent, simplify_ids: bool = False ):
+    fasta = []
     
     for element in component.elements():
-        if simplify:
+        if simplify_ids:
             fasta.append( ">S{}".format( element.sequence.id ) )
         else:
             fasta.append( ">{}".format( element ) )
-            
+        
         fasta.append( element.sites() )
         fasta.append( "" )
     
@@ -41,7 +36,7 @@ def component_to_fasta( component: LegoComponent, simplify : bool = False ):
 
 
 def edge_to_fasta( edge: LegoEdge ):
-    fasta = [ ]
+    fasta = []
     
     fasta.append( ";" )
     fasta.append( "; EDGE: {}".format( edge ) )
@@ -57,8 +52,7 @@ def edge_to_fasta( edge: LegoEdge ):
 
 
 def subsequence_to_fasta( subsequence: LegoSubsequence ):
-    fasta = [ ]
-    
+    fasta = []
     
     fasta.append( ">" + str( subsequence ) )
     
@@ -71,7 +65,7 @@ def subsequence_to_fasta( subsequence: LegoSubsequence ):
 
 
 def sequence_to_fasta( sequence: LegoSequence ):
-    fasta = [ ]
+    fasta = []
     
     fasta.append( ">" + sequence.accession )
     
@@ -81,5 +75,3 @@ def sequence_to_fasta( sequence: LegoSequence ):
         fasta.append( "; MISSING" )
     
     return "\n".join( fasta )
-
-

@@ -4,7 +4,7 @@ from groot.algorithms import alignment, components, consensus, fuse, tree
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_utils import Changes
+from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
 from mhelper import string_helper
@@ -14,7 +14,7 @@ __mcmd_folder_name__ = "Generating"
 
 
 @command( names = ["make_components", "create_components", "find_components"] )
-def make_components( tolerance: int = 0 ) -> Changes:
+def make_components( tolerance: int = 0 ) -> EChanges:
     """
     Detects composites in the model.
     :param tolerance:   Tolerance on overlap, in sites.
@@ -31,11 +31,11 @@ def make_components( tolerance: int = 0 ) -> Changes:
     
     MCMD.progress( "{} components detected.".format( len( model.components ) ) )
     
-    return Changes( Changes.COMPONENTS )
+    return EChanges.COMPONENTS
 
 
 @command( names = ["make_alignments", "create_alignments", "make_alignment", "create_alignment"] )
-def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def make_alignments( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Aligns the component. If no component is specified, aligns all components.
     
@@ -53,7 +53,7 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> Change
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA 
 
 
 @command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
@@ -75,7 +75,7 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA 
 
 
 @command( names = ["make_consensus", "create_consensus"] )
@@ -95,11 +95,11 @@ def make_consensus( component: Optional[List[LegoComponent]] = None ):
     after = sum( x.consensus is not None for x in model.components )
     MCMD.progress( "{} consensuses generated. {} of {} components have a consensus tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA 
 
 
 @command( names = ["make_fusions", "make_fusion", "create_fusions", "create_fusion", "find_fusions", "find_fusion"] )
-def make_fusions( overwrite: bool = False ) -> Changes:
+def make_fusions( overwrite: bool = False ) -> EChanges:
     """
     Makes the fusion points.
     
@@ -117,11 +117,11 @@ def make_fusions( overwrite: bool = False ) -> Changes:
     n = len( model.fusion_events )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
     
-    return Changes( Changes.MODEL_DATA )
+    return EChanges.MODEL_DATA 
 
 
 @command( names = ["make_nrfg", "create_nrfg"] )
-def make_nrfg() -> Changes:
+def make_nrfg() -> EChanges:
     """
     Creates the N-rooted fusion graph.
     
@@ -133,4 +133,4 @@ def make_nrfg() -> Changes:
     
     MCMD.progress( "NRFG created OK." )
     
-    return Changes( Changes.MODEL_DATA )
+    return EChanges.MODEL_DATA 

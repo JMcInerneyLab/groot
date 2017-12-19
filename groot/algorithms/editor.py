@@ -5,6 +5,7 @@ In order to maintain correct within-model relationships, the model should only b
 """
 
 from typing import List, Iterable
+from uuid import uuid4
 
 from groot.data.lego_model import LegoModel, LegoSequence, LegoSubsequence, LegoEdge
 from mhelper import Logger, array_helper, ImplementationError
@@ -18,18 +19,12 @@ def make_sequence( model: LegoModel,
                    accession: str,
                    obtain_only: bool,
                    initial_length: int,
-                   extra_data: object ) -> LegoSequence:
+                   extra_data: object,
+                   no_fresh: bool ) -> LegoSequence:
     """
     Creates the specified sequence, or returns it if it already exists.
-    
-    :param model: 
-    :param accession: 
-    :param obtain_only: 
-    :param initial_length: 
-    :param extra_data: 
-    :return: 
     """
-    assert_model_freshness( model )
+    assert_model_freshness( model, no_fresh )
     
     assert isinstance( initial_length, int )
     
@@ -58,17 +53,11 @@ def make_sequence( model: LegoModel,
     return result
 
 
-def make_edge( model: LegoModel, source: List[LegoSubsequence], destination: List[LegoSubsequence], extra_data ) -> LegoEdge:
+def make_edge( model: LegoModel, source: List[LegoSubsequence], destination: List[LegoSubsequence], extra_data, no_fresh: bool ) -> LegoEdge:
     """
     Creates the specified edge, or returns it if it already exists.
-    
-    :param model: 
-    :param source: 
-    :param destination: 
-    :param extra_data: 
-    :return: 
     """
-    assert_model_freshness( model )
+    assert_model_freshness( model, no_fresh )
     
     assert source != destination
     
@@ -86,8 +75,8 @@ def make_edge( model: LegoModel, source: List[LegoSubsequence], destination: Lis
     
     result = LegoEdge()
     
-    link_edge( result, False, source )
-    link_edge( result, True, destination )
+    link_edge( result, False, source, no_fresh )
+    link_edge( result, True, destination, no_fresh )
     result.comments.append( extra_data )
     
     return result
@@ -97,17 +86,21 @@ def make_subsequence( sequence: LegoSequence,
                       start: int,
                       end: int,
                       extra_data: object,
-                      allow_resize: bool = True ) -> List[LegoSubsequence]:
+                      allow_resize: bool,
+                      no_fresh: bool ) -> List[LegoSubsequence]:
     """
-    Creates the specified subsequence(s), or returns that if it already exists.
-    :param allow_resize: 
-    :param sequence: 
-    :param start: 
-    :param end: 
-    :param extra_data: 
-    :return: 
+    Creates the specified subsequence, or returns it if it already exists.
+    The result may encompass more than one subsequence, if the specified range spans existing subsequences.
+    
+    :param allow_resize:    Allow resizing of the parent sequence
+    :param sequence:        Sequence to create the subsequence within 
+    :param start:           Starting position (inclusive) of the new subsequence 
+    :param end:             Ending position (inclusive) of the new subsequence 
+    :param extra_data:      Extra data to attach to the subsequence 
+    :param no_fresh:        Skip the freshness check (not recommended)
+    :return:                A list containing the subsequence from start to end. 
     """
-    assert_model_freshness( sequence.model )
+    assert_model_freshness( sequence.model, no_fresh )
     
     assert start > 0, start
     assert end > 0, end
@@ -132,11 +125,11 @@ def make_subsequence( sequence: LegoSequence,
                     first = subsequence
                 else:
                     with LOG_MAKE_SS( "FIRST - {} - ¡SPLIT!".format( subsequence ) ):
-                        _, first = split_subsequence( subsequence, start )
+                        _, first = split_subsequence( subsequence, start, no_fresh )
                         LOG_MAKE_SS( "SPLIT ABOUT {} GIVING RIGHT {}".format( start, first ) )
                 
                 if first.end > end:
-                    first, _ = split_subsequence( first, end + 1 )
+                    first, _ = split_subsequence( first, end + 1, no_fresh )
                     LOG_MAKE_SS( "THEN SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, first ) )
                 
                 LOG_MAKE_SS( "#### {}".format( first ) )
@@ -148,7 +141,7 @@ def make_subsequence( sequence: LegoSequence,
                 if subsequence.end > end:
                     if subsequence.start != end + 1:
                         with LOG_MAKE_SS( "LAST - {} - ¡SPLIT!".format( subsequence ) ):
-                            last, _ = split_subsequence( subsequence, end + 1 )
+                            last, _ = split_subsequence( subsequence, end + 1, no_fresh )
                             LOG_MAKE_SS( "SPLIT ABOUT {} GIVING LEFT {}".format( end + 1, last ) )
                         
                         LOG_MAKE_SS( "#### {}".format( last ) )
@@ -174,30 +167,28 @@ def make_subsequence( sequence: LegoSequence,
         return r
 
 
-def split_sequence( sequence: LegoSequence, split_point: int ):
+def split_sequence( sequence: LegoSequence, split_point: int, no_fresh: bool ):
     """
     Splits a sequence about the `split_point`.
     See `split_subsequence`.
     """
-    assert_model_freshness( sequence.model )
+    assert_model_freshness( sequence.model, no_fresh )
     
     for ss in sequence.subsequences:
         if ss.start <= split_point <= ss.end:
-            split_subsequence( ss, split_point )
+            split_subsequence( ss, split_point, no_fresh )
             break
 
 
-def __inherit_subsequence( target: LegoSubsequence, original: LegoSubsequence ):
-    assert_model_freshness( target.sequence.model )
-    
+def __inherit_subsequence( target: LegoSubsequence, original: LegoSubsequence, no_fresh: bool ):
     LOG( "INHERIT SUBSEQUENCE {} --> {}".format( original, target ) )
     assert original != target
     
     for edge in original.edges:
-        link_edge( edge, edge.position( original ), [target] )
+        link_edge( edge, edge.position( original ), [target], no_fresh )
 
 
-def split_subsequence( subsequence: LegoSubsequence, p: int ):
+def split_subsequence( subsequence: LegoSubsequence, p: int, no_fresh: bool ):
     """
     Splits the subsequence into s..p-1 and p..e, i.e.:
 
@@ -206,7 +197,7 @@ def split_subsequence( subsequence: LegoSubsequence, p: int ):
     | 1 2 3 4|5 6 7 8 9 |
     ---------------------
     """
-    assert_model_freshness( subsequence.sequence.model )
+    assert_model_freshness( subsequence.sequence.model, no_fresh )
     
     with LOG( "SPLIT {} AT {}".format( subsequence, p ) ):
         if p <= subsequence.start or p > subsequence.end:
@@ -215,22 +206,22 @@ def split_subsequence( subsequence: LegoSubsequence, p: int ):
         left = LegoSubsequence( subsequence.sequence, subsequence.start, p - 1, subsequence.components )
         right = LegoSubsequence( subsequence.sequence, p, subsequence.end, subsequence.components )
         
-        __inherit_subsequence( left, subsequence )
-        __inherit_subsequence( right, subsequence )
+        __inherit_subsequence( left, subsequence, no_fresh )
+        __inherit_subsequence( right, subsequence, no_fresh )
         
         index = subsequence.sequence.subsequences.index( subsequence )
         subsequence.sequence.subsequences.remove( subsequence )
         subsequence.sequence.subsequences.insert( index, right )
         subsequence.sequence.subsequences.insert( index, left )
-        __destroy_subsequence( subsequence )
+        __destroy_subsequence( subsequence, no_fresh )
         return left, right
 
 
-def unlink_all_edges( model : LegoModel, edge: LegoEdge ):
+def unlink_all_edges( model: LegoModel, edge: LegoEdge, no_fresh: bool ):
     """
     Removes all references to this edge.
     """
-    assert_model_freshness( model )
+    assert_model_freshness( model, no_fresh )
     
     for x in edge.left:
         x.edges.remove( edge )
@@ -241,13 +232,13 @@ def unlink_all_edges( model : LegoModel, edge: LegoEdge ):
     edge.is_destroyed = True
 
 
-def unlink_edge( edge: LegoEdge, subsequence: "LegoSubsequence" ):
+def unlink_edge( edge: LegoEdge, subsequence: "LegoSubsequence", no_fresh: bool ):
     """
     Removes the specified subsequence from the edge.
     
     Warning: If this empties the edge, the edge is automatically destroyed.
     """
-    assert_model_freshness( subsequence.sequence.model )
+    assert_model_freshness( subsequence.sequence.model, no_fresh )
     
     the_list = edge.right if edge.position( subsequence ) else edge.left
     
@@ -255,14 +246,14 @@ def unlink_edge( edge: LegoEdge, subsequence: "LegoSubsequence" ):
     the_list.remove( subsequence )
     
     if len( the_list ) == 0:
-        unlink_all_edges( subsequence.sequence.model, edge )
+        unlink_all_edges( subsequence.sequence.model, edge, no_fresh )
 
 
-def link_edge( edge: LegoEdge, position: bool, subsequences: "List[LegoSubsequence]" ):
+def link_edge( edge: LegoEdge, position: bool, subsequences: "List[LegoSubsequence]", no_fresh: bool ):
     """
     Adds the specified subsequences to the edge.
     """
-    assert_model_freshness( subsequences[0].sequence.model )
+    assert_model_freshness( subsequences[0].sequence.model, no_fresh )
     
     with LOG( "LINK EDGE #{}".format( id( edge ) ) ):
         pfx = "-D->" if position else "-S->"
@@ -279,8 +270,8 @@ def link_edge( edge: LegoEdge, position: bool, subsequences: "List[LegoSubsequen
                 subsequence.edges.append( edge )
 
 
-def merge_subsequences( model : LegoModel, all: Iterable[LegoSubsequence] ):
-    assert_model_freshness( model )
+def merge_subsequences( model: LegoModel, all: Iterable[LegoSubsequence], no_fresh: bool ):
+    assert_model_freshness( model, no_fresh )
     
     all = sorted( all, key = lambda x: x.start )
     
@@ -298,38 +289,35 @@ def merge_subsequences( model : LegoModel, all: Iterable[LegoSubsequence] ):
     first.end = all[-1].end
     
     for other in all[1:]:
-        __inherit_subsequence( first, other )
+        __inherit_subsequence( first, other, no_fresh )
         other.sequence.subsequences.remove( other )
-        __destroy_subsequence( other )
+        __destroy_subsequence( other, no_fresh )
 
 
-def __destroy_subsequence( subsequence: LegoSubsequence ):
+def __destroy_subsequence( subsequence: LegoSubsequence, no_fresh: bool ):
     LOG( "DESTROY SUBSEQUENCE {}".format( subsequence ) )
     
     for edge in list( subsequence.edges ):
-        unlink_edge( edge, subsequence )
+        unlink_edge( edge, subsequence, no_fresh )
     
     assert len( subsequence.edges ) == 0, subsequence.edges
     subsequence.is_destroyed = True
 
 
-def add_new_sequence( model: LegoModel ) -> LegoSequence:
+def add_new_sequence( model: LegoModel, no_fresh: bool ) -> LegoSequence:
     """
     Creates a new sequence
     """
-    assert_model_freshness( model )
-    
-    sequence = LegoSequence( model, "Untitled", model._get_incremental_id() )
-    model.sequences.append( sequence )
-    return sequence
+    assert_model_freshness( model, no_fresh )
+    return make_sequence( model, str( uuid4() ), False, 10, "user-created", no_fresh )
 
 
-def add_new_edge( subsequences: List[LegoSubsequence] ) -> LegoEdge:
+def add_new_edge( subsequences: List[LegoSubsequence], no_fresh: bool ) -> LegoEdge:
     """
     Creates a new edge between the specified subsequences.
     The specified subsequences should span two, and only two, sequences.
     """
-    assert_model_freshness( subsequences[0].sequence.model )
+    assert_model_freshness( subsequences[0].sequence.model, no_fresh )
     
     sequences = list( set( subsequence.sequence for subsequence in subsequences ) )
     
@@ -344,33 +332,36 @@ def add_new_edge( subsequences: List[LegoSubsequence] ) -> LegoEdge:
     
     edge = LegoEdge()
     
-    link_edge( edge, False, left_subsequences )
-    link_edge( edge, True, right_subsequences )
+    link_edge( edge, False, left_subsequences, no_fresh )
+    link_edge( edge, True, right_subsequences, no_fresh )
     
     return edge
 
 
-def add_new_subsequence( sequence: LegoSequence, split_point: int ) -> None:
+def add_new_subsequence( sequence: LegoSequence, split_point: int, no_fresh: bool ) -> None:
     """
     Splits a sequence, creating a new subsequence
     """
-    split_sequence( sequence, split_point )
+    split_sequence( sequence, split_point, no_fresh )
 
 
-def remove_sequences( sequences: List[LegoSequence] ):
+def remove_sequences( sequences: List[LegoSequence], no_fresh: bool ):
     """
     Removes the specified sequences
     """
-    assert_model_freshness( sequences[0].model )
+    assert_model_freshness( sequences[0].model, no_fresh )
     
     for sequence in sequences:
         for subsequence in sequence.subsequences:
-            __destroy_subsequence( subsequence )
+            __destroy_subsequence( subsequence, no_fresh )
         
         sequence.model.sequences.remove( sequence )
 
 
-def assert_model_freshness( model ):
+def assert_model_freshness( model, no_fresh: bool ):
+    if no_fresh:
+        return
+    
     if model.components:
         raise ValueError( "Refusing to modify the model whilst it is in use. Did you mean to drop the components first?" )
     
@@ -381,13 +372,13 @@ def assert_model_freshness( model ):
         raise ValueError( "Refusing to modify the model whilst it is in use. Did you mean to drop the NRFG first?" )
 
 
-def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ):
+def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge], no_fresh: bool ):
     """
     Removes the specified edges from the specified subsequences
     """
-    assert_model_freshness( subsequences[0].sequence.model )
+    assert_model_freshness( subsequences[0].sequence.model, no_fresh )
     
     for subsequence in subsequences:
         for edge in edges:
             if not edge.is_destroyed:
-                unlink_edge( edge, subsequence )
+                unlink_edge( edge, subsequence, no_fresh )

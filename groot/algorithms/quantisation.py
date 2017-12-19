@@ -12,7 +12,7 @@ def quantise( model : LegoModel, level ):
     """
     Quantises the subsequence start/end positions in the model
     """
-    editor.assert_model_freshness( model )
+    editor.assert_model_freshness( model, False )
     
     before = model.count_subsequences()
     

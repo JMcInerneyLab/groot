@@ -4,7 +4,7 @@ from groot.algorithms import alignment, components, consensus, fuse, tree
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_utils import Changes
+from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
 
@@ -13,7 +13,7 @@ __mcmd_folder_name__ = "Generating"
 
 
 @command()
-def drop_components() -> Changes:
+def drop_components() -> EChanges:
     """
     Removes all the components from the model.
     """
@@ -22,11 +22,11 @@ def drop_components() -> Changes:
     
     MCMD.information( "Dropped all {} components from the model.".format( count ) )
     
-    return Changes( Changes.COMPONENTS )
+    return EChanges.COMPONENTS
 
 
 @command()
-def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Removes the alignment data from the component. If no component is specified, drops all alignments.
     :param component: Component to drop the alignment for, or `None` for all.
@@ -40,11 +40,11 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> Changes
     
     MCMD.print( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def drop_tree( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Removes component trees.
     
@@ -60,11 +60,11 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> Changes:
     
     MCMD.print( "{} trees removed across {} components.".format( count, len( to_do ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def drop_consensus( component: Optional[List[LegoComponent]] = None ) -> Changes:
+def drop_consensus( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Drops the consensus trees.
     :param component:   Component, or `None` for all.
@@ -79,11 +79,11 @@ def drop_consensus( component: Optional[List[LegoComponent]] = None ) -> Changes
     
     MCMD.print( "{} consensus trees removed across {} components.".format( count, len( to_do ) ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def drop_fusions() -> Changes:
+def drop_fusions() -> EChanges:
     """
     Removes the fusion events from the model.
     """
@@ -93,11 +93,11 @@ def drop_fusions() -> Changes:
     
     MCMD.information( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def drop_nrfg() -> Changes:
+def drop_nrfg() -> EChanges:
     """
     Removes the NRFG from the model.
     """
@@ -105,10 +105,10 @@ def drop_nrfg() -> Changes:
     
     if model.nrfg is None:
         MCMD.information( "The model doesn't have an NRFG. No action performed." )
-        return Changes( Changes.NONE )
+        return EChanges.NONE
     
     model.nrfg = None
     
     MCMD.information( "The NRFG has been removed from the model." )
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA

@@ -4,7 +4,7 @@ from typing import List, Optional
 from groot.algorithms import deconvolution, editor, quantisation, verification
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
-from groot.frontends.gui.gui_view_utils import Changes
+from groot.frontends.gui.gui_view_utils import EChanges
 from groot.graphing.graphing import MGraph
 from intermake import command
 from intermake.engine.environment import MCMD
@@ -15,7 +15,7 @@ __mcmd_folder_name__ = "Modifications"
 
 
 @command()
-def clean( edges: bool = True, subsequences: bool = True ) -> Changes:
+def clean( edges: bool = True, subsequences: bool = True ) -> EChanges:
     """
     Removes redundancies (duplicates) from the model.
     
@@ -36,22 +36,22 @@ def clean( edges: bool = True, subsequences: bool = True ) -> Changes:
         with MCMD.action( "Removing redundant subsequences" ):
             deconvolution.remove_redundant_subsequences( model )
     
-    return Changes( Changes.MODEL_ENTITIES )
+    return EChanges.MODEL_ENTITIES
 
 
 @command()
-def verify() -> Changes:
+def verify() -> EChanges:
     """
     Verifies the integrity of the model.
     """
     verification.verify( global_view.current_model() )
     MCMD.print( "Verified model OK." )
     
-    return Changes( Changes.NONE )
+    return EChanges.NONE
 
 
 @command()
-def set_tree( component: LegoComponent, tree: str ) -> Changes:
+def set_tree( component: LegoComponent, tree: str ) -> EChanges:
     """
     Sets a component tree manually.
     
@@ -65,11 +65,11 @@ def set_tree( component: LegoComponent, tree: str ) -> Changes:
     g.import_newick( tree, component.model )
     component.tree = g
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def set_alignment( component: LegoComponent, alignment: str ) -> Changes:
+def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
     """
     Sets a component tree manually.
     
@@ -81,11 +81,11 @@ def set_alignment( component: LegoComponent, alignment: str ) -> Changes:
     
     component.alignment = alignment
     
-    return Changes( Changes.COMP_DATA )
+    return EChanges.COMP_DATA
 
 
 @command()
-def quantise( level: int ) -> Changes:
+def quantise( level: int ) -> EChanges:
     """
     Quantises the model.
     
@@ -96,62 +96,62 @@ def quantise( level: int ) -> Changes:
     
     MCMD.print( "Quantised applied. Reduced the model from {} to {} subsequences.".format( before, after ) )
     
-    return Changes( Changes.MODEL_ENTITIES )
+    return EChanges.MODEL_ENTITIES
 
 
-def new_subsequence( sequence: LegoSequence, split_point: int ) -> Changes:
+def new_subsequence( sequence: LegoSequence, split_point: int ) -> EChanges:
     """
     Splits a sequence, thus creating two new subsequences.
     :param sequence:        Sequence to split 
     :param split_point:     The point to split about
     """
-    editor.split_sequence( sequence, split_point )
-    return Changes( Changes.MODEL_ENTITIES )
+    editor.split_sequence( sequence, split_point, no_fresh = False )
+    return EChanges.MODEL_ENTITIES
 
 
-def new_edge( subsequences: List[LegoSubsequence] ) -> Changes:
+def new_edge( subsequences: List[LegoSubsequence] ) -> EChanges:
     """
     Adds a new edge to the model.
     :param subsequences:    Subsequences to create the edge across 
     """
-    editor.add_new_edge( subsequences )
+    editor.add_new_edge( subsequences, no_fresh = False )
     ignore( subsequences )
-    return Changes( Changes.MODEL_ENTITIES )
+    return EChanges.MODEL_ENTITIES
 
 
 @command()
-def new_sequence() -> Changes:
+def new_sequence() -> EChanges:
     """
     Adds a new sequence to the model
     """
     model = global_view.current_model()
-    editor.add_new_sequence( model )
-    return Changes( Changes.MODEL_ENTITIES )
+    editor.add_new_sequence( model, no_fresh = False )
+    return EChanges.MODEL_ENTITIES
 
 
-def merge_subsequences( subsequences: List[LegoSubsequence] ) -> Changes:
+def merge_subsequences( subsequences: List[LegoSubsequence] ) -> EChanges:
     """
     Merges the specified subsequences, combining them into one, bigger, subsequence.
     :param subsequences:    Subsequences to merge
     """
     model = global_view.current_model()
-    editor.merge_subsequences( model, subsequences )
-    return Changes( Changes.MODEL_ENTITIES )
+    editor.merge_subsequences( model, subsequences, no_fresh = False )
+    return EChanges.MODEL_ENTITIES
 
 
 @command()
-def find_sequences( find: str ) -> Changes:
+def find_sequences( find: str ) -> EChanges:
     """
     Lists the sequences whose accession matches the specified regular expression.
     
     :param find:    Regular expression
     """
     __find_sequences( find )
-    return Changes( Changes.NONE )
+    return EChanges.NONE
 
 
 @command()
-def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Optional[str] = None ) -> Changes:
+def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Optional[str] = None ) -> EChanges:
     """
     Removes one or more sequences from the model.
     :param find:      Optional regular expression specifying the sequence(s) to remove, by accession.
@@ -163,11 +163,11 @@ def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Opti
     if find:
         sequences.extend( __find_sequences( find ) )
     
-    editor.remove_sequences( sequences )
+    editor.remove_sequences( sequences, no_fresh = False )
     
     MCMD.print( "Dropped {} sequences.".format( len( sequences ) ) )
     
-    return Changes( Changes.MODEL_ENTITIES )
+    return EChanges.MODEL_ENTITIES
 
 
 def __find_sequences( find ):
@@ -190,12 +190,12 @@ def __find_sequences( find ):
     return sequences
 
 
-def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ) -> Changes:
+def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ) -> EChanges:
     """
     Detaches the specified edges from the specified subsequences.
     
     :param subsequences:    Subsequences to unlink
     :param edges:           Edges to affect
     """
-    editor.remove_edges( subsequences, edges )
-    return Changes( Changes.MODEL_ENTITIES )
+    editor.remove_edges( subsequences, edges, no_fresh = False )
+    return EChanges.MODEL_ENTITIES
