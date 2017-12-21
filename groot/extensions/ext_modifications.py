@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 
-from groot.algorithms import deconvolution, editor, quantisation, verification
+from groot.algorithms import deconvolution, editor
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import EChanges

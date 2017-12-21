@@ -21,7 +21,7 @@ def consensus( component: LegoComponent ):
     
     # Get the IDs of of the genes we need the consensus for (`major_gene_ids`)
     all_trees_ete = []  # type: List[Tree]
-    major_gene_ids = set( (x.id for x in component.major_sequences()) )
+    major_gene_ids = set( (x.id for x in component.major_sequences) )
     
     for incoming_component in component.incoming_components():
         incoming_newick = incoming_component.tree.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id )

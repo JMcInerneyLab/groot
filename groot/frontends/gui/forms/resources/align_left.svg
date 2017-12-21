@@ -1,0 +1,11 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <title>align left</title>
+ <g>
+  <title>Layer 1</title>
+  <rect stroke="#ff0202" id="svg_1" height="32" width="96" y="320" x="160" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_3" height="384" width="64" y="64" x="64" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_4" height="32" width="192" y="128" x="160" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_5" height="32" width="288" y="224" x="160" stroke-width="0" fill="#000000"/>
+ </g>
+</svg>

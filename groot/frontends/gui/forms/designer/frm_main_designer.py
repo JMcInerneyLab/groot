@@ -20,21 +20,39 @@ class Ui_MainWindow(object):
 "    \n"
 "    WIDGET        | THEME               APPEARANCE (GUIDE)              USAGE (GUIDE)\n"
 "    --------------+-------------\n"
-"    QLabel        | title               border, big, bold               section titles \n"
+"    QLabel        | heading               border, big, bold               section titles \n"
+"    QLabel        | subheading               border, big, bold               section titles \n"
 "    QTextEdit     | console             monospaced, black background    code, console output\n"
 "    QPushButton   | completed           \n"
 "    QPushButton   | cancel              red                             abort button\n"
-"    QFrame        | title               border                          section titles\n"
+"    QFrame        | header               border                          section titles\n"
 "    QToolButton   | listbutton          condensed                       buttons in lists\n"
 "    QLabel        | helpbox             tooltip background              help labels\n"
 "*/\n"
 "\n"
 "QDialog\n"
 "{\n"
-"    background : #808080;\n"
+"    background : #EEEEEE;\n"
 "}\n"
 "\n"
-"QLabel[style=\"title\"]\n"
+"QFrame[style=\"heading\"]\n"
+"{\n"
+"    background    : #C0C0C0;\n"
+"    border-radius : 8px;\n"
+"    padding       : 4px;\n"
+"}\n"
+"\n"
+"QLabel[style=\"heading\"]\n"
+"{\n"
+"    background    : #C0C0C0;\n"
+"    border-radius : 4px;\n"
+"    margin        : 2px;\n"
+"    padding       : 2px;\n"
+"    color         : black;\n"
+"    font-weight   : bold;\n"
+"}\n"
+"\n"
+"QLabel[style=\"subheading\"]\n"
 "{\n"
 "    background    : #FFFFFF;\n"
 "    border-radius : 4px;\n"
@@ -43,6 +61,7 @@ class Ui_MainWindow(object):
 "    color         : black;\n"
 "    font-weight   : bold;\n"
 "}\n"
+"\n"
 "\n"
 "QLabel[style=\"helpbox\"]\n"
 "{\n"
@@ -113,13 +132,6 @@ class Ui_MainWindow(object):
 "    border-color  : white;\n"
 "    border-width  : 1px;\n"
 "    border-radius : 8px;\n"
-"}\n"
-"\n"
-"QFrame[style=\"title\"]\n"
-"{\n"
-"    background    : #C0C0C0;\n"
-"    border-radius : 8px;\n"
-"    padding       : 4px;\n"
 "}\n"
 "\n"
 "QMenuBar\n"
@@ -249,7 +261,39 @@ class Ui_MainWindow(object):
 "{\n"
 "background: #C0C0C0;\n"
 "}\n"
-"")
+"\n"
+"QRadioButton::indicator,QCheckBox::indicator\n"
+"{\n"
+"background: #0080C0;\n"
+"width: 16px;\n"
+"height: 16px;\n"
+"}\n"
+"\n"
+"QCheckBox::indicator\n"
+"{\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QRadioButton::indicator\n"
+"{\n"
+"border-radius: 8px;\n"
+"}\n"
+"\n"
+"QRadioButton::indicator:checked,QCheckBox::indicator:checked\n"
+"{\n"
+"background: #00C080;\n"
+"image: url(:/check_yes_white.svg);\n"
+"}\n"
+"\n"
+"QRadioButton::indicator:unchecked,QCheckBox::indicator:unchecked\n"
+"{\n"
+"image: none;\n"
+"}\n"
+"\n"
+"QRadioButton::indicator:indeterminate,QCheckBox::indicator:indeterminate\n"
+"{\n"
+"image: url(:/check_indeterminate_white.svg);\n"
+"}")
         MainWindow.setDockNestingEnabled(True)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.VerticalTabs)
         MainWindow.setUnifiedTitleAndToolBarOnMac(True)
@@ -257,15 +301,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.splitter_2 = QtWidgets.QSplitter(self.centralwidget)
-        self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_2.setObjectName("splitter_2")
-        self.widget = QtWidgets.QWidget(self.splitter_2)
-        self.widget.setObjectName("widget")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.widget)
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_3.setObjectName("gridLayout_3")
-        self.splitter = QtWidgets.QSplitter(self.widget)
+        self.splitter = QtWidgets.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setChildrenCollapsible(False)
         self.splitter.setObjectName("splitter")
@@ -298,7 +334,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.CHKBTN_DATA_DATA.sizePolicy().hasHeightForWidth())
         self.CHKBTN_DATA_DATA.setSizePolicy(sizePolicy)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/Images/Resources/new-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/list.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.CHKBTN_DATA_DATA.setIcon(icon)
         self.CHKBTN_DATA_DATA.setCheckable(True)
         self.CHKBTN_DATA_DATA.setAutoExclusive(True)
@@ -313,7 +349,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.CHKBTN_DATA_FASTA.sizePolicy().hasHeightForWidth())
         self.CHKBTN_DATA_FASTA.setSizePolicy(sizePolicy)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/Images/Resources/sequence.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":/sequence.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.CHKBTN_DATA_FASTA.setIcon(icon1)
         self.CHKBTN_DATA_FASTA.setCheckable(True)
         self.CHKBTN_DATA_FASTA.setChecked(True)
@@ -329,7 +365,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.CHKBTN_DATA_NEWICK.sizePolicy().hasHeightForWidth())
         self.CHKBTN_DATA_NEWICK.setSizePolicy(sizePolicy)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/Images/Resources/tree.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(":/tree.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.CHKBTN_DATA_NEWICK.setIcon(icon2)
         self.CHKBTN_DATA_NEWICK.setCheckable(True)
         self.CHKBTN_DATA_NEWICK.setAutoExclusive(True)
@@ -344,7 +380,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.CHKBTN_DATA_BLAST.sizePolicy().hasHeightForWidth())
         self.CHKBTN_DATA_BLAST.setSizePolicy(sizePolicy)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/Images/Resources/align.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":/edge.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.CHKBTN_DATA_BLAST.setIcon(icon3)
         self.CHKBTN_DATA_BLAST.setCheckable(True)
         self.CHKBTN_DATA_BLAST.setAutoExclusive(True)
@@ -380,7 +416,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.SCR_AREA = QtWidgets.QWidget()
-        self.SCR_AREA.setGeometry(QtCore.QRect(0, 0, 350, 826))
+        self.SCR_AREA.setGeometry(QtCore.QRect(0, 0, 380, 830))
         self.SCR_AREA.setObjectName("SCR_AREA")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.SCR_AREA)
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -392,6 +428,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.label_3 = QtWidgets.QLabel(self.layoutWidget)
         font = QtGui.QFont()
         font.setBold(True)
@@ -399,7 +437,19 @@ class Ui_MainWindow(object):
         self.label_3.setFont(font)
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
-        self.verticalLayout_6.addWidget(self.label_3)
+        self.horizontalLayout_2.addWidget(self.label_3)
+        self.BTN_VIEW_SETTINGS = QtWidgets.QPushButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_VIEW_SETTINGS.sizePolicy().hasHeightForWidth())
+        self.BTN_VIEW_SETTINGS.setSizePolicy(sizePolicy)
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/settings.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.BTN_VIEW_SETTINGS.setIcon(icon4)
+        self.BTN_VIEW_SETTINGS.setObjectName("BTN_VIEW_SETTINGS")
+        self.horizontalLayout_2.addWidget(self.BTN_VIEW_SETTINGS)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_7.setSpacing(0)
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
@@ -408,25 +458,14 @@ class Ui_MainWindow(object):
         self.BTN_SEL_COMPONENT = QtWidgets.QToolButton(self.layoutWidget)
         self.BTN_SEL_COMPONENT.setMinimumSize(QtCore.QSize(128, 0))
         self.BTN_SEL_COMPONENT.setMaximumSize(QtCore.QSize(128, 16777215))
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/Images/Resources/compartmentalise.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.BTN_SEL_COMPONENT.setIcon(icon4)
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/compartmentalise.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.BTN_SEL_COMPONENT.setIcon(icon5)
         self.BTN_SEL_COMPONENT.setCheckable(True)
         self.BTN_SEL_COMPONENT.setAutoExclusive(True)
         self.BTN_SEL_COMPONENT.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.BTN_SEL_COMPONENT.setObjectName("BTN_SEL_COMPONENT")
         self.horizontalLayout_7.addWidget(self.BTN_SEL_COMPONENT)
-        self.BTN_SEL_EDGE = QtWidgets.QToolButton(self.layoutWidget)
-        self.BTN_SEL_EDGE.setMinimumSize(QtCore.QSize(128, 0))
-        self.BTN_SEL_EDGE.setMaximumSize(QtCore.QSize(128, 16777215))
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap(":/Images/Resources/edge.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.BTN_SEL_EDGE.setIcon(icon5)
-        self.BTN_SEL_EDGE.setCheckable(True)
-        self.BTN_SEL_EDGE.setAutoExclusive(True)
-        self.BTN_SEL_EDGE.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-        self.BTN_SEL_EDGE.setObjectName("BTN_SEL_EDGE")
-        self.horizontalLayout_7.addWidget(self.BTN_SEL_EDGE)
         self.BTN_SEL_SEQUENCE = QtWidgets.QToolButton(self.layoutWidget)
         self.BTN_SEL_SEQUENCE.setMinimumSize(QtCore.QSize(128, 0))
         self.BTN_SEL_SEQUENCE.setMaximumSize(QtCore.QSize(128, 16777215))
@@ -441,13 +480,22 @@ class Ui_MainWindow(object):
         self.BTN_SEL_SUBSEQUENCE.setMinimumSize(QtCore.QSize(128, 0))
         self.BTN_SEL_SUBSEQUENCE.setMaximumSize(QtCore.QSize(128, 16777215))
         icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap(":/Images/Resources/subsequence.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon6.addPixmap(QtGui.QPixmap(":/subsequence.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.BTN_SEL_SUBSEQUENCE.setIcon(icon6)
         self.BTN_SEL_SUBSEQUENCE.setCheckable(True)
         self.BTN_SEL_SUBSEQUENCE.setAutoExclusive(True)
         self.BTN_SEL_SUBSEQUENCE.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
         self.BTN_SEL_SUBSEQUENCE.setObjectName("BTN_SEL_SUBSEQUENCE")
         self.horizontalLayout_7.addWidget(self.BTN_SEL_SUBSEQUENCE)
+        self.BTN_SEL_EDGE = QtWidgets.QToolButton(self.layoutWidget)
+        self.BTN_SEL_EDGE.setMinimumSize(QtCore.QSize(128, 0))
+        self.BTN_SEL_EDGE.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_SEL_EDGE.setIcon(icon3)
+        self.BTN_SEL_EDGE.setCheckable(True)
+        self.BTN_SEL_EDGE.setAutoExclusive(True)
+        self.BTN_SEL_EDGE.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_SEL_EDGE.setObjectName("BTN_SEL_EDGE")
+        self.horizontalLayout_7.addWidget(self.BTN_SEL_EDGE)
         spacerItem2 = QtWidgets.QSpacerItem(182, 16, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem2)
         self.verticalLayout_6.addLayout(self.horizontalLayout_7)
@@ -461,55 +509,87 @@ class Ui_MainWindow(object):
         self.FRA_MAIN.setFrameShadow(QtWidgets.QFrame.Raised)
         self.FRA_MAIN.setObjectName("FRA_MAIN")
         self.verticalLayout_6.addWidget(self.FRA_MAIN)
-        self.gridLayout_3.addWidget(self.splitter, 0, 0, 1, 1)
-        self.verticalLayoutWidget_4 = QtWidgets.QWidget(self.splitter_2)
-        self.verticalLayoutWidget_4.setObjectName("verticalLayoutWidget_4")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_4)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.label_4 = QtWidgets.QLabel(self.verticalLayoutWidget_4)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.BTN_STATUS_BLAST = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_4.setFont(font)
-        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_4.setObjectName("label_4")
-        self.verticalLayout_3.addWidget(self.label_4)
-        self.CHK_VIEW_NAMES = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_VIEW_NAMES.setChecked(True)
-        self.CHK_VIEW_NAMES.setTristate(True)
-        self.CHK_VIEW_NAMES.setObjectName("CHK_VIEW_NAMES")
-        self.verticalLayout_3.addWidget(self.CHK_VIEW_NAMES)
-        self.CHK_VIEW_PIANO_ROLLS = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_VIEW_PIANO_ROLLS.setChecked(True)
-        self.CHK_VIEW_PIANO_ROLLS.setTristate(True)
-        self.CHK_VIEW_PIANO_ROLLS.setObjectName("CHK_VIEW_PIANO_ROLLS")
-        self.verticalLayout_3.addWidget(self.CHK_VIEW_PIANO_ROLLS)
-        self.CHK_MOVE = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_MOVE.setChecked(True)
-        self.CHK_MOVE.setObjectName("CHK_MOVE")
-        self.verticalLayout_3.addWidget(self.CHK_MOVE)
-        self.CHK_VIEW_POSITIONS = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_VIEW_POSITIONS.setChecked(True)
-        self.CHK_VIEW_POSITIONS.setTristate(True)
-        self.CHK_VIEW_POSITIONS.setObjectName("CHK_VIEW_POSITIONS")
-        self.verticalLayout_3.addWidget(self.CHK_VIEW_POSITIONS)
-        self.CHK_MOVE_YSNAP = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_MOVE_YSNAP.setChecked(True)
-        self.CHK_MOVE_YSNAP.setObjectName("CHK_MOVE_YSNAP")
-        self.verticalLayout_3.addWidget(self.CHK_MOVE_YSNAP)
-        self.CHK_MOVE_XSNAP = QtWidgets.QCheckBox(self.verticalLayoutWidget_4)
-        self.CHK_MOVE_XSNAP.setChecked(True)
-        self.CHK_MOVE_XSNAP.setObjectName("CHK_MOVE_XSNAP")
-        self.verticalLayout_3.addWidget(self.CHK_MOVE_XSNAP)
-        spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_3.addItem(spacerItem3)
-        self.gridLayout.addWidget(self.splitter_2, 0, 0, 1, 1)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_BLAST.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_BLAST.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_BLAST.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_BLAST.setCheckable(True)
+        self.BTN_STATUS_BLAST.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_BLAST.setObjectName("BTN_STATUS_BLAST")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_BLAST)
+        self.BTN_STATUS_FASTA = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_FASTA.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_FASTA.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_FASTA.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_FASTA.setCheckable(True)
+        self.BTN_STATUS_FASTA.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_FASTA.setObjectName("BTN_STATUS_FASTA")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_FASTA)
+        self.BTN_STATUS_COMPONENTS = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_COMPONENTS.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_COMPONENTS.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_COMPONENTS.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_COMPONENTS.setCheckable(True)
+        self.BTN_STATUS_COMPONENTS.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_COMPONENTS.setObjectName("BTN_STATUS_COMPONENTS")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_COMPONENTS)
+        self.BTN_STATUS_ALIGNMENTS = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_ALIGNMENTS.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_ALIGNMENTS.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_ALIGNMENTS.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_ALIGNMENTS.setCheckable(True)
+        self.BTN_STATUS_ALIGNMENTS.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_ALIGNMENTS.setObjectName("BTN_STATUS_ALIGNMENTS")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_ALIGNMENTS)
+        self.BTN_STATUS_TREES = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_TREES.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_TREES.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_TREES.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_TREES.setCheckable(True)
+        self.BTN_STATUS_TREES.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_TREES.setObjectName("BTN_STATUS_TREES")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_TREES)
+        self.BTN_STATUS_FUSIONS = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_FUSIONS.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_FUSIONS.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_FUSIONS.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_FUSIONS.setCheckable(True)
+        self.BTN_STATUS_FUSIONS.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_FUSIONS.setObjectName("BTN_STATUS_FUSIONS")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_FUSIONS)
+        self.BTN_STATUS_NRFG = QtWidgets.QToolButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.BTN_STATUS_NRFG.sizePolicy().hasHeightForWidth())
+        self.BTN_STATUS_NRFG.setSizePolicy(sizePolicy)
+        self.BTN_STATUS_NRFG.setMaximumSize(QtCore.QSize(128, 16777215))
+        self.BTN_STATUS_NRFG.setCheckable(True)
+        self.BTN_STATUS_NRFG.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.BTN_STATUS_NRFG.setObjectName("BTN_STATUS_NRFG")
+        self.horizontalLayout_4.addWidget(self.BTN_STATUS_NRFG)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_4)
+        self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -529,8 +609,6 @@ class Ui_MainWindow(object):
         self.menu_Help.setObjectName("menu_Help")
         self.menu_Debug = QtWidgets.QMenu(self.menu_Help)
         self.menu_Debug.setObjectName("menu_Debug")
-        self.menu_View = QtWidgets.QMenu(self.menuBar)
-        self.menu_View.setObjectName("menu_View")
         self.menu_Generating = QtWidgets.QMenu(self.menuBar)
         self.menu_Generating.setObjectName("menu_Generating")
         self.menu_Remove = QtWidgets.QMenu(self.menu_Generating)
@@ -546,24 +624,26 @@ class Ui_MainWindow(object):
         self.menu_View_3.setObjectName("menu_View_3")
         MainWindow.setMenuBar(self.menuBar)
         self.ACT_FILE_NEW = QtWidgets.QAction(MainWindow)
-        self.ACT_FILE_NEW.setIcon(icon)
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/Images/Resources/new-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_FILE_NEW.setIcon(icon7)
         self.ACT_FILE_NEW.setObjectName("ACT_FILE_NEW")
         self.ACT_FILE_IMPORT = QtWidgets.QAction(MainWindow)
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap(":/Images/Resources/import-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ACT_FILE_IMPORT.setIcon(icon7)
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/Images/Resources/import-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_FILE_IMPORT.setIcon(icon8)
         self.ACT_FILE_IMPORT.setObjectName("ACT_FILE_IMPORT")
         self.ACT_APP_EXIT = QtWidgets.QAction(MainWindow)
         self.ACT_APP_EXIT.setObjectName("ACT_APP_EXIT")
         self.ACT_FILE_SAVE = QtWidgets.QAction(MainWindow)
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap(":/Images/Resources/save-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ACT_FILE_SAVE.setIcon(icon8)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/Images/Resources/save-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_FILE_SAVE.setIcon(icon9)
         self.ACT_FILE_SAVE.setObjectName("ACT_FILE_SAVE")
         self.ACT_FILE_OPEN = QtWidgets.QAction(MainWindow)
-        icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap(":/Images/Resources/open-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ACT_FILE_OPEN.setIcon(icon9)
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/Images/Resources/open-file.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_FILE_OPEN.setIcon(icon10)
         self.ACT_FILE_OPEN.setObjectName("ACT_FILE_OPEN")
         self.ACT_HELP_KEYS = QtWidgets.QAction(MainWindow)
         self.ACT_HELP_KEYS.setObjectName("ACT_HELP_KEYS")
@@ -596,19 +676,12 @@ class Ui_MainWindow(object):
         self.ACT_SELECT_BY_NAME.setObjectName("ACT_SELECT_BY_NAME")
         self.ACT_WINDOW_VIEW = QtWidgets.QAction(MainWindow)
         self.ACT_WINDOW_VIEW.setCheckable(True)
-        icon10 = QtGui.QIcon()
-        icon10.addPixmap(QtGui.QPixmap(":/Images/Resources/window.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ACT_WINDOW_VIEW.setIcon(icon10)
+        self.ACT_WINDOW_VIEW.setIcon(icon4)
         self.ACT_WINDOW_VIEW.setObjectName("ACT_WINDOW_VIEW")
-        self.ACT_WINDOW_EDIT = QtWidgets.QAction(MainWindow)
-        self.ACT_WINDOW_EDIT.setCheckable(True)
-        self.ACT_WINDOW_EDIT.setIcon(icon10)
-        self.ACT_WINDOW_EDIT.setObjectName("ACT_WINDOW_EDIT")
-        self.ACT_WINDOW_SELECTION = QtWidgets.QAction(MainWindow)
-        self.ACT_WINDOW_SELECTION.setCheckable(True)
-        self.ACT_WINDOW_SELECTION.setIcon(icon10)
-        self.ACT_WINDOW_SELECTION.setObjectName("ACT_WINDOW_SELECTION")
         self.ACT_VIEW_ALIGN = QtWidgets.QAction(MainWindow)
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/align_adjacent.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_VIEW_ALIGN.setIcon(icon11)
         self.ACT_VIEW_ALIGN.setObjectName("ACT_VIEW_ALIGN")
         self.ACT_SELECT_LEFT = QtWidgets.QAction(MainWindow)
         self.ACT_SELECT_LEFT.setObjectName("ACT_SELECT_LEFT")
@@ -617,8 +690,14 @@ class Ui_MainWindow(object):
         self.ACT_SELECT_DIRECT_CONNECTIONS = QtWidgets.QAction(MainWindow)
         self.ACT_SELECT_DIRECT_CONNECTIONS.setObjectName("ACT_SELECT_DIRECT_CONNECTIONS")
         self.ACT_VIEW_ALIGN_SUBSEQUENCES = QtWidgets.QAction(MainWindow)
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/align_component.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_VIEW_ALIGN_SUBSEQUENCES.setIcon(icon12)
         self.ACT_VIEW_ALIGN_SUBSEQUENCES.setObjectName("ACT_VIEW_ALIGN_SUBSEQUENCES")
         self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES = QtWidgets.QAction(MainWindow)
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/align_left.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES.setIcon(icon13)
         self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES.setObjectName("ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES")
         self.ACT_MAKE_COMPONENTS = QtWidgets.QAction(MainWindow)
         self.ACT_MAKE_COMPONENTS.setObjectName("ACT_MAKE_COMPONENTS")
@@ -662,8 +741,6 @@ class Ui_MainWindow(object):
         self.ACT_PRINT_FUSIONS.setObjectName("ACT_PRINT_FUSIONS")
         self.ACT_PRINT_NRFG = QtWidgets.QAction(MainWindow)
         self.ACT_PRINT_NRFG.setObjectName("ACT_PRINT_NRFG")
-        self.ACTION_VIEW_MCOMMAND = QtWidgets.QAction(MainWindow)
-        self.ACTION_VIEW_MCOMMAND.setObjectName("ACTION_VIEW_MCOMMAND")
         self.ACT_DROP_COMPONENTS = QtWidgets.QAction(MainWindow)
         self.ACT_DROP_COMPONENTS.setObjectName("ACT_DROP_COMPONENTS")
         self.ACT_DROP_ALIGNMENTS = QtWidgets.QAction(MainWindow)
@@ -682,8 +759,6 @@ class Ui_MainWindow(object):
         self.ACT_UPDATE_VIEW.setObjectName("ACT_UPDATE_VIEW")
         self.ACT_DEBUG = QtWidgets.QAction(MainWindow)
         self.ACT_DEBUG.setObjectName("ACT_DEBUG")
-        self.ACT_CLI = QtWidgets.QAction(MainWindow)
-        self.ACT_CLI.setObjectName("ACT_CLI")
         self.menu_File.addAction(self.ACT_FILE_NEW)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.ACT_FILE_OPEN)
@@ -713,12 +788,6 @@ class Ui_MainWindow(object):
         self.menu_Debug.addAction(self.ACT_DEBUG)
         self.menu_Help.addAction(self.ACT_HELP_KEYS)
         self.menu_Help.addAction(self.menu_Debug.menuAction())
-        self.menu_View.addAction(self.ACT_WINDOW_VIEW)
-        self.menu_View.addAction(self.ACT_WINDOW_EDIT)
-        self.menu_View.addAction(self.ACT_WINDOW_SELECTION)
-        self.menu_View.addSeparator()
-        self.menu_View.addAction(self.ACTION_VIEW_MCOMMAND)
-        self.menu_View.addAction(self.ACT_CLI)
         self.menu_Remove.addAction(self.ACT_DROP_COMPONENTS)
         self.menu_Remove.addAction(self.ACT_DROP_ALIGNMENTS)
         self.menu_Remove.addAction(self.ACT_DROP_TREE)
@@ -750,18 +819,12 @@ class Ui_MainWindow(object):
         self.menu_View_2.addAction(self.ACT_PRINT_COMPONENTS)
         self.menu_View_2.addAction(self.ACT_PRINT_FUSIONS)
         self.menu_View_2.addAction(self.ACT_PRINT_NRFG)
-        self.menu_View_3.addAction(self.ACT_SELECT_COMPONENT)
-        self.menu_View_3.addAction(self.ACT_SELECT_SEQUENCE)
-        self.menu_View_3.addAction(self.ACT_SELECT_SUBSEQUENCE)
-        self.menu_View_3.addAction(self.ACT_SELECT_EDGE)
-        self.menu_View_3.addSeparator()
         self.menu_View_3.addAction(self.ACT_VIEW_ALIGN_SUBSEQUENCES)
         self.menu_View_3.addAction(self.ACT_VIEW_ALIGN)
         self.menu_View_3.addAction(self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES)
         self.menuBar.addAction(self.menu_File.menuAction())
         self.menuBar.addAction(self.menuSelect.menuAction())
         self.menuBar.addAction(self.menu_View_3.menuAction())
-        self.menuBar.addAction(self.menu_View.menuAction())
         self.menuBar.addAction(self.menu_Help.menuAction())
         self.menuBar.addAction(self.menu_2.menuAction())
         self.menuBar.addAction(self.menu_Generating.menuAction())
@@ -769,16 +832,12 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menu_View_2.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.BTN_SEL_COMPONENT.clicked.connect(self.ACT_SELECT_COMPONENT.trigger)
-        self.BTN_SEL_EDGE.clicked.connect(self.ACT_SELECT_EDGE.trigger)
-        self.BTN_SEL_SEQUENCE.clicked.connect(self.ACT_SELECT_SEQUENCE.trigger)
-        self.BTN_SEL_SUBSEQUENCE.clicked.connect(self.ACT_SELECT_SUBSEQUENCE.trigger)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         self.label.setText(_translate("MainWindow", "Data"))
-        self.label.setProperty("style", _translate("MainWindow", "title"))
+        self.label.setProperty("style", _translate("MainWindow", "heading"))
         self.CHKBTN_DATA_DATA.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to BLAST viewing</p></body></html>"))
         self.CHKBTN_DATA_DATA.setText(_translate("MainWindow", "Data"))
         self.CHKBTN_DATA_FASTA.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to FASTA viewing</p></body></html>"))
@@ -788,39 +847,38 @@ class Ui_MainWindow(object):
         self.CHKBTN_DATA_BLAST.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to BLAST viewing</p></body></html>"))
         self.CHKBTN_DATA_BLAST.setText(_translate("MainWindow", "Blast"))
         self.label_3.setText(_translate("MainWindow", "Diagram"))
-        self.label_3.setProperty("style", _translate("MainWindow", "title"))
+        self.label_3.setProperty("style", _translate("MainWindow", "heading"))
         self.BTN_SEL_COMPONENT.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
         self.BTN_SEL_COMPONENT.setText(_translate("MainWindow", "Component"))
+        self.BTN_SEL_SEQUENCE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to sequence edit mode.</p></body></html>"))
+        self.BTN_SEL_SEQUENCE.setStatusTip(_translate("MainWindow", "Remove sequence"))
+        self.BTN_SEL_SEQUENCE.setText(_translate("MainWindow", "Genes"))
+        self.BTN_SEL_SUBSEQUENCE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to subsequence edit mode.</p></body></html>"))
+        self.BTN_SEL_SUBSEQUENCE.setStatusTip(_translate("MainWindow", "Remove (merge) splits"))
+        self.BTN_SEL_SUBSEQUENCE.setText(_translate("MainWindow", "Domains"))
         self.BTN_SEL_EDGE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to edge edit mode.</p></body></html>"))
         self.BTN_SEL_EDGE.setStatusTip(_translate("MainWindow", "Remove edge"))
         self.BTN_SEL_EDGE.setText(_translate("MainWindow", "Edge"))
-        self.BTN_SEL_SEQUENCE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to sequence edit mode.</p></body></html>"))
-        self.BTN_SEL_SEQUENCE.setStatusTip(_translate("MainWindow", "Remove sequence"))
-        self.BTN_SEL_SEQUENCE.setText(_translate("MainWindow", "Sequence"))
-        self.BTN_SEL_SUBSEQUENCE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to subsequence edit mode.</p></body></html>"))
-        self.BTN_SEL_SUBSEQUENCE.setStatusTip(_translate("MainWindow", "Remove (merge) splits"))
-        self.BTN_SEL_SUBSEQUENCE.setText(_translate("MainWindow", "Subsequence"))
-        self.label_4.setText(_translate("MainWindow", "View"))
-        self.label_4.setProperty("style", _translate("MainWindow", "title"))
-        self.CHK_VIEW_NAMES.setToolTip(_translate("MainWindow", "<html><head/><body><p>View sequence names (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span> | <span style=\" font-style:italic;\">when-selected</span>)</p></body></html>"))
-        self.CHK_VIEW_NAMES.setText(_translate("MainWindow", "Names"))
-        self.CHK_VIEW_PIANO_ROLLS.setToolTip(_translate("MainWindow", "<html><head/><body><p>View sequence data as piano rolls (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span> | <span style=\" font-style:italic;\">when-selected</span>)</p></body></html>"))
-        self.CHK_VIEW_PIANO_ROLLS.setText(_translate("MainWindow", "Piano rolls"))
-        self.CHK_MOVE.setToolTip(_translate("MainWindow", "<html><head/><body><p>Enable movement of elements using the mouse (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span>).</p><p><span style=\" font-weight:600;\">Note: Double-click the diagram to toggle this option.</span></p></body></html>"))
-        self.CHK_MOVE.setText(_translate("MainWindow", "Enable movement"))
-        self.CHK_VIEW_POSITIONS.setToolTip(_translate("MainWindow", "<html><head/><body><p>View split positions (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span> | <span style=\" font-style:italic;\">when-selected</span>)</p></body></html>"))
-        self.CHK_VIEW_POSITIONS.setText(_translate("MainWindow", "Positions"))
-        self.CHK_MOVE_YSNAP.setToolTip(_translate("MainWindow", "<html><head/><body><p>When moving elements using the mouse, snap to the vertical grid (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span>).</p></body></html>"))
-        self.CHK_MOVE_YSNAP.setText(_translate("MainWindow", "Y-snap"))
-        self.CHK_MOVE_XSNAP.setToolTip(_translate("MainWindow", "<html><head/><body><p>When moving elements using the mouse, snap horizontally to nearby boundaries (<span style=\" font-style:italic;\">yes</span> | <span style=\" font-style:italic;\">no</span>).</p></body></html>"))
-        self.CHK_MOVE_XSNAP.setText(_translate("MainWindow", "X-snap"))
+        self.BTN_STATUS_BLAST.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_BLAST.setText(_translate("MainWindow", "BLAST"))
+        self.BTN_STATUS_FASTA.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_FASTA.setText(_translate("MainWindow", "FASTA"))
+        self.BTN_STATUS_COMPONENTS.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_COMPONENTS.setText(_translate("MainWindow", "Components"))
+        self.BTN_STATUS_ALIGNMENTS.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_ALIGNMENTS.setText(_translate("MainWindow", "Alignment"))
+        self.BTN_STATUS_TREES.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_TREES.setText(_translate("MainWindow", "Trees"))
+        self.BTN_STATUS_FUSIONS.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_FUSIONS.setText(_translate("MainWindow", "Fusions"))
+        self.BTN_STATUS_NRFG.setToolTip(_translate("MainWindow", "<html><head/><body><p>Switch to component edit mode.</p></body></html>"))
+        self.BTN_STATUS_NRFG.setText(_translate("MainWindow", "NRFG"))
         self.menu_File.setTitle(_translate("MainWindow", "&File"))
         self.MNU_RECENT.setTitle(_translate("MainWindow", "&Recent diagrams"))
         self.MNU_EXAMPLES.setTitle(_translate("MainWindow", "&Import sample data"))
         self.menuSelect.setTitle(_translate("MainWindow", "&Edit"))
         self.menu_Help.setTitle(_translate("MainWindow", "&Help"))
         self.menu_Debug.setTitle(_translate("MainWindow", "&Debug"))
-        self.menu_View.setTitle(_translate("MainWindow", "&Window"))
         self.menu_Generating.setTitle(_translate("MainWindow", "&Generating"))
         self.menu_Remove.setTitle(_translate("MainWindow", "&Remove"))
         self.menu_Modifications.setTitle(_translate("MainWindow", "&Modifications"))
@@ -841,27 +899,25 @@ class Ui_MainWindow(object):
         self.ACT_HELP_KEYS.setShortcut(_translate("MainWindow", "F1"))
         self.ACT_SELECT_ALL.setText(_translate("MainWindow", "Select &all"))
         self.ACT_SELECT_NONE.setText(_translate("MainWindow", "Select &none"))
-        self.ACT_SELECT_EMPTY.setText(_translate("MainWindow", "&Select items missing sequence data"))
+        self.ACT_SELECT_EMPTY.setText(_translate("MainWindow", "&Select items with missing site data"))
         self.ACT_SELECTION_INVERT.setText(_translate("MainWindow", "&Invert selection"))
-        self.ACT_SELECT_SEQUENCE.setText(_translate("MainWindow", "Sequence mode"))
-        self.ACT_SELECT_SUBSEQUENCE.setText(_translate("MainWindow", "Subsequence mode"))
+        self.ACT_SELECT_SEQUENCE.setText(_translate("MainWindow", "Gene mode"))
+        self.ACT_SELECT_SUBSEQUENCE.setText(_translate("MainWindow", "Domain mode"))
         self.ACT_SELECT_EDGE.setText(_translate("MainWindow", "Edge mode"))
         self.ACT_SELECT_COMPONENT.setText(_translate("MainWindow", "Component mode"))
         self.ACT_FILE_SAVE_AS.setText(_translate("MainWindow", "Save diagram &as..."))
         self.ACT_FILE_EXPORT.setText(_translate("MainWindow", "Export selected data..."))
-        self.ACT_SELECT_BY_NAME.setText(_translate("MainWindow", "Select items by &name"))
+        self.ACT_SELECT_BY_NAME.setText(_translate("MainWindow", "Select items by &name..."))
         self.ACT_WINDOW_VIEW.setText(_translate("MainWindow", "Settings panel"))
-        self.ACT_WINDOW_EDIT.setText(_translate("MainWindow", "Mode panel"))
-        self.ACT_WINDOW_SELECTION.setText(_translate("MainWindow", "Data panel"))
-        self.ACT_VIEW_ALIGN.setText(_translate("MainWindow", "Align component starts to selected sequence"))
+        self.ACT_VIEW_ALIGN.setText(_translate("MainWindow", "Gene-align"))
         self.ACT_SELECT_LEFT.setText(_translate("MainWindow", "Select all subsequences to the left"))
         self.ACT_SELECT_LEFT.setShortcut(_translate("MainWindow", "Ctrl+Shift+Left"))
-        self.ACT_SELECT_RIGHT.setText(_translate("MainWindow", "Select all subsequences to the right"))
+        self.ACT_SELECT_RIGHT.setText(_translate("MainWindow", "Select all domains to the right"))
         self.ACT_SELECT_RIGHT.setShortcut(_translate("MainWindow", "Ctrl+Shift+Right"))
-        self.ACT_SELECT_DIRECT_CONNECTIONS.setText(_translate("MainWindow", "Select all subsequences with direct connections"))
+        self.ACT_SELECT_DIRECT_CONNECTIONS.setText(_translate("MainWindow", "Select all domains with direct connections"))
         self.ACT_SELECT_DIRECT_CONNECTIONS.setShortcut(_translate("MainWindow", "Ctrl+Shift+Up"))
-        self.ACT_VIEW_ALIGN_SUBSEQUENCES.setText(_translate("MainWindow", "Align subsequences to previous sibilings"))
-        self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES.setText(_translate("MainWindow", "Align first subsequences"))
+        self.ACT_VIEW_ALIGN_SUBSEQUENCES.setText(_translate("MainWindow", "Component-align"))
+        self.ACT_VIEW_ALIGN_FIRST_SUBSEQUENCES.setText(_translate("MainWindow", "Domain-align"))
         self.ACT_MAKE_COMPONENTS.setText(_translate("MainWindow", "Make &components"))
         self.ACT_MAKE_ALIGNMENTS.setText(_translate("MainWindow", "Make &alignments"))
         self.ACT_MAKE_TREE.setText(_translate("MainWindow", "Make &tree"))
@@ -883,7 +939,6 @@ class Ui_MainWindow(object):
         self.ACT_PRINT_COMPONENTS.setText(_translate("MainWindow", "View &components"))
         self.ACT_PRINT_FUSIONS.setText(_translate("MainWindow", "View fusions"))
         self.ACT_PRINT_NRFG.setText(_translate("MainWindow", "View NRF&G"))
-        self.ACTION_VIEW_MCOMMAND.setText(_translate("MainWindow", "&Intermake..."))
         self.ACT_DROP_COMPONENTS.setText(_translate("MainWindow", "Drop components"))
         self.ACT_DROP_ALIGNMENTS.setText(_translate("MainWindow", "Drop alignments"))
         self.ACT_DROP_TREE.setText(_translate("MainWindow", "Drop tree"))
@@ -893,6 +948,5 @@ class Ui_MainWindow(object):
         self.ACT_REFRESH_VIEW.setText(_translate("MainWindow", "&Refresh view"))
         self.ACT_UPDATE_VIEW.setText(_translate("MainWindow", "&Update view"))
         self.ACT_DEBUG.setText(_translate("MainWindow", "&Debug/other"))
-        self.ACT_CLI.setText(_translate("MainWindow", "&CLI"))
 
 

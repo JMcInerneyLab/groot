@@ -2,21 +2,21 @@
 Main form
 """
 import sip
-from typing import Any, List, Optional, Sequence, Set, Union, cast
+from typing import Any, List, Optional, Sequence, Set, cast
 
-from PyQt5.QtCore import QCoreApplication, QPoint, QRectF, Qt
+from PyQt5.QtCore import QCoreApplication, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QAction, QCheckBox, QFileDialog, QFrame, QGraphicsScene, QGridLayout, QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QAction, QFileDialog, QFrame, QGraphicsScene, QGridLayout, QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 from groot.frontends.gui.forms.designer.frm_main_designer import Ui_MainWindow
-from intermake.hosts.frontends.gui_qt.designer import resources_rc as intermake_resources_rc
 
 from groot import constants, extensions as COMMANDS
 from groot.algorithms import fastaiser
 from groot.data import global_view, user_options
 from groot.data.lego_model import ILegoVisualisable, LegoComponent
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view import EMode, ESelect, ILegoViewModelObserver, LegoViewModel, LegoView_Subsequence
+from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
+from groot.frontends.gui.gui_view import EMode, ESelect, ILegoViewModelObserver, LegoViewModel
 from groot.frontends.gui.gui_view_utils import EChanges, MyView
 from intermake import AsyncResult, MENV, Plugin, intermake_gui
 from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
@@ -24,9 +24,6 @@ from intermake.hosts.gui import IGuiPluginHostWindow
 from mhelper import SwitchError, ansi, array_helper, file_helper, string_helper
 from mhelper_qt import qt_gui_helper
 from mhelper_qt.qt_gui_helper import exceptToGui, exqtSlot
-
-
-cast( None, intermake_resources_rc )
 
 
 class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
@@ -78,7 +75,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         self.__update_as_required( EChanges.MODEL_OBJECT | EChanges.FILE_NAME )
         
         # Misc
-        self.freeze_options = False
         self.__group_boxes = []
         self.ANSI_SCHEME = qt_gui_helper.ansi_scheme_dark( family = 'Consolas,"Courier New",monospace' )
     
@@ -88,10 +84,9 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         
         print( "updating to " + str( changes ) )
         
-        if changes.MODEL_OBJECT or changes.MODEL_ENTITIES:
+        if changes.MODEL_OBJECT or changes.MODEL_ENTITIES or changes.COMPONENTS:
             # The model or its contents have changed
             self.freeze_options = True
-            first_load = self._view is None
             
             # Create and apply a view for the model
             if self._view:
@@ -102,21 +97,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             
             # Track the selection
             self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged )
-            
-            if first_load:
-                # When first loaded, reflect the options in the GUI
-                self.update_ui_from_options()
-            else:
-                self.freeze_options = False
-                self.update_options_from_ui()
         
-        if changes.COMPONENTS:
-            #  If the components have changed, we just need to refresh the colours
-            view.update()
-        
-        if changes.COMP_DATA or changes.MODEL_DATA:
-            # Model data is selected by the user so we needn't do anything
-            pass
+        if changes.MODEL_OBJECT or changes.MODEL_ENTITIES or changes.COMPONENTS or changes.COMP_DATA or changes.MODEL_DATA:
+            # Update the options
+            self._update_status_checkbox_values()
         
         if changes.FILE_NAME:
             # The filename is only reflected in the title
@@ -129,6 +113,16 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
                 action.setStatusTip( x )
                 action.triggered.connect( self.recent_file_triggered )
                 self.ui.MNU_RECENT.addAction( action )
+    
+    
+    def _update_status_checkbox_values( self ):
+        self.ui.BTN_STATUS_ALIGNMENTS.setChecked( all( x.alignment is not None for x in self._model.components ) )
+        self.ui.BTN_STATUS_BLAST.setChecked( len( self._model.edges ) != 0 )
+        self.ui.BTN_STATUS_FASTA.setChecked( all( x.site_array for x in self._model.sequences ) )
+        self.ui.BTN_STATUS_FUSIONS.setChecked( bool( self._model.fusion_events ) )
+        self.ui.BTN_STATUS_COMPONENTS.setChecked( len( self._model.components ) != 0 )
+        self.ui.BTN_STATUS_TREES.setChecked( all( x.tree is not None for x in self._model.components ) )
+        self.ui.BTN_STATUS_NRFG.setChecked( self._model.nrfg is not None )
     
     
     def plugin_completed( self, result: AsyncResult ):
@@ -170,7 +164,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         entities: Set[ILegoVisualisable] = self._view.selected_entities()
         first: ILegoVisualisable = array_helper.first( entities )
         type_name: str = (type( first ).__name__[4:].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
-        self._view.clear_selection_mask()
         
         #
         # Delete existing controls
@@ -276,54 +269,17 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     class __on__check_box:
-        def __init__( self, form: "FrmMain", entity : ILegoVisualisable ):
+        def __init__( self, form: "FrmMain", entity: ILegoVisualisable ):
             self.form = form
             self.entity = entity
         
         
         def call( self, _: bool ):
-            self.form._view.select_entity(self.entity)
-    
-    
-    def _update_for_checkbox( self, check_box: Union[QCheckBox, QPushButton] ):
-        assert isinstance( check_box, QPushButton ) or isinstance( check_box, QCheckBox ), check_box
-        
-        entity = check_box.property( "entity" )
-        assert entity is not None
-        
-        state = check_box.isChecked()
-        self._view.set_selection_mask( entity, state )
+            self.form._view.select_entity( self.entity )
     
     
     def ILegoViewModelObserver_options_changed( self ):
         self.update_ui_from_options()
-    
-    
-    def update_ui_from_options( self ):
-        self.freeze_options = True
-        
-        o = self._view.options
-        
-        self.ui.CHK_MOVE_XSNAP.setChecked( o.x_snap )
-        self.ui.CHK_MOVE_YSNAP.setChecked( o.y_snap )
-        self.ui.CHK_VIEW_NAMES.setCheckState( qt_gui_helper.to_check_state( o.view_names ) )
-        self.ui.CHK_VIEW_PIANO_ROLLS.setCheckState( qt_gui_helper.to_check_state( o.view_piano_roll ) )
-        self.ui.CHK_VIEW_POSITIONS.setCheckState( qt_gui_helper.to_check_state( o.view_positions ) )
-        self.ui.CHK_MOVE.setChecked( o.move_enabled )
-        
-        self.ui.BTN_SEL_SEQUENCE.setChecked( o.mode == EMode.SEQUENCE )
-        self.ui.ACT_SELECT_SEQUENCE.setChecked( o.mode == EMode.SEQUENCE )
-        
-        self.ui.BTN_SEL_COMPONENT.setChecked( o.mode == EMode.COMPONENT )
-        self.ui.ACT_SELECT_COMPONENT.setChecked( o.mode == EMode.COMPONENT )
-        
-        self.ui.BTN_SEL_SUBSEQUENCE.setChecked( o.mode == EMode.SUBSEQUENCE )
-        self.ui.ACT_SELECT_SUBSEQUENCE.setChecked( o.mode == EMode.SUBSEQUENCE )
-        
-        self.ui.BTN_SEL_EDGE.setChecked( o.mode == EMode.EDGE )
-        self.ui.ACT_SELECT_EDGE.setChecked( o.mode == EMode.EDGE )
-        
-        self.freeze_options = False
     
     
     def closeEvent( self, *args, **kwargs ):
@@ -332,23 +288,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         Fixes crash on exit on Windows
         """
         exit()
-    
-    
-    def update_options_from_ui( self ):
-        if self.freeze_options:
-            return
-        
-        options = self._view.options
-        options.x_snap = self.ui.CHK_MOVE_XSNAP.isChecked()
-        options.y_snap = self.ui.CHK_MOVE_YSNAP.isChecked()
-        options.view_names = qt_gui_helper.from_check_state( self.ui.CHK_VIEW_NAMES.checkState() )
-        options.view_piano_roll = qt_gui_helper.from_check_state( self.ui.CHK_VIEW_PIANO_ROLLS.checkState() )
-        options.view_positions = qt_gui_helper.from_check_state( self.ui.CHK_VIEW_POSITIONS.checkState() )
-        options.move_enabled = self.ui.CHK_MOVE.isChecked()
-        self.update_ui_from_options()
-        
-        self._view.scene.update()
-        self.freeze_options = False
     
     
     def __ask_for_one( self, array ) -> Optional[object]:
@@ -387,48 +326,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         message_box.setStandardButtons( QMessageBox.Yes | QMessageBox.No )
         x = message_box.exec_()
         return x == QMessageBox.Yes
-    
-    
-    def __select_next( self, check_boxes: List[QPushButton] ):
-        first = None
-        multiple = False
-        
-        for check_box in check_boxes:
-            if check_box.isChecked():
-                if first is None:
-                    first = check_box
-                else:
-                    multiple = True
-        
-        if first is None:
-            first = array_helper.first( check_boxes )
-            multiple = True
-        
-        defer = False
-        
-        for check_box in check_boxes:
-            if check_box is first:
-                if multiple:
-                    check_box.setChecked( True )
-                else:
-                    defer = True
-                    check_box.setChecked( False )
-            elif defer:
-                check_box.setChecked( True )
-                defer = False
-            else:
-                check_box.setChecked( False )
-            
-            self._update_for_checkbox( check_box )
-        
-        if defer:
-            check_box = array_helper.first( check_boxes )
-            
-            if check_box is not None:
-                check_box.setChecked( True )
-                self._update_for_checkbox( check_box )
-        
-        self._view.scene.update()
     
     
     def request_plugin( self, plugin: Plugin, defaults = None ):
@@ -565,35 +462,12 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
-    def on_ACT_WINDOW_EDIT_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_ACT_WINDOW_SELECTION_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
     def on_ACT_VIEW_ALIGN_triggered( self ) -> None:
         """
         Signal handler: Align selection
         """
-        sel_sequence = self._view.selected_sequence()
-        
-        if not sel_sequence:
-            QMessageBox.information( self, self.windowTitle(), "Select a single sequence first." )
-            return
-        
-        self._view.align_to_sequence( sel_sequence )
-        
-        QMessageBox.information( self, self.windowTitle(), "Aligned data about '{}'.".format( sel_sequence ) )
+        for userdomain_view in self._view.selected_userdomain_views():
+            self._view.align_about_domain( userdomain_view )
     
     
     @exqtSlot()
@@ -601,11 +475,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align subsequences
         """
-        the_list: List[LegoView_Subsequence] = self._view.selected_subsequence_views() or self._view.subsequence_views.values()
-        
-        for x in sorted( the_list, key = lambda x: x.index ):
-            if x.index != 0:
-                x.restore_default_position()
+        for userdomain_view in self._view.selected_userdomain_views():
+            self._view.align_about( userdomain_view )
     
     
     @exqtSlot()
@@ -613,14 +484,13 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align first subsequences in sequence
         """
-        the_list: List[LegoView_Subsequence] = self._view.selected_subsequence_views() or self._view.subsequence_views.values()
+        userdomain_views = self._view.selected_userdomain_views()
         
-        leftmost = min( x.pos().x() for x in the_list )
+        leftmost = min( x.pos().x() for x in userdomain_views )
         
-        for subsequence_view in self._view.selected_subsequence_views():
-            if subsequence_view.index == 0:
-                subsequence_view.setPos( QPoint( leftmost, subsequence_view.pos().y() ) )
-                subsequence_view.update_model()
+        for userdomain_view in userdomain_views:
+            userdomain_view.setX( leftmost )
+            userdomain_view.save_state()
     
     
     @exqtSlot()
@@ -628,6 +498,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Make - components
         """
+        if len( self._model.edges ) == 0:
+            QMessageBox.information( self, self.windowTitle(), "Load the edge data (BLAST) first." )
+            return
+        
         self.request_plugin( COMMANDS.ext_generating.make_components )
     
     
@@ -636,7 +510,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.request_plugin( COMMANDS.ext_generating.make_alignments, defaults = [list( self._view.selected_components() )] )
+        if not all( x.site_array for x in self._model.sequences ):
+            QMessageBox.information( self, self.windowTitle(), "Load the site data (FASTA) first." )
+            return
+        
+        self.request_plugin( COMMANDS.ext_generating.make_alignments, defaults = [list( self._view.selected_components() ) or None] )
     
     
     @exqtSlot()
@@ -644,7 +522,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.request_plugin( COMMANDS.ext_generating.make_trees, defaults = [list( self._view.selected_components() )] )
+        if not all( x.alignment is not None for x in self._model.components ):
+            QMessageBox.information( self, self.windowTitle(), "Align the sequences first." )
+            return
+        
+        self.request_plugin( COMMANDS.ext_generating.make_trees, defaults = [list( self._view.selected_components() ) or None] )
     
     
     @exqtSlot()
@@ -652,7 +534,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.request_plugin( COMMANDS.ext_generating.make_consensus, defaults = [list( self._view.selected_components() )] )
+        self.request_plugin( COMMANDS.ext_generating.make_consensus, defaults = [list( self._view.selected_components() ) or None] )
     
     
     @exqtSlot()
@@ -660,6 +542,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        if len( self._model.fusion_events ) == 0:
+            QMessageBox.information( self, self.windowTitle(), "Find the fusion events first." )
+            return
+        
         self.request_plugin( COMMANDS.ext_generating.make_nrfg )
     
     
@@ -668,6 +554,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        if not all( x.tree is not None for x in self._model.components ):
+            QMessageBox.information( self, self.windowTitle(), "Create the trees first." )
+            return
+        
         self.request_plugin( COMMANDS.ext_generating.make_fusions )
     
     
@@ -776,29 +666,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
-    def on_ACT_WINDOW_MOVE_triggered( self ) -> None: #TODO: BAD_HANDLER - The widget 'ACT_WINDOW_MOVE' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
     def on_ACT_WINDOW_VIEW_triggered( self ) -> None:
         """
         Signal handler:
         """
         pass
-    
-    
-    @exqtSlot()
-    def on_ACTION_VIEW_MCOMMAND_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from intermake.hosts.frontends.gui_qt.frm_main import FrmMain as McFrmMain
-        frm = McFrmMain( True )
-        frm.show()
     
     
     @exqtSlot()
@@ -874,12 +746,88 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
-    def on_ACT_CLI_triggered( self ) -> None:
+    def on_BTN_STATUS_BLAST_clicked( self ) -> None:
         """
         Signal handler:
         """
-        from intermake import common_commands
-        self.request_plugin( common_commands.ui )
+        self._update_status_checkbox_values()
+        self.on_ACT_FILE_IMPORT_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_FASTA_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_FILE_IMPORT_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_COMPONENTS_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_MAKE_COMPONENTS_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_ALIGNMENTS_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_MAKE_ALIGNMENTS_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_TREES_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_MAKE_TREE_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_FUSIONS_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_MAKE_FUSIONS_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_STATUS_NRFG_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self._update_status_checkbox_values()
+        self.on_ACT_MAKE_NRFG_triggered()
+    
+    
+    @exqtSlot()
+    def on_BTN_VIEW_SETTINGS_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        if FrmViewOptions.request( self, self._view ):
+            self.__update_as_required( EChanges.MODEL_ENTITIES )
+    
+    
+    def change_selection_mode( self ):
+        if self.ui.BTN_SEL_COMPONENT.isChecked():
+            self._model.ui_options.mode = EMode.COMPONENT
+        elif self.ui.BTN_SEL_SEQUENCE.isChecked():
+            self._model.ui_options.mode = EMode.SEQUENCE
+        elif self.ui.BTN_SEL_SUBSEQUENCE.isChecked():
+            self._model.ui_options.mode = EMode.SUBSEQUENCE
+        elif self.ui.BTN_SEL_EDGE.isChecked():
+            self._model.ui_options.mode = EMode.EDGE
+        
+        self._view.select_all( ESelect.REMOVE )
     
     
     @exqtSlot()
@@ -887,7 +835,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.REMOVE )
+        self.change_selection_mode()
     
     
     @exqtSlot()
@@ -895,7 +843,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.REMOVE )
+        self.change_selection_mode()
     
     
     @exqtSlot()
@@ -903,7 +851,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.REMOVE )
+        self.change_selection_mode()
     
     
     @exqtSlot()
@@ -911,7 +859,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.REMOVE )
+        self.change_selection_mode()
     
     
     @exqtSlot()
@@ -924,7 +872,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         if m == EMode.SEQUENCE:
             COMMANDS.ext_modifications.new_sequence()
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self._view.selected_subsequences()
+            subsequences = self._view.selected_userdomains()
             
             if not subsequences:
                 QMessageBox.information( self, self.windowTitle(), "Select a subsequence to split first." )
@@ -970,7 +918,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select a sequence first." )
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self._view.selected_subsequences()
+            subsequences = self._view.selected_userdomains()
             
             if len( subsequences ) >= 2:
                 if not self.__query_remove( subsequences ):
@@ -980,7 +928,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select at least two adjacent subsequences first." )
         elif m == EMode.EDGE:
-            subsequences = self._view.selected_subsequences()
+            subsequences = self._view.selected_userdomains()
             edges = self._view.selected_edges()
             
             if not edges:
@@ -995,7 +943,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             COMMANDS.ext_modifications.remove_edges( list( subsequences ), list( edges ) )
         elif m == EMode.COMPONENT:
             QMessageBox.information( self, self.windowTitle(), "Components are automatically generated, you cannot delete them." )
-    
     
     
     @exqtSlot()
@@ -1044,36 +991,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         Signal handler: View data
         """
         self.ILegoViewModelObserver_selection_changed()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_VIEW_EDGES_stateChanged( self, _: int ):  # TODO: BAD_HANDLER - The widget 'CHK_VIEW_EDGES' does not appear in the designer file.
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_VIEW_NAMES_stateChanged( self, _: int ):
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_VIEW_PIANO_ROLLS_stateChanged( self, _: int ):
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_VIEW_POSITIONS_stateChanged( self, _: int ):
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_MOVE_XSNAP_stateChanged( self, _: int ):
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot( int )
-    def on_CHK_MOVE_YSNAP_stateChanged( self, _: int ):
-        self.update_options_from_ui()
     
     
     def on_scene_selectionChanged( self ):

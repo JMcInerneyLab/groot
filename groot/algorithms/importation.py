@@ -1,5 +1,6 @@
 from groot.algorithms import editor
-from groot.data.lego_model import LegoModel, LOG
+from groot.data.lego_model import LegoModel, LOG, LegoSubsequence
+from intermake.engine.environment import MCMD
 from mhelper import file_helper
 
 
@@ -61,6 +62,8 @@ def import_fasta( model : LegoModel, file_name: str ):
                     LOG( "THIS FASTA IS BORING..." )
                     idle_counter *= 2
                     idle = 0
+                    
+    MCMD.print("Imported Fasta from «{}».".format(file_name))
                         
     
     
@@ -118,14 +121,13 @@ def import_blast( model : LegoModel, file_name: str ):
                     subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False )
                     
                     if query_s and subject_s and query_s is not subject_s:
-                        query = editor.make_subsequence( query_s, query_start, query_end, line, True, False ) if query_s else None
-                        subject = editor.make_subsequence(subject_s, subject_start, subject_end, line, True, False ) if subject_s else None
+                        query = LegoSubsequence( query_s, query_start, query_end )
+                        subject = LegoSubsequence( subject_s, subject_start, subject_end )
                         LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
-                        edge = editor.make_edge( model, query, subject, line, False )
-                        edge.comments.append( line )
+                        editor.make_edge( model, query, subject, line, False )
+                        
+    MCMD.print("Imported Blast from «{}».".format(file_name))
         
-        for z in [x for x in model.sequences if not x.subsequences]:
-            model.sequences.remove(z)
 
 
 def import_composites( model : LegoModel, file_name: str ):
@@ -140,7 +142,6 @@ def import_composites( model : LegoModel, file_name: str ):
         fam_name = "?"
         fam_mean_length = None
         composite_sequence = None
-        composite_subsequence = None
         
         with open( file_name, "r" ) as file:
             for line_number, line in enumerate( file ):
@@ -160,14 +161,14 @@ def import_composites( model : LegoModel, file_name: str ):
                     e = line.split( "\t" )
                     
                     fam_name = e[ 0 ]
-                    fam_mean_start = int( e[ 1 ] )
-                    fam_mean_end = int( e[ 2 ] )
+                    # fam_mean_start = int( e[ 1 ] )
+                    # fam_mean_end = int( e[ 2 ] )
                     # fam_num_seq_as_component = int(e[3])
                     # fam_num_seq_in_family = int(e[3])
                     # fam_mean_pident = float(e[4])
                     fam_mean_length = int( float( e[ 5 ] ) )
                     
-                    composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
+                    #composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
                     sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False )
@@ -175,5 +176,7 @@ def import_composites( model : LegoModel, file_name: str ):
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     
                     #subsequence = sequence._make_subsequence( 1, sequence.length )
-                    assert composite_subsequence
+                    #assert composite_subsequence
                     #self._make_edge( composite_subsequence, subsequence )
+                    
+    MCMD.print("Imported Composites from «{}».".format(file_name))

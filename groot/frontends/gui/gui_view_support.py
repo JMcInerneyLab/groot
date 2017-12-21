@@ -1,14 +1,15 @@
 from enum import Enum
-from typing import Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor, QPen
 
 from mhelper import array_helper
-from mhelper_qt import qt_colour_helper, Colours, Pens
+from mhelper_qt import Colours, Pens, qt_colour_helper
+
 
 _DARK_TEXT = QPen( QColor( 0, 0, 0 ) )
 _LIGHT_TEXT = QPen( QColor( 255, 255, 255 ) )
+
 
 class ColourBlock:
     """
@@ -33,10 +34,8 @@ class ColourBlock:
         new_colour = qt_colour_helper.interpolate_colours( self.colour, colour, amount )
         
         return ColourBlock( new_colour )
-        
-class ESequenceColour( Enum ):
-    RESET = 1
-    RANDOM = 2
+
+
 
 
 class EMode( Enum ):
@@ -143,22 +142,19 @@ class DRAWING:
     Z_SEQUENCE = 1
     Z_EDGES = 2
     Z_FOCUS = 3
-    
-    
 
 
-class LegoViewOptions:
+class EDomainFunction( Enum ):
     """
-    Options on the lego view
+    Domain generator function.
+    
+    :data COMPONENT: Components (parameter is unused)
+    :data FIXED_WIDTH: Fixed-width (parameter defines width)
+    :data FIXED_COUNT: Fixed-count (parameter defines width)
     """
-    
-    
-    def __init__( self ):
-        self.colour_blend = 1  # type: float
-        self.y_snap = True  # type: bool
-        self.x_snap = True  # type: bool
-        self.view_piano_roll = None  # type: Optional[bool]
-        self.view_names = True  # type: Optional[bool]
-        self.view_positions = None  # type: Optional[bool]
-        self.mode = EMode.SEQUENCE
-        self.move_enabled = False
+    COMPONENT = 1
+    FIXED_WIDTH = 2
+    FIXED_COUNT = 3
+
+
+

@@ -1,0 +1,16 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <title>align left</title>
+ <g>
+  <title>Layer 1</title>
+  <rect stroke="#ff0202" id="svg_1" height="32" width="96" y="320" x="352" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_4" height="32" width="64" y="128" x="352" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_5" height="32" width="160" y="224" x="320" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_6" height="32" width="96" y="128" x="96" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_7" height="32" width="96" y="128" x="224" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_8" height="32" width="64" y="224" x="96" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_9" height="32" width="96" y="224" x="192" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_10" height="32" width="96" y="320" x="96" stroke-width="0" fill="#000000"/>
+  <rect stroke="#ff0202" id="svg_11" height="32" width="96" y="320" x="224" stroke-width="0" fill="#000000"/>
+ </g>
+</svg>

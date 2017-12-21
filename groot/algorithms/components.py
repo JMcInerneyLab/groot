@@ -4,10 +4,9 @@ Components algorithms.
 The only one publicly exposed is `detect`, so start there.
 """
 from collections import defaultdict
-from typing import Tuple, Set
+from typing import Tuple, Set, cast, List
 
-from groot.algorithms import editor
-from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoSide, LegoEdge
+from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoEdge, LegoSubsequence
 from intermake.engine.environment import MCMD
 from mhelper import Logger, ImplementationError, array_helper
 from mhelper.component_helper import ComponentFinder
@@ -39,7 +38,7 @@ def drop( model: LegoModel ) -> int:
     if model.nrfg:
         raise ValueError( "Refusing to drop the components because there is already an NRFG which depends on them. Did you mean to drop the NRFG first?" )
     
-    previous = len(model.components)
+    previous = len( model.components )
     __clear( model )
     return previous
 
@@ -49,19 +48,13 @@ def __clear( model: LegoModel ) -> None:
     Clears the components from the model.
     """
     model.components.clear()
-    
-    for sequence in model.sequences:
-        sequence.component = None
-    
-    for subsequence in model.all_subsequences():
-        subsequence.components.clear()
 
 
 def __detect_major( model: LegoModel, tolerance: int ) -> None:
     """
     Finds the sequence components, here termed the "major" elements.
     
-    Defined as genes that share a similarity path between them, where each edge between elements ALPHA and BETA in that path:
+    Defined as genes (sequences) that share a similarity path between them, where each edge between elements ALPHA and BETA in that path:
         * Is sourced from no less than ALPHA's length, less the tolerance
         * Is targeted to no less than BETA's length, less the tolerance
         * The difference between ALPHA and beta's length is less than the tolerance 
@@ -73,10 +66,15 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     
     LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
     
+    # Iterate sequences
     for sequence_alpha in model.sequences:
-        LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( sequence_alpha.all_edges() ) )
+        assert isinstance( sequence_alpha, LegoSequence )
         
-        for edge in sequence_alpha.all_edges():
+        alpha_edges = model.edges.find_sequence( sequence_alpha )
+        
+        LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( alpha_edges ) )
+        
+        for edge in alpha_edges:
             source_difference = abs( edge.left.length - edge.left.sequence.length )
             destination_difference = abs( edge.right.length - edge.right.sequence.length )
             total_difference = abs( edge.left.sequence.length - edge.right.sequence.length )
@@ -86,10 +84,9 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
             LOG_MAJOR( "-- Destination difference (l={} e={} s={})", destination_difference, edge.right.length, edge.right.sequence.length )
             LOG_MAJOR( "-- Total difference (l={} s={} d={})", total_difference, edge.left.sequence.length, edge.right.sequence.length )
             
-            if \
-                                            source_difference > tolerance \
-                                    or destination_difference > tolerance \
-                            or total_difference > tolerance:
+            if source_difference > tolerance \
+                    or destination_difference > tolerance \
+                    or total_difference > tolerance:
                 LOG_MAJOR( "-- ==> REJECTED" )
                 continue
             else:
@@ -99,20 +96,18 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
             LOG_MAJOR( "-- LINKS {} AND {}", sequence_alpha, beta )
             components.join( sequence_alpha, beta )
     
+    # Create the components!
+    totality = set()
+    
     for index, sequence_list in enumerate( components.tabulate() ):
-        component = LegoComponent( model, index )
-        model.components.append( component )
-        
-        for sequence in sequence_list:  # type: LegoSequence
-            sequence.component = component
+        model.components.add( LegoComponent( model, index, cast( List[LegoSequence], sequence_list ) ) )
+        totality.update( sequence_list )
     
     # Create components for orphans
     for sequence in model.sequences:
-        if sequence.component is None:
+        if sequence not in totality:
             LOG_MAJOR( "ORPHAN: {}", sequence )
-            component = LegoComponent( model, len( model.components ) )
-            model.components.append( component )
-            sequence.component = component
+            model.components.add( LegoComponent( model, len( model.components ), [sequence] ) )
 
 
 def __detect_minor( model: LegoModel, tolerance: int ) -> None:
@@ -137,59 +132,61 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
     
     assert average_lengths
     
-    for sequence in model.sequences:
-        component = sequence.component
+    for component in model.components:
+        component.minor_subsequences = []
         
-        # Add the original components
-        for subsequence in sequence.subsequences:
-            subsequence.components.add( component )
-        
-        for entering_edge in sequence.all_edges():
-            opposite_side = entering_edge.opposite( sequence )
-            opposite_sequence = opposite_side.sequence
-            opposite_component = opposite_sequence.component
+        for sequence in component.major_sequences:
             
-            if opposite_component is None:
-                raise ImplementationError( "Sequence '{}' has no component!".format( opposite_sequence ) )
+            # Add the origin-al components
+            component.minor_subsequences.append(LegoSubsequence(sequence, 1, sequence.length))
             
-            if opposite_component != component:
-                # Entry from `component` into `opposite_component`
+            for entering_edge in model.edges.find_sequence(sequence):
+                opposite_side = entering_edge.opposite( sequence )
+                opposite_sequence = opposite_side.sequence
+                opposite_component = model.components.find_component_for_major_sequence(opposite_sequence)
                 
-                # We'll get both ways around, but we're only interested in big to little transitions
-                if average_lengths[opposite_component] < average_lengths[component]:
-                    continue
+                if opposite_component is None:
+                    raise ImplementationError( "Sequence '{}' has no component!".format( opposite_sequence ) )
                 
-                # If we have an edge already, we use the larger one
-                # (We just use the side in the opposite component - we assume the side in the origin component will be roughly similar so ignore it)
-                existing_edge = entry_dict[component].get( opposite_component )
-                
-                if existing_edge is not None:
-                    new_length = opposite_side.length
-                    existing_length = existing_edge.side( opposite_component ).length
+                if opposite_component != component:
+                    # Entry from `component` into `opposite_component`
                     
-                    if new_length > existing_length:
-                        existing_edge = None
-                
-                if existing_edge is None:
-                    LOG_MINOR( "FROM {} TO {} ACROSS {}", component, opposite_component, entering_edge )
-                    entry_dict[component][opposite_component] = entering_edge
+                    # We'll get both ways around, but we're only interested in big to little transitions
+                    if average_lengths[opposite_component] < average_lengths[component]:
+                        continue
+                    
+                    # If we have an edge already, we use the larger one
+                    # (We just use the side in the opposite component - we assume the side in the origin component will be roughly similar so ignore it)
+                    existing_edge = entry_dict[component].get( opposite_component )
+                    
+                    if existing_edge is not None:
+                        new_length = opposite_side.length
+                        existing_length = existing_edge.side( opposite_component ).length
+                        
+                        if new_length > existing_length:
+                            existing_edge = None
+                    
+                    if existing_edge is None:
+                        LOG_MINOR( "FROM {} TO {} ACROSS {}", component, opposite_component, entering_edge )
+                        entry_dict[component][opposite_component] = entering_edge
     
     # Now slice those sequences up!
     # Unfortunately we can't just relay the positions, since there will be shifts.
     # We need to use BLAST to work out the relationship between the genes.
     for component, opposing_dict in entry_dict.items():
+        assert isinstance( component, LegoComponent )
+        
         for other_component, entering_edge in opposing_dict.items():
             # `component` enters `other_component` via `edge`
             assert isinstance( other_component, LegoComponent )
             
-            opposite_side = entering_edge.opposite( component )  # type: LegoSide
+            opposite_side: LegoSubsequence = entering_edge.opposite( component )
             
             # Flag the entry point into `other component`
-            for subsequence in opposite_side:
-                subsequence.components.add( component )
+            component.minor_subsequences.append( opposite_side )
             
             # Now iterate over the rest of the `other_component`
-            to_do = set( other_component.major_sequences() )
+            to_do = set( other_component.major_sequences )
             
             # We did the first one though :)
             to_do.remove( opposite_side.sequence )
@@ -202,20 +199,21 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
             while to_do:
                 # First we need to find an edge between something in the "done" set and something in the "to_do" set.
                 # If multiple relationships are present, we use the largest one.
-                edge, origin_seq, destination_seq = __find_largest_relationship( to_do, done )
+                edge, origin_seq, destination_seq = __find_largest_relationship( model, to_do, done )
                 
                 LOG_MINOR( "flw. FOLLOWING {}", edge )
                 
                 # Now we have our relationship, we can use it to calculate the offset
-                left = edge.side( origin_seq )
-                right = edge.side( destination_seq )
+                left : LegoSubsequence= edge.side( origin_seq )
+                right : LegoSubsequence = edge.side( destination_seq )
                 LOG_MINOR( "flw. -- LEFT {} {}", left.start, left.end )
                 LOG_MINOR( "flw. -- RIGHT {} {}", right.start, right.end )
                 
                 # Our origin is the part of the leading side which comprises our component
-                origin_subsequences = [x for x in left if component in x.components]  # TODO: "left" or "left.subsequences"?
-                origin_start = origin_subsequences[0].start
-                origin_end = origin_subsequences[-1].end
+                msi = LegoSubsequence.list_union([x for x in component.minor_subsequences if x.sequence is origin_seq])
+                origin_subsequences = left.intersection(msi)
+                origin_start = origin_subsequences.start
+                origin_end = origin_subsequences.end
                 LOG_MINOR( "flw. -- ORIGIN {} {}", origin_start, origin_end )
                 assert origin_start >= left.start, "The origin start ({}) cannot be before the left start ({}), but it is: {}".format( origin_start, left.start, origin_subsequences )
                 assert origin_end <= left.end, "The origin end ({}) cannot be beyond the left end ({}), but it is: {}".format( origin_end, left.end, origin_subsequences )
@@ -233,12 +231,11 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
                 # Fix any small discrepancies
                 destination_end, destination_start = __fit_to_range( destination_seq.length, destination_start, destination_end, tolerance )
                 
-                subsequence_list = editor.make_subsequence( destination_seq, destination_start, destination_end, None, allow_resize = False, no_fresh = True )
+                subsequence_list = LegoSubsequence( destination_seq, destination_start, destination_end )
                 
                 LOG_MINOR( "flw. -- SHIFTED {} {}", offset_start, offset_end )
                 
-                for subsequence in subsequence_list:
-                    subsequence.components.add( component )
+                component.minor_subsequences.append( subsequence_list )
                 
                 to_do.remove( destination_seq )
                 done.add( destination_seq )
@@ -274,18 +271,19 @@ def average_component_lengths( model: LegoModel ):
     average_lengths = { }
     
     for component in model.components:
-        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences()] )
+        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
     
     return average_lengths
 
 
-def __find_largest_relationship( to_do: Set[LegoSequence], done: Set[LegoSequence] ) -> Tuple[LegoEdge, LegoSequence, LegoSequence]:
+def __find_largest_relationship( model: LegoModel, to_do: Set[LegoSequence], done: Set[LegoSequence] ) -> Tuple[LegoEdge, LegoSequence, LegoSequence]:
     candidate = None
     candidate_length = 0
     
     for sequence in done:
-        for edge in sequence.all_edges():
-            op = edge.opposite( sequence )
+        for edge in model.edges.find_sequence( sequence ):
+            op: LegoSubsequence = edge.opposite( sequence )
+            
             if op.sequence in to_do:
                 # We use just the `opposite` length of the edge - ASSUMING the origin is roughly the same
                 if op.length > candidate_length:

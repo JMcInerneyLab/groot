@@ -24,7 +24,7 @@ class FusionEvent:
     """
     
     
-    def __init__( self, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ):
+    def __init__( self, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
         self.component_a: LegoComponent = component_a
         self.component_b: LegoComponent = component_b
         self.intersections: Set[LegoComponent] = intersections

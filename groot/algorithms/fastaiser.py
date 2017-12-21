@@ -23,13 +23,15 @@ def to_fasta( item: ILegoVisualisable ):
 def component_to_fasta( component: LegoComponent, simplify_ids: bool = False ):
     fasta = []
     
-    for element in component.elements():
-        if simplify_ids:
-            fasta.append( ">S{}".format( element.sequence.id ) )
-        else:
-            fasta.append( ">{}".format( element ) )
+    for subsequence in component.minor_subsequences:
+        assert isinstance(subsequence, LegoSubsequence)
         
-        fasta.append( element.sites() )
+        if simplify_ids:
+            fasta.append( ">S{}".format( subsequence.sequence.id ) )
+        else:
+            fasta.append( ">{}".format( subsequence ) )
+        
+        fasta.append( subsequence.site_array )
         fasta.append( "" )
     
     return "\n".join( fasta )

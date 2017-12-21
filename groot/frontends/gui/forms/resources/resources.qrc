@@ -1,0 +1,35 @@
+<RCC>
+  <qresource>
+    <file>align_adjacent.svg</file>
+    <file>align_component.svg</file>
+    <file>align_left.svg</file>
+    <file>align.svg</file>
+    <file>colour-black.svg</file>
+    <file>colour-blue.svg</file>
+    <file>colour-cyan.svg</file>
+    <file>colour-dark-gray.svg</file>
+    <file>colour-gray.svg</file>
+    <file>colour-green.svg</file>
+    <file>colour-light-gray.svg</file>
+    <file>colour-magenta.svg</file>
+    <file>colour-red.svg</file>
+    <file>colour-white.svg</file>
+    <file>colour-yellow.svg</file>
+    <file>compartmentalise.svg</file>
+    <file>edge.svg</file>
+    <file>fuse.svg</file>
+    <file>help-cursor.svg</file>
+    <file>import-file.svg</file>
+    <file>lego.svg</file>
+    <file>move.svg</file>
+    <file>new-file.svg</file>
+    <file>open-file.svg</file>
+    <file>quantise.svg</file>
+    <file>save-file.svg</file>
+    <file>select.svg</file>
+    <file>sequence.svg</file>
+    <file>subsequence.svg</file>
+    <file>tree.svg</file>
+    <file>window.svg</file>
+  </qresource>
+</RCC>

@@ -25,7 +25,7 @@ def make_components( tolerance: int = 0 ) -> EChanges:
         components.detect( model, tolerance )
     
     for component in model.components:
-        if len( component.major_sequences() ) == 1:
+        if len( component.major_sequences ) == 1:
             MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tolerance ) )
             break
     
@@ -45,12 +45,12 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> EChang
     """
     model = global_view.current_model()
     to_do = cli_view_utils.get_component_list( component )
-    before = sum( x.tree is not None for x in model.components )
+    before = sum( x.alignment is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
         alignment.align( component_ )
     
-    after = sum( x.tree is not None for x in model.components )
+    after = sum( x.alignment is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return EChanges.COMP_DATA 

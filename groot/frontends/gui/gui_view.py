@@ -3,54 +3,54 @@ MVC architecture.
 
 Classes that manage the view of the model.
 """
-from random import randint
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
-from mhelper import SwitchError, array_helper, override
-from mhelper_qt import qt_colour_helper, Pens
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSide, LegoSubsequence, ILegoVisualisable
-from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, ESelect, LegoViewOptions, EMode, ESequenceColour
+from groot.algorithms import userdomains
+from groot.data.lego_model import ESiteType, ILegoVisualisable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions
+from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EDomainFunction, EMode, ESelect
+from mhelper import SwitchError, array_helper, override, misc_helper
+from mhelper_qt import Pens, qt_colour_helper
 
 
 _LegoViewInfo_Edge_ = "LegoViewInfo_Edge"
 _LegoView_AllEdges_ = "LegoView_AllEdges"
 _LegoViewInfo_Side_ = "LegoViewInfo_Side"
-_LegoViewSequence_ = "LegoViewSequence"
-_LegoView_Subsequence_ = "LegoView_Subsequence"
+_LegoViewSequence_ = "LegoView_Sequence"
+_LegoView_Subsequence_ = "LegoView_UserDomain"
 _LegoViewModel_ = "LegoViewModel"
 
 
 class LegoViewInfo_Side:
-    def __init__( self, edge: _LegoViewInfo_Edge_, side: LegoSide ) -> None:
+    def __init__( self, edge: _LegoViewInfo_Edge_, subsequence: LegoSubsequence ) -> None:
         self.edge = edge
-        self.list: List[LegoView_Subsequence] = []
+        self.subsequence = subsequence
+        self.userdomain_views: List[LegoView_UserDomain] = []
         
-        for subsequence in side:
-            self.list.append( edge.owner_view.view_model.find_subsequence_view( subsequence ) )
+        self.userdomain_views.extend( edge.owner_view.view_model.find_userdomain_views_for_subsequence( subsequence ) )
     
     
     def __bool__( self ):
-        return bool( self.list )
+        return bool( self.userdomain_views )
     
     
     def average_colour( self ):
-        return qt_colour_helper.average_colour( list( x.colour.colour for x in self.list ) )
+        return qt_colour_helper.average_colour( list( x.colour.colour for x in self.userdomain_views ) )
     
     
     def extract_points( self, backwards ):
         results = []
         
         if not backwards:
-            for x in sorted( self.list, key = lambda z: z.window_rect().left() ):
+            for x in sorted( self.userdomain_views, key = lambda z: z.window_rect().left() ):
                 r: QRect = x.window_rect()
                 results.append( r.bottomLeft() )
                 results.append( r.bottomRight() )
         else:
-            for x in sorted( self.list, key = lambda z: -z.window_rect().left() ):
+            for x in sorted( self.userdomain_views, key = lambda z: -z.window_rect().left() ):
                 r: QRect = x.window_rect()
                 results.append( r.topRight() )
                 results.append( r.topLeft() )
@@ -59,7 +59,7 @@ class LegoViewInfo_Side:
     
     
     def top( self ):
-        return self.list[0].window_rect().top()
+        return self.userdomain_views[0].window_rect().top()
 
 
 class LegoViewInfo_Edge:
@@ -127,7 +127,7 @@ class LegoViewInfo_Edge:
     
     @property
     def is_selected( self ) -> bool:
-        return any( x.isSelected() for x in self.left.list ) and any( x.isSelected() for x in self.right.list )
+        return any( x.isSelected() for x in self.left.userdomain_views ) and any( x.isSelected() for x in self.right.userdomain_views )
     
     
     def get_upper_and_lower( self ) -> Tuple[_LegoViewInfo_Side_, _LegoViewInfo_Side_]:
@@ -163,18 +163,24 @@ class LegoViewInfo_Edge:
         return result
 
 
-class LegoViewInfo_Component:
+class LegoView_Component:
     """
     View of a component
     """
     
     
     def __init__( self, owner: _LegoView_AllEdges_, component: LegoComponent ) -> None:
-        subsequence_views: List[LegoView_Subsequence] = [x for x in owner.view_model.subsequence_views.values() if component in x.subsequence.components]
+        domain_views: List[LegoView_UserDomain] = []
+        
+        for domain_view in owner.view_model.userdomain_views.values():
+            for subsequence in component.minor_subsequences:
+                if domain_view.domain.has_overlap( subsequence ):
+                    domain_views.append( domain_view )
+                    break
         
         self.owner = owner
         self.component = component
-        self.subsequence_views: Dict[LegoSubsequence, LegoView_Subsequence] = dict( (x.subsequence, x) for x in subsequence_views )
+        self.subsequence_views: Dict[LegoUserDomain, LegoView_UserDomain] = dict( (x.domain, x) for x in domain_views )
         self.colour = ColourBlock( owner.next_colour() )
     
     
@@ -185,19 +191,17 @@ class LegoViewInfo_Component:
         pass
 
 
-
-
-class LegoView_Subsequence( QGraphicsItem ):
-    def __init__( self, subsequences: LegoSubsequence, owner_view: _LegoViewSequence_, positional_index: int, precursor: Optional[_LegoView_Subsequence_] ) -> None:
+class LegoView_UserDomain( QGraphicsItem ):
+    def __init__( self, userdomain: LegoUserDomain, owner_view: _LegoViewSequence_, positional_index: int, precursor: Optional[_LegoView_Subsequence_] ) -> None:
         """
         CONSTRUCTOR
         
-        :param subsequences:             Subsequences to view 
+        :param userdomain:             Subsequences to view 
         :param owner_view:              Owning view 
         :param positional_index:        Index of subsequence within sequence 
         :param precursor:               Previous subsequence, or None 
         """
-        assert isinstance(subsequences, LegoSubsequence)
+        assert isinstance( userdomain, LegoUserDomain )
         
         #
         # SUPER
@@ -212,32 +216,33 @@ class LegoView_Subsequence( QGraphicsItem ):
         # FIELDS
         #
         self.owner_sequence_view = owner_view
-        self.sibling_next: LegoView_Subsequence = None
-        self.sibling_previous: LegoView_Subsequence = precursor
-        self.subsequence: LegoSubsequence = subsequences
+        self.sibling_next: LegoView_UserDomain = None
+        self.sibling_previous: LegoView_UserDomain = precursor
+        self.domain: LegoUserDomain = userdomain
         self.mousedown_original_pos: QPointF = None
         self.mousemove_label: str = None
         self.mousemove_snapline: Tuple[int, int] = None
         self.mousedown_move_all = False
         self.index = positional_index
-        self.edge_subsequence_views: List[LegoView_Subsequence] = []
         
         #
         # POSITION
         #
         table = owner_view.owner_model_view.lookup_table
-        self.rect = QRectF( 0, 0, subsequences.length * table.letter_size, table.sequence_height )
+        self.rect = QRectF( 0, 0, userdomain.length * table.letter_size, table.sequence_height )
         
-        if not subsequences.ui_position:
-            self.restore_default_position()
-        else:
-            self.setPos( subsequences.ui_position[0], subsequences.ui_position[1] )
+        self.load_state()
         
         #
         # PRECURSOR
         #
         if precursor:
             precursor.sibling_next = self
+        
+        #
+        # COMPONENTS
+        #
+        self.components: List[LegoComponent] = self.owner_model_view.model.components.find_components_for_minor_subsequence( self.domain )
     
     
     @property
@@ -245,10 +250,11 @@ class LegoView_Subsequence( QGraphicsItem ):
         """
         Subsequence colour.
         """
-        if self.subsequence.components:
+        
+        if self.components:
             colour = None
             
-            for component in self.subsequence.components:
+            for component in self.components:
                 try:
                     view = self.owner_model_view.find_component_view( component )
                 except KeyError:
@@ -262,28 +268,10 @@ class LegoView_Subsequence( QGraphicsItem ):
                     assert isinstance( colour, ColourBlock )
                     colour = colour.blend( view.colour.colour, 0.5 )
             
+            assert colour is not None
             return colour
         else:
             return DRAWING.DEFAULT_COLOUR
-    
-    
-    def restore_default_position( self ):
-        """
-        Restores the default position of this view.
-        """
-        table = self.owner_sequence_view.owner_model_view.lookup_table
-        precursor = self.sibling_previous
-        subsequence = self.subsequence
-        
-        if precursor:
-            x = precursor.window_rect().right()
-            y = precursor.window_rect().top()
-        else:
-            x = subsequence.start * table.letter_size
-            y = subsequence.sequence.index * (table.sequence_ysep + table.sequence_height)
-        
-        self.setPos( x, y )
-        self.update_model()
     
     
     @property
@@ -296,9 +284,44 @@ class LegoView_Subsequence( QGraphicsItem ):
         return self.owner_model_view.options
     
     
-    def update_model( self ):
-        self.subsequence.ui_position = self.pos().x(), self.pos().y()
-        self.subsequence.ui_colour = self.user_colour.colour.rgba() if self.user_colour is not None else None
+    def load_state( self ):
+        """
+        Loads the state (position) of this domain view from the options.
+        If there is no saved state, the default is applied.
+        """
+        position = self.options.domain_positions.get( (self.domain.sequence.id, self.domain.start) )
+        
+        if position is None:
+            self.reset_state()
+        else:
+            self.setPos( position[0], position[1] )
+    
+    
+    def save_state( self ):
+        """
+        Saves the state (position) of this domain view to the options.
+        """
+        self.options.domain_positions[(self.domain.sequence.id, self.domain.start)] = self.pos().x(), self.pos().y()
+    
+    
+    def reset_state( self ):
+        """
+        Resets the state (position) of this domain view to the default.
+        The reset state is automatically saved to the options.
+        """
+        table = self.owner_sequence_view.owner_model_view.lookup_table
+        precursor = self.sibling_previous
+        subsequence = self.domain
+        
+        if precursor:
+            x = precursor.window_rect().right()
+            y = precursor.window_rect().top()
+        else:
+            x = subsequence.start * table.letter_size
+            y = subsequence.sequence.index * (table.sequence_ysep + table.sequence_height)
+        
+        self.setPos( x, y )
+        self.save_state()
     
     
     @override
@@ -316,17 +339,16 @@ class LegoView_Subsequence( QGraphicsItem ):
         painter.setPen( self.colour.pen )
         painter.drawRect( r )
         
-        is_selected = self.is_selected_with_mask()
-        is_partially_selected = not is_selected and self.isSelected()
+        is_selected = self.isSelected()
         
-        if is_selected or is_partially_selected:
+        if is_selected:
             MARGIN = 4
             painter.setBrush( 0 )
             painter.setPen( DRAWING.SELECTION_LINE if is_selected else DRAWING.PARTIAL_SELECTION_LINE )
             painter.drawLine( r.left(), r.top() - MARGIN, r.right(), r.top() - MARGIN )
             painter.drawLine( r.left(), r.bottom() + MARGIN, r.right(), r.bottom() + MARGIN )
         
-        if self.options.move_enabled:
+        if misc_helper.coalesce( self.options.move_enabled, self.owner_sequence_view.owner_model_view.user_move_enabled ):
             MARGIN = 16
             painter.setBrush( 0 )
             painter.setPen( DRAWING.MOVE_LINE_SEL if is_selected else DRAWING.MOVE_LINE )
@@ -345,10 +367,7 @@ class LegoView_Subsequence( QGraphicsItem ):
                 painter.setPen( DRAWING.DISJOINT_LINE )
                 painter.drawLine( r.left(), r.top() - MARGIN, r.left(), r.bottom() + MARGIN )
         
-        draw_piano_roll = self.options.view_piano_roll
-        
-        if draw_piano_roll is None:
-            draw_piano_roll = is_selected or is_partially_selected
+        draw_piano_roll = misc_helper.coalesce( self.options.view_piano_roll, is_selected )
         
         if draw_piano_roll:
             lookup_table = self.owner_model_view.lookup_table
@@ -360,7 +379,7 @@ class LegoView_Subsequence( QGraphicsItem ):
             rect_height = lookup_table.count * letter_size
             painter.drawRect( 0, OFFSET_X, rect_width, rect_height )
             
-            array = self.subsequence.site_array
+            array = self.domain.site_array
             
             if not array:
                 painter.setPen( Pens.RED )
@@ -399,7 +418,7 @@ class LegoView_Subsequence( QGraphicsItem ):
                 if self.sibling_previous is None or self.sibling_next is None or self.sibling_previous.rect.width() > 32:
                     painter.setPen( DRAWING.POSITION_TEXT )
                     
-                    text = str( self.subsequence.start )
+                    text = str( self.domain.start )
                     lx = self.rect.left() - QFontMetrics( painter.font() ).width( text ) / 2
                     painter.setPen( DRAWING.TEXT_LINE )
                     painter.drawText( QPointF( lx, self.rect.top() - DRAWING.TEXT_MARGIN ), text )
@@ -407,19 +426,14 @@ class LegoView_Subsequence( QGraphicsItem ):
                 # Draw component name
                 painter.setPen( DRAWING.COMPONENT_PEN )
                 painter.setBrush( 0 )
-                text = "".join( str( x ) for x in self.subsequence.components )
+                text = "".join( str( x ) for x in self.components )
                 x = (self.rect.left() + self.rect.right()) / 2 - QFontMetrics( painter.font() ).width( text ) / 2
                 y = self.rect.top() - DRAWING.TEXT_MARGIN
                 painter.drawText( QPointF( x, y ), text )
     
     
     def __draw_position( self, is_selected ):
-        result = self.options.view_positions
-        
-        if result is None:
-            result = is_selected
-        
-        return result
+        return misc_helper.coalesce( self.options.view_positions, is_selected )
     
     
     def __draw_next_sibling_position( self, is_selected ):
@@ -475,8 +489,12 @@ class LegoView_Subsequence( QGraphicsItem ):
                 select = ESelect.TOGGLE
             else:
                 select = ESelect.ONLY
+                
+                if self.isSelected():
+                    # If we are selected stop, this confuses with dragging from a design perspective
+                    return
             
-            self.owner_model_view.select_subsequence_view( self, select )
+            self.owner_model_view.select_userdomain_view( self, select )
     
     
     def mouseDoubleClickEvent( self, m: QGraphicsSceneMouseEvent ):
@@ -485,9 +503,7 @@ class LegoView_Subsequence( QGraphicsItem ):
         Double click
         Just toggles "move enabled" 
         """
-        self.options.move_enabled = not self.options.move_enabled
-        
-        self.owner_model_view._call_options_changed()
+        self.owner_model_view.user_move_enabled = not self.owner_model_view.user_move_enabled
         self.owner_model_view.scene.update()
     
     
@@ -501,17 +517,17 @@ class LegoView_Subsequence( QGraphicsItem ):
     
     def snaps( self ):
         for sequence_view in self.owner_sequence_view.owner_model_view.sequence_views.values():
-            for subsequence_view in sequence_view.subsequence_views.values():
+            for subsequence_view in sequence_view.userdomain_views.values():
                 if subsequence_view is not self:
                     left_snap = subsequence_view.scenePos().x()
                     right_snap = subsequence_view.scenePos().x() + subsequence_view.boundingRect().width()
-                    yield left_snap, "Start of {}[{}]".format( subsequence_view.subsequence.sequence.accession, subsequence_view.subsequence.start ), subsequence_view.scenePos().y()
-                    yield right_snap, "End of {}[{}]".format( subsequence_view.subsequence.sequence.accession, subsequence_view.subsequence.end ), subsequence_view.scenePos().y()
+                    yield left_snap, "Start of {}[{}]".format( subsequence_view.domain.sequence.accession, subsequence_view.domain.start ), subsequence_view.scenePos().y()
+                    yield right_snap, "End of {}[{}]".format( subsequence_view.domain.sequence.accession, subsequence_view.domain.end ), subsequence_view.scenePos().y()
     
     
     def mouseMoveEvent( self, m: QGraphicsSceneMouseEvent ) -> None:
         if m.buttons() & Qt.LeftButton:
-            if not self.options.move_enabled or self.mousedown_original_pos is None:
+            if not misc_helper.coalesce( self.options.move_enabled, self.owner_model_view.user_move_enabled ) or self.mousedown_original_pos is None:
                 return
             
             new_pos: QPointF = self.mousedown_original_pos + (m.scenePos() - m.buttonDownScenePos( Qt.LeftButton ))
@@ -522,8 +538,8 @@ class LegoView_Subsequence( QGraphicsItem ):
             self.mousemove_label = "({0} {1})".format( new_pos.x(), new_pos.y() )
             self.mousemove_snapline = None
             
-            x_snap_enabled = self.options.x_snap == (not bool( m.modifiers() & Qt.ControlModifier ))
-            y_snap_enabled = self.options.y_snap == (not bool( m.modifiers() & Qt.AltModifier ))
+            x_snap_enabled = misc_helper.coalesce( self.options.x_snap, not bool( m.modifiers() & Qt.ControlModifier ) )
+            y_snap_enabled = misc_helper.coalesce( self.options.y_snap, not bool( m.modifiers() & Qt.AltModifier ) )
             
             if x_snap_enabled:
                 for snap_x, snap_label, snap_y in self.snaps():
@@ -548,7 +564,7 @@ class LegoView_Subsequence( QGraphicsItem ):
             new_pos.setY( new_y )
             
             self.setPos( new_pos )
-            self.update_model()
+            self.save_state()
             
             delta_x = new_x - self.mousedown_original_pos.x()
             delta_y = new_y - self.mousedown_original_pos.y()
@@ -556,7 +572,7 @@ class LegoView_Subsequence( QGraphicsItem ):
             for selected_item in self.owner_sequence_view.owner_model_view.scene.selectedItems():
                 if selected_item is not self and selected_item.mousedown_original_pos is not None:
                     selected_item.setPos( selected_item.mousedown_original_pos.x() + delta_x, selected_item.mousedown_original_pos.y() + delta_y )
-                    selected_item.update_model()
+                    selected_item.save_state()
     
     
     def mouseReleaseEvent( self, m: QGraphicsSceneMouseEvent ):
@@ -567,24 +583,10 @@ class LegoView_Subsequence( QGraphicsItem ):
     
     
     def __repr__( self ):
-        return "<<View of '{}' at ({},{})>>".format( self.subsequence, self.window_rect().left(), self.window_rect().top() )
-    
-    
-    def is_selected_with_mask( self, mask: bool = True ):
-        if not self.isSelected():
-            return False
-        
-        if mask:
-            for to_remove in list( self.owner_model_view.selection_mask ):
-                if to_remove == self.subsequence:
-                    return False
-                elif to_remove == self.subsequence.sequence:
-                    return False
-        
-        return True
+        return "<<View of '{}' at ({},{})>>".format( self.domain, self.window_rect().left(), self.window_rect().top() )
 
 
-class LegoViewSequence:
+class LegoView_Sequence:
     """
     Views a sequence
     """
@@ -598,33 +600,48 @@ class LegoViewSequence:
         
         self.owner_model_view = owner_model_view
         self.sequence = sequence
-        self.subsequence_views: Dict[LegoSubsequence, LegoView_Subsequence] = { }
+        self.userdomain_views: Dict[LegoUserDomain, LegoView_UserDomain] = { }
         self._recreate()
+    
+    
+    def get_sorted_userdomain_views( self ):
+        return sorted( self.userdomain_views.values(), key = lambda y: y.domain.start )
     
     
     def _recreate( self ):
         # Remove existing items
-        for x in self.subsequence_views:
+        for x in self.userdomain_views:
             self.owner_model_view.scene.removeItem( x )
         
-        self.subsequence_views.clear()
+        self.userdomain_views.clear()
         
         # Add new items
         previous_subsequence = None
         
+        switch = self.owner_model_view.options.domain_function
+        param = self.owner_model_view.options.domain_function_parameter
         
-        for subsequence in self.sequence.subsequences:
-            subsequence_view = LegoView_Subsequence( subsequence, self, len( self.subsequence_views ), previous_subsequence )
-            self.subsequence_views[subsequence] = subsequence_view
+        if switch == EDomainFunction.COMPONENT:
+            userdomains_ = userdomains.by_component( self.sequence )
+        elif switch == EDomainFunction.FIXED_COUNT:
+            userdomains_ = userdomains.fixed_count( self.sequence, param )
+        elif switch == EDomainFunction.FIXED_WIDTH:
+            userdomains_ = userdomains.fixed_width( self.sequence, param )
+        else:
+            raise SwitchError( "self.owner_model_view.options.domain_function", switch )
+        
+        for userdomain in userdomains_:
+            subsequence_view = LegoView_UserDomain( userdomain, self, len( self.userdomain_views ), previous_subsequence )
+            self.userdomain_views[userdomain] = subsequence_view
             self.owner_model_view.scene.addItem( subsequence_view )
             previous_subsequence = subsequence_view
     
     
     def paint_name( self, painter: QPainter ):
-        if not self.owner_model_view.options.view_names:
+        if not misc_helper.coalesce( self.owner_model_view.options.view_names, any( x.isSelected() for x in self.userdomain_views.values() ) ):
             return
         
-        leftmost_subsequence = sorted( self.subsequence_views.values(), key = lambda xx: xx.pos().x() )[0]
+        leftmost_subsequence = sorted( self.userdomain_views.values(), key = lambda xx: xx.pos().x() )[0]
         text = self.sequence.accession
         
         if self.sequence.is_root:
@@ -637,10 +654,18 @@ class LegoViewSequence:
 
 
 class LegoViewInfo_Interlink:
-    def __init__( self, owner_view: "LegoView_AllEdges", left: LegoSubsequence, right: LegoSubsequence ) -> None:
+    """
+                 ⤹ This bit!
+    ┌──────────┬┄┄┄┬──────────┐
+    │          │     │          │
+    └──────────┴┄┄┄┴──────────┘
+    """
+    
+    
+    def __init__( self, owner_view: "LegoView_AllEdges", left: LegoView_UserDomain, right: LegoView_UserDomain ) -> None:
         self.owner_view = owner_view
-        self.left = owner_view.view_model.find_subsequence_view( left )
-        self.right = owner_view.view_model.find_subsequence_view( right )
+        self.left = left
+        self.right = right
     
     
     def paint_interlink( self, painter: QPainter ):
@@ -688,28 +713,28 @@ class LegoView_AllEdges( QGraphicsItem ):
         self.__next_colour = -1
         self.view_model = view_model
         self.edge_views: Dict[LegoEdge, LegoViewInfo_Edge] = { }
-        self.component_views: Dict[LegoComponent, LegoViewInfo_Component] = { }
+        self.component_views: Dict[LegoComponent, LegoView_Component] = { }
         self.interlink_views: Dict[LegoSubsequence, LegoViewInfo_Interlink] = { }
         
         # Create the edge views
-        for edge in view_model.model.all_edges:
+        for edge in view_model.model.edges:
             self.edge_views[edge] = LegoViewInfo_Edge( self, edge )
         
         # Create the component views
         for component in view_model.model.components:
-            self.component_views[component] = LegoViewInfo_Component( self, component )
+            self.component_views[component] = LegoView_Component( self, component )
         
         # Create our interlink views
-        for sequence in view_model.model.sequences:
-            for left, right in array_helper.lagged_iterate( sequence.subsequences ):
+        for sequence_view in view_model.sequence_views.values():
+            for left, right in array_helper.lagged_iterate( sequence_view.userdomain_views.values() ):
                 self.interlink_views[left] = LegoViewInfo_Interlink( self, left, right )
         
-        # Our bounds encompasses the totality of the model
+        # Our bounds has_encompass the totality of the model
         # - find this!
         self.rect = QRectF( 0, 0, 0, 0 )
         
         for sequence_view in view_model.sequence_views.values():
-            for subsequence_view in sequence_view.subsequence_views.values():
+            for subsequence_view in sequence_view.userdomain_views.values():
                 r = subsequence_view.window_rect()
                 
                 if r.left() < self.rect.left():
@@ -723,12 +748,6 @@ class LegoView_AllEdges( QGraphicsItem ):
                 
                 if r.bottom() > self.rect.bottom():
                     self.rect.setBottom( r.bottom() )
-                
-                subsequence_view.edge_subsequence_views.clear()
-                
-                for edge in subsequence_view.subsequence.edges:
-                    for subsequence in edge.opposite( subsequence_view.subsequence ):
-                        subsequence_view.edge_subsequence_views.append( self.view_model.find_subsequence_view( subsequence ) )
         
         MARGIN = 256
         self.rect.setTop( self.rect.top() - MARGIN * 2 )
@@ -826,22 +845,29 @@ class LegoViewModel:
         self.observer: ILegoViewModelObserver = observer
         self.view: QGraphicsView = view
         self.model: LegoModel = model
-        self.selection_mask = set()
         self.scene = QGraphicsScene()
-        self.sequence_views: Dict[LegoSequence, LegoViewSequence] = { }
-        self.subsequence_views: Dict[LegoSubsequence, LegoView_Subsequence] = { }
+        self.sequence_views: Dict[LegoSequence, LegoView_Sequence] = { }
+        self.userdomain_views: Dict[LegoUserDomain, LegoView_UserDomain] = { }
         self.edges_view: LegoView_AllEdges = None
+        self.user_move_enabled = False
         
         for sequence in self.model.sequences:
-            item = LegoViewSequence( self, sequence )
+            item = LegoView_Sequence( self, sequence )
             self.sequence_views[sequence] = item
-            self.subsequence_views.update( item.subsequence_views )
+            self.userdomain_views.update( item.userdomain_views )
         
         self.edges_view = self.update_edges()
         self.scene.addItem( self.edges_view )
         
-        self.options = LegoViewOptions()
         self._selections = 0
+    
+    
+    @property
+    def options( self ) -> LegoViewOptions:
+        if not hasattr( self.model, "ui_options" ):
+            self.model.ui_options = LegoViewOptions()
+        
+        return self.model.ui_options
     
     
     def _call_selection_changed( self ):
@@ -868,57 +894,55 @@ class LegoViewModel:
         return self.edges_view
     
     
-    def selected_subsequence_views( self, mask = True ) -> Set[LegoView_Subsequence]:
+    def selected_userdomain_views( self ) -> Set[LegoView_UserDomain]:
         result = set()
         
         for sequence_view in self.sequence_views.values():
-            for subsequence_view in sequence_view.subsequence_views.values():
-                if subsequence_view.is_selected_with_mask( mask = mask ):
+            for subsequence_view in sequence_view.userdomain_views.values():
+                if subsequence_view.isSelected():
                     result.add( subsequence_view )
         
         return result
     
     
-    def selected_subsequence_view( self ) -> Optional[LegoView_Subsequence]:
-        return array_helper.extract_single_item( self.selected_subsequence_views() )
+    def selected_subsequence_expansions( self ) -> List[LegoSubsequence]:
+        """
+        This gets the list of selected subsequences, but joins together those which are adjacent.
+        :return: 
+        """
+        return LegoSubsequence.merge_list( list( self.selected_userdomains() ) )
     
     
-    def selected_subsequences( self, mask = True ) -> Set[LegoSubsequence]:
+    def selected_userdomains( self ) -> Set[LegoUserDomain]:
         """
         Subsequences selected by the user
         """
-        result = set( x.subsequence for x in self.selected_subsequence_views( mask = mask ) )
+        result = set( x.domain for x in self.selected_userdomain_views() )
         
         return result
     
     
-    def selected_subsequence( self, mask = True ) -> Optional[LegoSubsequence]:
-        return array_helper.extract_single_item( self.selected_subsequences( mask = mask ) )
+    def selected_domain( self ) -> Optional[LegoUserDomain]:
+        return array_helper.extract_single_item( self.selected_userdomains() )
     
     
-    def selected_sequences( self, mask = True ) -> Set[LegoSequence]:
+    def selected_sequences( self ) -> Set[LegoSequence]:
         """
         Sequences selected by the user (complete or partial)
         """
-        result = set( x.sequence for x in self.selected_subsequences( mask = False ) )
-        
-        if mask:
-            result -= self.selection_mask
+        result = set( x.sequence for x in self.selected_userdomains() )
         
         return result
     
     
-    def selected_complete_sequences( self, mask = True ) -> Set[LegoSequence]:
-        sel = self.selected_subsequences( mask = False )
+    def selected_complete_sequences( self ) -> Set[LegoSequence]:
+        sel = self.selected_userdomains()
         seqs = set( x.sequence for x in sel )
         results = set()
         
         for seq in seqs:
             if len( seq.subsequences ) == sum( x.sequence == seq for x in sel ):
                 results.add( seq )
-        
-        if mask:
-            results -= self.selection_mask
         
         return results
     
@@ -931,11 +955,11 @@ class LegoViewModel:
         return array_helper.extract_single_item( self.selected_sequences() )
     
     
-    def selected_edges( self, mask = True ) -> Set[LegoEdge]:
+    def selected_edges( self, ) -> Set[LegoEdge]:
         """
         Edges selected by the user (complete or partial)
         """
-        selected_subsequences = self.selected_subsequences( mask = False )
+        selected_subsequences = self.selected_userdomains()
         
         if len( selected_subsequences ) == 0:
             return set()
@@ -949,9 +973,6 @@ class LegoViewModel:
                 assert isinstance( result, set )
                 result = result.intersection( set( subsequence.edges ) )
         
-        if mask:
-            result -= self.selection_mask
-        
         return result
     
     
@@ -959,79 +980,38 @@ class LegoViewModel:
         return array_helper.extract_single_item( self.selected_edges() )
     
     
-    def selected_entities( self, mask = True ) -> Set[ILegoVisualisable]:
+    def selected_entities( self ) -> Set[ILegoVisualisable]:
         mode = self.options.mode
         
         if mode == EMode.COMPONENT:
-            return self.selected_components( mask = mask )
+            return self.selected_components()
         elif mode == EMode.SUBSEQUENCE:
-            return self.selected_subsequences( mask = mask )
+            return self.selected_userdomains()
         elif mode == EMode.SEQUENCE:
-            return self.selected_sequences( mask = mask )
+            return self.selected_sequences()
         elif mode == EMode.EDGE:
-            return self.selected_edges( mask = mask )
+            return self.selected_edges()
         else:
             raise SwitchError( "self.options.mode", mode )
     
     
-    def selected_components( self, mask = True ) -> Set[LegoComponent]:
+    def selected_components( self ) -> Set[LegoComponent]:
         """
         Components selected by the user (complete)
         """
         
         r = set()
-        selected_subsequences = self.selected_subsequences( mask = False )
-        for component in self.model.components:
-            if all( subsequence in selected_subsequences for subsequence in component.minor_subsequences() ):
-                r.add( component )
+        selected_userdomains = self.selected_subsequence_expansions()
         
-        if mask:
-            r -= self.selection_mask
+        for component in self.model.components:
+            if all( any( λuserdomain.has_encompass( λsubsequence ) for λuserdomain in selected_userdomains ) for λsubsequence in component.minor_subsequences ):
+                r.add( component )
         
         return r
     
     
-    def clear_selection_mask( self ):
-        self.selection_mask.clear()
-    
-    
-    def set_selection_mask( self, item: object, state: bool ):
-        assert item is not None
-        
-        if state:
-            if item in self.selection_mask:
-                self.selection_mask.remove( item )
-        else:
-            self.selection_mask.add( item )
-    
-    
-    def change_colours( self, new_colour: Union[QColor, ESequenceColour] ):
-        the_list = self.selected_subsequence_views() or self.subsequence_views
-        
-        if isinstance( new_colour, QColor ):
-            the_colour = ColourBlock( new_colour )
-        else:
-            the_colour = None
-        
-        for subsequence_view in the_list:
-            if new_colour == ESequenceColour.RESET:
-                the_colour = None
-            elif new_colour == ESequenceColour.RANDOM:
-                the_colour = ColourBlock( QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) ) )
-            
-            if the_colour is None:
-                subsequence_view.colour = None
-            if self.options.colour_blend != 1:
-                subsequence_view.colour = subsequence_view.colour.blend( the_colour.colour, self.options.colour_blend )
-            else:
-                subsequence_view.colour = the_colour
-            
-            subsequence_view.update_model()
-            subsequence_view.update()
-    
-    
     def add_new_sequence( self, sequence: LegoSequence ):
-        view = LegoViewSequence( self, sequence )
+        view = LegoView_Sequence( self, sequence )
         self.sequence_views[sequence] = view
         self.recreate_edges()
     
@@ -1051,11 +1031,23 @@ class LegoViewModel:
         self._call_selection_changed()
     
     
-    def find_subsequence_view( self, target: LegoSubsequence ) -> LegoView_Subsequence:
-        result = self.subsequence_views.get( target )
+    def find_userdomain_views_for_subsequence( self, target: LegoSubsequence ):
+        for sequence_view in self.sequence_views.values():  # todo: this is terribly inefficient
+            if sequence_view.sequence is not target.sequence:
+                continue
+            
+            for domain_view in sequence_view.userdomain_views.values():
+                if domain_view.domain.has_overlap( target ):
+                    yield domain_view
+    
+    
+    def find_domain_view( self, target: LegoUserDomain ) -> LegoView_UserDomain:
+        assert isinstance( target, LegoUserDomain )
+        
+        result = self.userdomain_views.get( target )
         
         if result is None:
-            raise KeyError( "Cannot find the UI element for the subsequence '{0}'.".format( target ) )
+            raise KeyError( "Cannot find the UI element for the domain '{0}'.".format( target ) )
         
         return result
     
@@ -1070,8 +1062,8 @@ class LegoViewModel:
         for sequence in sequences:
             sequence_view = self.find_sequence_view( sequence )
             
-            for subsequence_view in sequence_view.subsequence_views:
-                self.scene.removeItem( subsequence_view )
+            for domain_view in sequence_view.userdomain_views:
+                self.scene.removeItem( domain_view )
             
             del self.sequence_views[sequence]
         
@@ -1079,32 +1071,16 @@ class LegoViewModel:
         self._call_selection_changed()
     
     
-    def select( self, subsequences: List[LegoSubsequence] ):
-        """
-        API
-        Replace the current selection
-        :param subsequences: 
-        """
-        
-        for x in self.selected_subsequence_views():
-            x.setSelected( False )
-        
-        for x in subsequences:
-            self.find_subsequence_view( x ).setSelected( True )
-        
-        self._call_selection_changed()
-    
-    
     def _clear_selection( self ):
         """
         Internal function (externally just use `select_all(ESelect.REMOVE)`, which calls the handler)
         """
-        for x in self.subsequence_views.values():
+        for x in self.userdomain_views.values():
             x.setSelected( False )
     
     
     def select_left( self, select: ESelect = ESelect.APPEND ):
-        the_list = list( self.selected_subsequence_views() )
+        the_list = list( self.selected_userdomain_views() )
         
         with self.on_selecting( select ):
             for subsequence_view in the_list:
@@ -1116,7 +1092,7 @@ class LegoViewModel:
     
     
     def select_right( self, select: ESelect = ESelect.APPEND ):
-        the_list = list( self.selected_subsequence_views() )
+        the_list = list( self.selected_userdomain_views() )
         
         with self.on_selecting( select ):
             for subsequence_view in the_list:
@@ -1128,12 +1104,19 @@ class LegoViewModel:
     
     
     def select_direct_connections( self, select: ESelect = ESelect.APPEND ):
-        the_list = list( self.selected_subsequence_views() )
+        the_set = set( self.selected_userdomain_views() )
+        to_select = []
         
-        with self.on_selecting( select ):
-            for subsequence_view in the_list:
-                for x in subsequence_view.edge_subsequence_views:
-                    select.set( x )
+        for userdomain_view in the_set:
+            for edge in self.model.edges:
+                if edge.left.has_overlap( userdomain_view.domain ):
+                    to_select.append( edge.right )
+                elif edge.right.has_overlap( userdomain_view.domain ):
+                    to_select.append( edge.left )
+        
+        with self.on_selecting( select ) as select:
+            for subsequence in to_select:
+                self.select_overlapping_domains( subsequence, select )
     
     
     def select_all( self, select: ESelect = ESelect.ONLY ) -> None:
@@ -1141,15 +1124,17 @@ class LegoViewModel:
         Selects everything.
         """
         with self.on_selecting( select ) as select:
-            for subsequence_view in self.subsequence_views.values():
-                self.select_subsequence_view( subsequence_view, select )
+            for subsequence_view in self.userdomain_views.values():
+                self.select_userdomain_view( subsequence_view, select )
     
     
     def select_entity( self, entity: ILegoVisualisable, select: ESelect = ESelect.ONLY ):
         if isinstance( entity, LegoSequence ):
             self.select_sequence( entity, select )
+        elif isinstance( entity, LegoUserDomain ):
+            self.select_userdomain( entity, select )
         elif isinstance( entity, LegoSubsequence ):
-            self.select_subsequence( entity, select )
+            self.select_overlapping_domains( entity, select )
         elif isinstance( entity, LegoEdge ):
             self.select_edge( entity, select )
         elif isinstance( entity, LegoComponent ):
@@ -1166,17 +1151,17 @@ class LegoViewModel:
         
         for x in self.sequence_views.values():
             if x.sequence.site_array is None:
-                for y in x.subsequence_views.values():
+                for y in x.userdomain_views.values():
                     select.set( y )
         
         self._call_selection_changed()
     
     
-    def find_component_view( self, component: LegoComponent ) -> LegoViewInfo_Component:
+    def find_component_view( self, component: LegoComponent ) -> LegoView_Component:
         return self.edges_view.component_views[component]
     
     
-    def find_sequence_view( self, sequence: LegoSequence ) -> LegoViewSequence:
+    def find_sequence_view( self, sequence: LegoSequence ) -> LegoView_Sequence:
         """
         Finds the view of the specified `sequence`.
         :exception KeyError:
@@ -1236,7 +1221,7 @@ class LegoViewModel:
             else:
                 for side in (edge.left, edge.right):
                     for subsequence in side:
-                        self.select_subsequence( subsequence, select )  # nb. this expands for mode == COMPONENT for us
+                        self.select_userdomain( subsequence, select )  # nb. this expands for mode == COMPONENT for us
     
     
     def select_component( self, component: LegoComponent, select: ESelect = ESelect.ONLY ):
@@ -1246,11 +1231,12 @@ class LegoViewModel:
         """
         with self.on_selecting( select ) as select:
             if self.options.mode == EMode.SEQUENCE:
-                for sequence in component.minor_sequences():
+                for sequence in component.minor_sequences:
                     self.select_sequence( sequence, select )
             else:
-                for subsequence in component.minor_subsequences():
-                    self.select_subsequence( subsequence, select, True )
+                for subsequence in component.minor_subsequences:
+                    for userdomain in self.find_userdomain_views_for_subsequence( subsequence ):
+                        self.select_userdomain_view( userdomain, select, True )
     
     
     def select_sequence( self, sequence: LegoSequence, select: ESelect = ESelect.ONLY ):
@@ -1262,29 +1248,40 @@ class LegoViewModel:
             if self.options.mode == EMode.SEQUENCE:
                 sequence_view = self.find_sequence_view( sequence )
                 
-                for subsequence_view in sequence_view.subsequence_views.values():
-                    self.select_subsequence_view( subsequence_view, select )
+                for subsequence_view in sequence_view.userdomain_views.values():
+                    self.select_userdomain_view( subsequence_view, select )
             elif self.options.mode == EMode.COMPONENT:
-                for component in sequence.minor_components():
-                    self.select_component( component, select )
+                component = self.model.components.find_component_for_major_sequence( sequence )
+                self.select_component( component, select )
             else:
-                for subsequence in sequence.subsequences:
-                    self.select_subsequence( subsequence, select )
+                for domain_view in self.userdomain_views.values():
+                    if domain_view.domain.sequence is sequence:
+                        self.select_userdomain_view( domain_view, select )
     
     
-    def select_subsequence_view( self, subsequence_view: LegoView_Subsequence, select: ESelect = ESelect.ONLY, absolute: bool = False ):
+    def select_overlapping_domains( self, subsequence: LegoSubsequence, select: ESelect = ESelect.ONLY ):
+        """
+        Selects domain views that overlap the specified subsequence.
+        """
+        with self.on_selecting( select ) as select:
+            for domain_view in self.userdomain_views.values():
+                if domain_view.domain.has_overlap( subsequence ):
+                    self.select_userdomain_view( domain_view, select )
+    
+    
+    def select_userdomain_view( self, userdomain_view: LegoView_UserDomain, select: ESelect = ESelect.ONLY, absolute: bool = False ):
         """
         Selects the specified `LegoSubsequence`.
-        Unlike `select_subsequence` this does not account for the current selection mode and hence is a private function.
+        Unlike `select_userdomain` this does not account for the current selection mode and hence is a private function.
         """
         with self.on_selecting( select ) as select:
             if self.options.mode == EMode.SUBSEQUENCE or self.options.mode == EMode.EDGE or absolute:
-                self.__select_subsequence_view( select, subsequence_view )
+                self.__select_subsequence_view( select, userdomain_view )
             elif self.options.mode == EMode.SEQUENCE:
-                for sibling_view in subsequence_view.owner_sequence_view.subsequence_views.values():
+                for sibling_view in userdomain_view.owner_sequence_view.userdomain_views.values():
                     self.__select_subsequence_view( select, sibling_view )
             elif self.options.mode == EMode.COMPONENT:
-                for component in subsequence_view.subsequence.components:
+                for component in self.model.components.find_components_for_minor_subsequence( userdomain_view.domain ):
                     self.select_component( component, select )
             else:
                 raise SwitchError( "self.options.mode", self.options.mode )
@@ -1301,87 +1298,70 @@ class LegoViewModel:
             raise SwitchError( "ESelect.set(item)", select )
     
     
-    def select_subsequence( self, subsequence: LegoSubsequence, select: ESelect = ESelect.ONLY, absolute: bool = False ):
+    def select_userdomain( self, userdomain: LegoUserDomain, select: ESelect = ESelect.ONLY, absolute: bool = False ):
         """
         Selects the specified `LegoSubsequence`.
         If the selection mode is SEQUENCE or COMPONENT, the selection will be expanded accordingly.
         """
         with self.on_selecting( select ) as select:
             if absolute or self.options.mode == EMode.EDGE or self.options.mode == EMode.SUBSEQUENCE:
-                view = self.find_subsequence_view( subsequence )
-                print( "SELECTING {}.".format( view ) )
-                self.select_subsequence_view( view, select, absolute )
+                view = self.find_domain_view( userdomain )
+                self.select_userdomain_view( view, select, absolute )
             elif self.options.mode == EMode.SEQUENCE:
-                self.select_sequence( subsequence.sequence, select )
+                self.select_sequence( userdomain.sequence, select )
             elif self.options.mode == EMode.COMPONENT:
-                for component in subsequence.components:
+                for component in self.model.components.find_components_for_minor_subsequence( userdomain ):
                     self.select_component( component, select )
             else:
                 raise SwitchError( "self.options.mode", self.options.mode )
     
     
-    def align_to_sequence( self, sel_sequence: LegoSequence ) -> None:
+    def align_about_domain( self, target_userdomain_view: LegoView_UserDomain ) -> None:
         """
-        Positions sequence views sharing components with `sel_sequence` so that their components align with those in `sel_sequence`.
+        Repositions all domains in the same component to be in line with the specified domain.
         """
-        components = [x for x in self.model.components if sel_sequence in x.major_sequences()]
-        starts = { }
+        target_components = set( target_userdomain_view.components )
         
-        for component in components:
-            for line in component.minor_subsequences():
-                if line.sequence is sel_sequence:
-                    starts[component] = self.find_subsequence_view( line ).window_rect().left()
-        
-        touched = set()
-        
-        for component in components:
-            start = starts[component]
-            
-            for line in component.minor_subsequences():
-                sequence = line.sequence
-                
-                if sequence is sel_sequence:
-                    continue
-                
-                self.align_sequence( line, start, touched )
+        for sequence_view in self.sequence_views.values():
+            l = sequence_view.get_sorted_userdomain_views()
+            for userdomain_view in l:
+                s = set( userdomain_view.components )
+                if all( x in s for x in target_components ):
+                    userdomain_view.setX( target_userdomain_view.x() )
+                    userdomain_view.save_state()
+                    self.align_about( userdomain_view, relaxed = True )
+                    break
     
     
-    def align_sequence( self, specified_subsequence: LegoSubsequence, target_x: int, touched: Set[LegoView_Subsequence] ):
+    def align_about( self, userdomain_view: LegoView_UserDomain, left = True, right = True, relaxed = False ):
         """
-        Aligns the elements of a sequence, given that the `specified_subsequence` is placed at `target_x`.
-        All subsequence views repositioned are added to the `touched` set, and any views already in the `touched` set are not modified.
+        Aligns the elements of a sequence, fixing the position of the specified domain.
+        
+        :param userdomain_view:     Fixed domain
+        :param left:                Align predecessors 
+        :param right:               Align successors 
+        :param relaxed:             Only align if not aligning would make the sequences out of order
         """
-        what_view = self.find_subsequence_view( specified_subsequence )
-        
-        print( "ALIGN {} TO {}".format( what_view, target_x ) )
-        what_view.setPos( QPointF( target_x, what_view.window_rect().top() ) )
-        touched.add( what_view )
-        
-        prev = what_view
-        next = what_view.sibling_next
-        
-        while next:
-            if next not in touched:
-                x = prev.window_rect().right()
-                if next.window_rect().left() != x:
-                    next.setPos( QPointF( x, next.window_rect().top() ) )
-                
-                touched.add( next )
+        if left:
+            op = userdomain_view.sibling_previous
             
-            prev = next
-            next = next.sibling_next
-        
-        prev = what_view
-        next = what_view.sibling_previous
-        
-        while next:
-            if next not in touched:
-                x = prev.window_rect().left() - next.window_rect().width()
+            while op:
+                m = op.sibling_next.x() - op.rect.width()
                 
-                if next.window_rect().left() != x:
-                    next.setPos( QPointF( x, next.window_rect().top() ) )
+                if not relaxed or op.x() > m:
+                    op.setX( m )
+                    op.save_state()
                 
-                touched.add( next )
+                op = op.sibling_previous
+        
+        if right:
+            op = userdomain_view.sibling_next
             
-            prev = next
-            next = next.sibling_previous
+            while op:
+                m = op.sibling_previous.x() + op.sibling_previous.rect.width()
+                
+                if not relaxed or op.x() < m:
+                    op.setX( m )
+                    op.save_state()
+                
+                op = op.sibling_next

@@ -46,7 +46,7 @@ def print_status() -> EChanges:
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
     r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, ext_files.import_blast ) ) )
     r.append( "FASTA:         {}".format( __get_status_line( p, model.sequences, lambda x: x.site_array, ext_files.import_fasta ) ) )
-    r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: x.component, ext_generating.make_components ) ) )
+    r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: model.components.has_sequence( x ), ext_generating.make_components ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "Components" + Theme.RESET )
     r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
@@ -58,7 +58,7 @@ def print_status() -> EChanges:
     r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
     r.append( "Fusion graph : {}".format( __get_status_line( p, [model], lambda x: x.nrfg, ext_generating.make_nrfg ) ) )
     MCMD.print( "\n".join( r ) )
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 @command( names = ["print_alignments", "alignments"] )
@@ -76,7 +76,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChan
         else:
             MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, global_view.current_model().site_type ) )
     
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 class ETree( MEnum ):
@@ -125,7 +125,7 @@ def print_consensus( component: Optional[List[LegoComponent]] = None ) -> EChang
     """
     print_trees( component = component, consensus = True )
     
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 @help_command()
@@ -223,7 +223,7 @@ def print_trees( what: ETree = ETree.COMPONENT,
     elif out == EOut.FILE:
         file_helper.write_all_text( file, text )
     
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 def __print_header( x ):
@@ -234,7 +234,7 @@ def __print_header( x ):
 
 
 @command( names = ["print_interlinks", "interlinks"] )
-def print_component_edges( component: Optional[LegoComponent] = None ) -> EChanges:
+def print_component_edges( component: Optional[LegoComponent] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.
     
@@ -250,61 +250,76 @@ def print_component_edges( component: Optional[LegoComponent] = None ) -> EChang
         `end`    is the average of the end of the destination entry point
         `length` is the average length of the sequences in the destination 
 
-    :param component: Component to print. If not specified prints a summary of all components.    
+    :param component: Component to print. If not specified prints a summary of all components.
+    :param verbose:   Print everything!
     """
     model = global_view.current_model()
     
     if not model.components:
-        raise ValueError( "Cannot print minor components because components have not been calculated." )
+        raise ValueError( "Cannot print components because components have not been calculated." )
     
     message = Table()
-    
-    average_lengths = components.average_component_lengths( model )
     
     if component:
         message.add_title( component )
     else:
         message.add_title( "all components" )
     
-    message.add_row( "source", "destination", "sequence", "seq-length", "start", "end" )
-    message.add_hline()
+    if verbose:
+        message.add_row( "component", "origins", "destinations" )
+        message.add_hline()
+        
+        for major in model.components:
+            assert isinstance( major, LegoComponent )
+            
+            if component is not None and component is not major:
+                continue
+            
+            message.add_row( major, "\n".join( str( x ) for x in major.major_sequences ), "\n".join( str( x ) for x in major.minor_subsequences ) )
     
-    for major in model.components:
-        if component is not None and component is not major:
-            continue
+    else:
+        average_lengths = components.average_component_lengths( model )
         
-        major_sequences = list( major.major_sequences() )
+        message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
+        message.add_hline()
         
-        for minor in model.components:
-            if major is minor:
+        for major in model.components:
+            if component is not None and component is not major:
                 continue
             
-            start = 0
-            end = 0
-            failed = False
+            major_sequences = list( major.major_sequences )
             
-            for sequence in major_sequences:
-                subsequences = [x for x in sequence.subsequences if minor in x.components]
+            for minor in model.components:
+                if major is minor:
+                    continue
                 
-                if subsequences:
-                    start += subsequences[0].start
-                    end += subsequences[-1].end
+                start = 0
+                end = 0
+                failed = False
+                
+                for sequence in major_sequences:
+                    # subsequences that are in major sequence is a major sequence of major and are a minor subsequence of minor
+                    subsequences = [x for x in minor.minor_subsequences if x.sequence is sequence]
                     
-                    if component is not None:
-                        message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end )
-                else:
-                    failed = True
-            
-            if failed:
-                continue
-            
-            start /= len( major_sequences )
-            end /= len( major_sequences )
-            
-            message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ) )
+                    if subsequences:
+                        start += subsequences[0].start
+                        end += subsequences[-1].end
+                        
+                        if component is not None:
+                            message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
+                    else:
+                        failed = True
+                
+                if failed:
+                    continue
+                
+                start /= len( major_sequences )
+                end /= len( major_sequences )
+                
+                message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ), round( end - start ) )
     
     MCMD.print( message.to_string() )
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 @command( names = ["print_sequences", "sequences"] )
@@ -367,7 +382,7 @@ def print_sequences() -> EChanges:
         r.append( "\n" )
     
     MCMD.information( "".join( r ) )
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 @command( names = ["print_components", "components"] )
@@ -397,13 +412,11 @@ def print_components() -> EChanges:
     message.add_hline()
     
     for component in model.components:
-        message.add_row( component, ", ".join( x.accession for x in component.major_sequences() ) )
+        message.add_row( component, ", ".join( x.accession for x in component.major_sequences ) )
     
     MCMD.print( message.to_string() )
     
-    print_component_edges()
-    
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION | print_component_edges()
 
 
 def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:
@@ -457,7 +470,7 @@ def print_fusions( verbose: bool = False ) -> EChanges:
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
-    return EChanges.INFORMATION 
+    return EChanges.INFORMATION
 
 
 def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):

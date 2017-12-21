@@ -277,6 +277,33 @@ Creating the NRFG
 
 TODO
 
+Program architecture
+--------------------
+
+Gʀᴏᴏᴛ uses a simple MVC architecture:
+* The model:
+    * The dynamic model (`lego_model.py`):
+        * Sequences
+        * Edges
+            * Subsequences
+        * Components
+            * Subsequences
+    * The static model:
+        * Algorithms (`algorithms/`)
+* The abstract view (`gui_view.py`):
+    * Sequence views
+        * Subsequence views
+    * Edge views
+    * Component views
+    * Algorithm views
+* The concrete views:
+    * The CLI (Iɴᴛᴇʀᴍᴀᴋᴇ: `command_line.py`)
+    * The GUI (`frm_main.py`)
+* The controller:
+    * Controller superclass (Iɴᴛᴇʀᴍᴀᴋᴇ: `environment.py`)
+    * Controller subclass (`extensions/`)
+    
+
 Troubleshooting
 ---------------
 
