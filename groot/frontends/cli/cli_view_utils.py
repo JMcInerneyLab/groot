@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-
 from mhelper import ansi
 from groot.data import global_view
 from groot.data.lego_model import ESiteType, LegoComponent
+
 
 PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.FORE_WHITE, "L": ansi.FORE_WHITE, "I": ansi.FORE_WHITE,
                          "F": ansi.FORE_MAGENTA, "Y": ansi.FORE_MAGENTA, "W": ansi.FORE_MAGENTA,
@@ -12,10 +12,11 @@ PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.F
                          "K": ansi.FORE_RED, "R": ansi.FORE_RED, "H": ansi.FORE_RED,
                          "D": ansi.FORE_CYAN, "E": ansi.FORE_CYAN,
                          "N": ansi.FORE_BRIGHT_MAGENTA, "Q": ansi.FORE_BRIGHT_MAGENTA,
-                         "P": ansi.FORE_BRIGHT_RED }
+                         "P": ansi.FORE_BRIGHT_RED,
+                         "-": ansi.CODE_FORE_LIGHT_BLACK }
 
-DNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "T": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE }
-RNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "U": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE }
+DNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "T": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE, "-": ansi.CODE_FORE_LIGHT_BLACK }
+RNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "U": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE, "-": ansi.CODE_FORE_LIGHT_BLACK }
 
 COMPONENT_COLOURS_ANSI_FORE = [ansi.FORE_RED, ansi.FORE_GREEN, ansi.FORE_YELLOW, ansi.FORE_BLUE, ansi.FORE_MAGENTA, ansi.FORE_CYAN, ansi.FORE_BRIGHT_RED, ansi.FORE_BRIGHT_GREEN, ansi.FORE_BRIGHT_BLUE, ansi.FORE_BRIGHT_MAGENTA, ansi.FORE_BRIGHT_CYAN]
 COMPONENT_COLOURS_ANSI_BACK = [ansi.BACK_RED, ansi.BACK_GREEN, ansi.BACK_YELLOW, ansi.BACK_BLUE, ansi.BACK_MAGENTA, ansi.BACK_CYAN, ansi.BACK_BRIGHT_RED, ansi.BACK_BRIGHT_GREEN, ansi.BACK_BRIGHT_BLUE, ansi.BACK_BRIGHT_MAGENTA, ansi.BACK_BRIGHT_CYAN]

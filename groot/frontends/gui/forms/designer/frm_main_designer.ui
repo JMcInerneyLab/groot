@@ -311,7 +311,7 @@ image: url(:/check_indeterminate_white.svg);
        <enum>Qt::Horizontal</enum>
       </property>
       <property name="childrenCollapsible">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <widget class="QWidget" name="verticalLayoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -828,7 +828,45 @@ image: url(:/check_indeterminate_white.svg);
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_BLAST">
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="BTN_STATUS_FILE">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>128</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>MODEL</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="BTN_STATUS_BLAST">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -850,13 +888,10 @@ image: url(:/check_indeterminate_white.svg);
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_FASTA">
+           <widget class="QPushButton" name="BTN_STATUS_FASTA">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -878,13 +913,10 @@ image: url(:/check_indeterminate_white.svg);
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_COMPONENTS">
+           <widget class="QPushButton" name="BTN_STATUS_COMPONENTS">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -901,18 +933,15 @@ image: url(:/check_indeterminate_white.svg);
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Components</string>
+             <string>COMPONENTS</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_ALIGNMENTS">
+           <widget class="QPushButton" name="BTN_STATUS_ALIGNMENTS">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -929,18 +958,15 @@ image: url(:/check_indeterminate_white.svg);
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Alignment</string>
+             <string>ALIGNMENT</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_TREES">
+           <widget class="QPushButton" name="BTN_STATUS_TREES">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -957,18 +983,15 @@ image: url(:/check_indeterminate_white.svg);
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Trees</string>
+             <string>TREES</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_FUSIONS">
+           <widget class="QPushButton" name="BTN_STATUS_FUSIONS">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -985,18 +1008,15 @@ image: url(:/check_indeterminate_white.svg);
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Fusions</string>
+             <string>FUSIONS</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="BTN_STATUS_NRFG">
+           <widget class="QPushButton" name="BTN_STATUS_NRFG">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1018,10 +1038,20 @@ image: url(:/check_indeterminate_white.svg);
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -1100,33 +1130,9 @@ image: url(:/check_indeterminate_white.svg);
     <addaction name="ACT_HELP_KEYS"/>
     <addaction name="menu_Debug"/>
    </widget>
-   <widget class="QMenu" name="menu_Generating">
-    <property name="title">
-     <string>&amp;Generating</string>
-    </property>
-    <widget class="QMenu" name="menu_Remove">
-     <property name="title">
-      <string>&amp;Remove</string>
-     </property>
-     <addaction name="ACT_DROP_COMPONENTS"/>
-     <addaction name="ACT_DROP_ALIGNMENTS"/>
-     <addaction name="ACT_DROP_TREE"/>
-     <addaction name="ACT_DROP_CONSENSUS"/>
-     <addaction name="ACT_DROP_FUSIONS"/>
-     <addaction name="ACT_DROP_NRFG"/>
-    </widget>
-    <addaction name="ACT_MAKE_COMPONENTS"/>
-    <addaction name="ACT_MAKE_ALIGNMENTS"/>
-    <addaction name="ACT_MAKE_TREE"/>
-    <addaction name="ACT_MAKE_CONSENSUS"/>
-    <addaction name="ACT_MAKE_FUSIONS"/>
-    <addaction name="ACT_MAKE_NRFG"/>
-    <addaction name="separator"/>
-    <addaction name="menu_Remove"/>
-   </widget>
    <widget class="QMenu" name="menu_Modifications">
     <property name="title">
-     <string>&amp;Modifications</string>
+     <string>&amp;Tools</string>
     </property>
     <addaction name="ACT_MODIFY_CLEAN"/>
     <addaction name="ACT_MODIFY_SET_TREE"/>
@@ -1136,28 +1142,6 @@ image: url(:/check_indeterminate_white.svg);
     <addaction name="separator"/>
     <addaction name="ACT_MODIFY_NEW_ENTITY"/>
     <addaction name="ACT_MODIFY_REMOVE_ENTITY"/>
-   </widget>
-   <widget class="QMenu" name="menu_View_2">
-    <property name="title">
-     <string>&amp;Display</string>
-    </property>
-    <addaction name="ACT_PRINT_FASTA"/>
-    <addaction name="ACT_PRINT_STATUS"/>
-    <addaction name="ACT_PRINT_ALIGNMENT"/>
-    <addaction name="ACT_PRINT_CONSENSUS"/>
-    <addaction name="ACT_PRINT_TREE"/>
-    <addaction name="ACT_PRINT_COMPONENT_EDGES"/>
-    <addaction name="ACT_PRINT_COMPONENTS"/>
-    <addaction name="ACT_PRINT_FUSIONS"/>
-    <addaction name="ACT_PRINT_NRFG"/>
-   </widget>
-   <widget class="QMenu" name="menu_2">
-    <property name="tearOffEnabled">
-     <bool>true</bool>
-    </property>
-    <property name="title">
-     <string>|</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menu_View_3">
     <property name="title">
@@ -1170,11 +1154,8 @@ image: url(:/check_indeterminate_white.svg);
    <addaction name="menu_File"/>
    <addaction name="menuSelect"/>
    <addaction name="menu_View_3"/>
-   <addaction name="menu_Help"/>
-   <addaction name="menu_2"/>
-   <addaction name="menu_Generating"/>
    <addaction name="menu_Modifications"/>
-   <addaction name="menu_View_2"/>
+   <addaction name="menu_Help"/>
   </widget>
   <action name="ACT_FILE_NEW">
    <property name="icon">
@@ -1260,41 +1241,6 @@ image: url(:/check_indeterminate_white.svg);
     <string>&amp;Invert selection</string>
    </property>
   </action>
-  <action name="ACT_SELECT_SEQUENCE">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Gene mode</string>
-   </property>
-  </action>
-  <action name="ACT_SELECT_SUBSEQUENCE">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Domain mode</string>
-   </property>
-  </action>
-  <action name="ACT_SELECT_EDGE">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Edge mode</string>
-   </property>
-  </action>
-  <action name="ACT_SELECT_COMPONENT">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Component mode</string>
-   </property>
-  </action>
   <action name="ACT_FILE_SAVE_AS">
    <property name="text">
     <string>Save diagram &amp;as...</string>
@@ -1308,18 +1254,6 @@ image: url(:/check_indeterminate_white.svg);
   <action name="ACT_SELECT_BY_NAME">
    <property name="text">
     <string>Select items by &amp;name...</string>
-   </property>
-  </action>
-  <action name="ACT_WINDOW_VIEW">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc">
-     <normaloff>:/settings.svg</normaloff>:/settings.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Settings panel</string>
    </property>
   </action>
   <action name="ACT_VIEW_ALIGN">
@@ -1373,36 +1307,6 @@ image: url(:/check_indeterminate_white.svg);
     <string>Domain-align</string>
    </property>
   </action>
-  <action name="ACT_MAKE_COMPONENTS">
-   <property name="text">
-    <string>Make &amp;components</string>
-   </property>
-  </action>
-  <action name="ACT_MAKE_ALIGNMENTS">
-   <property name="text">
-    <string>Make &amp;alignments</string>
-   </property>
-  </action>
-  <action name="ACT_MAKE_TREE">
-   <property name="text">
-    <string>Make &amp;tree</string>
-   </property>
-  </action>
-  <action name="ACT_MAKE_CONSENSUS">
-   <property name="text">
-    <string>Make con&amp;sensus</string>
-   </property>
-  </action>
-  <action name="ACT_MAKE_NRFG">
-   <property name="text">
-    <string>Make &amp;NRFG</string>
-   </property>
-  </action>
-  <action name="ACT_MAKE_FUSIONS">
-   <property name="text">
-    <string>Make &amp;fusions</string>
-   </property>
-  </action>
   <action name="ACT_MODIFY_CLEAN">
    <property name="text">
     <string>&amp;Clean</string>
@@ -1431,81 +1335,6 @@ image: url(:/check_indeterminate_white.svg);
   <action name="ACT_MODIFY_REMOVE_ENTITY">
    <property name="text">
     <string>&amp;Remove entity</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_FASTA">
-   <property name="text">
-    <string>View &amp;FASTA</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_STATUS">
-   <property name="text">
-    <string>View &amp;status</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_ALIGNMENT">
-   <property name="text">
-    <string>&amp;View alignment</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_CONSENSUS">
-   <property name="text">
-    <string>&amp;View consensus</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_TREE">
-   <property name="text">
-    <string>View &amp;tree</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_COMPONENT_EDGES">
-   <property name="text">
-    <string>View component &amp;edges</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_COMPONENTS">
-   <property name="text">
-    <string>View &amp;components</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_FUSIONS">
-   <property name="text">
-    <string>View fusions</string>
-   </property>
-  </action>
-  <action name="ACT_PRINT_NRFG">
-   <property name="text">
-    <string>View NRF&amp;G</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_COMPONENTS">
-   <property name="text">
-    <string>Drop components</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_ALIGNMENTS">
-   <property name="text">
-    <string>Drop alignments</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_TREE">
-   <property name="text">
-    <string>Drop tree</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_CONSENSUS">
-   <property name="text">
-    <string>Drop consensus</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_FUSIONS">
-   <property name="text">
-    <string>Drop fusions</string>
-   </property>
-  </action>
-  <action name="ACT_DROP_NRFG">
-   <property name="text">
-    <string>Drop NRFG</string>
    </property>
   </action>
   <action name="ACT_REFRESH_VIEW">

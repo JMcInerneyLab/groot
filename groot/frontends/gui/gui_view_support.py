@@ -76,9 +76,10 @@ class DRAWING:
                              "K": Pens.RED, "R": Pens.RED, "H": Pens.RED,
                              "D": Pens.CYAN, "E": Pens.CYAN,
                              "N": Pens.DARK_ORANGE, "Q": Pens.DARK_ORANGE,
-                             "P": Pens.LIGHT_RED }
-    DNA_COLOUR_TABLE = { "A": Pens.YELLOW, "T": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE }
-    RNA_COLOUR_TABLE = { "A": Pens.YELLOW, "U": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE }
+                             "P": Pens.LIGHT_RED ,
+                             "-":Pens.GRAY }
+    DNA_COLOUR_TABLE = { "A": Pens.YELLOW, "T": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE,"-":Pens.GRAY } 
+    RNA_COLOUR_TABLE = { "A": Pens.YELLOW, "U": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE ,"-":Pens.GRAY }
     
     # Colour of components
     COMPONENT_COLOURS = [QColor( 255, 0, 0 ),  # R

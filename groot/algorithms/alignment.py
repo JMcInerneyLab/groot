@@ -1,3 +1,4 @@
+import groot.algorithms.extenal_runner
 from groot.algorithms import fastaiser, external_tools
 from groot.data.lego_model import LegoComponent
 
@@ -9,7 +10,7 @@ def clear( component: LegoComponent ):
 def align( component: LegoComponent ):
     fasta = fastaiser.component_to_fasta( component, simplify_ids = True )
     
-    component.alignment = external_tools.run_in_temporary( external_tools.align, fasta )
+    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( external_tools.align, fasta )
 
 
 def drop( component: LegoComponent ):

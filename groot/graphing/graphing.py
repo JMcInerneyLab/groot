@@ -129,11 +129,14 @@ class IsolationPoint:
 
 
 class IsolationError( Exception ):
-    pass
+    def __init__( self, message, inside_set: Set[_MNode_], outside_set: Set[_MNode_] ):
+        super().__init__( message )
+        self.inside_set = inside_set
+        self.outside_set = outside_set
 
 
 class MGraph:
-    def __init__( self ) -> None:
+    def __init__( self, title = None ) -> None:
         """
         CONSTRUCTOR
         """
@@ -174,7 +177,9 @@ class MGraph:
         points = self.find_isolation_points( is_inside, is_outside )
         
         if len( points ) != 1:
-            raise IsolationError( "Cannot extract the isolation from the graph because the specified points are not uniquely isolated." )
+            inside_set = [x for x in self.nodes if is_inside( x )]
+            outside_set = [x for x in self.nodes if is_outside( x )]
+            raise IsolationError( "Cannot extract an isolation point from the graph because the inside set ({}) is not isolated from the outside set ({}).".format( inside_set, outside_set ), inside_set, outside_set )
         
         return points[0]
     
@@ -359,7 +364,7 @@ class MGraph:
         :param right:   Right node of edge (or a TNodeOrUid allowing the right node to be found) 
         :return:        Resulting edge 
         """
-        return MEdge( self, self.find_node( left ), self.find_node( right ) )
+        return MEdge( self.find_node( left ), self.find_node( right ) )
     
     
     def copy( self ) -> _MGraph_:
@@ -454,7 +459,7 @@ class MGraph:
             for e_node_next in e_node_start.get_children():
                 m_node_next = self._node_from_ete( e_node_next, model )
                 
-                MEdge( self, m_node_start, m_node_next )
+                MEdge( m_node_start, m_node_next )
                 
                 ___recurse( m_node_next, e_node_next, depth + 1 )
         
@@ -477,7 +482,7 @@ class MGraph:
     
     def to_svg( self, get_text: DNodeToText, roots = None, html: bool = False ):
         from groot.graphing import graph_viewer
-        return graph_viewer.to_svg(self, get_text, roots, html)
+        return graph_viewer.to_svg( self, get_text, roots, html )
     
     
     def __find_slot( self, node, parent, prev_slots, slots, layer_len ):
@@ -501,7 +506,7 @@ class MGraph:
         raise LogicError()
     
     
-    def to_ascii( self, get_text: DNodeToText, name: str = None ):
+    def to_ascii( self, get_text: DNodeToText = str, name: str = None ):
         """
         Shows the graph as ASCII-art, which is actually in UTF8.
         """
@@ -699,6 +704,10 @@ class MNode:
         return self.__uid
     
     
+    def __str__( self ):
+        return str( self.data ) if self.data is not None else ""
+    
+    
     def __repr__( self ):
         return "MNode( {} )".format( self.data )
     
@@ -749,10 +758,12 @@ def import_name( model: _LegoModel_, name: str ) -> Optional[_LegoSequence_]:
 
 
 class MEdge:
-    def __init__( self, graph: MGraph, left: MNode, right: MNode ):
-        assert isinstance( graph, MGraph )
+    def __init__( self, left: MNode, right: MNode ):
         assert isinstance( left, MNode )
         assert isinstance( right, MNode )
+        
+        if left._graph is not right._graph:
+            raise ValueError( "Cannot create an edge between two nodes in different graphs." )
         
         if left is right:
             raise ValueError( "Cannot create an edge to the same node." )
@@ -760,7 +771,7 @@ class MEdge:
         if right in left._edges or left in right._edges:
             raise ValueError( "Cannot add an edge from node to node because these nodes already share an edge." )
         
-        self._graph = graph
+        self._graph = left._graph
         self._left = left
         self._right = right
         
@@ -784,7 +795,7 @@ class MEdge:
         if right is None:
             return None
         
-        new_edge = MEdge( target_graph, left, right )
+        new_edge = MEdge( left, right )
         return new_edge
     
     

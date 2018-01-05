@@ -11,18 +11,19 @@ from PyQt5.QtWidgets import QAction, QFileDialog, QFrame, QGraphicsScene, QGridL
 from groot.frontends.gui.forms.designer.frm_main_designer import Ui_MainWindow
 
 from groot import constants, extensions as COMMANDS
-from groot.algorithms import fastaiser
+from groot.algorithms import fastaiser, layout
 from groot.data import global_view, user_options
 from groot.data.lego_model import ILegoVisualisable, LegoComponent
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
-from groot.frontends.gui.gui_view import EMode, ESelect, ILegoViewModelObserver, LegoViewModel
+from groot.frontends.gui.gui_view import EMode, ESelect, ILegoViewModelObserver, LegoView_Model
 from groot.frontends.gui.gui_view_utils import EChanges, MyView
 from intermake import AsyncResult, MENV, Plugin, intermake_gui
+from intermake.engine.plugin_arguments import ArgsKwargs
 from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
 from intermake.hosts.gui import IGuiPluginHostWindow
-from mhelper import SwitchError, ansi, array_helper, file_helper, string_helper
-from mhelper_qt import qt_gui_helper
+from mhelper import SwitchError, ansi, array_helper, file_helper, string_helper, NOT_PROVIDED
+from mhelper_qt import qt_gui_helper, menu_helper
 from mhelper_qt.qt_gui_helper import exceptToGui, exqtSlot
 
 
@@ -71,12 +72,13 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             action.triggered[bool].connect( self.__select_sample_data )
             self.ui.MNU_EXAMPLES.addAction( action )
         
-        self._view: LegoViewModel = None
+        self.view: LegoView_Model = None
         self.__update_as_required( EChanges.MODEL_OBJECT | EChanges.FILE_NAME )
         
         # Misc
         self.__group_boxes = []
         self.ANSI_SCHEME = qt_gui_helper.ansi_scheme_dark( family = 'Consolas,"Courier New",monospace' )
+        self.ui.splitter.setSizes( [0, 1] )
     
     
     def __update_as_required( self, changes: EChanges ) -> None:
@@ -89,14 +91,14 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             self.freeze_options = True
             
             # Create and apply a view for the model
-            if self._view:
-                self._view.scene.setParent( None )
+            if self.view:
+                self.view.scene.setParent( None )
             
-            self._view = LegoViewModel( self, view, self._model )
-            view.setScene( self._view.scene )
+            self.view = LegoView_Model( self, view, self._model )
+            view.setScene( self.view.scene )
             
             # Track the selection
-            self._view.scene.selectionChanged.connect( self.on_scene_selectionChanged )
+            self.view.scene.selectionChanged.connect( self.on_scene_selectionChanged )
         
         if changes.MODEL_OBJECT or changes.MODEL_ENTITIES or changes.COMPONENTS or changes.COMP_DATA or changes.MODEL_DATA:
             # Update the options
@@ -116,6 +118,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     def _update_status_checkbox_values( self ):
+        self.ui.BTN_STATUS_FILE.setChecked( self._model.file_name is not None )
         self.ui.BTN_STATUS_ALIGNMENTS.setChecked( all( x.alignment is not None for x in self._model.components ) )
         self.ui.BTN_STATUS_BLAST.setChecked( len( self._model.edges ) != 0 )
         self.ui.BTN_STATUS_FASTA.setChecked( all( x.site_array for x in self._model.sequences ) )
@@ -153,7 +156,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         COMMANDS.ext_files.file_load( file_name )
     
     
-    def ILegoViewModelObserver_selection_changed( self ):
+    def ILegoViewModelObserver_selection_changed( self ) -> None:
         """
         Selection has changed.
         """
@@ -161,7 +164,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         #
         # What have we selected?
         #
-        entities: Set[ILegoVisualisable] = self._view.selected_entities()
+        entities: Set[ILegoVisualisable] = self.view.selected_entities()
         first: ILegoVisualisable = array_helper.first( entities )
         type_name: str = (type( first ).__name__[4:].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
         
@@ -275,7 +278,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         
         
         def call( self, _: bool ):
-            self.form._view.select_entity( self.entity )
+            self.form.view.select_entity( self.entity )
     
     
     def ILegoViewModelObserver_options_changed( self ):
@@ -328,11 +331,14 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         return x == QMessageBox.Yes
     
     
-    def request_plugin( self, plugin: Plugin, defaults = None ):
-        arguments = FrmArguments.request( self, plugin, defaults )
+    def request_plugin( self, plugin: Plugin, *args, **kwargs ):
+        if args is None:
+            args = ()
+        
+        arguments: Optional[ArgsKwargs] = FrmArguments.request( self, plugin, *args, **kwargs )
         
         if arguments is not None:
-            plugin.run( **arguments )  # --> self.plugin_completed
+            plugin.run( *arguments.args, **arguments.kwargs )  # --> self.plugin_completed
             
             
             # region Signal handlers
@@ -351,7 +357,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select subsequences to left
         """
-        self._view.select_left()
+        self.view.select_left()
     
     
     @exqtSlot( bool )
@@ -359,7 +365,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select subsequences to right
         """
-        self._view.select_right()
+        self.view.select_right()
     
     
     @exqtSlot( bool )
@@ -367,7 +373,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select direct connections
         """
-        self._view.select_direct_connections()
+        self.view.select_direct_connections()
     
     
     @exqtSlot()
@@ -466,8 +472,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Align selection
         """
-        for userdomain_view in self._view.selected_userdomain_views():
-            self._view.align_about_domain( userdomain_view )
+        for userdomain_view in self.view.selected_userdomain_views():
+            layout.align_about_domain( userdomain_view )
     
     
     @exqtSlot()
@@ -475,8 +481,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align subsequences
         """
-        for userdomain_view in self._view.selected_userdomain_views():
-            self._view.align_about( userdomain_view )
+        for userdomain_view in self.view.selected_userdomain_views():
+            layout.align_about( userdomain_view )
     
     
     @exqtSlot()
@@ -484,81 +490,13 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align first subsequences in sequence
         """
-        userdomain_views = self._view.selected_userdomain_views()
+        userdomain_views = self.view.selected_userdomain_views()
         
         leftmost = min( x.pos().x() for x in userdomain_views )
         
         for userdomain_view in userdomain_views:
             userdomain_view.setX( leftmost )
             userdomain_view.save_state()
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_COMPONENTS_triggered( self ) -> None:
-        """
-        Signal handler: Make - components
-        """
-        if len( self._model.edges ) == 0:
-            QMessageBox.information( self, self.windowTitle(), "Load the edge data (BLAST) first." )
-            return
-        
-        self.request_plugin( COMMANDS.ext_generating.make_components )
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_ALIGNMENTS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        if not all( x.site_array for x in self._model.sequences ):
-            QMessageBox.information( self, self.windowTitle(), "Load the site data (FASTA) first." )
-            return
-        
-        self.request_plugin( COMMANDS.ext_generating.make_alignments, defaults = [list( self._view.selected_components() ) or None] )
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_TREE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        if not all( x.alignment is not None for x in self._model.components ):
-            QMessageBox.information( self, self.windowTitle(), "Align the sequences first." )
-            return
-        
-        self.request_plugin( COMMANDS.ext_generating.make_trees, defaults = [list( self._view.selected_components() ) or None] )
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_CONSENSUS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_generating.make_consensus, defaults = [list( self._view.selected_components() ) or None] )
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_NRFG_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        if len( self._model.fusion_events ) == 0:
-            QMessageBox.information( self, self.windowTitle(), "Find the fusion events first." )
-            return
-        
-        self.request_plugin( COMMANDS.ext_generating.make_nrfg )
-    
-    
-    @exqtSlot()
-    def on_ACT_MAKE_FUSIONS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        if not all( x.tree is not None for x in self._model.components ):
-            QMessageBox.information( self, self.windowTitle(), "Create the trees first." )
-            return
-        
-        self.request_plugin( COMMANDS.ext_generating.make_fusions )
     
     
     @exqtSlot()
@@ -594,134 +532,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
-    def on_ACT_PRINT_FASTA_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_fasta, defaults = [array_helper.first( self._view.selected_entities() )] )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_STATUS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        COMMANDS.ext_viewing.print_status()
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_ALIGNMENT_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_alignments, defaults = [array_helper.first( self._view.selected_components() )] )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_CONSENSUS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_consensus, defaults = [array_helper.first( self._view.selected_components() )] )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_TREE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_trees, defaults = [array_helper.first( self._view.selected_components() )] )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_COMPONENT_EDGES_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_component_edges, defaults = [array_helper.first( self._view.selected_components() )] )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_COMPONENTS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_components )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_FUSIONS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_fusions )
-    
-    
-    @exqtSlot()
-    def on_ACT_PRINT_NRFG_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_viewing.print_nrfg )
-    
-    
-    @exqtSlot()
-    def on_ACT_WINDOW_VIEW_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_COMPONENTS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_components )
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_ALIGNMENTS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_alignment )
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_TREE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_tree )
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_CONSENSUS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_consensus )
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_FUSIONS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_fusions )
-    
-    
-    @exqtSlot()
-    def on_ACT_DROP_NRFG_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.request_plugin( COMMANDS.ext_dropping.drop_nrfg )
-    
-    
-    @exqtSlot()
     def on_ACT_REFRESH_VIEW_triggered( self ) -> None:
         """
         Signal handler:
@@ -746,12 +556,31 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
+    def on_BTN_STATUS_FILE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        selected = menu_helper.show( self.sender(), "Save", "Model status" )
+        
+        if selected == "Save":
+            self.on_ACT_FILE_SAVE_triggered()
+        elif selected == "Model status":
+            COMMANDS.ext_viewing.print_status()
+        
+        self._update_status_checkbox_values()
+    
+    
+    @exqtSlot()
     def on_BTN_STATUS_BLAST_clicked( self ) -> None:
         """
         Signal handler:
         """
+        selected = menu_helper.show( self.sender(), "Import" )
+        
+        if selected == "Import":
+            self.on_ACT_FILE_IMPORT_triggered()
+        
         self._update_status_checkbox_values()
-        self.on_ACT_FILE_IMPORT_triggered()
     
     
     @exqtSlot()
@@ -759,8 +588,14 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        selected = menu_helper.show( self.sender(), "Import", "View" )
+        
+        if selected == "Import":
+            self.on_ACT_FILE_IMPORT_triggered()
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_gui.view_fasta_gui, array_helper.first( self.view.selected_entities(), NOT_PROVIDED ) )
+        
         self._update_status_checkbox_values()
-        self.on_ACT_FILE_IMPORT_triggered()
     
     
     @exqtSlot()
@@ -768,17 +603,35 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View", "View edges" )
+        
+        if selected == "Generate":
+            self.request_plugin( COMMANDS.ext_generating.make_components )
+        elif selected == "Drop":
+            self.request_plugin( COMMANDS.ext_dropping.drop_components )
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_viewing.print_components )
+        elif selected == "View edges":
+            self.request_plugin( COMMANDS.ext_viewing.print_component_edges, array_helper.first( self.view.selected_components(), NOT_PROVIDED ) )
+        
         self._update_status_checkbox_values()
-        self.on_ACT_MAKE_COMPONENTS_triggered()
     
     
     @exqtSlot()
     def on_BTN_STATUS_ALIGNMENTS_clicked( self ) -> None:
         """
-        Signal handler:
+        Signal handler: ALIGNMENTS button
         """
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
+        
+        if selected == "Generate":
+            self.request_plugin( COMMANDS.ext_generating.make_alignments, list( self.view.selected_components() ) or None )
+        elif selected == "Drop":
+            self.request_plugin( COMMANDS.ext_dropping.drop_alignment )
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_gui.view_alignments_gui, array_helper.first( self.view.selected_components() ) or array_helper.first( self._model.components ) or NOT_PROVIDED )
+        
         self._update_status_checkbox_values()
-        self.on_ACT_MAKE_ALIGNMENTS_triggered()
     
     
     @exqtSlot()
@@ -786,8 +639,22 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View", "Generate consensus", "Drop consensus", "View consensus" )
+        
+        if selected == "Generate":
+            self.request_plugin( COMMANDS.ext_generating.make_trees, args = list( self.view.selected_components() ) or None )
+        elif selected == "Drop":
+            self.request_plugin( COMMANDS.ext_dropping.drop_tree )
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first( self.view.selected_components(), NOT_PROVIDED ) )
+        elif selected == "Generate consensus":
+            self.request_plugin( COMMANDS.ext_generating.make_consensus, args = list( self.view.selected_components() ) or None )
+        elif selected == "Drop consensus":
+            self.request_plugin( COMMANDS.ext_dropping.drop_consensus )
+        elif selected == "View consensus":
+            self.request_plugin( COMMANDS.ext_viewing.print_consensus, self.view.selected_components() or NOT_PROVIDED )
+        
         self._update_status_checkbox_values()
-        self.on_ACT_MAKE_TREE_triggered()
     
     
     @exqtSlot()
@@ -795,8 +662,16 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
+        
+        if selected == "Generate":
+            self.request_plugin( COMMANDS.ext_generating.make_fusions )
+        elif selected == "Drop":
+            self.request_plugin( COMMANDS.ext_dropping.drop_fusions )
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_viewing.print_fusions )
+        
         self._update_status_checkbox_values()
-        self.on_ACT_MAKE_FUSIONS_triggered()
     
     
     @exqtSlot()
@@ -805,7 +680,14 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         Signal handler:
         """
         self._update_status_checkbox_values()
-        self.on_ACT_MAKE_NRFG_triggered()
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
+        
+        if selected == "Generate":
+            self.request_plugin( COMMANDS.ext_generating.make_nrfg )
+        elif selected == "Drop":
+            self.request_plugin( COMMANDS.ext_dropping.drop_nrfg )
+        elif selected == "View":
+            self.request_plugin( COMMANDS.ext_gui.view_nrfg_gui )
     
     
     @exqtSlot()
@@ -813,7 +695,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        if FrmViewOptions.request( self, self._view ):
+        if FrmViewOptions.request( self, self.view ):
             self.__update_as_required( EChanges.MODEL_ENTITIES )
     
     
@@ -827,7 +709,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif self.ui.BTN_SEL_EDGE.isChecked():
             self._model.ui_options.mode = EMode.EDGE
         
-        self._view.select_all( ESelect.REMOVE )
+        self.view.select_all( ESelect.REMOVE )
     
     
     @exqtSlot()
@@ -867,12 +749,12 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: New entity
         """
-        m = self._view.options.mode
+        m = self.view.options.mode
         
         if m == EMode.SEQUENCE:
             COMMANDS.ext_modifications.new_sequence()
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self._view.selected_userdomains()
+            subsequences = self.view.selected_userdomains()
             
             if not subsequences:
                 QMessageBox.information( self, self.windowTitle(), "Select a subsequence to split first." )
@@ -905,10 +787,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Remove entity
         """
-        m = self._view.options.mode
+        m = self.view.options.mode
         
         if m == EMode.SEQUENCE:
-            sequences = self._view.selected_sequences()
+            sequences = self.view.selected_sequences()
             
             if sequences:
                 if not self.__query_remove( sequences ):
@@ -918,7 +800,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select a sequence first." )
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self._view.selected_userdomains()
+            subsequences = self.view.selected_userdomains()
             
             if len( subsequences ) >= 2:
                 if not self.__query_remove( subsequences ):
@@ -928,8 +810,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select at least two adjacent subsequences first." )
         elif m == EMode.EDGE:
-            subsequences = self._view.selected_userdomains()
-            edges = self._view.selected_edges()
+            subsequences = self.view.selected_userdomains()
+            edges = self.view.selected_edges()
             
             if not edges:
                 QMessageBox.information( self, self.windowTitle(), "Please select a subsequence with edges first." )
@@ -994,7 +876,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     def on_scene_selectionChanged( self ):
-        if len( self._view.scene.selectedItems() ) == 0:
+        if len( self.view.scene.selectedItems() ) == 0:
             self.ILegoViewModelObserver_selection_changed()
     
     
@@ -1021,7 +903,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.APPEND )
+        self.view.select_all( ESelect.APPEND )
     
     
     @exqtSlot()
@@ -1029,7 +911,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.REMOVE )
+        self.view.select_all( ESelect.REMOVE )
     
     
     @exqtSlot()
@@ -1037,7 +919,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_empty()
+        self.view.select_empty()
     
     
     @exqtSlot()
@@ -1045,55 +927,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self._view.select_all( ESelect.TOGGLE )
-    
-    
-    @exqtSlot()
-    def on_ACT_SELECT_SEQUENCE_triggered( self ) -> None:
-        """
-        Signal handler: Sequence selection mode
-        """
-        if self.freeze_options:
-            return
-        
-        self._view.options.mode = EMode.SEQUENCE
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot()
-    def on_ACT_SELECT_SUBSEQUENCE_triggered( self ) -> None:
-        """
-        Signal handler: Subsequence selection mode
-        """
-        if self.freeze_options:
-            return
-        
-        self._view.options.mode = EMode.SUBSEQUENCE
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot()
-    def on_ACT_SELECT_EDGE_triggered( self ) -> None:
-        """
-        Signal handler: Edge selection mode
-        """
-        if self.freeze_options:
-            return
-        
-        self._view.options.mode = EMode.EDGE
-        self.update_options_from_ui()
-    
-    
-    @exqtSlot()
-    def on_ACT_SELECT_COMPONENT_triggered( self ) -> None:
-        """
-        Signal handler: Component selection mode
-        """
-        if self.freeze_options:
-            return
-        
-        self._view.options.mode = EMode.COMPONENT
-        self.update_options_from_ui()
+        self.view.select_all( ESelect.TOGGLE )
 
 
 # endregion

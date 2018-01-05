@@ -7,6 +7,7 @@ from mhelper import array_helper
 
 _FusionPoint_ = "FusionPoint"
 
+
 class NotCommensurateError( Exception ):
     pass
 
@@ -84,11 +85,9 @@ class FusionPoint:
     
     
     def __repr__( self ):
-        return "({})-AND-({})-FORM-({}):{}_GENES=[{}]".format( self.component,
-                                                               self.opposite_component,
-                                                               ",".join( sorted( str( x ) for x in self.event.intersections ) ),
-                                                               self.count,
-                                                               ",".join( sorted( str( x ) for x in self.genes ) ) )
+        return "({})-GIVEN-({})-FORMS-({})".format( self.component,
+                                                    self.opposite_component,
+                                                    ",".join( sorted( str( x ) for x in self.event.intersections ) ) )
 
 
 class NrfgEvent:

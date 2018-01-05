@@ -8,7 +8,7 @@ from groot.frontends.gui.gui_view_utils import EChanges
 from groot.graphing.graphing import MGraph
 from intermake import command
 from intermake.engine.environment import MCMD
-from mhelper import ignore
+
 
 
 __mcmd_folder_name__ = "Modifications"
@@ -39,15 +39,6 @@ def clean( edges: bool = True, subsequences: bool = True ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command()
-def verify() -> EChanges:
-    """
-    Verifies the integrity of the model.
-    """
-    verification.verify( global_view.current_model() )
-    MCMD.print( "Verified model OK." )
-    
-    return EChanges.NONE
 
 
 @command()
@@ -61,7 +52,7 @@ def set_tree( component: LegoComponent, tree: str ) -> EChanges:
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
     
-    g = MGraph()
+    g = MGraph(component)
     g.import_newick( tree, component.model )
     component.tree = g
     
@@ -84,38 +75,16 @@ def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command()
-def quantise( level: int ) -> EChanges:
-    """
-    Quantises the model.
-    
-    :param level:   Quantisation level, in sites 
-    """
-    
-    before, after = quantisation.quantise( global_view.current_model(), level )
-    
-    MCMD.print( "Quantised applied. Reduced the model from {} to {} subsequences.".format( before, after ) )
-    
-    return EChanges.MODEL_ENTITIES
 
 
-def new_subsequence( sequence: LegoSequence, split_point: int ) -> EChanges:
-    """
-    Splits a sequence, thus creating two new subsequences.
-    :param sequence:        Sequence to split 
-    :param split_point:     The point to split about
-    """
-    editor.split_sequence( sequence, split_point, no_fresh = False )
-    return EChanges.MODEL_ENTITIES
 
-
-def new_edge( subsequences: List[LegoSubsequence] ) -> EChanges:
+def new_edge( left: LegoSubsequence, right : LegoSubsequence ) -> EChanges:
     """
     Adds a new edge to the model.
-    :param subsequences:    Subsequences to create the edge across 
+    :param left:     Subsequence to create the edge from 
+    :param right:    Subsequence to create the edge to
     """
-    editor.add_new_edge( subsequences, no_fresh = False )
-    ignore( subsequences )
+    editor.add_new_edge( left, right, no_fresh = False )
     return EChanges.MODEL_ENTITIES
 
 

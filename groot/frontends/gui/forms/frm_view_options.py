@@ -1,5 +1,5 @@
 from groot.data.lego_model import LegoViewOptions
-from groot.frontends.gui.gui_view import LegoViewModel
+from groot.frontends.gui.gui_view import LegoView_Model
 from intermake import intermake_gui
 from mhelper_qt import exqtSlot
 from PyQt5.QtWidgets import QDialog, QWidget
@@ -83,7 +83,7 @@ class FrmViewOptions( QDialog ):
     
     
     @classmethod
-    def request( cls, owner_window: QWidget, view: LegoViewModel ):
+    def request( cls, owner_window: QWidget, view: LegoView_Model ):
         form = FrmViewOptions( owner_window, view.options )
         
         if form.exec_():

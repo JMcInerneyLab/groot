@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, consensus, fuse, tree
+from groot.algorithms import alignment, components, consensus, fuse, tree, fuse_2
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
@@ -20,6 +20,9 @@ def make_components( tolerance: int = 0 ) -> EChanges:
     :param tolerance:   Tolerance on overlap, in sites.
     """
     model = global_view.current_model()
+    
+    if len( model.edges ) == 0:
+        raise ValueError( "Refusing to make components because there is no edge data. Did you mean to load the edge data (BLAST) first?" )
     
     with MCMD.action( "Component detection" ):
         components.detect( model, tolerance )
@@ -44,6 +47,10 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> EChang
     :param component: Component to align, or `None` for all.
     """
     model = global_view.current_model()
+    
+    if not all( x.site_array for x in model.sequences ):
+        raise ValueError( "Refusing to make alignments because there is no site data. Did you mean to load the site data (FASTA) first?" )
+    
     to_do = cli_view_utils.get_component_list( component )
     before = sum( x.alignment is not None for x in model.components )
     
@@ -66,6 +73,10 @@ def make_trees( component: Optional[List[LegoComponent]] = None ):
     :param component:   Component, or `None` for all.
     """
     model = global_view.current_model()
+    
+    if not all( x.alignment is not None for x in model.components ):
+        raise ValueError( "Refusing to generate trees because there are no alignments. Did you mean to align the sequences first?" )
+
     to_do = cli_view_utils.get_component_list( component )
     before = sum( x.tree is not None for x in model.components )
     
@@ -105,9 +116,12 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
     
     Requisites: The trees. You must have called `make_trees` first.
     
-    :param overwrite: Drop existing trees first
+    :param overwrite: Drop existing fusions first?
     """
     model = global_view.current_model()
+    
+    if not all( x.tree is not None for x in model.components ):
+        raise ValueError(  "Cannot find fusion events because there is no tree data. Did you mean to generate the trees first?" )
     
     if overwrite:
         fuse.remove_fusions( model )
@@ -129,7 +143,28 @@ def make_nrfg() -> EChanges:
     """
     model = global_view.current_model()
     
+    if len( model.fusion_events ) == 0:
+        raise ValueError( "Cannot generate the NRFG because there is no fusion event data. Did you mean to find the fusion events first?" )
+    
     fuse.create_nrfg( model )
+    
+    MCMD.progress( "NRFG created OK." )
+    
+    return EChanges.MODEL_DATA 
+
+@command( names = ["make_nrfg_2", "create_nrfg_2"] )
+def make_nrfg_2() -> EChanges:
+    """
+    Creates the N-rooted fusion graph.
+    
+    Requisites: The fusions. You must have called `make_fusions` first!
+    """
+    model = global_view.current_model()
+    
+    if len( model.fusion_events ) == 0:
+        raise ValueError( "Cannot generate the NRFG because there is no fusion event data. Did you mean to find the fusion events first?" )
+    
+    fuse_2.create_nrfg( model )
     
     MCMD.progress( "NRFG created OK." )
     

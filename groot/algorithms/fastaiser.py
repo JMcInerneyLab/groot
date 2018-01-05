@@ -44,10 +44,10 @@ def edge_to_fasta( edge: LegoEdge ):
     fasta.append( "; EDGE: {}".format( edge ) )
     fasta.append( ";" )
     fasta.append( ">{} [ {} : {} ]".format( edge.left.sequence, edge.left.start, edge.left.end ) )
-    fasta.append( edge.left.sites or ";MISSING" )
+    fasta.append( edge.left.site_array or ";MISSING" )
     fasta.append( "" )
     fasta.append( ">{} [ {} : {} ]".format( edge.right.sequence, edge.right.start, edge.right.end ) )
-    fasta.append( edge.right.sites or ";MISSING" )
+    fasta.append( edge.right.site_array or ";MISSING" )
     fasta.append( "" )
     
     return "\n".join( fasta )

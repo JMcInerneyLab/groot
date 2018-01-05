@@ -177,7 +177,7 @@ def create_user_formatter( format_str: str = None ) -> DNodeToText:
                       if not in a section this character is ignored
     anything else   - verbatim
     """
-    if format_str is None:
+    if not format_str:
         return FORMATTER.short
     
     return (lambda x: lambda n: __format_node( n, x ))( format_str )

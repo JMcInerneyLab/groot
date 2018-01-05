@@ -5,7 +5,7 @@ import pyperclip
 from groot.algorithms import components, fastaiser, graph_viewing
 from groot.algorithms.classes import FusionPoint
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent
+from groot.data.lego_model import LegoComponent, ILegoVisualisable
 from groot.extensions import ext_files, ext_generating
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
@@ -20,7 +20,7 @@ T = TypeVar( "T" )
 
 
 @command( names = ["print_fasta", "fasta"] )
-def print_fasta( target: IVisualisable ) -> EChanges:
+def print_fasta( target: ILegoVisualisable ) -> EChanges:
     """
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
@@ -158,7 +158,7 @@ def print_trees( what: ETree = ETree.COMPONENT,
     Prints the tree for a component.
     
     :param file:        File to write the output to.
-    :param out:         Output. Ignored if `out_file` is set.
+    :param out:         Output. Ignored if `file` is set.
     :param what:        What to print.
     :param format:      How to format the nodes. See `print_trees_help`.
     :param view:        How to view the tree.
@@ -178,7 +178,7 @@ def print_trees( what: ETree = ETree.COMPONENT,
     if what == ETree.COMPONENT or what == ETree.CONSENSUS:
         for component_ in to_do:
             tree = component_.consensus if what == ETree.CONSENSUS else component_.tree
-            trees.append( (str( component ), tree) )
+            trees.append( (str( component_ ), tree) )
     elif what == ETree.NRFG:
         trees.append( ("NRFG", model.nrfg.graph if model.nrfg is not None else None) )
     else:
@@ -453,6 +453,8 @@ def print_fusions( verbose: bool = False ) -> EChanges:
     results: List[str] = []
     
     model = global_view.current_model()
+    n = 0
+    i = False
     
     for fusion_event in model.fusion_events:
         results.append( "{}".format( fusion_event ) )
@@ -460,29 +462,44 @@ def print_fusions( verbose: bool = False ) -> EChanges:
         
         for fusion_point in fusion_event.points_a:
             __format_fusion_point( fusion_point, results, verbose )
+            n += 1
         
         results.append( "" )
         
         for fusion_point in fusion_event.points_b:
             __format_fusion_point( fusion_point, results, verbose )
+            
+        if len(fusion_event.points_a) != len(fusion_event.points_b):
+            i = True
         
         results.append( "" )
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
+    
+    if n == 0:
+        MCMD.information( "Your model contains no fusion events. Have you tried generating some?" )
+    elif i:
+        MCMD.information( "An agreement on the number of fusion events is not agreed by the trees in your model." )
+    elif n == 1:
+        MCMD.information( "Your model contains 1 fusion." )
+    else:
+        MCMD.information( "Your model contains {} fusions.".format( n ) )
+    
     return EChanges.INFORMATION
 
 
 def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
     if not verbose:
         results.append( "  •  {}".format( str( fusion_point ) ) )
+        results.append( "         {} : {}".format( fusion_point.count, ",".join( sorted( str( x ) for x in fusion_point.genes ) ) ) )
         return
     
-    results.append( "  •  component  {}".format( fusion_point.component ) )
-    results.append( "     component  {}".format( fusion_point.opposite_component ) )
-    results.append( "     intersect  {}".format( fusion_point.event.intersections ) )
-    results.append( "     intersect  {}".format( fusion_point.event.orig_intersections ) )
-    results.append( "     sequences  {}".format( fusion_point.genes ) )
+    results.append( "  •  component         {}".format( fusion_point.component ) )
+    results.append( "     component         {}".format( fusion_point.opposite_component ) )
+    results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.intersections ) ) )
+    results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.orig_intersections ) ) )
+    results.append( "     sequences         {}".format( string_helper.format_array( fusion_point.genes ) ) )
     results.append( "     fusion_node_uid   {}".format( fusion_point.fusion_node_uid ) )
 
 

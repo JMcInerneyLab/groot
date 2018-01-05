@@ -7,7 +7,7 @@ See class `LegoModel`.
 from typing import Dict, Iterator, List, Optional, cast, Tuple
 from groot.frontends.gui.gui_view_support import EDomainFunction, EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
-from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper
+from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper, bio_helper
 
 
 LOG = Logger( False )
@@ -370,30 +370,12 @@ class LegoSequence( ILegoVisualisable ):
                        value = "{} sites".format( self.length ),
                        colour = EColour.BLUE,
                        icon = resources.folder,
-                       extra = { "id"          : self.id,
-                                 "component"   : self.component,
-                                 "length"      : self.length,
-                                 "edges"       : self.all_edges(),
-                                 "accession"   : self.accession,
-                                 "is_composite": self.get_is_composite(),
-                                 "is_root"     : self.is_root,
-                                 "num_sites"   : len( self.site_array ),
-                                 "sites"       : self.site_array,
-                                 "subsequences": self.subsequences_data } )
-    
-    
-    def get_is_composite( self ) -> ETristate:
-        """
-        Returns if this has been determined to be a composite gene
-        """
-        l = len( self.minor_components() )
-        
-        if l == 1:
-            return ETristate.NO
-        elif l == 0:
-            return ETristate.UNKNOWN
-        else:
-            return ETristate.YES
+                       extra = { "id"       : self.id,
+                                 "length"   : self.length,
+                                 "accession": self.accession,
+                                 "is_root"  : self.is_root,
+                                 "num_sites": len( self.site_array ),
+                                 "sites"    : self.site_array } )
     
     
     def __str__( self ) -> str:
@@ -465,6 +447,23 @@ class LegoComponent( ILegoVisualisable ):
         self.consensus_intersection: List[LegoSequence] = None
         self.major_sequences: List[LegoSequence] = major_sequences
         self.minor_subsequences: List[LegoSubsequence] = None
+    
+    
+    def get_alignment_by_accession( self ) -> str:
+        """
+        Gets the `alignment` property, but translates sequence IDs into accessions
+        """
+        if not self.alignment:
+            return self.alignment
+        
+        r = []
+        
+        for name, value in bio_helper.parse_fasta( text = self.alignment ):
+            assert name.startswith( "S" ), name
+            r.append( ">" + self.model.find_sequence_by_id( int( name[1:] ) ).accession )
+            r.append( value )
+        
+        return "\n".join( r )
     
     
     def visualisable_info( self ) -> UiInfo:
@@ -552,6 +551,10 @@ class LegoComponentCollection:
     
     def add( self, component: LegoComponent ):
         self.__components.append( component )
+    
+    
+    def __getitem__( self, item ):
+        return self.__components[item]
     
     
     def __len__( self ):
@@ -812,4 +815,3 @@ class LegoUserDomain( LegoSubsequence ):
     
     def __init__( self, sequence: "LegoSequence", start: int, end: int ):
         super().__init__( sequence, start, end )
-        

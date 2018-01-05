@@ -2,6 +2,7 @@ from typing import Iterable, List
 
 from ete3 import Tree
 
+import groot.algorithms.extenal_runner
 from groot.algorithms import external_tools, graph_viewing
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
@@ -44,7 +45,7 @@ def consensus( component: LegoComponent ):
         raise ValueError( "Cannot perform consensus, trees are empty." )
     
     if len( all_trees_ete ) != 1:
-        consensus_newick = external_tools.run_in_temporary( external_tools.consensus, all_trees_newick )
+        consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( external_tools.consensus, all_trees_newick )
     else:
         consensus_newick = all_trees_newick
     
@@ -54,6 +55,9 @@ def consensus( component: LegoComponent ):
 def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
     """
     Generates a consensus tree.
+    :param model:       Model 
+    :param graphs:      Graphs to generate consensus from 
+    :return:            Tuple of consensus tree and its root 
     """
     newick = []
     
@@ -72,7 +76,7 @@ def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNo
         
         newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
     
-    consensus_newick = external_tools.run_in_temporary( external_tools.consensus, "\n".join( newick ) + "\n" )
+    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( external_tools.consensus, "\n".join( newick ) + "\n" )
     
     root_ref = ByRef[MNode]( None )
     result = MGraph.from_newick( consensus_newick, model, root_ref )

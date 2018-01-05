@@ -21,7 +21,7 @@ _LegoView_AllEdges_ = "LegoView_AllEdges"
 _LegoViewInfo_Side_ = "LegoViewInfo_Side"
 _LegoViewSequence_ = "LegoView_Sequence"
 _LegoView_Subsequence_ = "LegoView_UserDomain"
-_LegoViewModel_ = "LegoViewModel"
+_LegoViewModel_ = "LegoView_Model"
 
 
 class LegoViewInfo_Side:
@@ -275,7 +275,7 @@ class LegoView_UserDomain( QGraphicsItem ):
     
     
     @property
-    def owner_model_view( self ) -> "LegoViewModel":
+    def owner_model_view( self ) -> "LegoView_Model":
         return self.owner_sequence_view.owner_model_view
     
     
@@ -707,7 +707,7 @@ class LegoView_AllEdges( QGraphicsItem ):
     """
     
     
-    def __init__( self, view_model: "LegoViewModel" ):
+    def __init__( self, view_model: "LegoView_Model" ) -> None:
         super().__init__()
         self.setZValue( DRAWING.Z_EDGES )
         self.__next_colour = -1
@@ -827,7 +827,7 @@ class LookupTable:
         self.sequence_ysep = self.sequence_height
 
 
-class LegoViewModel:
+class LegoView_Model:
     """
     The view of the model.
     Holds all of the other views.
@@ -856,7 +856,7 @@ class LegoViewModel:
             self.sequence_views[sequence] = item
             self.userdomain_views.update( item.userdomain_views )
         
-        self.edges_view = self.update_edges()
+        self.edges_view : LegoView_AllEdges = self.update_edges()
         self.scene.addItem( self.edges_view )
         
         self._selections = 0
@@ -891,6 +891,7 @@ class LegoViewModel:
         
         self.edges_view = LegoView_AllEdges( self )
         self.scene.addItem( self.edges_view )
+        
         return self.edges_view
     
     
@@ -1170,7 +1171,7 @@ class LegoViewModel:
     
     
     class __on_selecting:
-        def __init__( self, owner: "LegoViewModel", select: ESelect ):
+        def __init__( self, owner: "LegoView_Model", select: ESelect ):
             assert isinstance( select, ESelect )
             
             self.owner = owner
@@ -1316,52 +1317,4 @@ class LegoViewModel:
                 raise SwitchError( "self.options.mode", self.options.mode )
     
     
-    def align_about_domain( self, target_userdomain_view: LegoView_UserDomain ) -> None:
-        """
-        Repositions all domains in the same component to be in line with the specified domain.
-        """
-        target_components = set( target_userdomain_view.components )
-        
-        for sequence_view in self.sequence_views.values():
-            l = sequence_view.get_sorted_userdomain_views()
-            for userdomain_view in l:
-                s = set( userdomain_view.components )
-                if all( x in s for x in target_components ):
-                    userdomain_view.setX( target_userdomain_view.x() )
-                    userdomain_view.save_state()
-                    self.align_about( userdomain_view, relaxed = True )
-                    break
     
-    
-    def align_about( self, userdomain_view: LegoView_UserDomain, left = True, right = True, relaxed = False ):
-        """
-        Aligns the elements of a sequence, fixing the position of the specified domain.
-        
-        :param userdomain_view:     Fixed domain
-        :param left:                Align predecessors 
-        :param right:               Align successors 
-        :param relaxed:             Only align if not aligning would make the sequences out of order
-        """
-        if left:
-            op = userdomain_view.sibling_previous
-            
-            while op:
-                m = op.sibling_next.x() - op.rect.width()
-                
-                if not relaxed or op.x() > m:
-                    op.setX( m )
-                    op.save_state()
-                
-                op = op.sibling_previous
-        
-        if right:
-            op = userdomain_view.sibling_next
-            
-            while op:
-                m = op.sibling_previous.x() + op.sibling_previous.rect.width()
-                
-                if not relaxed or op.x() < m:
-                    op.setX( m )
-                    op.save_state()
-                
-                op = op.sibling_next

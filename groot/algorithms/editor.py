@@ -162,11 +162,6 @@ def add_new_edge( left: LegoSubsequence, right: LegoSubsequence, no_fresh: bool 
     return edge
 
 
-def add_new_subsequence( sequence: LegoSequence, split_point: int, no_fresh: bool ) -> None:
-    """
-    Splits a sequence, creating a new subsequence
-    """
-    split_sequence( sequence, split_point, no_fresh )
 
 
 def remove_sequences( sequences: List[LegoSequence], no_fresh: bool ):

@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+    <title>$(TITLE)</title>
+
+    <script type="text/javascript" src="vis/dist/vis.js"></script>
+
+    <script type="text/javascript">
+    function show_network()
+    {
+      // create an array with nodes
+      var nodes = new vis.DataSet
+      ([
+        $(NODES)
+      ]);
+
+      // create an array with edges
+      var edges = new vis.DataSet
+      ([
+        $(EDGES)
+      ]);
+
+      // create a network
+      var container = document.getElementById('my_network');
+      var data =
+      {
+        nodes: nodes,
+        edges: edges
+      };
+
+      var options = {};
+      var network = new vis.Network(container, data, options);
+  }
+  
+    </script>
+
+    <style type="text/css">
+        #my_network
+        {
+            width  : 1024px;
+            height : 768px;
+            border : 1px solid lightgray;
+        }
+    </style>
+</head>
+<body>
+<p><b>$(TITLE)</b></p>
+<p>$(COMMENT)</p>
+<div id="my_network"></div>
+<script type="text/javascript">
+    show_network();
+</script>
+</body>
+</html>
