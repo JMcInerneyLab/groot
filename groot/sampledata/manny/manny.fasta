@@ -1,0 +1,89 @@
+; TATOS
+
+; Our ortato, all A's. extinct but gave rise to potato and flatato.
+;>Ao1
+;AAAAAAAA
+
+; [ortato_] Our potato, from ortato, mutated a C at position 8
+>Ax1
+AAAAAAAC
+
+; [ortato_] The flatato, from ortato, mutated a C at position 7. extinct but gave rise to schmato and eetato
+;>Ao2
+;AAAAAACA
+
+; [ortato_flatato_] The schmato, from flatato, mutated a C at position 6
+>Ax2
+AAAAACCA
+
+; [ortato_flatato_] The eetato, from flatato, mutated a C at position 5. extinct but gave rise to zatato and diretato
+;>Ao3
+;AAAACACA
+
+; [ortato_flatato_eetato_] The zeetato, from eetato, mutated a C at position 4
+>Ax3
+AAACCACA
+
+; [ortato_flatato_eetato_] The diretato, from eetato, mutated a C at position 3. extinct but gave rise to the odobia.
+;>Ao4
+;AACACACA
+
+; MICE
+
+; Our ormouse, all T's. extinct but gave rise to mouse and flamouse.
+;>Bo1
+;TTTTTTTT
+
+; [ormouse_] Our mouse, from ormouse, mutated a G at position 8
+>Bx1
+TTTTTTTG
+
+; [ormouse_] Our flamouse, from ormouse, mutated a G at position 7. extinct but gave rise to schlmouse and eemouse.
+;>Bo2
+;TTTTTTGT
+
+; [ormouse_flamouse_] Our schlmouse, from flamouse, mutated a G at position 6
+>Bx2
+TTTTTGGT
+
+; [ormouse_flamouse_] Our eemouse, from flamouse, mutated a G at position 5. extinct but gave rise to zeemouse and diremouse.
+;>Bo3
+;TTTTGTGT
+
+; [ormouse_flamouse_eemouse_] Our zeemouse, from eemouse, mutated a G at position 4
+>Bx3
+TTTGGTGT
+
+; [ormouse_flamouse_eemouse_] Our diremouse, from ormouse, mutated a G at position 3. extinct but gave rise to the odobia.
+;>Bo4
+;TTGTGTGT
+
+; ODOBIA
+
+; Our orflobadob, from the combination of a diretato and a diremouse. extinct but gave rise to flodobadob and fladobadob.
+;>Co1
+;AACACACATTGTGTGT
+
+; [orflobabob_] Our floadobadob, from orflobadob, mutated a T at position 1 (L1)
+>Cx1
+TACACACATTGTGTGT
+
+; [orflobabob_] Our fladobadob, from orflobadob, mutated a G at position 1 (L1). extinct but gave rise to schlodobadob and eedobadob.
+;>Co2
+;GACACACATTGTGTGT
+
+; [orflobabob_fladobadob_] Our schlodobadob, from fladobadob, mutated an A at position 9 (R1)
+>Cx2
+GACACACAATGTGTGT
+
+; [orflobabob_fladobadob_] Our eedobadob, from fladobadob, mutated an C at position 9 (R1). extinct but gave rise to zlodobadob and diredobadob.
+;>Co3
+;GACACACACTGTGTGT
+
+; [orflobabob_fladobadob_eedobadob_] Our zlodobadob, from eedobadob, mutated an T at position 2 (L2)
+>Cx3
+GTCACACACTGTGTGT
+
+; [orflobabob_fladobadob_eedobadob_] Our _diredobadob, from eedobadob, mutated an G at position 2 (L2). still alive.
+>Co4
+GGCACACACTGTGTGT

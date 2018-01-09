@@ -7,15 +7,20 @@ def clear( component: LegoComponent ):
     component.alignment = None
 
 
-def align( component: LegoComponent ):
+def align( algorithm: str, component: LegoComponent ):
     fasta = fastaiser.component_to_fasta( component, simplify_ids = True )
     
-    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( external_tools.align, fasta )
+    if algorithm is None:
+        algorithm = "default"
+    
+    fn = groot.algorithms.extenal_runner.get_tool("align" , algorithm)
+    
+    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( fn, fasta )
 
 
 def drop( component: LegoComponent ):
     if component.tree:
-        raise ValueError("Refusing to drop the alignment because there is already a tree for this component. Did you mean to drop the tree first?")
+        raise ValueError( "Refusing to drop the alignment because there is already a tree for this component. Did you mean to drop the tree first?" )
     
     if component.alignment is not None:
         component.alignment = None

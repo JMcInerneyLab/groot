@@ -73,6 +73,7 @@ def best_iso( g: MGraph, is_inside, is_outside ):
 
 
 def create_nrfg( model: LegoModel ):
+    MCMD.print("This is NRFG V 2")
     bag: List[MGraph] = []
     
     for component in model.components:

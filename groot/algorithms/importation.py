@@ -1,10 +1,12 @@
+from numpy import record
+
 from groot.algorithms import editor
 from groot.data.lego_model import LegoModel, LOG, LegoSubsequence
 from intermake.engine.environment import MCMD
-from mhelper import file_helper
+from mhelper import file_helper, bio_helper
 
 
-def import_directory( model : LegoModel, directory: str ):
+def import_directory( model: LegoModel, directory: str ):
     """
     Imports all importable files from a specified directory
     :param model:     Model to import into
@@ -14,23 +16,23 @@ def import_directory( model : LegoModel, directory: str ):
     contents = file_helper.list_dir( directory )
     
     for file_name in contents:
-        import_file(model, file_name, skip_bad_extensions = True)
+        import_file( model, file_name, skip_bad_extensions = True )
 
 
-
-def import_file( model : LegoModel, file_name: str, *, skip_bad_extensions : bool = False ):
-    ext = file_helper.get_extension(file_name).lower()
+def import_file( model: LegoModel, file_name: str, *, skip_bad_extensions: bool = False ):
+    ext = file_helper.get_extension( file_name ).lower()
     
     if ext in (".blast", ".tsv"):
-        import_blast(model, file_name)
+        import_blast( model, file_name )
     elif ext in (".fasta", ".fa", ".faa"):
-        import_fasta(model, file_name)
+        import_fasta( model, file_name )
     elif ext in (".composites", ".comp"):
-        import_composites(model, file_name)
+        import_composites( model, file_name )
     elif not skip_bad_extensions:
-        raise ValueError("Cannot import the file '{}' because I don't recognise the extension '{}'.".format(file_name, ext))
+        raise ValueError( "Cannot import the file '{}' because I don't recognise the extension '{}'.".format( file_name, ext ) )
 
-def import_fasta( model : LegoModel, file_name: str ):
+
+def import_fasta( model: LegoModel, file_name: str ):
     """
     API
     Imports a FASTA file.
@@ -45,15 +47,15 @@ def import_fasta( model : LegoModel, file_name: str ):
         num_updates = 0
         idle = 0
         idle_counter = 10000
-        extra_data = "FASTA from '{}'".format(file_name)
+        extra_data = "FASTA from '{}'".format( file_name )
         
-        for record in SeqIO.parse( file_name, "fasta" ):
-            sequence = editor.make_sequence( model, str( record.id ), obtain_only, len( record.seq ), extra_data, False )
+        for name, sequence_data in bio_helper.parse_fasta( file = file_name ):
+            sequence = editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False )
             
             if sequence:
-                LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( record.seq ) ) )
+                LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( sequence_data ) ) )
                 num_updates += 1
-                sequence.site_array = str( record.seq )
+                sequence.site_array = str( sequence_data )
                 idle = 0
             else:
                 idle += 1
@@ -62,12 +64,11 @@ def import_fasta( model : LegoModel, file_name: str ):
                     LOG( "THIS FASTA IS BORING..." )
                     idle_counter *= 2
                     idle = 0
-                    
-    MCMD.print("Imported Fasta from «{}».".format(file_name))
-                        
     
-    
-def import_blast( model : LegoModel, file_name: str ):
+    MCMD.print( "Imported Fasta from «{}».".format( file_name ) )
+
+
+def import_blast( model: LegoModel, file_name: str ):
     """
     API
     Imports a BLAST file.
@@ -78,44 +79,48 @@ def import_blast( model : LegoModel, file_name: str ):
     obtain_only = model._has_data()
     
     with LOG( "IMPORT {} BLAST FROM '{}'".format( "MERGE" if obtain_only else "NEW", file_name ) ):
-        
         with open( file_name, "r" ) as file:
             for line in file.readlines():
                 line = line.strip()
                 
-                if line and not line.startswith( "#" ) and not line.startswith(";"):
+                if line and not line.startswith( "#" ) and not line.startswith( ";" ):
                     # BLASTN     query acc. | subject acc. |                                 | % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
                     # MEGABLAST  query id   | subject ids  | query acc.ver | subject acc.ver | % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
                     # Fields: 
-                    # Fields: 
-                    e = line.split( "\t" )
                     
-                    if len(e) == 14:
+                    # Split by tabs or spaces 
+                    if "\t" in line:
+                        e = line.split( "\t" )
+                    else:
+                        e = [x for x in line.split( " " ) if x]
+                    
+                    if len( e ) == 14:
                         del e[2:4]
                     
-                    if len(e) != 12:
-                        raise ValueError("BLAST file '{}' should contain 12 values, but this line contains {}: {}".format(file_name, len(e), line))
+                    # Assertion
+                    if len( e ) != 12:
+                        raise ValueError( "BLAST file '{}' should contain 12 values, but this line contains {}: {}".format( file_name, len( e ), line ) )
                     
-                    query_accession = e[ 0 ]
-                    query_start = int( e[ 6 ] )
-                    query_end = int( e[ 7 ] )
-                    query_length = query_end-  query_start 
-                    subject_accession = e[ 1 ]
-                    subject_start = int( e[ 8 ] )
-                    subject_end = int( e[ 9 ] )
-                    subject_length = subject_end-  subject_start
-                    e_value = float(e[10])
-                    LOG("BLAST SAYS {} {}:{} ({}) --> {} {}:{} ({})".format(query_accession, query_start, query_end, query_length, subject_accession, subject_start, subject_end, subject_length))
+                    query_accession = e[0]
+                    query_start = int( e[6] )
+                    query_end = int( e[7] )
+                    query_length = query_end - query_start
+                    subject_accession = e[1]
+                    subject_start = int( e[8] )
+                    subject_end = int( e[9] )
+                    subject_length = subject_end - subject_start
+                    e_value = float( e[10] )
+                    LOG( "BLAST SAYS {} {}:{} ({}) --> {} {}:{} ({})".format( query_accession, query_start, query_end, query_length, subject_accession, subject_start, subject_end, subject_length ) )
                     
                     if e_value > 1e-10:
-                        LOG("REJECTED E VALUE")
+                        LOG( "REJECTED E VALUE" )
                         continue
                     
-                    assert query_length>0 and subject_length > 0
+                    assert query_length > 0 and subject_length > 0
                     
-                    TOL = int(10 + ((query_length+subject_length)/2)/5)
-                    if not (subject_length - TOL) <= query_length <= (subject_length+TOL):
-                        raise ValueError("Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format(query_length, subject_length, line))
+                    TOL = int( 10 + ((query_length + subject_length) / 2) / 5 )
+                    if not (subject_length - TOL) <= query_length <= (subject_length + TOL):
+                        raise ValueError( "Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format( query_length, subject_length, line ) )
                     
                     query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line, False )
                     subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False )
@@ -125,12 +130,11 @@ def import_blast( model : LegoModel, file_name: str ):
                         subject = LegoSubsequence( subject_s, subject_start, subject_end )
                         LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
                         editor.make_edge( model, query, subject, line, False )
-                        
-    MCMD.print("Imported Blast from «{}».".format(file_name))
-        
+    
+    MCMD.print( "Imported Blast from «{}».".format( file_name ) )
 
 
-def import_composites( model : LegoModel, file_name: str ):
+def import_composites( model: LegoModel, file_name: str ):
     """
     API
     Imports a COMPOSITES file
@@ -138,7 +142,6 @@ def import_composites( model : LegoModel, file_name: str ):
     model.comments.append( "IMPORT_COMPOSITES \"{}\"".format( file_name ) )
     
     with LOG( "IMPORT COMPOSITES FROM '{}'".format( file_name ) ):
-        
         fam_name = "?"
         fam_mean_length = None
         composite_sequence = None
@@ -150,9 +153,9 @@ def import_composites( model : LegoModel, file_name: str ):
                 if line.startswith( ">" ):
                     if composite_sequence:
                         return
-                        
+                    
                     # COMPOSITE!
-                    composite_name = line[ 1: ]
+                    composite_name = line[1:]
                     composite_sequence = editor.make_sequence( model, composite_name, False, 0, line, False )
                     composite_sequence.comments.append( "FILE '{}' LINE {}".format( file_name, line_number ) )
                 elif "\t" in line:
@@ -160,23 +163,23 @@ def import_composites( model : LegoModel, file_name: str ):
                     # Fields: F<comp family id> <mean align> <mean align> <no sequences as component> <no sequences in family> <mean pident> <mean length>
                     e = line.split( "\t" )
                     
-                    fam_name = e[ 0 ]
+                    fam_name = e[0]
                     # fam_mean_start = int( e[ 1 ] )
                     # fam_mean_end = int( e[ 2 ] )
                     # fam_num_seq_as_component = int(e[3])
                     # fam_num_seq_in_family = int(e[3])
                     # fam_mean_pident = float(e[4])
-                    fam_mean_length = int( float( e[ 5 ] ) )
+                    fam_mean_length = int( float( e[5] ) )
                     
-                    #composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
+                    # composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
                     sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False )
                     sequence.comments.append( "Family '{}'".format( fam_name ) )
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     
-                    #subsequence = sequence._make_subsequence( 1, sequence.length )
-                    #assert composite_subsequence
-                    #self._make_edge( composite_subsequence, subsequence )
-                    
-    MCMD.print("Imported Composites from «{}».".format(file_name))
+                    # subsequence = sequence._make_subsequence( 1, sequence.length )
+                    # assert composite_subsequence
+                    # self._make_edge( composite_subsequence, subsequence )
+    
+    MCMD.print( "Imported Composites from «{}».".format( file_name ) )

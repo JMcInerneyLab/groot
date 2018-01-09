@@ -38,13 +38,14 @@ def make_components( tolerance: int = 0 ) -> EChanges:
 
 
 @command( names = ["make_alignments", "create_alignments", "make_alignment", "create_alignment"] )
-def make_alignments( component: Optional[List[LegoComponent]] = None ) -> EChanges:
+def make_alignments( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Aligns the component. If no component is specified, aligns all components.
     
     Requisites: The FASTA sequences. You must have called `load_fasta` first.
     
-    :param component: Component to align, or `None` for all.
+    :param algorithm:   Algorithm to use.
+    :param component:   Component to align, or `None` for all.
     """
     model = global_view.current_model()
     
@@ -55,58 +56,39 @@ def make_alignments( component: Optional[List[LegoComponent]] = None ) -> EChang
     before = sum( x.alignment is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
-        alignment.align( component_ )
+        alignment.align( algorithm, component_ )
     
     after = sum( x.alignment is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
-    return EChanges.COMP_DATA 
+    return EChanges.COMP_DATA
 
 
 @command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
-def make_trees( component: Optional[List[LegoComponent]] = None ):
+def make_trees( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ):
     """
     Generates component trees.
     
     Requisites: The alignments. You must have called `make_alignments` first.
     
+    :param algorithm:   Algorithm to use. See `help_algorithms`.
     :param component:   Component, or `None` for all.
     """
     model = global_view.current_model()
     
     if not all( x.alignment is not None for x in model.components ):
         raise ValueError( "Refusing to generate trees because there are no alignments. Did you mean to align the sequences first?" )
-
+    
     to_do = cli_view_utils.get_component_list( component )
     before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
-        tree.generate_tree( component_ )
+        tree.generate_tree( algorithm, component_ )
     
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
-    return EChanges.COMP_DATA 
-
-
-@command( names = ["make_consensus", "create_consensus"] )
-def make_consensus( component: Optional[List[LegoComponent]] = None ):
-    """
-    Fuses the component trees to create the basis for the fusion graph.
-    
-    :param component:   Component to generate consensus for, or the default, `None`, to generate the consensus for all components.
-    """
-    model = global_view.current_model()
-    to_do = cli_view_utils.get_component_list( component )
-    before = sum( x.consensus is not None for x in model.components )
-    
-    for component_ in MCMD.iterate( to_do, "Consensus" ):
-        consensus.consensus( component_ )
-    
-    after = sum( x.consensus is not None for x in model.components )
-    MCMD.progress( "{} consensuses generated. {} of {} components have a consensus tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
-    
-    return EChanges.COMP_DATA 
+    return EChanges.COMP_DATA
 
 
 @command( names = ["make_fusions", "make_fusion", "create_fusions", "create_fusion", "find_fusions", "find_fusion"] )
@@ -121,7 +103,7 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
     model = global_view.current_model()
     
     if not all( x.tree is not None for x in model.components ):
-        raise ValueError(  "Cannot find fusion events because there is no tree data. Did you mean to generate the trees first?" )
+        raise ValueError( "Cannot find fusion events because there is no tree data. Did you mean to generate the trees first?" )
     
     if overwrite:
         fuse.remove_fusions( model )
@@ -131,7 +113,7 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
     n = len( model.fusion_events )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
     
-    return EChanges.MODEL_DATA 
+    return EChanges.MODEL_DATA
 
 
 @command( names = ["make_nrfg", "create_nrfg"] )
@@ -150,7 +132,8 @@ def make_nrfg() -> EChanges:
     
     MCMD.progress( "NRFG created OK." )
     
-    return EChanges.MODEL_DATA 
+    return EChanges.MODEL_DATA
+
 
 @command( names = ["make_nrfg_2", "create_nrfg_2"] )
 def make_nrfg_2() -> EChanges:
@@ -168,4 +151,4 @@ def make_nrfg_2() -> EChanges:
     
     MCMD.progress( "NRFG created OK." )
     
-    return EChanges.MODEL_DATA 
+    return EChanges.MODEL_DATA

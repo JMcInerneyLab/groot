@@ -1,3 +1,11 @@
+"""
+This module contains the user-defined algorithms.
+
+Which algorithm is used can be specified in GROOT by the `algorithm` parameter.
+If no algorithm is specified, the `_default` function is used.
+
+Please see the pre-defined `_default` functions for details.
+"""
 import re
 
 from groot.algorithms import extenal_runner
@@ -7,51 +15,71 @@ from mhelper import bio_helper, file_helper
 _RX1 = re.compile( ":[0-9.]+" )
 
 
-def consensus( trees ):
+def consensus_default( trees ):
     """
     Generates a consensus tree.
     
     :param trees:       Input trees, in Newick format. One tree per line. 
     :return:            Output (consensus) tree, in Newick format.
     """
-    
+    return consensus_paup( trees )
+
+
+def consensus_paup( trees ):
     SCRIPT = """GetTrees file=in_file.nwk;
                 ConTree /treeFile=temp_file.nex;
                 GetTrees file=temp_file.nex;
                 SaveTrees file=out_file.nwk format=Newick replace=yes;
                 quit;"""
     
+    GARBAGE = ("P A U P \\*",
+               "Version .*",
+               "Mon .*",
+               "Running on .*",
+               "SSE vectorization enabled",
+               "SSSE3 instructions supported",
+               "Multithreading enabled for likelihood using Pthreads",
+               "Compiled using .*",
+               ".*----.*",
+               "This is an alpha-test version that is still changing rapidly\\.",
+               "It will expire on .*",
+               "Time used",
+               "Strict consensus of",
+               "Please report bugs to dave@phylosolutions\\.com",
+               "Keeping: trees from file \\(replacing any trees already in memory\\)",
+               ".*\\|.*")
+    
     # Strip the branch lengths, Paup doesn't like them
     trees = _RX1.sub( "", trees )
     file_helper.write_all_text( "in_file.nwk", trees )
     file_helper.write_all_text( "in_file.paup", SCRIPT )
     
-    extenal_runner.run_subprocess( ["paup", "in_file.paup"] )
+    extenal_runner.run_subprocess( ["paup", "in_file.paup", "-n"], garbage = GARBAGE )
     
     return file_helper.read_all_text( "out_file.nwk" )
 
 
-# def consensus( trees ):
-#     """
-#     Generates a consensus tree.
-#     
-#     :param trees:       Input trees, in Newick format. One tree per line. 
-#     :return:            Output (consensus) tree, in Newick format.
-#     """
-#     import sys
-#     from Bio.Phylo import Consensus
-#     
-#     # Let's use BioPython and a majority consensus.
-#     trees_ = [bio_helper.newick_to_biotree( x ) for x in trees.split( "\n" ) if x]
-#     orig = sys.getrecursionlimit()
-#     sys.setrecursionlimit( 100000 )
-#     majority_tree = Consensus.adam_consensus( trees_ )
-#     sys.setrecursionlimit( orig )
-#     result = bio_helper.biotree_to_newick( majority_tree )
-#     return result
+def consensus_biopython( trees ):
+    """
+    Generates a consensus tree.
+
+    :param trees:       Input trees, in Newick format. One tree per line. 
+    :return:            Output (consensus) tree, in Newick format.
+    """
+    import sys
+    from Bio.Phylo import Consensus
+    
+    # Let's use BioPython and a majority consensus.
+    trees_ = [bio_helper.newick_to_biotree( x ) for x in trees.split( "\n" ) if x]
+    orig = sys.getrecursionlimit()
+    sys.setrecursionlimit( 100000 )
+    majority_tree = Consensus.adam_consensus( trees_ )
+    sys.setrecursionlimit( orig )
+    result = bio_helper.biotree_to_newick( majority_tree )
+    return result
 
 
-def tree( alignment ):
+def tree_default( alignment ):
     """
     Generates a tree.
     
@@ -66,15 +94,29 @@ def tree( alignment ):
     return file_helper.read_all_text( "RAxML_bestTree.t" )
 
 
-def align( fasta ):
+def align_default( fasta ):
     """
     Generates an alignment.
     
     :param fasta:       Input data, in Fasta format. 
     :return:            Output data, in Fasta format.
     """
+    return align_muscle( fasta )
+
+
+def align_muscle( fasta ):
+    """
+    Variation of `align_default` which uses MUSCLE to align.
+    """
     file_helper.write_all_text( "in_file.fasta", fasta )
     
     extenal_runner.run_subprocess( "muscle -in in_file.fasta -out out_file.fasta".split( " " ) )
     
     return file_helper.read_all_text( "out_file.fasta" )
+
+
+def align_as_is( fasta ):
+    """
+    Variation of `align_default` which uses the FASTA as is.
+    """
+    return fasta

@@ -639,7 +639,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View", "Generate consensus", "Drop consensus", "View consensus" )
+        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
         
         if selected == "Generate":
             self.request_plugin( COMMANDS.ext_generating.make_trees, args = list( self.view.selected_components() ) or None )
@@ -647,12 +647,6 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             self.request_plugin( COMMANDS.ext_dropping.drop_tree )
         elif selected == "View":
             self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first( self.view.selected_components(), NOT_PROVIDED ) )
-        elif selected == "Generate consensus":
-            self.request_plugin( COMMANDS.ext_generating.make_consensus, args = list( self.view.selected_components() ) or None )
-        elif selected == "Drop consensus":
-            self.request_plugin( COMMANDS.ext_dropping.drop_consensus )
-        elif selected == "View consensus":
-            self.request_plugin( COMMANDS.ext_viewing.print_consensus, self.view.selected_components() or NOT_PROVIDED )
         
         self._update_status_checkbox_values()
     

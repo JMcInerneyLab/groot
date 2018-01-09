@@ -1,7 +1,7 @@
 from groot.extensions import ext_viewing, ext_files, ext_generating, ext_gimmicks, ext_modifications, ext_dropping, ext_gui
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.22"
+__version__ = "0.0.0.23"
 
 
 def __setup():

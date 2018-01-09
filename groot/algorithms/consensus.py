@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 from ete3 import Tree
 
@@ -10,7 +10,7 @@ from groot.graphing.graphing import MGraph, MNode
 from mhelper import ByRef, array_helper
 
 
-def consensus( component: LegoComponent ):
+def consensus(algorithm:Optional[str], component: LegoComponent ):
     """
     Generates the consensus tree for a component.
     """
@@ -44,15 +44,17 @@ def consensus( component: LegoComponent ):
     if not all_trees_newick:
         raise ValueError( "Cannot perform consensus, trees are empty." )
     
+    fn = groot.algorithms.extenal_runner.get_tool("consensus" , algorithm)
+    
     if len( all_trees_ete ) != 1:
-        consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( external_tools.consensus, all_trees_newick )
+        consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, all_trees_newick )
     else:
         consensus_newick = all_trees_newick
     
     component.consensus = MGraph.from_newick( consensus_newick, component.model )
 
 
-def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
+def tree_consensus( algorithm:Optional[str], model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
     """
     Generates a consensus tree.
     :param model:       Model 
@@ -75,21 +77,13 @@ def tree_consensus( model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNo
             raise ValueError( "Refusing to generate a consensus because at least one graph has no sequence data: {}".format( graph ) )
         
         newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
+        
+    fn = groot.algorithms.extenal_runner.get_tool("consensus" , algorithm)
     
-    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( external_tools.consensus, "\n".join( newick ) + "\n" )
+    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, "\n".join( newick ) + "\n" )
     
     root_ref = ByRef[MNode]( None )
     result = MGraph.from_newick( consensus_newick, model, root_ref )
     return result, root_ref.value
 
 
-def drop( component: LegoComponent ):
-    if component.model.nrfg:
-        raise ValueError( "Refusing to drop consensus because they may be in use by the NRFG. Did you mean to drop the NRFG first?" )
-    
-    if component.consensus is not None:
-        component.consensus = None
-        component.consensus_intersection = None
-        return True
-    
-    return False

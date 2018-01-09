@@ -52,7 +52,6 @@ def print_status() -> EChanges:
     r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
     r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignments ) ) )
     r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_trees ) ) )
-    r.append( "Consensus:     {}".format( __get_status_line( p, model.components, lambda x: x.consensus, ext_generating.make_consensus ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "NRFG" + Theme.RESET )
     r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
@@ -68,13 +67,14 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChan
     :param component:   Component to print alignment for. If not specified prints all alignments.
     """
     to_do = cli_view_utils.get_component_list( component )
+    m = global_view.current_model()
     
     for component_ in to_do:
         MCMD.print( __print_header( component_ ) )
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
-            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, global_view.current_model().site_type ) )
+            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type,  m) )
     
     return EChanges.INFORMATION
 
@@ -322,6 +322,20 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     return EChanges.INFORMATION
 
 
+@command( names = ["print_edges", "edges"] )
+def print_edges() -> EChanges:
+    """
+    Prints model edges
+    """
+    
+    model = global_view.current_model()
+    
+    for edge in model.edges:
+        MCMD.print( str( edge ) )
+    
+    return EChanges.NONE
+
+
 @command( names = ["print_sequences", "sequences"] )
 def print_sequences() -> EChanges:
     """
@@ -468,8 +482,8 @@ def print_fusions( verbose: bool = False ) -> EChanges:
         
         for fusion_point in fusion_event.points_b:
             __format_fusion_point( fusion_point, results, verbose )
-            
-        if len(fusion_event.points_a) != len(fusion_event.points_b):
+        
+        if len( fusion_event.points_a ) != len( fusion_event.points_b ):
             i = True
         
         results.append( "" )

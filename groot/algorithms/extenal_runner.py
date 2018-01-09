@@ -1,25 +1,63 @@
 import os
 import shutil
-from typing import Sequence
+from typing import Sequence, Optional
 
+import re
+
+from groot.algorithms import external_tools
 from intermake.engine import constants
 from intermake.engine.constants import EStream
 from intermake.engine.environment import MCMD, MENV
-from mhelper import file_helper, async_helper
+from mhelper import file_helper, async_helper, SubprocessError
 
-def _print_1(x):
-    MCMD.print(x, stream = EStream.EXTERNAL_STDOUT)
+
+class __SubprocessRun:
+    def __init__( self, garbage ):
+        self.garbage = garbage
+        self.nx1 = [True, True]
     
-def _print_2(x):
-    MCMD.print(x, stream = EStream.EXTERNAL_STDERR)
+    
+    def __print( self, x, s, i ):
+        if any( y.search( x ) for y in self.garbage ):
+            return
+        
+        if not x:
+            if self.nx1[i]:
+                return
+            
+            self.nx1[i] = True
+        else:
+            self.nx1[i] = False
+        
+        MCMD.print( x, stream = s )
+    
+    
+    def print_1( self, x ):
+        self.__print( x, EStream.EXTERNAL_STDOUT, 0 )
+    
+    
+    def print_2( self, x ):
+        self.__print( x, EStream.EXTERNAL_STDERR, 1 )
 
-def run_subprocess( command: Sequence[str] ):
+
+def run_subprocess( command: Sequence[str], garbage = None ):
     """
     Runs the specified subprocess
-    :param command: Commands and arguments 
-    :return: 
+    
+    :param command: Commands and arguments
+    :param garbage: List containing one or more regex that specify lines dropped from display 
     """
-    async_helper.async_run(command, _print_1, _print_2, check = True)
+    if garbage is None:
+        garbage = []
+    
+    garbage = [re.compile( x ) for x in garbage]
+    
+    spr = __SubprocessRun( garbage )
+    
+    try:
+        async_helper.async_run( command, spr.print_1, spr.print_2, check = True )
+    except SubprocessError as ex:
+        MCMD.question( "Halting to inspect subprocess error", [None], None )
 
 
 def run_in_temporary( function, *args, **kwargs ):
@@ -41,3 +79,18 @@ def run_in_temporary( function, *args, **kwargs ):
     finally:
         os.chdir( ".." )
         shutil.rmtree( temp_folder_name )
+
+
+def get_tool( prefix, tool: Optional[str] ):
+    """
+    Gets the specified function from the `external_tools` module.
+    """
+    if not tool:
+        tool = "default"
+    
+    name = prefix + "_" + tool
+    
+    try:
+        return getattr( external_tools, name )
+    except AttributeError:
+        raise ValueError( "No such «{}» algorithm as «{}». (the «{}» function does not exist in the `external_tools` module.)".format( prefix, tool, name ) )

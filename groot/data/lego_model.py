@@ -324,7 +324,11 @@ class LegoSubsequence( ILegoVisualisable ):
         Obtains the slice of the sequence array pertinent to this subsequence
         """
         if self.sequence.site_array:
-            return self.sequence.site_array[self.start:self.end + 1]
+            result = self.sequence.site_array[self.start - 1:self.end]
+            if len( result ) != self.length:
+                raise ValueError( "Cannot extract site range {}-{} from site array of length {}.".format( self.start, self.length, self.sequence.length ) )
+            
+            return result
         else:
             return None
     
