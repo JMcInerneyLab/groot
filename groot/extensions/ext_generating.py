@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, consensus, fuse, tree, fuse_2
+from groot.algorithms import alignment, components, fuse, tree, fuse_3
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
@@ -125,29 +125,7 @@ def make_nrfg() -> EChanges:
     """
     model = global_view.current_model()
     
-    if len( model.fusion_events ) == 0:
-        raise ValueError( "Cannot generate the NRFG because there is no fusion event data. Did you mean to find the fusion events first?" )
-    
-    fuse.create_nrfg( model )
-    
-    MCMD.progress( "NRFG created OK." )
-    
-    return EChanges.MODEL_DATA
-
-
-@command( names = ["make_nrfg_2", "create_nrfg_2"] )
-def make_nrfg_2() -> EChanges:
-    """
-    Creates the N-rooted fusion graph.
-    
-    Requisites: The fusions. You must have called `make_fusions` first!
-    """
-    model = global_view.current_model()
-    
-    if len( model.fusion_events ) == 0:
-        raise ValueError( "Cannot generate the NRFG because there is no fusion event data. Did you mean to find the fusion events first?" )
-    
-    fuse_2.create_nrfg( model )
+    fuse_3.create_nrfg( model )
     
     MCMD.progress( "NRFG created OK." )
     

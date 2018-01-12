@@ -183,7 +183,7 @@ def __get_layers( roots, self ) -> List[List[SNode]]:
         next_nodes = []
         
         for parent_snode in nodes:
-            for edge in parent_snode.node.iter_edges():
+            for edge in parent_snode.node.list_edges():
                 opposite = edge.opposite( parent_snode.node )
                 if opposite not in visited:
                     visited.add( parent_snode.node )

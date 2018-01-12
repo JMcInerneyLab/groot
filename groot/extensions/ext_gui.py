@@ -1,10 +1,11 @@
 from os import path, system
 
-from groot.data.graphing import MGraph
-from groot.data.lego_model import LegoComponent, ILegoVisualisable, LegoModel
+
+from groot.data.lego_model import LegoComponent, ILegoVisualisable
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot.algorithms import fastaiser, graph_viewing
 from groot.data import global_view
+from groot.graphing import MGraph
 from intermake import command, visibilities, EThread, MENV
 from mhelper import file_helper, array_helper
 
@@ -41,7 +42,6 @@ def view_fasta_gui( entity: ILegoVisualisable ) -> None:
     """
     from groot.frontends.gui.forms.frm_alignment import FrmAlignment
     
-    model = global_view.current_model()
     fasta = fastaiser.to_fasta( entity )
     FrmAlignment.request( MENV.host.form, "FASTA for {}".format( entity ), MENV.host.form.view.lookup_table, fasta )
 

@@ -44,7 +44,7 @@ def best_iso( g: MGraph, is_inside, is_outside ):
     
     for edge in g.get_edges():
         for left, right in ((edge.left, edge.right), (edge.right, edge.left)):
-            p = FollowParams( root = left, exclude_edges = [edge] )
+            p = FollowParams( start = left, exclude_edges = [edge] )
             g.follow( p )
             unvisited_nodes = set( g.nodes )
             

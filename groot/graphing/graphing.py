@@ -67,7 +67,7 @@ class DepthInfo:
 class FollowParams:
     def __init__( self,
                   *,
-                  root: "MNode",
+                  start: "MNode",
                   include_repeats: bool = False,
                   exclude_edges: "Iterable[MEdge]" = None,
                   exclude_nodes: "Iterable[MNode]" = None ) -> None:
@@ -87,7 +87,7 @@ class FollowParams:
         self.exclude_nodes: Set[MNode] = set( exclude_nodes )
         self.visited: List[DepthInfo] = []
         self.exclude_edges: Set[MEdge] = set( exclude_edges )
-        self.root_info: DepthInfo = DepthInfo( node = root,
+        self.root_info: DepthInfo = DepthInfo( node = start,
                                                is_last = True,
                                                is_repeat = False,
                                                parent_info = None,
@@ -136,11 +136,46 @@ class IsolationError( Exception ):
 
 
 class MGraph:
-    def __init__( self, title = None ) -> None:
+    def __init__( self ) -> None:
         """
         CONSTRUCTOR
         """
         self._nodes: Dict[int, MNode] = { }
+        self._root = None
+    
+    
+    @property
+    def root( self ):
+        """
+        Root of the graph, or `None` if unassigned.
+        """
+        return self._root
+    
+    @property
+    def first_node( self ) -> _MNode_:
+        """
+        Obtains the root node, or an arbitrary node if there is no root.
+        """
+        if self._root is None:
+            return array_helper.first_or_error( self.nodes )
+        else:
+            return self._root
+    
+    def get_root( self ) -> _MNode_:
+        """
+        Obtains the root of the graph.
+        If no root is assigned, one is created.
+        
+        :except KeyError: No nodes in graph
+        """
+        # B/C
+        if not hasattr(self, "_root"):
+            self._root = None
+        
+        if self._root is None:
+            array_helper.first_or_error( self.nodes ).make_root()
+        
+        return self._root
     
     
     @property
@@ -227,7 +262,7 @@ class MGraph:
         
         for edge in self.get_edges():
             for node in cast( Sequence[MNode], (edge.left, edge.right) ):
-                params = FollowParams( root = node, exclude_edges = [edge] )
+                params = FollowParams( start = node, exclude_edges = [edge] )
                 self.follow( params )
                 outside_nodes = False
                 inside_nodes = set()
@@ -306,7 +341,7 @@ class MGraph:
         """
         new_graph = MGraph()
         
-        params = FollowParams( root = internal_node, exclude_nodes = [external_node] )
+        params = FollowParams( start = internal_node, exclude_nodes = [external_node] )
         self.follow( params )
         
         visited_nodes = set( params.visited_nodes )
@@ -315,7 +350,7 @@ class MGraph:
         for node in visited_nodes:
             node.copy_into( new_graph )
             
-            for edge in node.iter_edges():
+            for edge in node.list_edges():
                 if edge.left in visited_nodes and edge.right in visited_nodes:
                     visited_edges.add( edge )  # add the edges after when all the nodes exist
         
@@ -518,13 +553,16 @@ class MGraph:
         visited: Set[MNode] = set()
         
         while True:
-            # Choose an arbitrary root
-            first = array_helper.first( x for x in self._nodes.values() if x not in visited )
+            # Choose the proper root first, on subsequence passes pick random nodes from the isolates
+            first = self.first_node
+            
+            if first in visited:
+                first = array_helper.first( x for x in self._nodes.values() if x not in visited )
             
             if first is None:
                 break
             
-            params = FollowParams( root = first, include_repeats = True )
+            params = FollowParams( start = first, include_repeats = True )
             self.follow( params )
             visited.update( params.exclude_nodes )
             results.extend( x.describe( get_text ) for x in params.visited )
@@ -594,19 +632,29 @@ class MGraph:
         result = set()
         
         for node in self._nodes.values():
-            result.update( node.iter_edges() )
+            result.update( node.list_edges() )
         
         return result
     
     
-    def get_nodes( self ) -> "Iterator[ MNode ]":
+    def get_nodes( self ) -> Iterator[ "MNode" ]:
         """
         Iterates over all the nodes.
         """
         return iter( self._nodes.values() )
     
     
-    def follow( self, params: FollowParams ) -> FollowParams:
+    def follow( self, *args, **kwargs ) -> FollowParams:
+        """
+        Follows the graph from the specified point.
+        :param args:        A FollowParams or arguments to be passed to the constructor of FollowParams.
+        :return:            The now populated reference to the FollowParams passed in or created. 
+        """
+        if len( args ) == 1 and len( kwargs ) == 0 and isinstance( args[0], FollowParams ):
+            params = args[0]
+        else:
+            params = FollowParams( *args, **kwargs )
+        
         self.__follow( params = params, parent_info = params.root_info )
         return params
     
@@ -623,7 +671,7 @@ class MGraph:
         this allows the caller to iterate from a node to the exclusion of a specified branch(es).
         """
         parent = parent_info.node
-        targets = [edge.opposite( parent ) for edge in parent.iter_edges() if edge not in params.exclude_edges]
+        targets = [edge.opposite( parent ) for edge in parent.list_edges() if edge not in params.exclude_edges]
         
         if parent_info.parent_info is not None:
             targets = [node for node in targets if node is not parent_info.parent_info.node]
@@ -692,6 +740,31 @@ class MNode:
         graph._nodes[self.__uid] = self
     
     
+    def make_root( self ):
+        """
+        Makes this node the root.
+        (All edges expand outwards from here)
+        :except ValueError: Graph is not a tree (contains cycles)
+        """
+        self._graph._root = self
+        
+        open_set = []
+        closed_set = set()
+        
+        for edge_1 in self.list_edges():
+            if edge_1 in closed_set:
+                raise ValueError( "Cannot make node root because the graph is cyclic." )
+            
+            closed_set.add( edge_1 )
+            
+            if edge_1.left is not self:
+                edge_1.flip()
+            
+            for edge_2 in edge_1.right.list_edges():
+                if edge_2 is not edge_1:
+                    open_set.append( edge_2 )
+    
+    
     def copy_into( self, target_graph: MGraph ) -> _MNode_:
         """
         Copies the node (but not the edges!)
@@ -712,11 +785,20 @@ class MNode:
         return "MNode( {} )".format( self.data )
     
     
-    def iter_edges( self ) -> "List[MEdge]":
+    def list_edges( self, direction: int = 0 ) -> "List[MEdge]":
         """
         Iterates over the edges on this node.
+        
+        :param direction: Direction. -1 = incoming, 1 = outgoing, 0 = both.
         """
-        return sorted( self._edges.values(), key = lambda x: "{}-{}".format( id( x.left ), id( x.right ) ) )
+        edges = self._edges.values()
+        
+        if direction < 0:
+            edges = filter( lambda x: x.right is self, edges )
+        elif direction > 0:
+            edges = filter( lambda x: x.left is self, edges )
+        
+        return sorted( edges, key = lambda x: "{}-{}".format( id( x.left ), id( x.right ) ) )
     
     
     def num_edges( self ) -> int:
@@ -738,13 +820,16 @@ class MNode:
                 break
         
         del self._graph._nodes[self.__uid]
+        
+        if self._graph._root is self:
+            self._graph._root = None
     
     
     def iter_relations( self ) -> "List[MNode]":
         """
         Iterates the node(s) connected to this node.
         """
-        return [edge.opposite( self ) for edge in self.iter_edges()]
+        return [edge.opposite( self ) for edge in self.list_edges()]
 
 
 def import_name( model: _LegoModel_, name: str ) -> Optional[_LegoSequence_]:
@@ -777,6 +862,21 @@ class MEdge:
         
         left._edges[right] = self
         right._edges[left] = self
+    
+    
+    def flip( self ):
+        """
+        Flips the direction of this edge.
+        """
+        del self._left._edges[self._right]
+        del self._right._edges[self._left]
+        
+        left = self._left
+        self._left = self.right
+        self._right = left
+        
+        self._left._edges[self._right] = self
+        self._right._edges[self._left] = self
     
     
     def copy_into( self, target_graph: MGraph ) -> Optional[_MEdge_]:
@@ -828,8 +928,8 @@ class MEdge:
     
     
     def iter_a( self ) -> Set[MNode]:
-        return self._graph.follow( FollowParams( root = self._left, exclude_nodes = [self._right] ) ).exclude_nodes
+        return self._graph.follow( FollowParams( start = self._left, exclude_nodes = [self._right] ) ).exclude_nodes
     
     
     def iter_b( self ) -> Set[MNode]:
-        return self._graph.follow( FollowParams( root = self._right, exclude_nodes = [self._left] ) ).exclude_nodes
+        return self._graph.follow( FollowParams( start = self._right, exclude_nodes = [self._left] ) ).exclude_nodes

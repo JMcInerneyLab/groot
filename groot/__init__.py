@@ -1,7 +1,10 @@
 from groot.extensions import ext_viewing, ext_files, ext_generating, ext_gimmicks, ext_modifications, ext_dropping, ext_gui
+from intermake import run_jupyter
+
+run_jupyter = run_jupyter
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.23"
+__version__ = "0.0.0.24"
 
 
 def __setup():

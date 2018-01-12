@@ -92,7 +92,7 @@ def remove_fusions( model: LegoModel ) -> int:
         for node in graph.get_nodes():
             if isinstance( node.data, FusionPoint ):
                 assert node.num_edges() == 2
-                edges = list( node.iter_edges() )
+                edges = list( node.list_edges() )
                 
                 d1 = edges[0].opposite( node )
                 d2 = edges[1].opposite( node )
