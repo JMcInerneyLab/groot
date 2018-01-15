@@ -61,7 +61,7 @@ class FusionEvent:
     
     @property
     def component_c( self ) -> LegoComponent:
-        return array_helper.extract_single_item_or_error( self.intersections )
+        return array_helper.single_or_error( self.intersections )
     
     
     def __str__( self ) -> str:

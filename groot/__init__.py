@@ -4,7 +4,7 @@ from intermake import run_jupyter
 run_jupyter = run_jupyter
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.24"
+__version__ = "0.0.0.25"
 
 
 def __setup():

@@ -557,7 +557,7 @@ class MGraph:
             first = self.first_node
             
             if first in visited:
-                first = array_helper.first( x for x in self._nodes.values() if x not in visited )
+                first = array_helper.first_or_none( x for x in self._nodes.values() if x not in visited )
             
             if first is None:
                 break

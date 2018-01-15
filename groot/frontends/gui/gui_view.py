@@ -924,7 +924,7 @@ class LegoView_Model:
     
     
     def selected_domain( self ) -> Optional[LegoUserDomain]:
-        return array_helper.extract_single_item( self.selected_userdomains() )
+        return array_helper.single_or_none( self.selected_userdomains() )
     
     
     def selected_sequences( self ) -> Set[LegoSequence]:
@@ -949,11 +949,11 @@ class LegoView_Model:
     
     
     def selected_complete_sequence( self ) -> Optional[LegoSequence]:
-        return array_helper.extract_single_item( self.selected_complete_sequences() )
+        return array_helper.single_or_none( self.selected_complete_sequences() )
     
     
     def selected_sequence( self ) -> Optional[LegoSequence]:
-        return array_helper.extract_single_item( self.selected_sequences() )
+        return array_helper.single_or_none( self.selected_sequences() )
     
     
     def selected_edges( self, ) -> Set[LegoEdge]:
@@ -978,7 +978,7 @@ class LegoView_Model:
     
     
     def selected_edge( self ) -> Optional[LegoEdge]:
-        return array_helper.extract_single_item( self.selected_edges() )
+        return array_helper.single_or_none( self.selected_edges() )
     
     
     def selected_entities( self ) -> Set[ILegoVisualisable]:

@@ -46,7 +46,7 @@ def find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
         for event in results:
             if len( event.intersections ) > 1:
                 for event_b in results:
-                    f = array_helper.first( event_b.intersections )
+                    f = array_helper.first_or_none( event_b.intersections )
                     if len( event_b.intersections ) == 1 and f in event.intersections:
                         for component in (event_b.component_a, event_b.component_b):
                             if component in event.intersections:

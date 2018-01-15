@@ -165,7 +165,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         # What have we selected?
         #
         entities: Set[ILegoVisualisable] = self.view.selected_entities()
-        first: ILegoVisualisable = array_helper.first( entities )
+        first: ILegoVisualisable = array_helper.first_or_none( entities )
         type_name: str = (type( first ).__name__[4:].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
         
         #
@@ -315,7 +315,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     @staticmethod
     def __query_remove( items: Set[object] ) -> bool:
-        first = array_helper.first( items )
+        first = array_helper.first_or_none( items )
         
         if first is None:
             return False
@@ -593,7 +593,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         if selected == "Import":
             self.on_ACT_FILE_IMPORT_triggered()
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_gui.view_fasta_gui, array_helper.first( self.view.selected_entities(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_gui.view_fasta_gui, array_helper.first_or_none( self.view.selected_entities(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -612,7 +612,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif selected == "View":
             self.request_plugin( COMMANDS.ext_viewing.print_components )
         elif selected == "View edges":
-            self.request_plugin( COMMANDS.ext_viewing.print_component_edges, array_helper.first( self.view.selected_components(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_viewing.print_component_edges, array_helper.first_or_none( self.view.selected_components(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -629,7 +629,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif selected == "Drop":
             self.request_plugin( COMMANDS.ext_dropping.drop_alignment )
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_gui.view_alignments_gui, array_helper.first( self.view.selected_components() ) or array_helper.first( self._model.components ) or NOT_PROVIDED )
+            self.request_plugin( COMMANDS.ext_gui.view_alignments_gui, array_helper.first_or_none( self.view.selected_components() ) or array_helper.first_or_none( self._model.components ) or NOT_PROVIDED )
         
         self._update_status_checkbox_values()
     
@@ -646,7 +646,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif selected == "Drop":
             self.request_plugin( COMMANDS.ext_dropping.drop_tree )
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first( self.view.selected_components(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first_or_none( self.view.selected_components(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -754,7 +754,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
                 QMessageBox.information( self, self.windowTitle(), "Select a subsequence to split first." )
                 return
             
-            sequence = array_helper.first( subsequences ).sequence
+            sequence = array_helper.first_or_none( subsequences ).sequence
             
             if not all( x.sequence is sequence for x in subsequences ):
                 QMessageBox.information( self, self.windowTitle(), "All of the the selected subsequences must be in the same sequence." )
