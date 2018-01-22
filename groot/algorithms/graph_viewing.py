@@ -1,6 +1,6 @@
 from groot.algorithms.classes import FusionPoint
 from groot.data.lego_model import LegoSequence
-from groot.graphing.graphing import DNodeToText, MNode
+from mgraph import DNodeToText, MNode
 from intermake.engine.theme import Theme
 from mhelper import SwitchError
 
@@ -56,7 +56,7 @@ class __Formatter:
         if isinstance( node.data, LegoSequence ):
             return "⊕ {}".format( node.data.accession )
         elif isinstance( node.data, FusionPoint ):
-            return "⊛ {}:{}".format( node.data.opposite_component, node.data.count )
+            return "⊛ {}".format( str( node.data ) )
         else:
             return "⊙"
     

@@ -9,23 +9,24 @@ Please see the pre-defined `_default` functions for details.
 import re
 
 from groot.algorithms import extenal_runner
+from groot.data.lego_model import LegoModel, ESiteType
 from mhelper import bio_helper, file_helper
 
 
 _RX1 = re.compile( ":[0-9.]+" )
 
 
-def consensus_default( trees ):
+def consensus_default( model: LegoModel, trees ):
     """
     Generates a consensus tree.
     
     :param trees:       Input trees, in Newick format. One tree per line. 
     :return:            Output (consensus) tree, in Newick format.
     """
-    return consensus_paup( trees )
+    return consensus_paup( model, trees )
 
 
-def consensus_paup( trees ):
+def consensus_paup( model: LegoModel, trees ):
     SCRIPT = """GetTrees file=in_file.nwk;
                 ConTree /treeFile=temp_file.nex;
                 GetTrees file=temp_file.nex;
@@ -59,7 +60,7 @@ def consensus_paup( trees ):
     return file_helper.read_all_text( "out_file.nwk" )
 
 
-def consensus_biopython( trees ):
+def consensus_biopython( model: LegoModel, trees ):
     """
     Generates a consensus tree.
 
@@ -79,32 +80,44 @@ def consensus_biopython( trees ):
     return result
 
 
-def tree_default( alignment ):
+def tree_default( model: LegoModel, alignment ):
     """
     Generates a tree.
     
     :param alignment:   Alignment data, in Fasta format. 
     :return:            Output tree, in Newick format.
     """
+    return tree_paup( model, alignment )
+
+
+def tree_paup( model: LegoModel, alignment ):
+    """
+    Variation of `tree_default` that uses Paup.
+    """
     file_helper.write_all_text( "in_file.fasta", alignment )
     bio_helper.convert_file( "in_file.fasta", "in_file.phy", "fasta", "phylip" )
     
-    extenal_runner.run_subprocess( "raxml -T 4 -m PROTGAMMAWAG -p 1 -s in_file.phy -# 20 -n t".split( " " ) )
+    if model.site_type == ESiteType.DNA:
+        method = "GTRCAT"
+    else:
+        method = "PROTGAMMAWAG"
+    
+    extenal_runner.run_subprocess( "raxml -T 4 -m {} -p 1 -s in_file.phy -# 20 -n t".format( method ).split( " " ) )
     
     return file_helper.read_all_text( "RAxML_bestTree.t" )
 
 
-def align_default( fasta ):
+def align_default( model: LegoModel, fasta ):
     """
     Generates an alignment.
     
     :param fasta:       Input data, in Fasta format. 
     :return:            Output data, in Fasta format.
     """
-    return align_muscle( fasta )
+    return align_muscle( model, fasta )
 
 
-def align_muscle( fasta ):
+def align_muscle( model: LegoModel, fasta ):
     """
     Variation of `align_default` which uses MUSCLE to align.
     """
@@ -115,7 +128,7 @@ def align_muscle( fasta ):
     return file_helper.read_all_text( "out_file.fasta" )
 
 
-def align_as_is( fasta ):
+def align_as_is( model: LegoModel, fasta ):
     """
     Variation of `align_default` which uses the FASTA as is.
     """

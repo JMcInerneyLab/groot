@@ -1,16 +1,17 @@
 from colorama import Fore
 from ete3 import Tree
 
-from groot import constants
 from groot.data.lego_model import LegoModel
-from groot.graphing.graphing import DNodeToText, MGraph
+from groot.frontends.cli.cli_view_utils import COMPONENT_COLOURS_ANSI_FORE, COMPONENT_COLOURS_ANSI_COUNT
+from mgraph import DNodeToText, MGraph
 
 
 def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
     ascii = tree_from_newick( target.to_newick( formatter ) ).get_ascii( show_internal = True )
     
     for sequence in model.sequences:
-        colour = constants.COMPONENT_COLOURS_ANSI_FORE[sequence.component.index % constants.COMPONENT_COLOURS_ANSI_COUNT]
+        component = model.components.find_component_for_major_sequence(sequence)
+        colour = COMPONENT_COLOURS_ANSI_FORE[component.index % COMPONENT_COLOURS_ANSI_COUNT]
         ascii = ascii.replace( sequence.accession, colour + sequence.accession + Fore.RESET )
     
     return ascii
@@ -24,8 +25,9 @@ def show_tree( target: MGraph, model: LegoModel, formatter : DNodeToText ):
         n.img_style["fgcolor"] = "#000000"
     
     for node in tree__:
-        sequence = model.find_sequence( node.name )
-        node.img_style["fgcolor"] = colours[sequence.component.index % len( colours )]
+        sequence = model.find_sequence_by_accession( node.name )
+        component = model.components.find_component_for_major_sequence(sequence)
+        node.img_style["fgcolor"] = colours[component % len( colours )]
     
     tree__.show()
 

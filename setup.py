@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url = "https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.25",
+       version = "0.0.0.27",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "https://www.gnu.org/licenses/agpl-3.0.html",
@@ -18,11 +18,11 @@ setup( name = "groot",
                    "groot.frontends.gui.forms.designer",
                    ],
        entry_points = { "console_scripts": ["groot = groot.__main__:main"] },
-       install_requires = ["ete3",  # graphs
-                           "intermake",  # architecture
+       install_requires = ["intermake",  # architecture
                            "mhelper",  # general
                            'pyperclip',  # clipboard
                            'colorama',  # ui (cli)
-                           'PyQt5', 'sip'],  # ui
+                           'PyQt5', # ui (GUI)
+                           'sip'],  # ui (GUI)
        python_requires = ">=3.6"
        )

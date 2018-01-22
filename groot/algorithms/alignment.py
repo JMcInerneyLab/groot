@@ -15,7 +15,7 @@ def align( algorithm: str, component: LegoComponent ):
     
     fn = groot.algorithms.extenal_runner.get_tool("align" , algorithm)
     
-    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( fn, fasta )
+    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( fn, component.model, fasta )
 
 
 def drop( component: LegoComponent ):

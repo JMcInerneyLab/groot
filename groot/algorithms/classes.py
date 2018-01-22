@@ -1,7 +1,7 @@
 from typing import List, Set, Tuple
 
 from groot.data.lego_model import LegoComponent, LegoSequence
-from groot.graphing.graphing import MGraph
+from mgraph import MGraph
 from mhelper import array_helper
 
 
@@ -25,7 +25,8 @@ class FusionEvent:
     """
     
     
-    def __init__( self, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
+    def __init__( self, index: int, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
+        self.index = index
         self.component_a: LegoComponent = component_a
         self.component_b: LegoComponent = component_b
         self.intersections: Set[LegoComponent] = intersections
@@ -70,7 +71,8 @@ class FusionEvent:
 
 
 class FusionPoint:
-    def __init__( self, fusion_node_uid: int, internal_node_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
+    def __init__( self, is_left: bool, fusion_node_uid: int, internal_node_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
+        self.is_left = is_left
         self.fusion_node_uid = fusion_node_uid
         self.internal_node_uid = internal_node_uid
         self.opposite_component = opposite_component
@@ -85,9 +87,7 @@ class FusionPoint:
     
     
     def __repr__( self ):
-        return "({})-GIVEN-({})-FORMS-({})".format( self.component,
-                                                    self.opposite_component,
-                                                    ",".join( sorted( str( x ) for x in self.event.intersections ) ) )
+        return "F.{}{}.{}".format( self.event.index, "L" if self.is_left else "R", self.count )
 
 
 class NrfgEvent:
@@ -100,9 +100,3 @@ class NrfgEvent:
         self.bΔ = bΔ
         self.bΛ = bΛ
         self.dΔ = dΔ
-
-
-class Nrfg:
-    def __init__( self, graph: MGraph, events: List[NrfgEvent] ) -> None:
-        self.graph = graph
-        self.events = events

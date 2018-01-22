@@ -10,7 +10,8 @@ from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QFileDialog, QFrame, QGraphicsScene, QGridLayout, QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 from groot.frontends.gui.forms.designer.frm_main_designer import Ui_MainWindow
 
-from groot import constants, extensions as COMMANDS
+import groot.extensions as COMMANDS
+from groot import constants
 from groot.algorithms import fastaiser, layout
 from groot.data import global_view, user_options
 from groot.data.lego_model import ILegoVisualisable, LegoComponent
@@ -72,7 +73,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             action.triggered[bool].connect( self.__select_sample_data )
             self.ui.MNU_EXAMPLES.addAction( action )
         
-        self.view: LegoView_Model = None
+        self.model_view: LegoView_Model = None
         self.__update_as_required( EChanges.MODEL_OBJECT | EChanges.FILE_NAME )
         
         # Misc
@@ -91,14 +92,14 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             self.freeze_options = True
             
             # Create and apply a view for the model
-            if self.view:
-                self.view.scene.setParent( None )
+            if self.model_view:
+                self.model_view.scene.setParent( None )
             
-            self.view = LegoView_Model( self, view, self._model )
-            view.setScene( self.view.scene )
+            self.model_view = LegoView_Model( self, view, self._model )
+            view.setScene( self.model_view.scene )
             
             # Track the selection
-            self.view.scene.selectionChanged.connect( self.on_scene_selectionChanged )
+            self.model_view.scene.selectionChanged.connect( self.on_scene_selectionChanged )
         
         if changes.MODEL_OBJECT or changes.MODEL_ENTITIES or changes.COMPONENTS or changes.COMP_DATA or changes.MODEL_DATA:
             # Update the options
@@ -164,7 +165,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         #
         # What have we selected?
         #
-        entities: Set[ILegoVisualisable] = self.view.selected_entities()
+        entities: Set[ILegoVisualisable] = self.model_view.selected_entities()
         first: ILegoVisualisable = array_helper.first_or_none( entities )
         type_name: str = (type( first ).__name__[4:].upper() + ("s" if len( entities ) > 1 else "")) if entities else None
         
@@ -200,7 +201,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             #
             
             # - Frame
-            group_box = QFrame()
+            group_box : QFrame = QFrame()
             group_box.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Minimum )
             self.ui.SCR_AREA.layout().addWidget( group_box )
             
@@ -278,7 +279,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         
         
         def call( self, _: bool ):
-            self.form.view.select_entity( self.entity )
+            self.form.model_view.select_entity( self.entity )
     
     
     def ILegoViewModelObserver_options_changed( self ):
@@ -357,7 +358,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select subsequences to left
         """
-        self.view.select_left()
+        self.model_view.select_left()
     
     
     @exqtSlot( bool )
@@ -365,7 +366,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select subsequences to right
         """
-        self.view.select_right()
+        self.model_view.select_right()
     
     
     @exqtSlot( bool )
@@ -373,7 +374,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Select direct connections
         """
-        self.view.select_direct_connections()
+        self.model_view.select_direct_connections()
     
     
     @exqtSlot()
@@ -472,7 +473,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Align selection
         """
-        for userdomain_view in self.view.selected_userdomain_views():
+        for userdomain_view in self.model_view.selected_userdomain_views():
             layout.align_about_domain( userdomain_view )
     
     
@@ -481,7 +482,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align subsequences
         """
-        for userdomain_view in self.view.selected_userdomain_views():
+        for userdomain_view in self.model_view.selected_userdomain_views():
             layout.align_about( userdomain_view )
     
     
@@ -490,7 +491,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: View - align first subsequences in sequence
         """
-        userdomain_views = self.view.selected_userdomain_views()
+        userdomain_views = self.model_view.selected_userdomain_views()
         
         leftmost = min( x.pos().x() for x in userdomain_views )
         
@@ -528,7 +529,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.request_plugin( COMMANDS.ext_modifications.quantise )
+        pass # TODO: REMOVE
     
     
     @exqtSlot()
@@ -593,7 +594,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         if selected == "Import":
             self.on_ACT_FILE_IMPORT_triggered()
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_gui.view_fasta_gui, array_helper.first_or_none( self.view.selected_entities(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_gui.view_fasta_gui, array_helper.first_or_none( self.model_view.selected_entities(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -612,7 +613,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif selected == "View":
             self.request_plugin( COMMANDS.ext_viewing.print_components )
         elif selected == "View edges":
-            self.request_plugin( COMMANDS.ext_viewing.print_component_edges, array_helper.first_or_none( self.view.selected_components(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_viewing.print_component_edges, array_helper.first_or_none( self.model_view.selected_components(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -625,11 +626,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
         
         if selected == "Generate":
-            self.request_plugin( COMMANDS.ext_generating.make_alignments, list( self.view.selected_components() ) or None )
+            self.request_plugin( COMMANDS.ext_generating.make_alignments, list( self.model_view.selected_components() ) or None )
         elif selected == "Drop":
             self.request_plugin( COMMANDS.ext_dropping.drop_alignment )
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_gui.view_alignments_gui, array_helper.first_or_none( self.view.selected_components() ) or array_helper.first_or_none( self._model.components ) or NOT_PROVIDED )
+            self.request_plugin( COMMANDS.ext_gui.view_alignments_gui, array_helper.first_or_none( self.model_view.selected_components() ) or array_helper.first_or_none( self._model.components ) or NOT_PROVIDED )
         
         self._update_status_checkbox_values()
     
@@ -642,11 +643,11 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
         
         if selected == "Generate":
-            self.request_plugin( COMMANDS.ext_generating.make_trees, args = list( self.view.selected_components() ) or None )
+            self.request_plugin( COMMANDS.ext_generating.make_trees, args = list( self.model_view.selected_components() ) or None )
         elif selected == "Drop":
             self.request_plugin( COMMANDS.ext_dropping.drop_tree )
         elif selected == "View":
-            self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first_or_none( self.view.selected_components(), NOT_PROVIDED ) )
+            self.request_plugin( COMMANDS.ext_viewing.print_trees, component = array_helper.first_or_none( self.model_view.selected_components(), NOT_PROVIDED ) )
         
         self._update_status_checkbox_values()
     
@@ -656,16 +657,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        selected = menu_helper.show( self.sender(), "Generate", "Drop", "View" )
-        
-        if selected == "Generate":
-            self.request_plugin( COMMANDS.ext_generating.make_fusions )
-        elif selected == "Drop":
-            self.request_plugin( COMMANDS.ext_dropping.drop_fusions )
-        elif selected == "View":
-            self.request_plugin( COMMANDS.ext_viewing.print_fusions )
-        
-        self._update_status_checkbox_values()
+        pass
     
     
     @exqtSlot()
@@ -689,7 +681,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        if FrmViewOptions.request( self, self.view ):
+        if FrmViewOptions.request( self, self.model_view ):
             self.__update_as_required( EChanges.MODEL_ENTITIES )
     
     
@@ -703,7 +695,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         elif self.ui.BTN_SEL_EDGE.isChecked():
             self._model.ui_options.mode = EMode.EDGE
         
-        self.view.select_all( ESelect.REMOVE )
+        self.model_view.select_all( ESelect.REMOVE )
     
     
     @exqtSlot()
@@ -743,12 +735,12 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: New entity
         """
-        m = self.view.options.mode
+        m = self.model_view.options.mode
         
         if m == EMode.SEQUENCE:
             COMMANDS.ext_modifications.new_sequence()
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self.view.selected_userdomains()
+            subsequences = self.model_view.selected_userdomains()
             
             if not subsequences:
                 QMessageBox.information( self, self.windowTitle(), "Select a subsequence to split first." )
@@ -781,10 +773,10 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler: Remove entity
         """
-        m = self.view.options.mode
+        m = self.model_view.options.mode
         
         if m == EMode.SEQUENCE:
-            sequences = self.view.selected_sequences()
+            sequences = self.model_view.selected_sequences()
             
             if sequences:
                 if not self.__query_remove( sequences ):
@@ -794,7 +786,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select a sequence first." )
         elif m == EMode.SUBSEQUENCE:
-            subsequences = self.view.selected_userdomains()
+            subsequences = self.model_view.selected_userdomains()
             
             if len( subsequences ) >= 2:
                 if not self.__query_remove( subsequences ):
@@ -804,8 +796,8 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
             else:
                 QMessageBox.information( self, self.windowTitle(), "Please select at least two adjacent subsequences first." )
         elif m == EMode.EDGE:
-            subsequences = self.view.selected_userdomains()
-            edges = self.view.selected_edges()
+            subsequences = self.model_view.selected_userdomains()
+            edges = self.model_view.selected_edges()
             
             if not edges:
                 QMessageBox.information( self, self.windowTitle(), "Please select a subsequence with edges first." )
@@ -870,7 +862,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
     
     
     def on_scene_selectionChanged( self ):
-        if len( self.view.scene.selectedItems() ) == 0:
+        if len( self.model_view.scene.selectedItems() ) == 0:
             self.ILegoViewModelObserver_selection_changed()
     
     
@@ -897,7 +889,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.view.select_all( ESelect.APPEND )
+        self.model_view.select_all( ESelect.APPEND )
     
     
     @exqtSlot()
@@ -905,7 +897,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.view.select_all( ESelect.REMOVE )
+        self.model_view.select_all( ESelect.REMOVE )
     
     
     @exqtSlot()
@@ -913,7 +905,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.view.select_empty()
+        self.model_view.select_empty()
     
     
     @exqtSlot()
@@ -921,7 +913,7 @@ class FrmMain( QMainWindow, ILegoViewModelObserver, IGuiPluginHostWindow ):
         """
         Signal handler:
         """
-        self.view.select_all( ESelect.TOGGLE )
+        self.model_view.select_all( ESelect.TOGGLE )
 
 
 # endregion

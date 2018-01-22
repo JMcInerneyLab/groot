@@ -1,12 +1,13 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, fuse, tree, fuse_3
+from groot.algorithms import alignment, components, tree, nrfg, fuse
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
+from mgraph import MGraph
 from mhelper import string_helper
 
 
@@ -120,13 +121,22 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
 def make_nrfg() -> EChanges:
     """
     Creates the N-rooted fusion graph.
-    
-    Requisites: The fusions. You must have called `make_fusions` first!
     """
     model = global_view.current_model()
     
-    fuse_3.create_nrfg( model )
+    nrfg.create_nrfg( model )
     
     MCMD.progress( "NRFG created OK." )
     
     return EChanges.MODEL_DATA
+
+
+@command()
+def split_graph( tree: MGraph ) -> EChanges:
+    """
+    Shows the splits for a tree.
+    :param tree:   Tree to split.
+    """
+    nrfg.reduce_and_rebuild( tree )
+    
+    return EChanges.NONE

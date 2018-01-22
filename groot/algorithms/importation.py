@@ -1,9 +1,11 @@
 from numpy import record
+from typing import Optional, cast
 
 from groot.algorithms import editor
-from groot.data.lego_model import LegoModel, LOG, LegoSubsequence
+from groot.data.lego_model import LegoModel, LOG, LegoSubsequence, LegoSequence
 from intermake.engine.environment import MCMD
-from mhelper import file_helper, bio_helper
+from mgraph import MGraph, MNode
+from mhelper import file_helper, bio_helper, ByRef
 
 
 def import_directory( model: LegoModel, directory: str ):
@@ -183,3 +185,39 @@ def import_composites( model: LegoModel, file_name: str ):
                     # self._make_edge( composite_subsequence, subsequence )
     
     MCMD.print( "Imported Composites from «{}».".format( file_name ) )
+
+
+def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None ) -> MGraph:
+    """
+    Imports a newick string as an MGraph object.
+    """
+    g: MGraph = MGraph.from_newick( newick, root_ref )
+    
+    for node in g.nodes:
+        node.data = import_sequence_reference( cast( str, node.data ), model, allow_empty = True )
+    
+    return g
+
+
+def import_sequence_reference( name: str, model: LegoModel, *, allow_empty: bool = False ) -> Optional[LegoSequence]:
+    """
+    Converts a sequence name to a sequence reference.
+    
+    :param name:        Name, either:
+                            i.  The accession
+                            ii. The ID, of the form `"S[0-9]+"`
+    :param model:       The model to find the sequence in 
+    :param allow_empty: Allow `None` or `""` to denote a missing sequence, `None`. 
+    :return:            The sequence, or `None` if `allow_empty` is set.
+    """
+    if allow_empty and name is None:
+        return None
+    
+    assert isinstance( name, str )
+    
+    if allow_empty and name == "" or name == "root" or name.startswith("clade"):
+        return None
+    elif name.startswith( "S" ) and all( x.isdigit() for x in name[1:] ):
+        return model.find_sequence_by_id( int( name[1:] ) )
+    else:
+        return model.find_sequence_by_accession( name )

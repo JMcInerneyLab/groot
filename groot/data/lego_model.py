@@ -7,6 +7,7 @@ See class `LegoModel`.
 from typing import Dict, Iterator, List, Optional, cast, Tuple
 from groot.frontends.gui.gui_view_support import EDomainFunction, EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
+from mgraph import MGraph
 from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper, bio_helper
 
 
@@ -15,8 +16,6 @@ LOG = Logger( False )
 TEXT_SUBSEQUENCE_FORMAT = "{}[{}:{}]"
 TEXT_EDGE_FORMAT = "{}[{}:{}]--{}[{}:{}]"
 TEXT_SEQ_FORMAT = "{}"
-
-_Nrfg_ = "groot.algorithms.classes.Nrfg"
 
 _LegoModel_ = "LegoModel"
 __author__ = "Martin Rusilowicz"
@@ -386,7 +385,7 @@ class LegoSequence( ILegoVisualisable ):
         """
         OVERRIDE 
         """
-        return self.accession
+        return self.accession or "(no-accession)"
     
     
     @property
@@ -442,12 +441,11 @@ class LegoComponent( ILegoVisualisable ):
     
     
     def __init__( self, model: _LegoModel_, index: int, major_sequences: List[LegoSequence] ):
-        from groot.graphing.graphing import MGraph
+        from mgraph import MGraph
         self.model: LegoModel = model  # Source model
         self.index: int = index  # Index of component
         self.tree: MGraph = None
         self.alignment: str = None  # Alignment generated for component, in FASTA format
-        self.consensus: MGraph = None  # Consensus tree
         self.consensus_intersection: List[LegoSequence] = None
         self.major_sequences: List[LegoSequence] = major_sequences
         self.minor_subsequences: List[LegoSubsequence] = None
@@ -477,10 +475,13 @@ class LegoComponent( ILegoVisualisable ):
                        value = "{} sequences".format( array_helper.count( self.major_sequences ) ),
                        colour = EColour.RED,
                        icon = resources.folder,
-                       extra = { "index"   : self.index,
-                                 "major"   : self.major_sequences,
-                                 "minor_s" : self.minor_sequences,
-                                 "minor_ss": self.minor_subsequences } )
+                       extra = { "index"                 : self.index,
+                                 "major"                 : self.major_sequences,
+                                 "minor_s"               : self.minor_sequences,
+                                 "minor_ss"              : self.minor_subsequences,
+                                 "alignment"             : self.alignment,
+                                 "consensus_intersection": self.consensus_intersection,
+                                 "tree"                  : self.tree } )
     
     
     def __str__( self ) -> str:
@@ -680,7 +681,7 @@ class LegoViewOptions:
         self.domain_positions: Dict[Tuple[str, int], Tuple[int, int]] = { }
 
 
-class LegoModel( IVisualisable ):
+class LegoModel( ILegoVisualisable ):
     """
     At it's apex, the model comprises:
     
@@ -717,7 +718,7 @@ class LegoModel( IVisualisable ):
         self.file_name = None
         from groot.algorithms.classes import FusionEvent
         self.fusion_events = cast( List[FusionEvent], [] )
-        self.nrfg: _Nrfg_ = None
+        self.nrfg: MGraph = None
         self.ui_options = LegoViewOptions()
     
     
@@ -733,7 +734,8 @@ class LegoModel( IVisualisable ):
                                  "site_type"    : self.site_type,
                                  "sequences"    : self.sequences,
                                  "edges"        : self.edges,
-                                 "components"   : self.components } )
+                                 "components"   : self.components,
+                                 "nrfg"         : self.nrfg } )
     
     
     def __str__( self ):
@@ -795,12 +797,12 @@ class LegoModel( IVisualisable ):
         return bool( self.sequences )
     
     
-    def find_sequence( self, name: str ) -> "LegoSequence":
+    def find_sequence_by_accession( self, name: str ) -> "LegoSequence":
         for x in self.sequences:
             if x.accession == name:
                 return x
         
-        raise KeyError( name )
+        raise LookupError( "There is no sequence with the accession «{}».".format( name ) )
     
     
     def find_sequence_by_id( self, id: int ) -> "LegoSequence":
@@ -808,7 +810,7 @@ class LegoModel( IVisualisable ):
             if x.id == id:
                 return x
         
-        raise KeyError( id )
+        raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
 
 
 class LegoUserDomain( LegoSubsequence ):

@@ -3,14 +3,14 @@ from typing import Iterable, List, Optional
 from ete3 import Tree
 
 import groot.algorithms.extenal_runner
-from groot.algorithms import external_tools, graph_viewing
+from groot.algorithms import external_tools, graph_viewing, importation
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
-from groot.graphing.graphing import MGraph, MNode
+from mgraph import MGraph, MNode
 from mhelper import ByRef, array_helper
 
 
-def consensus(algorithm:Optional[str], component: LegoComponent ):
+def consensus( algorithm: Optional[str], component: LegoComponent ):
     """
     Generates the consensus tree for a component.
     """
@@ -44,19 +44,20 @@ def consensus(algorithm:Optional[str], component: LegoComponent ):
     if not all_trees_newick:
         raise ValueError( "Cannot perform consensus, trees are empty." )
     
-    fn = groot.algorithms.extenal_runner.get_tool("consensus" , algorithm)
+    fn = groot.algorithms.extenal_runner.get_tool( "consensus", algorithm )
     
     if len( all_trees_ete ) != 1:
-        consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, all_trees_newick )
+        consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, component.model, all_trees_newick )
     else:
         consensus_newick = all_trees_newick
     
-    component.consensus = MGraph.from_newick( consensus_newick, component.model )
+    component.consensus = importation.import_newick( consensus_newick, component.model )
 
 
-def tree_consensus( algorithm:Optional[str], model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
+def tree_consensus( algorithm: Optional[str], model: LegoModel, graphs: Iterable[MGraph] ) -> (MGraph, MNode):
     """
     Generates a consensus tree.
+    :param algorithm:   Algorithm to use
     :param model:       Model 
     :param graphs:      Graphs to generate consensus from 
     :return:            Tuple of consensus tree and its root 
@@ -77,13 +78,11 @@ def tree_consensus( algorithm:Optional[str], model: LegoModel, graphs: Iterable[
             raise ValueError( "Refusing to generate a consensus because at least one graph has no sequence data: {}".format( graph ) )
         
         newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
-        
-    fn = groot.algorithms.extenal_runner.get_tool("consensus" , algorithm)
     
-    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, "\n".join( newick ) + "\n" )
+    fn = groot.algorithms.extenal_runner.get_tool( "consensus", algorithm )
+    
+    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, model, "\n".join( newick ) + "\n" )
     
     root_ref = ByRef[MNode]( None )
-    result = MGraph.from_newick( consensus_newick, model, root_ref )
+    result = importation.import_newick( consensus_newick, model, root_ref )
     return result, root_ref.value
-
-

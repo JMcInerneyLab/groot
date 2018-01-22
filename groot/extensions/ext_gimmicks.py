@@ -1,13 +1,14 @@
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
+from groot.extensions.ext_viewing import EFormat
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
-from groot.graphing.graphing import MGraph
 from intermake import MCMD, command, visibilities
 from mhelper import EFileMode, Filename, file_helper
 
 
 __mcmd_folder_name__ = "Gimmicks"
+
 
 @command( visibility = visibilities.ADVANCED )
 def print_sites( type: ESiteType, text: str ) -> EChanges:
@@ -25,7 +26,7 @@ __EXT_FASTA = ".fasta"
 
 
 @command( visibility = visibilities.ADVANCED )
-def print_file( type: ESiteType, file: Filename[ EFileMode.READ, __EXT_FASTA ] ) -> EChanges:
+def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -> EChanges:
     """
     Prints a FASTA file in colour
     :param type: Type of sites to display.
@@ -42,17 +43,24 @@ def update_model() -> EChanges:
     """
     Update model to new version.
     """
-    model = global_view.current_model()
+    _ = global_view.current_model()
     
-    for x in model.components:
-        if isinstance( x.tree, str ):
-            g = MGraph()
-            g.import_newick( x.tree, global_view.current_model() )
-            x.tree = g
-        
-        if isinstance( x.consensus, str ):
-            g = MGraph()
-            g.import_newick( x.consensus, global_view.current_model() )
-            x.consensus = g
+    # ...
     
     return EChanges.COMP_DATA
+
+
+@command( visibility = visibilities.ADVANCED )
+def walkthrough():
+    from groot.extensions import ext_files, ext_generating, ext_viewing
+    
+    ext_files.file_new()
+    ext_files.file_sample( "manny" )
+    ext_files.file_save( "manny" )
+    ext_generating.make_components()
+    ext_generating.make_alignments()
+    ext_generating.make_trees()
+    ext_generating.make_fusions()
+    ext_generating.make_nrfg()
+    ext_viewing.print_trees()
+    ext_files.file_save( "manny" )

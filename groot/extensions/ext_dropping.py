@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, consensus, fuse, tree
+from groot.algorithms import alignment, components, consensus, tree, fuse
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
@@ -59,25 +59,6 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
             count += 1
     
     MCMD.print( "{} trees removed across {} components.".format( count, len( to_do ) ) )
-    
-    return EChanges.COMP_DATA
-
-
-@command()
-def drop_consensus( component: Optional[List[LegoComponent]] = None ) -> EChanges:
-    """
-    Drops the consensus trees.
-    :param component:   Component, or `None` for all.
-    :return: 
-    """
-    to_do = cli_view_utils.get_component_list( component )
-    count = 0
-    
-    for component_ in to_do:
-        if consensus.drop( component_ ):
-            count += 1
-    
-    MCMD.print( "{} consensus trees removed across {} components.".format( count, len( to_do ) ) )
     
     return EChanges.COMP_DATA
 

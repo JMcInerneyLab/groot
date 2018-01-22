@@ -1,8 +1,8 @@
 from typing import Optional
 
 import groot.algorithms.extenal_runner
+from groot.algorithms import importation
 from groot.data.lego_model import LegoComponent
-from groot.graphing.graphing import MGraph
 
 
 def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
@@ -17,10 +17,8 @@ def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     fn = groot.algorithms.extenal_runner.get_tool( "tree", algorithm )
     
     # Read the result
-    newick = groot.algorithms.extenal_runner.run_in_temporary( fn, component.alignment )
-    g = MGraph()
-    g.import_newick( newick, component.model )
-    component.tree = g
+    newick = groot.algorithms.extenal_runner.run_in_temporary( fn, component.model, component.alignment )
+    component.tree = importation.import_newick( newick, component.model )
 
 
 def drop( component: LegoComponent ) -> bool:

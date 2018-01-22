@@ -3,7 +3,7 @@ from intermake.engine.environment import MENV
 
 class GlobalOptions:
     """
-    :data recent_files: Files recently accessed.
+    :attr recent_files: Files recently accessed.
     """
     
     def __init__(self):

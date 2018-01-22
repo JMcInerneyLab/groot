@@ -1,8 +1,11 @@
+import inspect
+from collections import defaultdict
 from typing import Callable, Iterable, List, Optional, Set, TypeVar
 
 import pyperclip
+import re
 
-from groot.algorithms import components, fastaiser, graph_viewing
+from groot.algorithms import components, fastaiser, graph_viewing, external_tools
 from groot.algorithms.classes import FusionPoint
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, ILegoVisualisable
@@ -10,13 +13,33 @@ from groot.extensions import ext_files, ext_generating
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import IVisualisable, MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
+from intermake import MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
+from mgraph import MGraph
 from mhelper import ByRef, Filename, MEnum, MOptional, SwitchError, ansi, file_helper, string_helper
 
 
 __mcmd_folder_name__ = "Viewing"
 
 T = TypeVar( "T" )
+
+
+@command( names = ["print_algorithms", "algorithms"] )
+def print_algorithms():
+    """
+    Prints available algorithms.
+    """
+    d = defaultdict( list )
+    
+    for x, xv in external_tools.__dict__.items():
+        if not x.startswith( "_" ) and "_" in x and inspect.isfunction(xv):
+            y = x.split( "_", 1 )
+            d[y[0]].append( y[1] )
+    
+    for k, v in d.items():
+        MCMD.print( k + ":" )
+        
+        for vv in v:
+            MCMD.print( "    " + vv )
 
 
 @command( names = ["print_fasta", "fasta"] )
@@ -29,7 +52,7 @@ def print_fasta( target: ILegoVisualisable ) -> EChanges:
     return EChanges.INFORMATION
 
 
-@command( names = ["print_status", "status"], visibility = visibilities.HIGHLIGHT )
+@command( names = ["print_status", "status"], highlight = True )
 def print_status() -> EChanges:
     """
     Prints the status of the model. 
@@ -74,30 +97,21 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChan
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
-            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type,  m) )
+            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m ) )
     
     return EChanges.INFORMATION
-
-
-class ETree( MEnum ):
-    """
-    What to print.
-    
-    :data COMPONENT:    Standard component tree
-    :data CONSENSUS:    Component consensus tree
-    :data NRFG:         The N-rooted fusion graph
-    """
-    COMPONENT = 1
-    CONSENSUS = 2
-    NRFG = 3
 
 
 class EFormat( MEnum ):
     """
     :data NEWICK:       Newick format
-    :data ASCII:        ASCII diagram
-    :data ETE_GUI:      Interactive diagram, provided by Ete. Is also available in CLI.
-    :data ETE_ASCII:    ASCII, provided by Ete
+    :data ASCII:        Simple ASCII diagram
+    :data ETE_GUI:      Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete.
+    :data ETE_ASCII:    ASCII, provided by Ete. Requires Ete.
+    :data SVG:          SVG graphic
+    :data HTML:         HTML graphic
+    :data CSV:          Excel-type CSV with headers, suitable for Gephi.
+    :data DEBUG:        Debug format. Reflects source data and not the tree.
     """
     NEWICK = 1
     ASCII = 2
@@ -106,9 +120,20 @@ class EFormat( MEnum ):
     SVG = 5
     HTML = 6
     CSV = 7
+    DEBUG = 8
 
 
 class EOut( MEnum ):
+    """
+    Output mode.
+    
+    :data DEFAULT: Same as NORMAL, unless a filename is specified, in which this is the same as FILE.
+    :data NORMAL:  Display in current UI
+    :data STDOUT:  Write to STDOUT regardless of current UI.
+    :data CLIP:    Write to clipboard.
+    :data FILE:    Write to file. 
+    """
+    DEFAULT = 0
     NORMAL = 1
     STDOUT = 2
     CLIP = 3
@@ -148,41 +173,41 @@ def print_trees_help() -> str:
 
 
 @command( names = ["print_trees", "trees", "print_tree", "tree"] )
-def print_trees( what: ETree = ETree.COMPONENT,
+def print_trees( graph: Optional[MGraph] = None,
                  view: EFormat = EFormat.ASCII,
                  format: str = None,
-                 component: Optional[LegoComponent] = None,
-                 out: EOut = EOut.NORMAL,
+                 out: EOut = EOut.DEFAULT,
                  file: MOptional[Filename] = None ) -> EChanges:
     """
     Prints the tree for a component.
     
     :param file:        File to write the output to.
     :param out:         Output. Ignored if `file` is set.
-    :param what:        What to print.
+    :param graph:       What to print. Prints everything if not specified.
     :param format:      How to format the nodes. See `print_trees_help`.
     :param view:        How to view the tree.
-    :param component:   Component to print.
-                        If `None` prints all trees.
-                        This parameter is ignored when printing the NRFG.
-    :return: 
     """
-    to_do = cli_view_utils.get_component_list( component )
     formatter = graph_viewing.create_user_formatter( format )
     model = global_view.current_model()
     trees = []
     
     if file:
+        if out not in (EOut.DEFAULT, EOut.FILE):
+            raise ValueError( "Cannot specify both the `out` and `file` parameters." )
+        
         out = EOut.FILE
+    elif out == EOut.DEFAULT:
+        out = EOut.NORMAL
     
-    if what == ETree.COMPONENT or what == ETree.CONSENSUS:
-        for component_ in to_do:
-            tree = component_.consensus if what == ETree.CONSENSUS else component_.tree
-            trees.append( (str( component_ ), tree) )
-    elif what == ETree.NRFG:
-        trees.append( ("NRFG", model.nrfg.graph if model.nrfg is not None else None) )
+    if graph is None:
+        for component_ in model.components:
+            if component_.tree:
+                trees.append( (str( component_ ), component_.tree) )
+        
+        if model.nrfg:
+            trees.append( (str( "NRFG" ), model.nrfg) )
     else:
-        raise SwitchError( "what", what )
+        trees.append( ("", graph) )
     
     text = []
     
@@ -198,6 +223,8 @@ def print_trees( what: ETree = ETree.COMPONENT,
             text.append( tree.to_ascii( formatter ) )
         elif view == EFormat.ETE_ASCII:
             text.append( ete_providers.tree_to_ascii( tree, model, formatter ) )
+        elif view == EFormat.DEBUG:
+            text.append( __tree_to_debug( model, tree ) )
         elif view == EFormat.NEWICK:
             text.append( tree.to_newick( formatter ) )
         elif view == EFormat.ETE_GUI:
@@ -224,6 +251,18 @@ def print_trees( what: ETree = ETree.COMPONENT,
         file_helper.write_all_text( file, text )
     
     return EChanges.INFORMATION
+
+
+def __tree_to_debug( model, tree ):
+    rx = []
+    r = re.compile( ":[0-9.]+" )
+    for line in tree.import_info:
+        line = r.sub( "", line )
+        for s in sorted( model.sequences, key = lambda x: -len( str( x.id ) ) ):
+            line = line.replace( "S{}".format( s.id ), s.accession )
+        rx.append( line )
+    rrx = "\n".join( rx )
+    return rrx
 
 
 def __print_header( x ):
@@ -517,10 +556,9 @@ def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
     results.append( "     fusion_node_uid   {}".format( fusion_point.fusion_node_uid ) )
 
 
-@command( names = ("print_nrfg", "nrfg") )
-def print_nrfg():
+@command( visibility = visibilities.ADVANCED )
+def groot():
     """
-    Prints the NRFG.
-    See also `print_trees`, which permits more advanced options.
+    Displays the application version.
     """
-    return print_trees( what = ETree.NRFG )
+    MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )

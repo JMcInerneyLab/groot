@@ -1,11 +1,10 @@
 import re
 from typing import List, Optional
 
-from groot.algorithms import deconvolution, editor
+from groot.algorithms import deconvolution, editor, importation
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import EChanges
-from groot.graphing.graphing import MGraph
 from intermake import command
 from intermake.engine.environment import MCMD
 
@@ -52,9 +51,7 @@ def set_tree( component: LegoComponent, tree: str ) -> EChanges:
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
     
-    g = MGraph(component)
-    g.import_newick( tree, component.model )
-    component.tree = g
+    component.tree = importation.import_newick( tree, component.model )
     
     return EChanges.COMP_DATA
 
