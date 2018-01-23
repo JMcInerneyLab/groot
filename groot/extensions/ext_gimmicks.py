@@ -1,6 +1,5 @@
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
-from groot.extensions.ext_viewing import EFormat
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, command, visibilities
@@ -52,6 +51,10 @@ def update_model() -> EChanges:
 
 @command( visibility = visibilities.ADVANCED )
 def walkthrough():
+    """
+    Loads a sample and processes it.
+    Look at the code in the `walkthrough` function for details :) 
+    """
     from groot.extensions import ext_files, ext_generating, ext_viewing
     
     ext_files.file_new()

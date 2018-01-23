@@ -23,23 +23,30 @@ __mcmd_folder_name__ = "Viewing"
 T = TypeVar( "T" )
 
 
-@command( names = ["print_algorithms", "algorithms"] )
+@help_command( names = ["algorithm_help", "print_algorithms", "algorithms"] )
 def print_algorithms():
     """
     Prints available algorithms.
     """
+    r = []
     d = defaultdict( list )
     
     for x, xv in external_tools.__dict__.items():
-        if not x.startswith( "_" ) and "_" in x and inspect.isfunction(xv):
+        if not x.startswith( "_" ) and "_" in x and inspect.isfunction( xv ):
             y = x.split( "_", 1 )
             d[y[0]].append( y[1] )
     
-    for k, v in d.items():
-        MCMD.print( k + ":" )
+    for k, v in sorted( d.items(), key = lambda x: x[0] ):
+        r.append("")
+        r.append( Theme.TITLE + "========== " + k + " ==========" + Theme.RESET )
         
         for vv in v:
-            MCMD.print( "    " + vv )
+            if vv != "default":
+                r.append( "    " + Theme.COMMAND_NAME + vv + Theme.RESET )
+                
+        r.append("")
+    
+    return "\n".join( r )
 
 
 @command( names = ["print_fasta", "fasta"] )
@@ -297,14 +304,14 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     if not model.components:
         raise ValueError( "Cannot print components because components have not been calculated." )
     
-    message = Table()
-    
-    if component:
-        message.add_title( component )
-    else:
-        message.add_title( "all components" )
-    
     if verbose:
+        message = Table()
+        
+        if component:
+            message.add_title( component )
+        else:
+            message.add_title( "all components" )
+        
         message.add_row( "component", "origins", "destinations" )
         message.add_hline()
         
@@ -314,48 +321,59 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
             if component is not None and component is not major:
                 continue
             
-            message.add_row( major, "\n".join( str( x ) for x in major.major_sequences ), "\n".join( str( x ) for x in major.minor_subsequences ) )
+            major_seq = string_helper.format_array( major.major_sequences, join = "\n" )
+            minor_seq = string_helper.format_array( major.minor_subsequences, join = "\n" )
+            
+            message.add_row( major, major_seq, minor_seq )
+        
+        MCMD.print( message.to_string() )
     
+    message = Table()
+    
+    if component:
+        message.add_title( component )
     else:
-        average_lengths = components.average_component_lengths( model )
+        message.add_title( "all components" )
+    
+    average_lengths = components.get_average_component_lengths( model )
+    
+    message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
+    message.add_hline()
+    
+    for major in model.components:
+        if component is not None and component is not major:
+            continue
         
-        message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
-        message.add_hline()
+        major_sequences = list( major.major_sequences )
         
-        for major in model.components:
-            if component is not None and component is not major:
+        for minor in model.components:
+            if major is minor:
                 continue
             
-            major_sequences = list( major.major_sequences )
+            start = 0
+            end = 0
+            failed = False
             
-            for minor in model.components:
-                if major is minor:
-                    continue
+            for sequence in major_sequences:
+                # subsequences that are in major sequence is a major sequence of major and are a minor subsequence of minor
+                subsequences = [x for x in minor.minor_subsequences if x.sequence is sequence]
                 
-                start = 0
-                end = 0
-                failed = False
-                
-                for sequence in major_sequences:
-                    # subsequences that are in major sequence is a major sequence of major and are a minor subsequence of minor
-                    subsequences = [x for x in minor.minor_subsequences if x.sequence is sequence]
+                if subsequences:
+                    start += subsequences[0].start
+                    end += subsequences[-1].end
                     
-                    if subsequences:
-                        start += subsequences[0].start
-                        end += subsequences[-1].end
-                        
-                        if component is not None:
-                            message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
-                    else:
-                        failed = True
-                
-                if failed:
-                    continue
-                
-                start /= len( major_sequences )
-                end /= len( major_sequences )
-                
-                message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ), round( end - start ) )
+                    if component is not None:
+                        message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
+                else:
+                    failed = True
+            
+            if failed:
+                continue
+            
+            start /= len( major_sequences )
+            end /= len( major_sequences )
+            
+            message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ), round( end - start ) )
     
     MCMD.print( message.to_string() )
     return EChanges.INFORMATION
@@ -439,7 +457,7 @@ def print_sequences() -> EChanges:
 
 
 @command( names = ["print_components", "components"] )
-def print_components() -> EChanges:
+def print_components( verbose: bool = False ) -> EChanges:
     """
     Prints the major components.
     
@@ -451,6 +469,8 @@ def print_components() -> EChanges:
     
         `major` is the component name
         `sequences` is the list of components in that sequence
+        
+    :param verbose: Print verbose information
     
     """
     model = global_view.current_model()
@@ -469,7 +489,7 @@ def print_components() -> EChanges:
     
     MCMD.print( message.to_string() )
     
-    return EChanges.INFORMATION | print_component_edges()
+    return EChanges.INFORMATION | print_component_edges( verbose = verbose )
 
 
 def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:

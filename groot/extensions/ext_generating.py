@@ -103,8 +103,9 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
     """
     model = global_view.current_model()
     
-    if not all( x.tree is not None for x in model.components ):
-        raise ValueError( "Cannot find fusion events because there is no tree data. Did you mean to generate the trees first?" )
+    for x in model.components:
+        if x.tree is None:
+            raise ValueError( "Cannot find fusion events because there is no tree data for at least one component ({}). Did you mean to generate the trees first?".format( x ) )
     
     if overwrite:
         fuse.remove_fusions( model )

@@ -1,8 +1,9 @@
-from groot.algorithms.classes import FusionPoint
+from groot.algorithms.classes import FusionPoint, FusionEvent, IFusion
 from groot.data.lego_model import LegoSequence
+from groot.frontends.cli import cli_view_utils
 from mgraph import DNodeToText, MNode
 from intermake.engine.theme import Theme
-from mhelper import SwitchError
+from mhelper import SwitchError, ansi
 
 
 NEXT_SPECIAL = "["
@@ -40,6 +41,8 @@ class __Formatter:
             return "seq:{}".format( node.data.accession )
         elif isinstance( node.data, FusionPoint ):
             return "fus:{}:{}".format( node.data.opposite_component, node.data.count )
+        elif isinstance( node.data, FusionEvent ):
+            return "fue:{}:{}".format( node.data.component_a, node.data.component_b )
         else:
             return "cla:{}".format( node.uid )
     
@@ -55,17 +58,28 @@ class __Formatter:
         """
         if isinstance( node.data, LegoSequence ):
             return "⊕ {}".format( node.data.accession )
-        elif isinstance( node.data, FusionPoint ):
+        elif isinstance( node.data, IFusion ):
             return "⊛ {}".format( str( node.data ) )
         else:
             return "⊙"
+    
+    
+    def colour_graph( self, node: MNode ) -> str:
+        d = node.data
+        
+        if isinstance( d, LegoSequence ):
+            return "⊕ " + ansi.FORE_BLACK + cli_view_utils.component_to_ansi_back( d.model.components.find_component_for_major_sequence( d ) ) + str( d ) + ansi.FORE_RESET + ansi.BACK_RESET
+        elif isinstance( d, IFusion ):
+            return "⊛ " + ansi.BOLD + ansi.BACK_BRIGHT_WHITE + ansi.FORE_BLACK + str( d ) + ansi.RESET
+        else:
+            return "⊙ " + ansi.ITALIC + ansi.FORE_YELLOW + str( node ) + ansi.RESET
     
     
     def fusion_name( self, node: MNode ) -> str:
         """
         Name of the fusion, or empty if not a fusion.
         """
-        if isinstance( node.data, FusionPoint ):
+        if isinstance( node.data, IFusion ):
             return Theme.BOLD + str( node.data ) + Theme.RESET
     
     
@@ -153,14 +167,14 @@ class __Formatter:
         """
         Skips the text until the next `|` if this node is a clade.
         """
-        return not isinstance( node.data, LegoSequence ) and not isinstance( node.data, FusionPoint )
+        return not isinstance( node.data, LegoSequence ) and not isinstance( node.data, IFusion )
     
     
     def is_not_clade( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is not a clade.
         """
-        return isinstance( node.data, LegoSequence ) or isinstance( node.data, FusionPoint )
+        return isinstance( node.data, LegoSequence ) or isinstance( node.data, IFusion )
 
 
 FORMATTER = __Formatter()
@@ -178,7 +192,7 @@ def create_user_formatter( format_str: str = None ) -> DNodeToText:
     anything else   - verbatim
     """
     if not format_str:
-        return FORMATTER.short
+        return FORMATTER.colour_graph
     
     return (lambda x: lambda n: __format_node( n, x ))( format_str )
 

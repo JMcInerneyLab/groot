@@ -4,7 +4,7 @@ Holds the Lego model, and its dependencies.
 See class `LegoModel`.
 """
 
-from typing import Dict, Iterator, List, Optional, cast, Tuple
+from typing import Dict, Iterator, List, Optional, cast, Tuple, Set
 from groot.frontends.gui.gui_view_support import EDomainFunction, EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
 from mgraph import MGraph
@@ -264,7 +264,7 @@ class LegoSubsequence( ILegoVisualisable ):
     
     
     def visualisable_info( self ) -> UiInfo:
-        return UiInfo( name = "{}:{}".format( self.__start, self.__end ),
+        return UiInfo( name = str( self ),
                        comment = "",
                        type_name = "Subsequence",
                        value = "{} sites".format( self.length ),
@@ -429,24 +429,23 @@ _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
 
 class LegoComponent( ILegoVisualisable ):
     """
-    A component represents a `major` and `minor` set.
+    Stores information about a component of the (:class:`LegoModel`).
     
-    The `major` comprises the set of sequences that are deemed to be wholly similar.
-    
-    The `minor` comprises the set of sequences and subsequences that are deemed to represent a smaller subsequence of `major`.
-    
-    The exact definition of "wholly similar" and "a smaller subsequence" is described in more detail alongside the algorithms
-    present in the `__detect_major` and `__detect_minor` subroutines of the source code (`LegoModels.py`).
+    :attr: model:                      Back-reference to model
+    :attr: index:                      Index of component within model
+    :attr: tree:                       Tree generated for this component (can be None)
+    :attr: alignment:                  Alignment generated for this component, in FASTA format, with sequences referenced by IID (not accession). Can be None.
+    :attr: major_sequences:            Major sequences of this component. i.e. sequences only containing domains in :attr:`minor_subsequences`
+    :attr: minor_subsequences:         Minor subsequences of this component. i.e. all domains in this component.
     """
     
     
     def __init__( self, model: _LegoModel_, index: int, major_sequences: List[LegoSequence] ):
         from mgraph import MGraph
-        self.model: LegoModel = model  # Source model
-        self.index: int = index  # Index of component
+        self.model: LegoModel = model
+        self.index: int = index
         self.tree: MGraph = None
-        self.alignment: str = None  # Alignment generated for component, in FASTA format
-        self.consensus_intersection: List[LegoSequence] = None
+        self.alignment: str = None
         self.major_sequences: List[LegoSequence] = major_sequences
         self.minor_subsequences: List[LegoSubsequence] = None
     
@@ -475,17 +474,19 @@ class LegoComponent( ILegoVisualisable ):
                        value = "{} sequences".format( array_helper.count( self.major_sequences ) ),
                        colour = EColour.RED,
                        icon = resources.folder,
-                       extra = { "index"                 : self.index,
-                                 "major"                 : self.major_sequences,
-                                 "minor_s"               : self.minor_sequences,
-                                 "minor_ss"              : self.minor_subsequences,
-                                 "alignment"             : self.alignment,
-                                 "consensus_intersection": self.consensus_intersection,
-                                 "tree"                  : self.tree } )
+                       extra = { "index"    : self.index,
+                                 "major"    : self.major_sequences,
+                                 "minor_s"  : self.minor_sequences,
+                                 "minor_ss" : self.minor_subsequences,
+                                 "alignment": self.alignment,
+                                 "tree"     : self.tree,
+                                 "incoming" : self.incoming_components(),
+                                 "outgoing" : self.outgoing_components() } )
     
     
     def __str__( self ) -> str:
-        return _GREEK[self.index % len( _GREEK )].lower()
+        return "⨍" + self.major_sequences[0].accession
+        # return _GREEK[self.index % len( _GREEK )].lower()
     
     
     def minor_subsequences( self ) -> List[LegoSubsequence]:
@@ -499,14 +500,14 @@ class LegoComponent( ILegoVisualisable ):
         """
         Returns components which implicitly form part of this component.
         """
-        return [component for component in self.model.components if any( x in component.minor_sequences for x in self.major_sequences )]
+        return [component for component in self.model.components if any( x in component.minor_sequences for x in self.major_sequences ) and component is not self]
     
     
     def outgoing_components( self ) -> "List[LegoComponent]":
         """
         Returns components which implicitly form part of this component.
         """
-        return [component for component in self.model.components if any( x in component.major_sequences for x in self.minor_sequences )]
+        return [component for component in self.model.components if any( x in component.major_sequences for x in self.minor_sequences ) and component is not self]
     
     
     @property

@@ -2,7 +2,7 @@ from typing import List, Set, Tuple
 
 from groot.data.lego_model import LegoComponent, LegoSequence
 from mgraph import MGraph
-from mhelper import array_helper
+from mhelper import array_helper, string_helper
 
 
 _FusionPoint_ = "FusionPoint"
@@ -11,8 +11,10 @@ _FusionPoint_ = "FusionPoint"
 class NotCommensurateError( Exception ):
     pass
 
+class IFusion:
+    pass
 
-class FusionEvent:
+class FusionEvent(IFusion):
     """
     Describes a fusion event
     
@@ -26,6 +28,12 @@ class FusionEvent:
     
     
     def __init__( self, index: int, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
+        if component_a is component_b:
+            raise ValueError("FusionEvent component A ({}) cannot be component B ({}).".format(component_a, component_b))
+        
+        if any(x is component_a or x is component_b for x in intersections):
+            raise ValueError("FusionEvent intersections ({}) cannot contain component A ({}) or component B ({}).".format(string_helper.format_array(intersections), component_a, component_b))
+        
         self.index = index
         self.component_a: LegoComponent = component_a
         self.component_b: LegoComponent = component_b
@@ -67,10 +75,11 @@ class FusionEvent:
     
     def __str__( self ) -> str:
         intersections = ", ".join( x.__str__() for x in self.intersections )
-        return "{} COMBINES WITH {} TO FORM {}".format( self.component_a, self.component_b, intersections )
+        return intersections
+        #return "{}+{}->{}".format( self.component_a, self.component_b, intersections )
 
 
-class FusionPoint:
+class FusionPoint(IFusion):
     def __init__( self, is_left: bool, fusion_node_uid: int, internal_node_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
         self.is_left = is_left
         self.fusion_node_uid = fusion_node_uid
@@ -87,7 +96,7 @@ class FusionPoint:
     
     
     def __repr__( self ):
-        return "F.{}{}.{}".format( self.event.index, "L" if self.is_left else "R", self.count )
+        return "F.{}:{}.{}".format( self.event, "L" if self.is_left else "R", self.count )
 
 
 class NrfgEvent:

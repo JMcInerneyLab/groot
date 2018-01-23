@@ -12,13 +12,19 @@ from mhelper import Logger, ImplementationError, array_helper
 from mhelper.component_helper import ComponentFinder
 
 
-LOG_MAJOR = Logger( "component.major", False )
-LOG_MINOR = Logger( "component.minor", False )
+LOG_MAJOR = Logger( "comp.major", False )
+LOG_MINOR = Logger( "comp.minor", True )
+LOG_GRAPH = Logger( "comp.graph", False )
 
 
 def detect( model: LegoModel, tolerance: int ) -> None:
     """
-    Detects sequence and subsequence components.
+    Detects model components.
+    Returns nothing, the components are written to :attr:`model.components`.
+    
+    :param model:       Model 
+    :param tolerance:   Tolerance value, which determines how similar two "paths" through the model must be (see :func:`__detect_major`)
+    :return: 
     """
     if not model.sequences:
         raise ValueError( "Cannot perform component detection because the model has no sequences." )
@@ -31,6 +37,9 @@ def detect( model: LegoModel, tolerance: int ) -> None:
 def drop( model: LegoModel ) -> int:
     """
     Drops all components from the model.
+    The components are removed from :attr:`model.components`.
+    
+    :returns: Number of components removed.
     """
     if model.fusion_events:
         raise ValueError( "Refusing to drop the components because there are already fusion events which depend on them. Did you mean to drop the fusion events first?" )
@@ -38,9 +47,24 @@ def drop( model: LegoModel ) -> int:
     if model.nrfg:
         raise ValueError( "Refusing to drop the components because there is already an NRFG which depends on them. Did you mean to drop the NRFG first?" )
     
-    previous = len( model.components )
+    previous_count = len( model.components )
     __clear( model )
-    return previous
+    return previous_count
+
+
+def get_average_component_lengths( model: LegoModel ):
+    """
+    Obtains a dictionary detailing the average lengths of the sequences in each component.
+    :return: Dictionary:
+                key:    component
+                value:  average length 
+    """
+    average_lengths = { }
+    
+    for component in model.components:
+        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
+    
+    return average_lengths
 
 
 def __clear( model: LegoModel ) -> None:
@@ -48,20 +72,27 @@ def __clear( model: LegoModel ) -> None:
     Clears the components from the model.
     """
     model.components.clear()
+    
 
 
 def __detect_major( model: LegoModel, tolerance: int ) -> None:
     """
-    Finds the sequence components, here termed the "major" elements.
+    First step of finding the components.
     
-    Defined as genes (sequences) that share a similarity path between them, where each edge between elements ALPHA and BETA in that path:
-        * Is sourced from no less than ALPHA's length, less the tolerance
-        * Is targeted to no less than BETA's length, less the tolerance
-        * The difference between ALPHA and beta's length is less than the tolerance 
+    We classify each component as a set of "major" genes.
     
-    :param tolerance: Tolerance value. 
+    Components are defined as sets of genes that share a similarity path between them, where each edge between element 𝓧 and 𝓨 in that path:
+        * Is sourced from no less than 𝓧's length, less the tolerance
+        * Is targeted to no less than 𝓨's length, less the tolerance
+        * The difference between 𝓧 and 𝓨's length is less than the tolerance
+        
+    We'll grab the minor domains that this component extends into in the next step. 
+    
+    :param model:       Model
+    :param tolerance:   Tolerance value 
     """
     # Create new components
+    MCMD.autoquestion("begin major")
     components = ComponentFinder()
     
     LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
@@ -97,15 +128,15 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
             components.join( sequence_alpha, beta )
     
     # Create the components!
-    totality = set()
+    sequences_in_components = set()
     
     for index, sequence_list in enumerate( components.tabulate() ):
         model.components.add( LegoComponent( model, index, cast( List[LegoSequence], sequence_list ) ) )
-        totality.update( sequence_list )
+        sequences_in_components.update( sequence_list )
     
     # Create components for orphans
     for sequence in model.sequences:
-        if sequence not in totality:
+        if sequence not in sequences_in_components:
             LOG_MAJOR( "ORPHAN: {}", sequence )
             model.components.add( LegoComponent( model, len( model.components ), [sequence] ) )
 
@@ -121,6 +152,7 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
         When one sequence of a component possesses an edge to a sequence of another component (an "entry").
         Subsequences of all sequences in that second component receive the first component, at the position of the entry.
     """
+    MCMD.autoquestion("begin minor")
     sc = model.components
     
     if not sc:
@@ -128,22 +160,22 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
     
     entry_dict = defaultdict( dict )
     
-    average_lengths = average_component_lengths( model )
+    average_lengths = get_average_component_lengths( model )
     
     assert average_lengths
     
     for component in model.components:
+        LOG_MINOR( "~~~~~ {} ~~~~~", component )
         component.minor_subsequences = []
         
         for sequence in component.major_sequences:
-            
             # Add the origin-al components
-            component.minor_subsequences.append(LegoSubsequence(sequence, 1, sequence.length))
+            component.minor_subsequences.append( LegoSubsequence( sequence, 1, sequence.length ) )
             
-            for entering_edge in model.edges.find_sequence(sequence):
+            for entering_edge in model.edges.find_sequence( sequence ):
                 opposite_side = entering_edge.opposite( sequence )
                 opposite_sequence = opposite_side.sequence
-                opposite_component = model.components.find_component_for_major_sequence(opposite_sequence)
+                opposite_component = model.components.find_component_for_major_sequence( opposite_sequence )
                 
                 if opposite_component is None:
                     raise ImplementationError( "Sequence '{}' has no component!".format( opposite_sequence ) )
@@ -204,14 +236,14 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
                 LOG_MINOR( "flw. FOLLOWING {}", edge )
                 
                 # Now we have our relationship, we can use it to calculate the offset
-                left : LegoSubsequence= edge.side( origin_seq )
-                right : LegoSubsequence = edge.side( destination_seq )
+                left: LegoSubsequence = edge.side( origin_seq )
+                right: LegoSubsequence = edge.side( destination_seq )
                 LOG_MINOR( "flw. -- LEFT {} {}", left.start, left.end )
                 LOG_MINOR( "flw. -- RIGHT {} {}", right.start, right.end )
                 
                 # Our origin is the part of the leading side which comprises our component
-                msi = LegoSubsequence.list_union([x for x in component.minor_subsequences if x.sequence is origin_seq])
-                origin_subsequences = left.intersection(msi)
+                msi = LegoSubsequence.list_union( [x for x in component.minor_subsequences if x.sequence is origin_seq] )
+                origin_subsequences = left.intersection( msi )
                 origin_start = origin_subsequences.start
                 origin_end = origin_subsequences.end
                 LOG_MINOR( "flw. -- ORIGIN {} {}", origin_start, origin_end )
@@ -265,15 +297,6 @@ def __fit_to_range( max_value: int, start: int, end: int, tolerance: int ) -> Tu
         LOG_MINOR( "fix. -- FIXED TO {} {} OF {}", start, end, max_value )
     
     return end, start
-
-
-def average_component_lengths( model: LegoModel ):
-    average_lengths = { }
-    
-    for component in model.components:
-        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
-    
-    return average_lengths
 
 
 def __find_largest_relationship( model: LegoModel, to_do: Set[LegoSequence], done: Set[LegoSequence] ) -> Tuple[LegoEdge, LegoSequence, LegoSequence]:

@@ -1,8 +1,10 @@
 from typing import Optional, List
 
+from groot.algorithms.classes import FusionPoint
+from mgraph import MNode
 from mhelper import ansi, bio_helper
 from groot.data import global_view
-from groot.data.lego_model import ESiteType, LegoComponent, LegoModel
+from groot.data.lego_model import ESiteType, LegoComponent, LegoModel, LegoSequence
 
 
 PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.FORE_WHITE, "L": ansi.FORE_WHITE, "I": ansi.FORE_WHITE,

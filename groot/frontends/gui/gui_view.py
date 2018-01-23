@@ -823,7 +823,7 @@ class LookupTable:
             print( "Warning: Cannot create the lookup table because I don't know the letter type. Defaulting to `protein`." )
         
         self.count = len( self.letter_order_table )
-        self.sequence_height = self.letter_size * (self.count + 2)
+        self.sequence_height = max( self.letter_size * (self.count + 2), 32)
         self.sequence_ysep = self.sequence_height
 
 

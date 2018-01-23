@@ -43,8 +43,6 @@ def import_fasta( model: LegoModel, file_name: str ):
     model.comments.append( "IMPORT_FASTA \"{}\"".format( file_name ) )
     
     with LOG( "IMPORT FASTA FROM '{}'".format( file_name ) ):
-        from Bio import SeqIO
-        
         obtain_only = model._has_data()
         num_updates = 0
         idle = 0
@@ -80,7 +78,9 @@ def import_blast( model: LegoModel, file_name: str ):
     
     obtain_only = model._has_data()
     
-    with LOG( "IMPORT {} BLAST FROM '{}'".format( "MERGE" if obtain_only else "NEW", file_name ) ):
+    LOG( "IMPORT {} BLAST FROM '{}'", "MERGE" if obtain_only else "NEW", file_name )
+    
+    with LOG:
         with open( file_name, "r" ) as file:
             for line in file.readlines():
                 line = line.strip()

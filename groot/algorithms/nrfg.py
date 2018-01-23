@@ -4,8 +4,9 @@ Module for creating the NRFG.
 
 from typing import FrozenSet, Union, Iterable, Set, Dict, Tuple
 
-from groot.algorithms.classes import FusionPoint
+from groot.algorithms.classes import FusionPoint, FusionEvent, IFusion
 from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent
+from intermake.engine.environment import MCMD
 from mgraph import FollowParams, MGraph, MNode
 from mhelper import string_helper, array_helper, Logger, LogicError
 
@@ -26,7 +27,7 @@ def __get_split_leaves( params: _TGetSequences ) -> Set[object]:
     for node in params:
         if isinstance( node.data, LegoSequence ):
             result.add( node.data )
-        elif isinstance( node.data, FusionPoint ):
+        elif isinstance( node.data, IFusion ):
             result.add( node.data )
     
     return result
@@ -115,12 +116,12 @@ def __make_graph_from_splits( splits ):
     for i, split in enumerate( to_use ):
         split_str = __print_split( split )
         
-        __LOG( "CURRENT STATUS" )
-        __LOG( g.to_ascii() )
-        __LOG( g.to_edgelist( delimiter = "    --->    ", pad = True ) )
-        __LOG( "========================================" )
-        __LOG( "SPLIT {} OF {}".format( i, len( to_use ) ) )
-        __LOG( "= " + split_str )
+        # __LOG( "CURRENT STATUS" )
+        # __LOG( g.to_ascii() )
+        # __LOG( g.to_edgelist( delimiter = "    --->    ", pad = True ) )
+        # __LOG( "========================================" )
+        # __LOG( "SPLIT {} OF {}".format( i, len( to_use ) ) )
+        # __LOG( "= " + split_str )
         
         if len( split ) == 1:
             sequence = array_helper.single_or_error( split )
@@ -133,28 +134,31 @@ def __make_graph_from_splits( splits ):
         # Find the most recent common ancestor of all sequences in our split
         paths = g.find_common_ancestor_paths( filter = lambda x: x.data in split )
         mrca: MNode = paths[0][0]
-        __LOG( "MRCA = {}".format( mrca ) )
+        # __LOG( "MRCA = {}".format( mrca ) )
         
         # Some nodes will be attached by the same clade, reduce this to the final set
         destinations = set( path[1] for path in paths )
         
         if len( destinations ) == len( mrca.edges.outgoing_dict ):
             # Already a self-contained clade, nothing to do
+            __LOG( "EXISTING SPLIT {} OF {} = {} (@{})", i, len( to_use ), split_str, mrca )
             continue
+        
+        __LOG( "NEW      SPLIT {} OF {} = {} (@{})", i, len( to_use ), split_str, mrca )
         
         new_node = mrca.add_child()
         new_node.data = "split: " + split_str
-        __LOG( "NEW CHILD = {}".format( new_node ) )
+        # __LOG( "NEW CHILD = {}".format( new_node ) )
         
         for destination in destinations:
             # MCMD.print( "MRCA DESTINATION #n = {}".format( destination ) )
             mrca.remove_edge_to( destination )
             new_node.add_edge_to( destination )
         
-        __LOG( "========================================" )
+        # __LOG( "========================================" )
     
-    __LOG( "FINAL STATUS" )
-    __LOG( g.to_ascii() )
+    # __LOG( "FINAL STATUS" )
+    # __LOG( g.to_ascii() )
     return g
 
 
@@ -190,11 +194,12 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ SPLITS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     __LOG( "========== SPLITS STAGE ==========" )
+    MCMD.autoquestion("begin splits")
     splits: _TSetSet = set()
     data_by_component: _TDataByComponent = { }
     
     for component in model.components:
-        __LOG( str( component ) )
+        __LOG( "FOR COMPONENT {}", component )
         
         tree: MGraph = component.tree
         tree.get_root()
@@ -203,7 +208,7 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
         component_splits = __get_splits( tree )
         
         for split in component_splits:
-            __LOG( "SPLIT    : {}".format( __print_split( split ) ) )
+            __LOG( "---- FOUND SPLIT {}", __print_split( split ) )
         
         splits.update( component_splits )
         data_by_component[component] = component_splits, component_sequences
@@ -212,6 +217,7 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ EVIDENCE ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     __LOG( "========== EVIDENCE STAGE ==========" )
+    MCMD.autoquestion("begin evidence")
     to_use: _TSetSet = set()
     
     for split in splits:
@@ -240,14 +246,19 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
         frequency = len( evidence_for ) / total_evidence
         accept = frequency > cutoff
         
-        __LOG( "SPLIT    : {}".format( __print_split( split ) ) )
-        __LOG( "SPLITSIZE: {}".format( len( split ) ) )
-        __LOG( "FOR      : {}".format( string_helper.format_array( evidence_for, sort = True ) ) )
-        __LOG( "AGAINST  : {}".format( string_helper.format_array( evidence_against, sort = True ) ) )
-        __LOG( "UNUSED   : {}".format( string_helper.format_array( evidence_unused, sort = True ) ) )
-        __LOG( "FREQUENCY: {} / {} = {}%".format( len( evidence_for ), total_evidence, int( frequency * 100 ) ) )
-        __LOG( "STATUS:    {}".format( "accepted" if accept else "rejected" ) )
-        __LOG( "" )
+        # __LOG( "SPLIT    : {}".format( __print_split( split ) ) )
+        # __LOG( "SPLITSIZE: {}".format( len( split ) ) )
+        # __LOG( "FOR      : {}".format( string_helper.format_array( evidence_for, sort = True ) ) )
+        # __LOG( "AGAINST  : {}".format( string_helper.format_array( evidence_against, sort = True ) ) )
+        # __LOG( "UNUSED   : {}".format( string_helper.format_array( evidence_unused, sort = True ) ) )
+        # __LOG( "FREQUENCY: {} / {} = {}%".format( len( evidence_for ), total_evidence, int( frequency * 100 ) ) )
+        # __LOG( "STATUS:    {}".format( "accepted" if accept else "rejected" ) )
+        # __LOG( "" )
+        
+        evfor = string_helper.format_array( evidence_for, sort = True )
+        evag = string_helper.format_array( evidence_against, sort = True )
+        
+        __LOG( "SPLIT WITH {}% EVIDENCE (+ {} ({}) - {} ({}))   : {}", int( frequency * 100 ), evfor, len( evidence_for ), evag, len( evidence_against ), __print_split( split ) )
         
         if accept:
             to_use.add( split )
@@ -257,6 +268,7 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # Sort the to_use by size
     __LOG( "========== RECOMBINE STAGE ==========" )
+    MCMD.autoquestion("begin recombine")
     model.nrfg = __make_graph_from_splits( to_use )
     
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒

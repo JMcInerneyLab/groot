@@ -1,6 +1,9 @@
 from groot.algorithms import editor
-from groot.data.lego_model import LegoModel, LOG
-from mhelper import array_helper
+from groot.data.lego_model import LegoModel
+from mhelper import array_helper, Logger
+
+
+LOG = Logger( False )
 
 
 def remove_redundant_subsequences( model: LegoModel ):

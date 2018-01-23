@@ -1,6 +1,6 @@
 from os import path, system
 
-from groot.algorithms.classes import FusionPoint
+from groot.algorithms.classes import FusionPoint, IFusion
 from groot.data.lego_model import LegoComponent, ILegoVisualisable, LegoSequence
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot.algorithms import fastaiser, graph_viewing
@@ -96,7 +96,7 @@ def view_nrfg_gui( format_str: str = "" ) -> EChanges:
                        "#008000", 
                        "#000000",]
             colour = colours[component.index % len( colours )]
-        elif isinstance( node.data, FusionPoint ):
+        elif isinstance( node.data, IFusion ):
             colour = "#FF0000"
         else:
             colour = "#FFFFC0"
