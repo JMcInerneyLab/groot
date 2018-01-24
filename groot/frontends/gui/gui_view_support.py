@@ -3,7 +3,7 @@ from enum import Enum
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor, QPen
 
-from mhelper import array_helper
+from mhelper import array_helper, MEnum
 from mhelper_qt import Colours, Pens, qt_colour_helper
 
 
@@ -145,7 +145,7 @@ class DRAWING:
     Z_FOCUS = 3
 
 
-class EDomainFunction( Enum ):
+class EDomainFunction( MEnum ):
     """
     Domain generator function.
     

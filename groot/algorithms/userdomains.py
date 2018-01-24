@@ -5,7 +5,8 @@ Used for display, nothing to do with the model.
 """
 from typing import List, Iterable
 
-from mhelper import array_helper
+from groot.frontends.gui.gui_view_support import EDomainFunction
+from mhelper import array_helper, SwitchError
 
 from groot.data.lego_model import LegoSequence, LegoModel, LegoSubsequence, LegoUserDomain
 
@@ -13,10 +14,11 @@ from groot.data.lego_model import LegoSequence, LegoModel, LegoSubsequence, Lego
 def fixed_width( sequence: LegoSequence, width: int = 25 ) -> List[LegoUserDomain]:
     r = []
     
-    for s, e in array_helper.divide_workload( sequence.length, width, expand = True ):
-        r.append( LegoUserDomain( sequence, s + 1, e + 1 ) )
+    for i in range( 1, sequence.length + 1, width ):
+        r.append( LegoUserDomain( sequence, i, min( i + width, sequence.length ) ) )
     
     return r
+
 
 def fixed_count( sequence: LegoSequence, count: int = 4 ) -> List[LegoUserDomain]:
     r = []
@@ -53,7 +55,7 @@ def by_cuts( sequence: LegoSequence, cuts: Iterable[int] ):
         if right is None:
             if left > sequence.length:
                 continue
-                
+            
             right = sequence.length
         elif right == 1:
             continue
@@ -78,4 +80,18 @@ def by_component( sequence: LegoSequence ) -> List[LegoUserDomain]:
             
             todo.append( subsequence )
     
+    if not todo:
+        return [LegoUserDomain( sequence, 1, sequence.length )]
+    
     return by_predefined( todo )
+
+
+def by_enum( sequence, switch, param ):
+    if switch == EDomainFunction.COMPONENT:
+        return by_component( sequence )
+    elif switch == EDomainFunction.FIXED_COUNT:
+        return fixed_count( sequence, param )
+    elif switch == EDomainFunction.FIXED_WIDTH:
+        return fixed_width( sequence, param )
+    else:
+        raise SwitchError( "self.owner_model_view.options.domain_function", switch )

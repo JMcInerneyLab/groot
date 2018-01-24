@@ -171,9 +171,6 @@ def remove_sequences( sequences: List[LegoSequence], no_fresh: bool ):
     assert_model_freshness( sequences[0].model, no_fresh )
     
     for sequence in sequences:
-        for subsequence in sequence.subsequences:
-            __destroy_subsequence( subsequence, no_fresh )
-        
         sequence.model.sequences.remove( sequence )
 
 

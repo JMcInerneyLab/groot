@@ -1,12 +1,12 @@
 from groot.data.lego_model import LegoSequence
-from groot.frontends.cli.cli_view_utils import COMPONENT_COLOURS_ANSI_FORE, COMPONENT_COLOURS_ANSI_COUNT
 from intermake.engine.environment import MCMD
+from intermake.engine.theme import Theme
 from mhelper import ansi, string_helper
 
 
 def sequence( seq ):
-    i = ord( seq.accession[0] ) % COMPONENT_COLOURS_ANSI_COUNT
-    c = COMPONENT_COLOURS_ANSI_FORE[i]
+    i = ord( seq.accession[0] ) % Theme.PROGRESSION_COUNT
+    c = Theme.PROGRESSION_FORE[i]
     return c + seq.accession + ansi.RESET
 
 

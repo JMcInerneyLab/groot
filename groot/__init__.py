@@ -2,7 +2,7 @@
 # META DATA
 #
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.27"
+__version__ = "0.0.0.29"
 
 #
 # PRE SETUP

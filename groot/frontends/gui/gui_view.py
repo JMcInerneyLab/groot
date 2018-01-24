@@ -621,14 +621,7 @@ class LegoView_Sequence:
         switch = self.owner_model_view.options.domain_function
         param = self.owner_model_view.options.domain_function_parameter
         
-        if switch == EDomainFunction.COMPONENT:
-            userdomains_ = userdomains.by_component( self.sequence )
-        elif switch == EDomainFunction.FIXED_COUNT:
-            userdomains_ = userdomains.fixed_count( self.sequence, param )
-        elif switch == EDomainFunction.FIXED_WIDTH:
-            userdomains_ = userdomains.fixed_width( self.sequence, param )
-        else:
-            raise SwitchError( "self.owner_model_view.options.domain_function", switch )
+        userdomains_ = userdomains.by_enum( self.sequence, switch, param )
         
         for userdomain in userdomains_:
             subsequence_view = LegoView_UserDomain( userdomain, self, len( self.userdomain_views ), previous_subsequence )
@@ -823,7 +816,7 @@ class LookupTable:
             print( "Warning: Cannot create the lookup table because I don't know the letter type. Defaulting to `protein`." )
         
         self.count = len( self.letter_order_table )
-        self.sequence_height = max( self.letter_size * (self.count + 2), 32)
+        self.sequence_height = max( self.letter_size * (self.count + 2), 32 )
         self.sequence_ysep = self.sequence_height
 
 
@@ -856,7 +849,7 @@ class LegoView_Model:
             self.sequence_views[sequence] = item
             self.userdomain_views.update( item.userdomain_views )
         
-        self.edges_view : LegoView_AllEdges = self.update_edges()
+        self.edges_view: LegoView_AllEdges = self.update_edges()
         self.scene.addItem( self.edges_view )
         
         self._selections = 0
@@ -1315,6 +1308,3 @@ class LegoView_Model:
                     self.select_component( component, select )
             else:
                 raise SwitchError( "self.options.mode", self.options.mode )
-    
-    
-    

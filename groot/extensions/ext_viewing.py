@@ -5,13 +5,14 @@ from typing import Callable, Iterable, List, Optional, Set, TypeVar
 import pyperclip
 import re
 
-from groot.algorithms import components, fastaiser, graph_viewing, external_tools
+from groot.algorithms import components, fastaiser, graph_viewing, external_tools, userdomains
 from groot.algorithms.classes import FusionPoint
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, ILegoVisualisable
 from groot.extensions import ext_files, ext_generating
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
+from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
 from mgraph import MGraph
@@ -24,7 +25,7 @@ T = TypeVar( "T" )
 
 
 @help_command( names = ["algorithm_help", "print_algorithms", "algorithms"] )
-def print_algorithms():
+def algorithm_help():
     """
     Prints available algorithms.
     """
@@ -34,17 +35,19 @@ def print_algorithms():
     for x, xv in external_tools.__dict__.items():
         if not x.startswith( "_" ) and "_" in x and inspect.isfunction( xv ):
             y = x.split( "_", 1 )
-            d[y[0]].append( y[1] )
+            d[y[0]].append( (y[1], xv) )
     
     for k, v in sorted( d.items(), key = lambda x: x[0] ):
-        r.append("")
+        r.append( "" )
         r.append( Theme.TITLE + "========== " + k + " ==========" + Theme.RESET )
         
-        for vv in v:
-            if vv != "default":
-                r.append( "    " + Theme.COMMAND_NAME + vv + Theme.RESET )
-                
-        r.append("")
+        for name, function in v:
+            if name != "default":
+                r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
+                r.append( "    " + (function.__doc__ or "").strip() )
+                r.append( "" )
+        
+        r.append( "" )
     
     return "\n".join( r )
 
@@ -394,59 +397,55 @@ def print_edges() -> EChanges:
 
 
 @command( names = ["print_sequences", "sequences"] )
-def print_sequences() -> EChanges:
+def print_sequences( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter: int = 0 ) -> EChanges:
     """
     Prints the sequences (as components)
+    
+    :param domain:      How to break up the sequences 
+    :param parameter:   Parameter on `domain` 
+    :return: 
     """
     
     model = global_view.current_model()
     longest = max( x.length for x in model.sequences )
     r = []
     
-    
-    def ___get_seq_msg( component_index: int, num: int, counter: int, component: LegoComponent, last_components: Set[LegoComponent] ):
-        if counter == 0:
-            return
-        
-        if component in last_components:
-            x = component.str_ansi_back()
-        else:
-            x = ansi.BACK_LIGHT_BLACK
-        
-        size = max( 1, int( (counter / longest) * 80 ) )
-        
-        r.append( x + ansi.DIM + ansi.FORE_BLACK + ("▏" if num else " ") + ansi.NORMAL + string_helper.centre_align( str( counter ) if component_index == 0 else (" " * len( str( counter ) )), size ) + " " )
-    
-    
     for sequence in model.sequences:
-        if not sequence.minor_components():
-            r.append( "{} - no components".format( sequence ) )
+        minor_components = model.components.find_components_for_minor_sequence( sequence )
         
-        for component_index, component in enumerate( sequence.minor_components() ):
+        if not minor_components:
+            minor_components = [None]
+        
+        for component_index, component in enumerate( minor_components ):
             if component_index == 0:
                 r.append( sequence.accession.ljust( 20 ) )
             else:
                 r.append( "".ljust( 20 ) )
             
-            r.append( component.str_ansi + " " )
+            if component:
+                r.append( cli_view_utils.component_to_ansi( component ) + " " )
+            else:
+                r.append( "Ø " )
             
-            last_components = None
-            counter = 0
-            num = 0
+            subsequences = userdomains.by_enum( sequence, domain, parameter )
             
-            for subsequence in sequence.subsequences:
-                if last_components is None:
-                    last_components = subsequence.components
+            for subsequence in subsequences:
+                components = model.components.find_components_for_minor_subsequence( subsequence )
                 
-                if subsequence.components != last_components:
-                    ___get_seq_msg( component_index, num, counter, component, last_components )
-                    num += 1
-                    last_components = subsequence.components
-                    counter = 0
+                if component in components:
+                    colour = cli_view_utils.component_to_ansi_back( component )
                 else:
-                    counter += subsequence.length
-            
-            ___get_seq_msg( component_index, num, counter, component, last_components )
+                    colour = ansi.BACK_LIGHT_BLACK
+                
+                size = max( 1, int( (subsequence.length / longest) * 80 ) )
+                name = "{}-{}".format( subsequence.start, subsequence.end )
+                
+                r.append( colour +
+                          ansi.DIM +
+                          ansi.FORE_BLACK +
+                          "▏" +
+                          ansi.NORMAL +
+                          string_helper.centre_align( name, size ) )
             
             r.append( Theme.RESET + "\n" )
         

@@ -45,7 +45,7 @@ def make_alignments( algorithm: Optional[str] = None, component: Optional[List[L
     
     Requisites: The FASTA sequences. You must have called `load_fasta` first.
     
-    :param algorithm:   Algorithm to use.
+    :param algorithm:   Algorithm to use. See `algorithm_help`.
     :param component:   Component to align, or `None` for all.
     """
     model = global_view.current_model()
@@ -72,7 +72,7 @@ def make_trees( algorithm: Optional[str] = None, component: Optional[List[LegoCo
     
     Requisites: The alignments. You must have called `make_alignments` first.
     
-    :param algorithm:   Algorithm to use. See `help_algorithms`.
+    :param algorithm:   Algorithm to use. See `algorithm_help`.
     :param component:   Component, or `None` for all.
     """
     model = global_view.current_model()

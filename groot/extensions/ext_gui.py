@@ -1,6 +1,6 @@
 from os import path, system
 
-from groot.algorithms.classes import FusionPoint, IFusion
+from groot.algorithms.classes import IFusion
 from groot.data.lego_model import LegoComponent, ILegoVisualisable, LegoSequence
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot.algorithms import fastaiser, graph_viewing
@@ -71,7 +71,7 @@ def view_nrfg_gui( format_str: str = "" ) -> EChanges:
     r = []
     
     g: MGraph = model.nrfg
-    formatter = graph_viewing.create_user_formatter( format_str )
+    formatter = graph_viewing.create_user_formatter( format_str, ansi = False )
     
     nodes = array_helper.create_index_lookup( g.get_nodes() )
     
@@ -79,22 +79,20 @@ def view_nrfg_gui( format_str: str = "" ) -> EChanges:
         # {id: 1, label: 'Node 1'},
         if isinstance( node.data, LegoSequence ):
             component = model.components.find_component_for_major_sequence( node.data )
-            colours = ["#00FFFF",
-                       "#00C0FF",
-                       "#0080FF", 
-                       "#0000FF",
-                       "#00FFC0",
-                       "#00C0C0",
-                       "#0080C0", 
-                       "#0000C0",
-                       "#00FF80",
-                       "#00C080",
-                       "#008080", 
-                       "#000080",
-                       "#00FF00",
-                       "#00C000",
-                       "#008000", 
-                       "#000000",]
+            colours = ["#C0392B",
+                       "#9B59B6",
+                       "#2980B9",
+                       "#1ABC9C",
+                       "#27AE60",
+                       "#F1C40F",
+                       "#E74C3C",
+                       "#8E44AD",
+                       "#3498DB",
+                       "#239B56",
+                       "#16A085",
+                       "#2ECC71",
+                       "#F39C12",
+                       "#D35400"]
             colour = colours[component.index % len( colours )]
         elif isinstance( node.data, IFusion ):
             colour = "#FF0000"

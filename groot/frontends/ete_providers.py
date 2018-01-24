@@ -2,7 +2,7 @@ from colorama import Fore
 from ete3 import Tree
 
 from groot.data.lego_model import LegoModel
-from groot.frontends.cli.cli_view_utils import COMPONENT_COLOURS_ANSI_FORE, COMPONENT_COLOURS_ANSI_COUNT
+from intermake import Theme
 from mgraph import DNodeToText, MGraph
 
 
@@ -11,7 +11,7 @@ def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
     
     for sequence in model.sequences:
         component = model.components.find_component_for_major_sequence(sequence)
-        colour = COMPONENT_COLOURS_ANSI_FORE[component.index % COMPONENT_COLOURS_ANSI_COUNT]
+        colour = Theme.PROGRESSION_FORE[component.index % Theme.PROGRESSION_COUNT]
         ascii = ascii.replace( sequence.accession, colour + sequence.accession + Fore.RESET )
     
     return ascii

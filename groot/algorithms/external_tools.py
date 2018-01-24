@@ -10,7 +10,7 @@ import re
 
 from groot.algorithms import extenal_runner
 from groot.data.lego_model import LegoModel, ESiteType
-from mhelper import bio_helper, file_helper
+from mhelper import bio_helper, file_helper, ignore
 
 
 _RX1 = re.compile( ":[0-9.]+" )
@@ -20,6 +20,7 @@ def consensus_default( model: LegoModel, trees ):
     """
     Generates a consensus tree.
     
+    :param model:       Model.
     :param trees:       Input trees, in Newick format. One tree per line. 
     :return:            Output (consensus) tree, in Newick format.
     """
@@ -27,6 +28,10 @@ def consensus_default( model: LegoModel, trees ):
 
 
 def consensus_paup( model: LegoModel, trees ):
+    """
+    Uses Paup to generate the consensus.
+    """
+    ignore( model )
     SCRIPT = """GetTrees file=in_file.nwk;
                 ConTree /treeFile=temp_file.nex;
                 GetTrees file=temp_file.nex;
@@ -62,11 +67,9 @@ def consensus_paup( model: LegoModel, trees ):
 
 def consensus_biopython( model: LegoModel, trees ):
     """
-    Generates a consensus tree.
-
-    :param trees:       Input trees, in Newick format. One tree per line. 
-    :return:            Output (consensus) tree, in Newick format.
+    Uses Biopython to generate the consensus.
     """
+    ignore( model )
     import sys
     from Bio.Phylo import Consensus
     
@@ -84,15 +87,17 @@ def tree_default( model: LegoModel, alignment ):
     """
     Generates a tree.
     
+    :param model:       Model.
     :param alignment:   Alignment data, in Fasta format. 
     :return:            Output tree, in Newick format.
     """
-    return tree_paup( model, alignment )
+    ignore( model )
+    return tree_raxml( model, alignment )
 
 
-def tree_paup( model: LegoModel, alignment ):
+def tree_raxml( model: LegoModel, alignment ):
     """
-    Variation of `tree_default` that uses Paup.
+    Uses Raxml to generate the tree.
     """
     file_helper.write_all_text( "in_file.fasta", alignment )
     bio_helper.convert_file( "in_file.fasta", "in_file.phy", "fasta", "phylip" )
@@ -111,6 +116,7 @@ def align_default( model: LegoModel, fasta ):
     """
     Generates an alignment.
     
+    :param model:       Model.
     :param fasta:       Input data, in Fasta format. 
     :return:            Output data, in Fasta format.
     """
@@ -119,7 +125,7 @@ def align_default( model: LegoModel, fasta ):
 
 def align_muscle( model: LegoModel, fasta ):
     """
-    Variation of `align_default` which uses MUSCLE to align.
+    Uses MUSCLE to align.
     """
     file_helper.write_all_text( "in_file.fasta", fasta )
     
@@ -130,6 +136,7 @@ def align_muscle( model: LegoModel, fasta ):
 
 def align_as_is( model: LegoModel, fasta ):
     """
-    Variation of `align_default` which uses the FASTA as is.
+    Uses the FASTA as it already is.
     """
+    ignore( model )
     return fasta
