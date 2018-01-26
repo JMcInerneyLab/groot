@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 
-from groot.algorithms import deconvolution, editor, importation
+from groot.algorithms import editor, importation
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import EChanges
@@ -13,29 +13,6 @@ from intermake.engine.environment import MCMD
 __mcmd_folder_name__ = "Modifications"
 
 
-@command()
-def clean( edges: bool = True, subsequences: bool = True ) -> EChanges:
-    """
-    Removes redundancies (duplicates) from the model.
-    
-    :param subsequences: When `True`, redundant subsequences are removed. 
-    :param edges:        When `True`, redundant edges are removed.
-    :return: 
-    """
-    model = global_view.current_model()
-    
-    if not edges and not subsequences:
-        raise ValueError( "You must specify at least one item to clean." )
-    
-    if edges:
-        with MCMD.action( "Removing redundant edges" ):
-            deconvolution.remove_redundant_edges( model )
-    
-    if subsequences:
-        with MCMD.action( "Removing redundant subsequences" ):
-            deconvolution.remove_redundant_subsequences( model )
-    
-    return EChanges.MODEL_ENTITIES
 
 
 

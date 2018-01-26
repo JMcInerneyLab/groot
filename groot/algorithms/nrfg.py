@@ -2,27 +2,85 @@
 Module for creating the NRFG.
 """
 
-from typing import FrozenSet, Union, Iterable, Set, Dict, Tuple
+from typing import Dict, FrozenSet, Iterable, Set, Tuple, Union, AbstractSet
 
-from groot.algorithms.classes import FusionPoint, FusionEvent, IFusion
-from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent
+import itertools
+
+from groot.algorithms.classes import IFusion
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from intermake.engine.environment import MCMD
-from mgraph import FollowParams, MGraph, MNode
-from mhelper import string_helper, array_helper, Logger, LogicError
+from mgraph import FollowParams, MEdge, MGraph, MNode
+from mhelper import Logger, LogicError, TTristate, ansi, array_helper, string_helper, ansi_helper
 
 
+_TLeaf = Union[LegoSequence, IFusion]
 _TDataByComponent = Dict[LegoComponent, Tuple[FrozenSet[LegoSequence], Set[FrozenSet[LegoSequence]]]]
 _TGetSequences = Union[Iterable[MNode], FollowParams]
-_TSetSet = Set[FrozenSet[LegoSequence]]
 
 __LOG = Logger( "nrfg", True )
 
 
-def __get_split_leaves( params: _TGetSequences ) -> Set[object]:
+class Split:
+    def __init__( self, inside: FrozenSet[_TLeaf], outside: FrozenSet[_TLeaf] ):
+        self.inside: FrozenSet[_TLeaf] = inside
+        self.outside: FrozenSet[_TLeaf] = outside
+        self.all = frozenset( itertools.chain( self.inside, self.outside ) )
+    
+    
+    def __str__( self ):
+        r = []
+        
+        for x in sorted( self.all, key = str ):
+            if x in self.inside:
+                r.append( ansi.FORE_GREEN + str( x ) + ansi.FORE_RESET )
+            else:
+                r.append( ansi.FORE_RED + str( x ) + ansi.FORE_RESET )
+        
+        return ", ".join( r )
+        
+        # return string_helper.format_array( self.all, sort = True )+" = "+ ansi.FORE_GREEN + string_helper.format_array( self.inside, sort = True ) + ansi.RESET + " ¦ " + ansi.FORE_RED + string_helper.format_array( self.outside, sort = True ) + ansi.RESET
+    
+    
+    @property
+    def is_empty( self ):
+        return len( self.inside ) == 0
+    
+    
+    def is_evidenced_by( self, other: "Split" ) -> TTristate:
+        """
+        A split is evidenced by another if it is a subset of it
+        No evidence can be provided if the other set of leaves is not a subset 
+        """
+        if not self.all.issubset( other.all ):
+            return None
+        
+        return self.inside.issubset( other.inside) and self.outside.issubset(other.outside)
+    
+    def __len__(self):
+        return len(self.inside)
+    
+    
+    def __hash__( self ):
+        return hash( (self.inside, self.outside) )
+    
+    
+    def __eq__( self, other ):
+        return isinstance( other, Split ) and self.inside == other.inside and self.outside == other.outside
+
+
+def __is_clade( node: MNode ) -> bool:
+    return node.data is None or isinstance( node.data, str )
+
+
+def __is_fusion( node: MNode ) -> bool:
+    return isinstance( node.data, IFusion )
+
+
+def __get_split_leaves( params: _TGetSequences ) -> Set[_TLeaf]:
     if isinstance( params, FollowParams ):
         params = params.visited_nodes
     
-    result: Set[object] = set()
+    result: Set[_TLeaf] = set()
     
     for node in params:
         if isinstance( node.data, LegoSequence ):
@@ -33,54 +91,6 @@ def __get_split_leaves( params: _TGetSequences ) -> Set[object]:
     return result
 
 
-def __print_split( x: Iterable[object] ):
-    return string_helper.format_array( x, sort = True )
-
-
-class NewickItem:
-    def __init__( self, sequence ):
-        if isinstance( sequence, LegoSequence ):
-            self.sequence = sequence
-            self.list = None
-        else:
-            self.sequence = None
-            self.list = sequence
-    
-    
-    def __repr__( self ):
-        if self.sequence:
-            return str( self.sequence )
-        else:
-            return "({})".format( ", ".join( str( x ) for x in self.list ) )
-    
-    
-    def is_subset_of( self, it ):
-        for x in self:
-            if x not in it:
-                return False
-        
-        return True
-    
-    
-    def __iter__( self ):
-        if self.sequence:
-            yield self.sequence
-        else:
-            for x in self.list:
-                yield from x
-    
-    
-    def __contains__( self, item ):
-        if self.sequence is not None:
-            r = item is self.sequence
-            print( "{} is {}.sequence = {}".format( item, self, r ) )
-            return r
-        else:
-            r = any( item in x for x in self.list )
-            print( "any( {} in x for x in {}.list ) = {}".format( item, self, r ) )
-            return r
-
-
 def __iter_splits( graph: MGraph ) -> Iterable[Tuple[FrozenSet[LegoSequence], FrozenSet[LegoSequence]]]:
     """
     Obtains the set of splits in a graph.
@@ -88,25 +98,25 @@ def __iter_splits( graph: MGraph ) -> Iterable[Tuple[FrozenSet[LegoSequence], Fr
     all_sequences = __get_split_leaves( graph.nodes )
     
     for edge in graph.edges:
-        left_sequences = __get_split_leaves( graph.follow( FollowParams( start = edge.left, exclude_edges = [edge] ) ) )
-        right_sequences = all_sequences - left_sequences
-        yield frozenset( left_sequences ), frozenset( right_sequences )
+        left_leaves = __get_split_leaves( graph.follow( FollowParams( start = edge.left, exclude_edges = [edge] ) ) )
+        right_leaves = all_sequences - left_leaves
+        yield frozenset( left_leaves ), frozenset( right_leaves )
 
 
-def __get_splits( graph: MGraph ) -> _TSetSet:
+def __get_splits( graph: MGraph ) -> Set[Split]:
     """
     Obtains the set of splits in a graph.
     """
-    all_splits: _TSetSet = set()
+    all_splits: Set[Split] = set()
     
     for left_sequences, right_sequences in __iter_splits( graph ):
-        all_splits.add( left_sequences )
-        all_splits.add( right_sequences )
+        all_splits.add( Split( left_sequences, right_sequences ) )
+        all_splits.add( Split( right_sequences, left_sequences ) )
     
     return all_splits
 
 
-def __make_graph_from_splits( splits ):
+def __make_graph_from_splits( splits : AbstractSet[Split] ):
     # Nb. treemodel.Tree.from_split_bitmasks just skips dud splits, not sure we should do that here
     
     g = MGraph()
@@ -114,7 +124,7 @@ def __make_graph_from_splits( splits ):
     root: MNode = g.add_node( data = "root" )
     
     for i, split in enumerate( to_use ):
-        split_str = __print_split( split )
+        split_str = str( split )
         
         # __LOG( "CURRENT STATUS" )
         # __LOG( g.to_ascii() )
@@ -124,7 +134,7 @@ def __make_graph_from_splits( splits ):
         # __LOG( "= " + split_str )
         
         if len( split ) == 1:
-            sequence = array_helper.single_or_error( split )
+            sequence = array_helper.single_or_error( split.inside )
             
             if not any( x.data is sequence for x in g.nodes ):
                 root.add_child( data = sequence )
@@ -132,7 +142,7 @@ def __make_graph_from_splits( splits ):
             continue
         
         # Find the most recent common ancestor of all sequences in our split
-        paths = g.find_common_ancestor_paths( filter = lambda x: x.data in split )
+        paths = g.find_common_ancestor_paths( filter = lambda x: x.data in split.inside )
         mrca: MNode = paths[0][0]
         # __LOG( "MRCA = {}".format( mrca ) )
         
@@ -172,13 +182,11 @@ def reduce_and_rebuild( graph: MGraph ):
     results.append( graph.to_ascii() )
     
     # SPLIT
-    all_sequences = __get_split_leaves( graph.nodes )
-    l = len( __print_split( all_sequences ) )
     splits = __get_splits( graph )
     
     results.append( "============= SPLITS =============" )
-    for i, split in enumerate( sorted( splits, key = str ) ):
-        results.append( "SPLIT {} OF {}: {} | {}".format( i, len( splits ), __print_split( split ).ljust( l ), __print_split( all_sequences - split ) ) )
+    for i, split in enumerate( sorted( splits, key = Split.__str__ ) ):
+        results.append( "SPLIT {} OF {}: {}".format( i, len( splits ), str( split ) ) )
     
     # RECOMBINE
     g = __make_graph_from_splits( splits )
@@ -189,14 +197,15 @@ def reduce_and_rebuild( graph: MGraph ):
     __LOG( "\n".join( results ) )
 
 
-def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
+def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, debug: bool = True ):
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ SPLITS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     __LOG( "========== SPLITS STAGE ==========" )
-    MCMD.autoquestion("begin splits")
-    splits: _TSetSet = set()
-    data_by_component: _TDataByComponent = { }
+    if debug:
+        MCMD.autoquestion( "begin splits" )
+    splits: Set[Split] = set()
+    data_by_component: Dict[LegoComponent, Tuple[FrozenSet[Split], FrozenSet[_TLeaf]]] = { }
     
     for component in model.components:
         __LOG( "FOR COMPONENT {}", component )
@@ -208,20 +217,22 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
         component_splits = __get_splits( tree )
         
         for split in component_splits:
-            __LOG( "---- FOUND SPLIT {}", __print_split( split ) )
+            __LOG( "---- FOUND SPLIT {}", str( split ) )
         
         splits.update( component_splits )
-        data_by_component[component] = component_splits, component_sequences
+        data_by_component[component] = frozenset( component_splits ), frozenset( component_sequences )
     
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ EVIDENCE ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     __LOG( "========== EVIDENCE STAGE ==========" )
-    MCMD.autoquestion("begin evidence")
-    to_use: _TSetSet = set()
+    if debug:
+        MCMD.autoquestion( "begin evidence ({} splits)".format( len( splits ) ) )
+    to_use: Set[Split] = set()
     
     for split in splits:
-        if len( split ) == 0:
+        if split.is_empty:
+            __LOG( "SPLIT IS EMPTY: {}".format( split ) )
             continue
         
         evidence_for = set()
@@ -230,17 +241,26 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
         
         for component in model.components:
             component_splits, component_sequences = data_by_component[component]
+            has_evidence = None
             
-            if split.issubset( component_sequences ):
-                if split in component_splits:
-                    evidence_for.add( component )
-                else:
-                    evidence_against.add( component )
+            for component_split in component_splits:
+                evidence = split.is_evidenced_by( component_split )
+                
+                if evidence is True:
+                    has_evidence = True
+                    break
+                elif evidence is False:
+                    has_evidence = False
+            
+            if has_evidence is True:
+                evidence_for.add( component )
+            elif has_evidence is False:
+                evidence_against.add( component )
             else:
                 evidence_unused.add( component )
         
         if not evidence_for:
-            raise LogicError( "There is no evidence for this split «{}», but the split must have come from somewhere.".format( split ) )
+            raise LogicError( "There is no evidence for (F{} A{} U{}) this split «{}», but the split must have come from somewhere.".format( len( evidence_for ), len( evidence_against ), len( evidence_unused ), split ) )
         
         total_evidence = len( evidence_for ) + len( evidence_against )
         frequency = len( evidence_for ) / total_evidence
@@ -255,10 +275,11 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
         # __LOG( "STATUS:    {}".format( "accepted" if accept else "rejected" ) )
         # __LOG( "" )
         
-        evfor = string_helper.format_array( evidence_for, sort = True )
-        evag = string_helper.format_array( evidence_against, sort = True )
+        evidence_for_str = string_helper.format_array( evidence_for, sort = True )
+        evidence_against_str = string_helper.format_array( evidence_against, sort = True )
+        evidence_unused_str = string_helper.format_array( evidence_unused, sort = True )
         
-        __LOG( "SPLIT WITH {}% EVIDENCE (+ {} ({}) - {} ({}))   : {}", int( frequency * 100 ), evfor, len( evidence_for ), evag, len( evidence_against ), __print_split( split ) )
+        __LOG( "{} {} = {}% -- FOR: ({}) {}, AGAINST: ({}) {}, UNUSED: ({}) {}", "✔" if accept else "✘", ansi_helper.ljust(  str( split ), 80), int( frequency * 100 ), len( evidence_for ), evidence_for_str, len( evidence_against ), evidence_against_str, len( evidence_unused ), evidence_unused_str )
         
         if accept:
             to_use.add( split )
@@ -268,22 +289,61 @@ def create_nrfg( model: LegoModel, verbose: bool = False, cutoff: float = 0.5 ):
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # Sort the to_use by size
     __LOG( "========== RECOMBINE STAGE ==========" )
-    MCMD.autoquestion("begin recombine")
+    if debug:
+        MCMD.autoquestion( "begin recombine" )
     model.nrfg = __make_graph_from_splits( to_use )
     
-    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FIX CONNECTIONS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-    suitable = [x for x in model.nrfg if isinstance( x.data, FusionPoint )]
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ DEBUG SPLITS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    if debug:
+        MCMD.autoquestion( "begin debug" )
+    supported: Set[Split] = set()
     
-    for a, b in array_helper.triangular_comparison( suitable ):
-        assert isinstance( a, MNode )
-        assert isinstance( b, MNode )
-        af: FusionPoint = a.data
-        bf: FusionPoint = b.data
+    new_splits: Set[Split] = set()
+    
+    for edge in model.nrfg.edges:
+        assert isinstance( edge, MEdge )
+        left: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_left() ) )
+        right: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_right() ) )
         
-        if af.genes == bf.genes:
-            if a.edges.has_node( b ):
-                continue
-            
-            a.add_edge_to( b )
+        new_splits.add( Split( left, right ) )
+        new_splits.add( Split( right, left ) )
+    
+    for split in to_use:
+        for new_split in new_splits:
+            if split.is_evidenced_by( new_split ) is True:
+                supported.add( split )
+    
+    unsupported = to_use - supported
+    
+    for split in unsupported:
+        MCMD.print( ansi.FORE_RED + "unsupported: " + ansi.RESET + str( split ) )
+    
+    for split in supported:
+        MCMD.print( ansi.FORE_GREEN + "supported: " + ansi.RESET + str( split ) )
+    
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CLEAN GRAPH ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+    if clean:
+        if debug:
+            MCMD.autoquestion( "begin clean" )
+        __LOG( "========== CLEAN GRAPH ==========" )
+        for node in list( model.nrfg ):
+            assert isinstance( node, MNode )
+            if __is_fusion( node ):
+                node.remove_node()
+        
+        for node in list( model.nrfg ):
+            assert isinstance( node, MNode )
+            if __is_clade( node ):
+                in_ = len( node.edges.incoming )
+                out_ = len( node.edges.outgoing )
+                if in_ == 1 and out_ == 1:
+                    node.parent.add_edge_to( node.child )
+                    node.remove_node()
+                if in_ == 0 and out_ == 2:
+                    c = list( node.children )
+                    c[0].add_edge_to( c[1] )
+                    node.remove_node()

@@ -5,13 +5,14 @@ See class `LegoModel`.
 """
 
 from typing import Dict, Iterator, List, Optional, cast, Tuple, Set
+
+import re
+
 from groot.frontends.gui.gui_view_support import EDomainFunction, EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
 from mgraph import MGraph
-from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper, bio_helper
+from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper, bio_helper, utf_helper
 
-
-LOG = Logger( False )
 
 TEXT_SUBSEQUENCE_FORMAT = "{}[{}:{}]"
 TEXT_EDGE_FORMAT = "{}[{}:{}]--{}[{}:{}]"
@@ -180,8 +181,6 @@ class LegoSubsequence( ILegoVisualisable ):
         :param start: Leftmost position (inclusive) 
         :param end: Rightmost position (inclusive) 
         """
-        LOG( "NEW SUBSEQUENCE {} {}".format( start, end ) )
-        
         assert isinstance( sequence, LegoSequence )
         assert isinstance( start, int )
         assert isinstance( end, int )
@@ -485,8 +484,8 @@ class LegoComponent( ILegoVisualisable ):
     
     
     def __str__( self ) -> str:
-        return "⨍" + self.major_sequences[0].accession
-        # return _GREEK[self.index % len( _GREEK )].lower()
+        return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )
+        # return _GREEK[self.index % len( _GREEK )].lower() ⨍
     
     
     def minor_subsequences( self ) -> List[LegoSubsequence]:

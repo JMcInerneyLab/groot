@@ -2,10 +2,13 @@ from numpy import record
 from typing import Optional, cast
 
 from groot.algorithms import editor
-from groot.data.lego_model import LegoModel, LOG, LegoSubsequence, LegoSequence
+from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence
 from intermake.engine.environment import MCMD
 from mgraph import MGraph, MNode
-from mhelper import file_helper, bio_helper, ByRef
+from mhelper import file_helper, bio_helper, ByRef, Logger
+
+
+LOG = Logger( "import" )
 
 
 def import_directory( model: LegoModel, directory: str ):
@@ -215,7 +218,7 @@ def import_sequence_reference( name: str, model: LegoModel, *, allow_empty: bool
     
     assert isinstance( name, str )
     
-    if allow_empty and name == "" or name == "root" or name.startswith("clade"):
+    if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
         return None
     elif name.startswith( "S" ) and all( x.isdigit() for x in name[1:] ):
         return model.find_sequence_by_id( int( name[1:] ) )

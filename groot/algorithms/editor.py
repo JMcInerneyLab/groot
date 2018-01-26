@@ -11,7 +11,6 @@ from groot.data.lego_model import LegoModel, LegoSequence, LegoSubsequence, Lego
 from mhelper import Logger, array_helper
 
 
-LOG = Logger( False )
 LOG_MAKE_SS = Logger( "make.subsequence", False )
 
 
@@ -132,8 +131,6 @@ def merge_subsequences( model: LegoModel, all: Iterable[LegoSubsequence], no_fre
 
 
 def __destroy_subsequence( subsequence: LegoSubsequence, no_fresh: bool ):
-    LOG( "DESTROY SUBSEQUENCE {}".format( subsequence ) )
-    
     for edge in list( subsequence.edges ):
         unlink_edge( edge, subsequence, no_fresh )
     
