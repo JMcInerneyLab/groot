@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url = "https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.30",
+       version = "0.0.0.32",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "https://www.gnu.org/licenses/agpl-3.0.html",
@@ -23,6 +23,7 @@ setup( name = "groot",
                            "pyperclip",  # clipboard
                            "colorama",  # ui (cli)
                            "mgraph",
+                           "stringcoercion",
                            "PyQt5", # ui (GUI)
                            "sip"],  # ui (GUI)
        python_requires = ">=3.6"

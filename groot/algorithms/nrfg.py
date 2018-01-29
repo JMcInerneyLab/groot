@@ -54,10 +54,11 @@ class Split:
         if not self.all.issubset( other.all ):
             return None
         
-        return self.inside.issubset( other.inside) and self.outside.issubset(other.outside)
+        return self.inside.issubset( other.inside ) and self.outside.issubset( other.outside )
     
-    def __len__(self):
-        return len(self.inside)
+    
+    def __len__( self ):
+        return len( self.inside )
     
     
     def __hash__( self ):
@@ -116,11 +117,12 @@ def __get_splits( graph: MGraph ) -> Set[Split]:
     return all_splits
 
 
-def __make_graph_from_splits( splits : AbstractSet[Split] ):
+def __make_graph_from_splits( splits: AbstractSet[Split] ):
     # Nb. treemodel.Tree.from_split_bitmasks just skips dud splits, not sure we should do that here
     
     g = MGraph()
-    to_use = sorted( splits, key = lambda x: len( x ) )
+    to_use = sorted( splits, key = lambda x: str( x ) )
+    to_use = sorted( to_use, key = lambda x: len( x ) )
     root: MNode = g.add_node( data = "root" )
     
     for i, split in enumerate( to_use ):
@@ -134,6 +136,7 @@ def __make_graph_from_splits( splits : AbstractSet[Split] ):
         # __LOG( "= " + split_str )
         
         if len( split ) == 1:
+            __LOG( "DEFINING SPLIT {} OF {} = {}", i, len( to_use ), split_str )
             sequence = array_helper.single_or_error( split.inside )
             
             if not any( x.data is sequence for x in g.nodes ):
@@ -157,7 +160,7 @@ def __make_graph_from_splits( splits : AbstractSet[Split] ):
         __LOG( "NEW      SPLIT {} OF {} = {} (@{})", i, len( to_use ), split_str, mrca )
         
         new_node = mrca.add_child()
-        new_node.data = "split: " + split_str
+        #new_node.data = "split: " + split_str
         # __LOG( "NEW CHILD = {}".format( new_node ) )
         
         for destination in destinations:
@@ -165,11 +168,25 @@ def __make_graph_from_splits( splits : AbstractSet[Split] ):
             mrca.remove_edge_to( destination )
             new_node.add_edge_to( destination )
         
+        __LOG(g.to_ascii())
+
+        __print_split_status( g, split )
+            
+        __LOG.pause()
+        
         # __LOG( "========================================" )
     
     # __LOG( "FINAL STATUS" )
     # __LOG( g.to_ascii() )
     return g
+
+
+def __print_split_status( g, split ):
+    query = set( [split] )
+    if __debug_splits( g, query ) == query:
+        __LOG( "OK" )
+    else:
+        __LOG( "FAIL" )
 
 
 def reduce_and_rebuild( graph: MGraph ):
@@ -204,7 +221,7 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, deb
     __LOG( "========== SPLITS STAGE ==========" )
     if debug:
         MCMD.autoquestion( "begin splits" )
-    splits: Set[Split] = set()
+    all_splits: Set[Split] = set()
     data_by_component: Dict[LegoComponent, Tuple[FrozenSet[Split], FrozenSet[_TLeaf]]] = { }
     
     for component in model.components:
@@ -219,18 +236,18 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, deb
         for split in component_splits:
             __LOG( "---- FOUND SPLIT {}", str( split ) )
         
-        splits.update( component_splits )
+        all_splits.update( component_splits )
         data_by_component[component] = frozenset( component_splits ), frozenset( component_sequences )
-    
+        
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ EVIDENCE ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     __LOG( "========== EVIDENCE STAGE ==========" )
     if debug:
-        MCMD.autoquestion( "begin evidence ({} splits)".format( len( splits ) ) )
+        MCMD.autoquestion( "begin evidence ({} splits)".format( len( all_splits ) ) )
     to_use: Set[Split] = set()
     
-    for split in splits:
+    for split in all_splits:
         if split.is_empty:
             __LOG( "SPLIT IS EMPTY: {}".format( split ) )
             continue
@@ -275,11 +292,17 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, deb
         # __LOG( "STATUS:    {}".format( "accepted" if accept else "rejected" ) )
         # __LOG( "" )
         
-        evidence_for_str = string_helper.format_array( evidence_for, sort = True )
-        evidence_against_str = string_helper.format_array( evidence_against, sort = True )
-        evidence_unused_str = string_helper.format_array( evidence_unused, sort = True )
         
-        __LOG( "{} {} = {}% -- FOR: ({}) {}, AGAINST: ({}) {}, UNUSED: ({}) {}", "✔" if accept else "✘", ansi_helper.ljust(  str( split ), 80), int( frequency * 100 ), len( evidence_for ), evidence_for_str, len( evidence_against ), evidence_against_str, len( evidence_unused ), evidence_unused_str )
+        __LOG( "{} {} = {}% -- FOR: ({}) {}, AGAINST: ({}) {}, UNUSED: ({}) {}",
+               "✔" if accept else "✘",
+               ansi_helper.ljust( str( split ), 80 ),
+               int( frequency * 100 ),
+               len( evidence_for ),
+               string_helper.format_array( evidence_for, sort = True ),
+               len( evidence_against ),
+               string_helper.format_array( evidence_against, sort = True ),
+               len( evidence_unused ),
+               string_helper.format_array( evidence_unused, sort = True ) )
         
         if accept:
             to_use.add( split )
@@ -298,24 +321,10 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, deb
     # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
     if debug:
         MCMD.autoquestion( "begin debug" )
-    supported: Set[Split] = set()
-    
-    new_splits: Set[Split] = set()
-    
-    for edge in model.nrfg.edges:
-        assert isinstance( edge, MEdge )
-        left: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_left() ) )
-        right: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_right() ) )
         
-        new_splits.add( Split( left, right ) )
-        new_splits.add( Split( right, left ) )
-    
-    for split in to_use:
-        for new_split in new_splits:
-            if split.is_evidenced_by( new_split ) is True:
-                supported.add( split )
-    
-    unsupported = to_use - supported
+
+    supported = __debug_splits( model.nrfg, to_use )
+    unsupported = to_use - supported 
     
     for split in unsupported:
         MCMD.print( ansi.FORE_RED + "unsupported: " + ansi.RESET + str( split ) )
@@ -347,3 +356,23 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = False, deb
                     c = list( node.children )
                     c[0].add_edge_to( c[1] )
                     node.remove_node()
+
+
+def __debug_splits( graph, query ):
+    supported: Set[Split] = set()
+    new_splits: Set[Split] = set()
+    
+    for edge in graph.edges:
+        assert isinstance( edge, MEdge )
+        left: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_left() ) )
+        right: FrozenSet[_TLeaf] = frozenset( __get_split_leaves( edge.follow_right() ) )
+        
+        new_splits.add( Split( left, right ) )
+        new_splits.add( Split( right, left ) )
+        
+    for split in query:
+        for new_split in new_splits:
+            if split.is_evidenced_by( new_split ) is True:
+                supported.add( split )
+                
+    return supported

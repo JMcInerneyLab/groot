@@ -11,10 +11,12 @@ _FusionPoint_ = "FusionPoint"
 class NotCommensurateError( Exception ):
     pass
 
+
 class IFusion:
     pass
 
-class FusionEvent(IFusion):
+
+class FusionEvent( IFusion ):
     """
     Describes a fusion event
     
@@ -29,10 +31,10 @@ class FusionEvent(IFusion):
     
     def __init__( self, index: int, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
         if component_a is component_b:
-            raise ValueError("FusionEvent component A ({}) cannot be component B ({}).".format(component_a, component_b))
+            raise ValueError( "FusionEvent component A ({}) cannot be component B ({}).".format( component_a, component_b ) )
         
-        if any(x is component_a or x is component_b for x in intersections):
-            raise ValueError("FusionEvent intersections ({}) cannot contain component A ({}) or component B ({}).".format(string_helper.format_array(intersections), component_a, component_b))
+        if any( x is component_a or x is component_b for x in intersections ):
+            raise ValueError( "FusionEvent intersections ({}) cannot contain component A ({}) or component B ({}).".format( string_helper.format_array( intersections ), component_a, component_b ) )
         
         self.index = index
         self.component_a: LegoComponent = component_a
@@ -73,26 +75,18 @@ class FusionEvent(IFusion):
     
     
     def __str__( self ) -> str:
-        return "({}+{}={})".format( self.component_a, self.component_b, ",".join( x.__str__() for x in self.products ) )
+        #return "({}+{}={})".format( self.component_a, self.component_b, ",".join( x.__str__() for x in self.products ) )
+        return "{}".format( ",".join( x.__str__() for x in self.products ) )
 
 
-class FusionPoint(IFusion):
-    def __init__( self, fusion_node_uid: int, internal_node_uid: int, event: FusionEvent, genes: Set[LegoSequence], component: LegoComponent, opposite_component: LegoComponent ):
-        self.fusion_node_uid = fusion_node_uid
-        self.internal_node_uid = internal_node_uid
-        self.opposite_component = opposite_component
-        self.component = component
+class FusionPoint( IFusion ):
+    def __init__( self, event: FusionEvent, component: LegoComponent ):
         self.event = event
-        self.genes = genes
-    
-    
-    @property
-    def count( self ):
-        return len( self.genes )
+        self.component = component
     
     
     def __repr__( self ):
-        return "F.{}:{}.{}".format( self.event, self.component, self.count )
+        return "F:{}".format( self.event )
 
 
 class NrfgEvent:

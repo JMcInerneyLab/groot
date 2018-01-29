@@ -4,23 +4,27 @@ from intermake.engine.environment import MENV
 class GlobalOptions:
     """
     :attr recent_files: Files recently accessed.
+    :attr visjs_path:   Path to locate vis-js.
     """
     
-    def __init__(self):
+    
+    def __init__( self ):
         self.recent_files = []
-        
-        
+        self.visjs_path = ""
+
+
 __global_options = None
-        
+
+
 def options() -> GlobalOptions:
     global __global_options
     
     if __global_options is None:
         __global_options = MENV.local_data.store.get_and_init( "lego-options", GlobalOptions() )
-        
+    
     return __global_options
-        
-        
+
+
 def remember_file( file_name: str ) -> None:
     """
     PRIVATE
@@ -34,7 +38,6 @@ def remember_file( file_name: str ) -> None:
     opt.recent_files.append( file_name )
     
     while len( opt.recent_files ) > 10:
-        del opt.recent_files[ 0 ]
+        del opt.recent_files[0]
     
     MENV.local_data.store["lego-options"] = opt
-    

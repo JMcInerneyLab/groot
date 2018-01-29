@@ -127,7 +127,7 @@ def find_all_fusion_points( model: LegoModel ) -> None:
         
         for component in model.components:
             for point in __find_fusion_points( event, component ):
-                event.points = (point)
+                event.points.append( point )
         
         r.append( event )
     
@@ -160,9 +160,19 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     __LOG( "***** LOOKING FOR EVENT {} IN COMPONENT {} ***** ", fusion_event, component )
     
-    # Get the component tree
-    # The `intersection_aliases` correspond to βγδ in the above diagram
     graph: MGraph = component.tree
+    
+    if fusion_event.component_c is component:
+        __LOG( "Base of graph" )
+        first: MNode = graph.first_node
+        root = first.add_parent()
+        root.make_root()
+        result = FusionPoint( fusion_event, component )
+        root.data = result.event
+        return [result]
+    
+    # The `intersection_aliases` correspond to βγδ in the above diagram
+    
     
     component_sequences = set( component.minor_sequences )
     
@@ -213,12 +223,7 @@ def __find_fusion_points( fusion_event: FusionEvent,
         edge.remove_edge()
         
         genes = set( x.data for x in isolation_point.pure_inside_nodes if isinstance( x.data, LegoSequence ) )
-        fusion_point = FusionPoint( fusion_node.uid,
-                                    isolation_point.internal_node.uid,
-                                    fusion_event,
-                                    genes,
-                                    component,
-                                    fusion_event.component_a if (fusion_event.component_a is not component) else fusion_event.component_b )
+        fusion_point = FusionPoint( fusion_event, component )
         fusion_node.data = fusion_point.event
         results.append( fusion_point )
     

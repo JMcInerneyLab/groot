@@ -1,22 +1,24 @@
 import inspect
+import os
 from collections import defaultdict
-from typing import Callable, Iterable, List, Optional, Set, TypeVar
+from typing import Callable, Iterable, List, Optional, TypeVar
 
 import pyperclip
-import re
+from os import path
 
-from groot.algorithms import components, fastaiser, graph_viewing, external_tools, userdomains
+import intermake
+from groot.algorithms import components, external_tools, fastaiser, graph_viewing, userdomains
 from groot.algorithms.classes import FusionPoint
+from groot.constants import EFormat, EOut
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent, ILegoVisualisable
+from groot.data.lego_model import ILegoVisualisable, LegoComponent
 from groot.extensions import ext_files, ext_generating
-from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
 from mgraph import MGraph
-from mhelper import ByRef, Filename, MEnum, MOptional, SwitchError, ansi, file_helper, string_helper
+from mhelper import ByRef, Filename, MOptional, SwitchError, ansi, file_helper, string_helper
 
 
 __mcmd_folder_name__ = "Viewing"
@@ -103,7 +105,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChan
     m = global_view.current_model()
     
     for component_ in to_do:
-        MCMD.print( __print_header( component_ ) )
+        MCMD.print( graph_viewing.print_header( component_ ) )
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
@@ -112,59 +114,8 @@ def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChan
     return EChanges.INFORMATION
 
 
-class EFormat( MEnum ):
-    """
-    :data NEWICK:       Newick format
-    :data ASCII:        Simple ASCII diagram
-    :data ETE_GUI:      Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete.
-    :data ETE_ASCII:    ASCII, provided by Ete. Requires Ete.
-    :data SVG:          SVG graphic
-    :data HTML:         HTML graphic
-    :data CSV:          Excel-type CSV with headers, suitable for Gephi.
-    :data DEBUG:        Debug format. Reflects source data and not the tree.
-    """
-    NEWICK = 1
-    ASCII = 2
-    ETE_GUI = 3
-    ETE_ASCII = 4
-    SVG = 5
-    HTML = 6
-    CSV = 7
-    DEBUG = 8
-
-
-class EOut( MEnum ):
-    """
-    Output mode.
-    
-    :data DEFAULT: Same as NORMAL, unless a filename is specified, in which this is the same as FILE.
-    :data NORMAL:  Display in current UI
-    :data STDOUT:  Write to STDOUT regardless of current UI.
-    :data CLIP:    Write to clipboard.
-    :data FILE:    Write to file. 
-    """
-    DEFAULT = 0
-    NORMAL = 1
-    STDOUT = 2
-    CLIP = 3
-    FILE = 4
-
-
-@command( names = ["print_consensus", "consensus"] )
-def print_consensus( component: Optional[List[LegoComponent]] = None ) -> EChanges:
-    """
-    Prints the consensus tree for a component.
-    See also `print_trees`, which permits more advanced options.
-    
-    :param component:   Component to print. If not specified prints all trees.
-    """
-    print_trees( component = component, consensus = True )
-    
-    return EChanges.INFORMATION
-
-
 @help_command()
-def print_trees_help() -> str:
+def print_help() -> str:
     """
     Help on tree-node formatting.
     """
@@ -182,73 +133,77 @@ def print_trees_help() -> str:
     return "\n".join( r )
 
 
-@command( names = ["print_trees", "trees", "print_tree", "tree"] )
+@help_command()
+def specify_graph_help() -> str:
+    """
+    To specify a tree of a component use:
+        * The component name.
+        * A pointer to the component in the virtual directory tree.
+        
+    To specify the NRFG use:
+        * The text "nrfg".
+        * A pointer to the NRFG in the virtual directory tree.
+    """
+    pass
+
+
+@command( names = ["print", "print_trees", "trees", "print_tree", "tree"] )
 def print_trees( graph: Optional[MGraph] = None,
                  view: EFormat = EFormat.ASCII,
                  format: str = None,
                  out: EOut = EOut.DEFAULT,
                  file: MOptional[Filename] = None ) -> EChanges:
     """
-    Prints the tree for a component.
+    Prints trees or graphs
     
     :param file:        File to write the output to.
-    :param out:         Output. Ignored if `file` is set.
-    :param graph:       What to print. Prints everything if not specified.
-    :param format:      How to format the nodes. See `print_trees_help`.
+    :param out:         Output.
+    :param graph:       What to print. See `specify_graph_help` for details.
+                        All graphs are printed if nothing is specified.
+    :param format:      How to format the nodes. See `print_help`.
     :param view:        How to view the tree.
     """
-    formatter = graph_viewing.create_user_formatter( format )
     model = global_view.current_model()
     trees = []
     
     if file:
-        if out not in (EOut.DEFAULT, EOut.FILE):
+        if out not in (EOut.DEFAULT, EOut.FILE, EOut.FILEOPEN):
             raise ValueError( "Cannot specify both the `out` and `file` parameters." )
         
-        out = EOut.FILE
+        if out == EOut.DEFAULT:
+            out = EOut.FILE
     elif out == EOut.DEFAULT:
-        out = EOut.NORMAL
+        if view in (EFormat.VISJS, EFormat.HTML, EFormat.SVG):
+            out = EOut.OPEN
+        else:
+            out = EOut.NORMAL
     
     if graph is None:
         for component_ in model.components:
             if component_.tree:
                 trees.append( (str( component_ ), component_.tree) )
+            else:
+                MCMD.print( "I cannot draw the tree for component «{}» because it has not yet been generated.".format( component_ ) )
+                continue
         
         if model.nrfg:
             trees.append( (str( "NRFG" ), model.nrfg) )
     else:
-        trees.append( ("", graph) )
-    
-    text = []
-    
-    for name, tree in trees:
-        if len( trees ) != 1:
-            text.append( __print_header( name ) )
-        
-        if tree is None:
-            MCMD.print( "I cannot draw this tree because it has not yet been generated." )
-            continue
-        
-        if view == EFormat.ASCII:
-            text.append( tree.to_ascii( formatter ) )
-        elif view == EFormat.ETE_ASCII:
-            text.append( ete_providers.tree_to_ascii( tree, model, formatter ) )
-        elif view == EFormat.DEBUG:
-            text.append( __tree_to_debug( model, tree ) )
-        elif view == EFormat.NEWICK:
-            text.append( tree.to_newick( formatter ) )
-        elif view == EFormat.ETE_GUI:
-            ete_providers.show_tree( tree, model, formatter )
-        elif view == EFormat.SVG:
-            text.append( tree.to_svg( formatter ) )
-        elif view == EFormat.HTML:
-            text.append( tree.to_svg( formatter, html = True ) )
-        elif view == EFormat.CSV:
-            text.append( tree.to_csv( formatter ) )
+        if out == EOut.NORMAL:
+            name = "unknown"
+            
+            for component in model.components:
+                if graph is component.tree:
+                    name = str( component )
+            
+            if graph is model.nrfg:
+                name = "NRFG"
         else:
-            raise SwitchError( "view", view )
+            name = None
+        
+        trees.append( (name, graph) )
     
-    text = "\n".join( text )
+    text = graph_viewing.create( format, trees, model, view )
     
     if out == EOut.NORMAL:
         MCMD.information( text )
@@ -259,27 +214,26 @@ def print_trees( graph: Optional[MGraph] = None,
         MCMD.information( "Output copied to clipboard." )
     elif out == EOut.FILE:
         file_helper.write_all_text( file, text )
+    elif out == EOut.OPEN:
+        extension = { EFormat.ASCII    : ".txt",
+                      EFormat.DEBUG    : ".txt",
+                      EFormat.NEWICK   : ".nwk",
+                      EFormat.ETE_ASCII: ".txt",
+                      EFormat.ETE_GUI  : ".txt",
+                      EFormat.SVG      : ".svg",
+                      EFormat.HTML     : ".html",
+                      EFormat.CSV      : ".csv",
+                      EFormat.VISJS    : ".html" }[view]
+        file_name = path.join( MENV.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "groot_temporary{}".format( extension ) )
+        file_helper.write_all_text( file_name, text )
+        os.system( "open \"{}\"".format( file_name ) )
+    elif out == EOut.FILEOPEN:
+        file_helper.write_all_text( file, text )
+        os.system( "open \"{}\"".format( file ) )
+    else:
+        raise SwitchError( "out", out )
     
     return EChanges.INFORMATION
-
-
-def __tree_to_debug( model, tree ):
-    rx = []
-    r = re.compile( ":[0-9.]+" )
-    for line in tree.import_info:
-        line = r.sub( "", line )
-        for s in sorted( model.sequences, key = lambda x: -len( str( x.id ) ) ):
-            line = line.replace( "S{}".format( s.id ), s.accession )
-        rx.append( line )
-    rrx = "\n".join( rx )
-    return rrx
-
-
-def __print_header( x ):
-    if isinstance( x, LegoComponent ):
-        x = "COMPONENT {}".format( x )
-    
-    return "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET
 
 
 @command( names = ["print_interlinks", "interlinks"] )
@@ -525,38 +479,18 @@ def print_fusions( verbose: bool = False ) -> EChanges:
     results: List[str] = []
     
     model = global_view.current_model()
-    n = 0
-    i = False
     
     for fusion_event in model.fusion_events:
         results.append( "{}".format( fusion_event ) )
         results.append( "" )
         
-        for fusion_point in fusion_event.points_a:
+        for fusion_point in fusion_event.points:
             __format_fusion_point( fusion_point, results, verbose )
-            n += 1
+            results.append( "" )
         
-        results.append( "" )
-        
-        for fusion_point in fusion_event.points_b:
-            __format_fusion_point( fusion_point, results, verbose )
-        
-        if len( fusion_event.points_a ) != len( fusion_event.points_b ):
-            i = True
-        
-        results.append( "" )
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
-    
-    if n == 0:
-        MCMD.information( "Your model contains no fusion events. Have you tried generating some?" )
-    elif i:
-        MCMD.information( "An agreement on the number of fusion events is not agreed by the trees in your model." )
-    elif n == 1:
-        MCMD.information( "Your model contains 1 fusion." )
-    else:
-        MCMD.information( "Your model contains {} fusions.".format( n ) )
     
     return EChanges.INFORMATION
 

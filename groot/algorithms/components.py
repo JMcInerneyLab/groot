@@ -92,7 +92,6 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     :param tolerance:   Tolerance value 
     """
     # Create new components
-    MCMD.autoquestion("begin major")
     components = ComponentFinder()
     
     LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
@@ -152,7 +151,6 @@ def __detect_minor( model: LegoModel, tolerance: int ) -> None:
         When one sequence of a component possesses an edge to a sequence of another component (an "entry").
         Subsequences of all sequences in that second component receive the first component, at the position of the entry.
     """
-    MCMD.autoquestion("begin minor")
     sc = model.components
     
     if not sc:
