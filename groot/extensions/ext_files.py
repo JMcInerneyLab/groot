@@ -10,10 +10,13 @@ from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, PathToVisualisable, command, console_explorer
 from intermake.engine.theme import Theme
 
-from mhelper import file_helper, io_helper
+from mhelper import file_helper, io_helper, Filename, EFileMode, MOptional
 
 
 __mcmd_folder_name__ = "Files"
+EXT_GROOT = ".groot"
+EXT_FASTA = ".fasta"
+EXT_BLAST = ".blast"
 
 
 @command( names = ["file_sample", "sample"] )
@@ -54,7 +57,7 @@ def file_new() -> EChanges:
 
 
 @command()
-def import_blast( file_name: str ) -> EChanges:
+def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST] ) -> EChanges:
     """
     Imports a BLAST file into the model 
     :param file_name:   File to import 
@@ -67,7 +70,7 @@ def import_blast( file_name: str ) -> EChanges:
 
 
 @command()
-def import_composites( file_name: str ) -> EChanges:
+def import_composites( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Imports a composites file into the model
     :param file_name:   File to import 
@@ -80,7 +83,7 @@ def import_composites( file_name: str ) -> EChanges:
 
 
 @command()
-def import_fasta( file_name: str ) -> EChanges:
+def import_fasta( file_name: Filename[EFileMode.READ, EXT_FASTA] ) -> EChanges:
     """
     Imports a FASTA file into the model
     :param file_name:   File to import 
@@ -93,7 +96,7 @@ def import_fasta( file_name: str ) -> EChanges:
 
 
 @command()
-def import_file( file_name: str ) -> EChanges:
+def import_file( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Imports a file into the model
     :param file_name:   File to import 
@@ -137,7 +140,7 @@ def file_recent():
 
 
 @command( names = ["file_save", "save"] )
-def file_save( file_name: Optional[str] = None ) -> EChanges:
+def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None ) -> EChanges:
     """
     Saves the model
     :param file_name: Filename. File to load. Either specify a complete path, or the name of the file in the `sessions` folder. If not specified the current filename is used.
@@ -158,7 +161,7 @@ def file_save( file_name: Optional[str] = None ) -> EChanges:
     sys.setrecursionlimit( 10000 )
     
     with MCMD.action( "Saving file to «{}»".format( file_name ) ):
-        marshal.save_to_file(file_name, model)
+        marshal.save_to_file( file_name, model )
     
     model.file_name = file_name
     MCMD.print( "Saved model to «{}»".format( file_name ) )
@@ -183,14 +186,14 @@ def import_directory( directory: str, reset: bool = True ):
     if reset:
         if MENV.host.is_cli:
             console_explorer.re_cd( PathToVisualisable.root_path( MENV.root ) )
-            
+        
         return EChanges.MODEL_OBJECT
     else:
         return EChanges.MODEL_ENTITIES
 
 
 @command( names = ["file_load", "load"] )
-def file_load( file_name: str ) -> EChanges:
+def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Loads the model from a file
     :param file_name:   File to load.
@@ -198,7 +201,7 @@ def file_load( file_name: str ) -> EChanges:
                         (If you'd like to use the current "working" directory, use the prefix `./`)
     """
     file_name = __fix_path( file_name )
-    model = marshal.load_from_file(file_name)
+    model = marshal.load_from_file( file_name )
     global_view.set_model( model )
     user_options.remember_file( file_name )
     MCMD.print( "Loaded model: {}".format( file_name ) )

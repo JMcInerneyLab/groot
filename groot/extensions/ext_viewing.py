@@ -498,15 +498,13 @@ def print_fusions( verbose: bool = False ) -> EChanges:
 def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
     if not verbose:
         results.append( "  •  {}".format( str( fusion_point ) ) )
-        results.append( "         {} : {}".format( fusion_point.count, ",".join( sorted( str( x ) for x in fusion_point.genes ) ) ) )
+        results.append( "         {} : {}".format( fusion_point.count, ",".join( sorted( str( x ) for x in fusion_point.sequences ) ) ) )
         return
     
     results.append( "  •  component         {}".format( fusion_point.component ) )
-    results.append( "     component         {}".format( fusion_point.opposite_component ) )
     results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.intersections ) ) )
     results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.orig_intersections ) ) )
-    results.append( "     sequences         {}".format( string_helper.format_array( fusion_point.genes ) ) )
-    results.append( "     fusion_node_uid   {}".format( fusion_point.fusion_node_uid ) )
+    results.append( "     sequences         {}".format( string_helper.format_array( fusion_point.sequences ) ) )
 
 
 @command( visibility = visibilities.ADVANCED )

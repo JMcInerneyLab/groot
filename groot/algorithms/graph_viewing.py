@@ -8,8 +8,8 @@ from intermake import MENV, Theme
 from mgraph import DNodeToText, MNode, MGraph
 from mhelper import SwitchError, ansi, file_helper, array_helper
 
-from groot.algorithms.classes import FusionPoint, FusionEvent, IFusion
-from groot.data.lego_model import LegoSequence, LegoComponent
+from groot.algorithms.classes import FusionPoint, FusionEvent
+from groot.data.lego_model import LegoSequence, LegoComponent, ILeaf
 from groot.frontends.cli import cli_view_utils
 from groot.frontends import ete_providers
 from groot.data import user_options
@@ -50,8 +50,6 @@ class __Formatter:
             return "seq:{}".format( node.data.accession )
         elif isinstance( node.data, FusionPoint ):
             return "fus:{}:{}".format( node.data.opposite_component, node.data.count )
-        elif isinstance( node.data, FusionEvent ):
-            return "fue:{}:{}".format( node.data.component_a, node.data.component_b )
         else:
             return "cla:{}".format( node.uid )
     
@@ -67,7 +65,7 @@ class __Formatter:
         """
         if isinstance( node.data, LegoSequence ):
             return "⊕ {}".format( node.data.accession )
-        elif isinstance( node.data, IFusion ):
+        elif isinstance( node.data, FusionPoint ):
             return "⊛ {}".format( str( node.data ) )
         else:
             return "⊙"
@@ -78,7 +76,7 @@ class __Formatter:
         
         if isinstance( d, LegoSequence ):
             return "⊕ " + ansi.FORE_BLACK + cli_view_utils.component_to_ansi_back( d.model.components.find_component_for_major_sequence( d ) ) + str( d ) + ansi.FORE_RESET + ansi.BACK_RESET
-        elif isinstance( d, IFusion ):
+        elif isinstance( d, FusionPoint ):
             return "⊛ " + ansi.BOLD + ansi.BACK_BRIGHT_WHITE + ansi.FORE_BLACK + str( d ) + ansi.RESET
         else:
             return "⊙ " + ansi.ITALIC + ansi.FORE_YELLOW + str( node ) + ansi.RESET
@@ -88,7 +86,7 @@ class __Formatter:
         """
         Name of the fusion, or empty if not a fusion.
         """
-        if isinstance( node.data, IFusion ):
+        if isinstance( node.data, FusionPoint ):
             return Theme.BOLD + str( node.data ) + Theme.RESET
     
     
@@ -176,14 +174,14 @@ class __Formatter:
         """
         Skips the text until the next `|` if this node is a clade.
         """
-        return not isinstance( node.data, LegoSequence ) and not isinstance( node.data, IFusion )
+        return not isinstance( node.data, ILeaf )
     
     
     def is_not_clade( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is not a clade.
         """
-        return isinstance( node.data, LegoSequence ) or isinstance( node.data, IFusion )
+        return isinstance( node.data, ILeaf )
 
 
 FORMATTER = __Formatter()
@@ -318,7 +316,7 @@ def create_vis_js( format_str, graphs: Sequence[MGraph], model ) -> str:
                        "#F39C12",
                        "#D35400"]
             colour = colours[component.index % len( colours )]
-        elif isinstance( node.data, IFusion ):
+        elif isinstance( node.data, FusionPoint ):
             colour = "#FF0000"
         else:
             colour = "#FFFFC0"

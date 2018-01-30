@@ -4,15 +4,14 @@ Model for finding fusion events.
 
 from typing import List, Set
 
-from groot.algorithms import graph_viewing
-from groot.algorithms.classes import FusionEvent, FusionPoint, IFusion
+from groot.algorithms import lego_graph
+from groot.algorithms.classes import FusionEvent, FusionPoint
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
 from mgraph import MGraph, MNode
-from mgraph.graphing import EDirection
 from mhelper import Logger, array_helper
 
 
-__LOG = Logger( "fusion", True )
+__LOG = Logger( "fusion", False )
 
 
 def remove_fusions( model: LegoModel ) -> int:
@@ -31,7 +30,7 @@ def remove_fusions( model: LegoModel ) -> int:
         to_delete: List[MNode] = []
         
         for node in graph.get_nodes():
-            if isinstance( node.data, IFusion ):
+            if isinstance( node.data, FusionPoint ):
                 assert len( node.edges ) == 2
                 
                 # Remove the old node
@@ -105,7 +104,7 @@ def __fusions_exist( model: LegoModel ):
     
     for component in model.components:
         for node in component.tree:
-            if isinstance( node.data, IFusion ):
+            if isinstance( node.data, FusionPoint ):
                 return True
     
     return False
@@ -167,8 +166,10 @@ def __find_fusion_points( fusion_event: FusionEvent,
         first: MNode = graph.first_node
         root = first.add_parent()
         root.make_root()
-        result = FusionPoint( fusion_event, component )
-        root.data = result.event
+        assert isinstance( component, LegoComponent )
+        sequences = lego_graph.get_sequences( graph ).intersection( set( fusion_event.component_c.major_sequences ) )
+        result = FusionPoint( fusion_event, component, sequences, set() )
+        root.data = result
         return [result]
     
     # The `intersection_aliases` correspond to βγδ in the above diagram
@@ -222,9 +223,10 @@ def __find_fusion_points( fusion_event: FusionEvent,
         graph.add_edge( fusion_node, edge.right )
         edge.remove_edge()
         
-        genes = set( x.data for x in isolation_point.pure_inside_nodes if isinstance( x.data, LegoSequence ) )
-        fusion_point = FusionPoint( fusion_event, component )
-        fusion_node.data = fusion_point.event
+        sequences = lego_graph.get_split_leaves( isolation_point.all_outside_nodes )
+        outer_sequences = lego_graph.get_split_leaves( isolation_point.all_inside_nodes )
+        fusion_point = FusionPoint( fusion_event, component, sequences, outer_sequences )
+        fusion_node.data = fusion_point
         results.append( fusion_point )
     
     __LOG( "----{} results", len( results ) )

@@ -1,22 +1,14 @@
-from typing import List, Set, Tuple
+from typing import List, Set
 
-from groot.data.lego_model import LegoComponent, LegoSequence
+from groot.data.lego_model import LegoComponent, ILeaf, LegoSequence
 from mgraph import MGraph
-from mhelper import array_helper, string_helper
+from mhelper import array_helper, string_helper, utf_helper
 
 
 _FusionPoint_ = "FusionPoint"
 
 
-class NotCommensurateError( Exception ):
-    pass
-
-
-class IFusion:
-    pass
-
-
-class FusionEvent( IFusion ):
+class FusionEvent:
     """
     Describes a fusion event
     
@@ -44,49 +36,76 @@ class FusionEvent( IFusion ):
         self.points: List[FusionPoint] = None
     
     
-    def get_commensurate_points( self ) -> List[Tuple[_FusionPoint_, _FusionPoint_]]:
-        """
-        Gets tuples of points that look like they are commensurate, or raises a `NotCommensurateError`. 
-        """
-        if len( self.points_a ) != len( self.points_b ):
-            raise NotCommensurateError( "The two sets of fusion points for this event are not the same length, so at least one will be non-commensurate.".format( len( self.points_a ), len( self.points_b ) ) )
-        
-        results = []
-        
-        for point_a in self.points_a:
-            found = False
-            for point_b in self.points_b:
-                if point_a.genes == point_b.genes:
-                    if found:
-                        raise NotCommensurateError( "In the fusion point A there are multiple commensurate points in the B set. A = «{}», B = «{}».".format( point_a, self.points_b ) )
-                    
-                    results.append( (point_a, point_b) )
-                    found = True
-            
-            if not found:
-                raise NotCommensurateError( "In the fusion point A there is no commensurate point in the B set. A = «{}», B = «{}».".format( point_a, self.points_b ) )
-        
-        return results
-    
-    
     @property
     def component_c( self ) -> LegoComponent:
         return array_helper.single_or_error( self.products )
     
     
     def __str__( self ) -> str:
-        #return "({}+{}={})".format( self.component_a, self.component_b, ",".join( x.__str__() for x in self.products ) )
+        # return "({}+{}={})".format( self.component_a, self.component_b, ",".join( x.__str__() for x in self.products ) )
         return "{}".format( ",".join( x.__str__() for x in self.products ) )
 
 
-class FusionPoint( IFusion ):
-    def __init__( self, event: FusionEvent, component: LegoComponent ):
+class FusionPoint( ILeaf ):
+    def __init__( self, event: FusionEvent, component: LegoComponent, sequences: Set[ILeaf], outer_sequences: Set[ILeaf] ):
         self.event = event
         self.component = component
+        self.sequences = sequences
+        self.outer_sequences = outer_sequences
+        self.pertinent_inner = frozenset( self.sequences.intersection( self.event.component_c.major_sequences ) )
+        self.pertinent_outer = frozenset( self.outer_sequences.intersection( set( self.event.component_a.major_sequences ).union( set( self.event.component_b.major_sequences ) ) ) )
+        
+    
+    @property
+    def count( self ):
+        return len( self.sequences )
     
     
     def __repr__( self ):
-        return "F:{}".format( self.event )
+        return self.str_short()
+    
+    
+    def __eq__( self, other ):
+        if not isinstance( other, FusionPoint ):
+            return False
+        
+        return other.event == self.event and other.pertinent_inner == other.pertinent_inner
+    
+    
+    def __hash__( self ):
+        return hash( (self.event, self.pertinent_inner) )
+    
+    
+    def get_pertinent_inner( self ):
+        return self.pertinent_inner.union( { self } )
+    
+    
+    def get_pertinent_outer( self ):
+        return self.pertinent_outer.union( { self } )
+    
+    
+    def __format_elements( self, y ):
+        r = []
+        
+        for x in y:
+            if isinstance( x, LegoSequence ):
+                r.append( x.__str__() )
+            elif isinstance( x, FusionPoint ):
+                r.append( x.str_id() )
+        
+        return string_helper.format_array( r, sort = True )
+    
+    
+    def str_id( self ):
+        return "{}{}".format(  self.event, utf_helper.subscript( str( self.count ) ) )
+    
+    
+    def str_short( self ):
+        return self.event.__str__()
+    
+    
+    def str_long( self ):
+        return "¨{} ⊇ {} ⊅ {}¨".format(  self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )
 
 
 class NrfgEvent:

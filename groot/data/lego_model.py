@@ -21,6 +21,8 @@ TEXT_SEQ_FORMAT = "{}"
 _LegoModel_ = "LegoModel"
 __author__ = "Martin Rusilowicz"
 
+class ILeaf:
+    pass
 
 # noinspection PyAbstractClass
 class ILegoVisualisable( IVisualisable ):
@@ -339,7 +341,7 @@ class LegoSubsequence( ILegoVisualisable ):
         return self.end - self.start + 1
 
 
-class LegoSequence( ILegoVisualisable ):
+class LegoSequence( ILegoVisualisable, ILeaf ):
     """
     Protein (or DNA) sequence
     """
