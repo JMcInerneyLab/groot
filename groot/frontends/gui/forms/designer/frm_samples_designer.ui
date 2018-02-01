@@ -10,12 +10,40 @@
     <height>630</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="LBL_HAS_DATA_WARNING">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data is currently loaded. &lt;a href=&quot;FrmWorkflow&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Close&lt;/span&gt;&lt;/a&gt; the current first, or visit the &lt;a href=&quot;workflow&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;workflow&lt;/span&gt;&lt;/a&gt; to manipulate your data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="FRA_RECENT_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>File system</string>
      </property>
@@ -25,6 +53,9 @@
         <property name="text">
          <string>Browse</string>
         </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -33,16 +64,29 @@
    <item>
     <widget class="QGroupBox" name="FRA_RECENT">
      <property name="title">
-      <string>Recent</string>
+      <string>Recent files</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="FRA_SAMPLES">
      <property name="title">
-      <string>Samples</string>
+      <string>Sample data</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

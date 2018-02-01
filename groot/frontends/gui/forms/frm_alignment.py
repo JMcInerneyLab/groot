@@ -1,43 +1,61 @@
-from typing import List, Tuple
 from PyQt5.QtCore import QPoint, QRect, Qt
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPen
-from PyQt5.QtWidgets import QDialog, QSizePolicy, QWidget, QMessageBox
-from mhelper import bio_helper
-from mhelper_qt import exqtSlot, qt_colour_helper
-from groot.frontends.gui.forms.designer.frm_alignment_designer import Ui_Dialog
+from PyQt5.QtWidgets import QSizePolicy, QWidget
+from groot.frontends.gui.forms.designer import frm_alignment_designer
+
+from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view import LookupTable
+from mhelper import array_helper, bio_helper
+from mhelper_qt import exqtSlot, qt_colour_helper
 
 
-XSTEP = 16
-RESCOL = 6
+COL_WIDTH = 16
+NUM_RESERVED_COLS = 6
 DEFAULT_PEN = QPen( QColor( 255, 0, 0 ) )
 
 
 class AlignmentViewWidget( QWidget ):
-    def __init__( self, parent, table: LookupTable, sequences: List[Tuple[str, str]], owner ):
-        QWidget.__init__( self, parent )
-        self.max_len: int = max( len( x[1] ) for x in sequences )
+    def __init__( self, parent, owner ):
+        super().__init__( parent )
+        self.owner: FrmAlignment = owner
+        self.highlight_row = None
+        self.highlight_col = None
+        self.max_len: int = 0
+        self.sequences = []
+        self.table: LookupTable = None
+    
+    
+    def clear( self ):
+        self.max_len = 0
+        self.sequences = []
+        self.table = None
+        self.highlight_row = None
+        self.highlight_col = None
+    
+    
+    def load( self, table: LookupTable, fasta: str ):
+        sequences = list( bio_helper.parse_fasta( text = fasta ) )
+        self.max_len = max( len( x[1] ) for x in sequences )
         self.sequences = []
         
         for i in range( len( sequences ) ):
             self.sequences.append( (sequences[i][0], sequences[i][1].ljust( self.max_len )) )
-        self.table: LookupTable = table
-        self.owner: FrmAlignment = owner
-        self.hrow = None
-        self.hcol = None
+        
+        self.table = table
+        self.highlight_row = None
+        self.highlight_col = None
     
     
     def paintEvent( self, ev ):
         p = QPainter( self )
         y = 0
-        x = 0
         table = self.table
         
         for row, (name, sequence) in enumerate( self.sequences ):
             # Name background
             color = QColor( 0, 0, 255 )
             brush = QBrush( color )
-            r = QRect( 0, y, XSTEP * RESCOL, XSTEP )
+            r = QRect( 0, y, COL_WIDTH * NUM_RESERVED_COLS, COL_WIDTH )
             p.fillRect( r, brush )
             
             # Name text
@@ -45,9 +63,11 @@ class AlignmentViewWidget( QWidget ):
             p.setPen( text_pen )
             p.drawText( r, Qt.AlignRight | Qt.AlignVCenter, name )
             
-            x = XSTEP * RESCOL
+            x = COL_WIDTH * NUM_RESERVED_COLS
             
-            for col in range( self.owner.ui.SCR_MAIN.value(), len( sequence ) ):
+            start = max( 0, self.owner.ui.SCR_MAIN.value() )
+            
+            for col in range( start, len( sequence ) ):
                 char = sequence[col]
                 pen: QPen = table.letter_colour_table.get( char, DEFAULT_PEN )
                 color = pen.color()
@@ -55,13 +75,13 @@ class AlignmentViewWidget( QWidget ):
                 brush = QBrush( color )
                 
                 # Site background
-                r = QRect( x, y, XSTEP, XSTEP )
+                r = QRect( x, y, COL_WIDTH, COL_WIDTH )
                 p.fillRect( r, brush )
                 
                 # Site text
-                if row == self.hrow and col == self.hcol:
+                if row == self.highlight_row and col == self.highlight_col:
                     text_pen = QPen( QColor( 0, 0, 255 ) )
-                elif row == self.hrow or col == self.hcol:
+                elif row == self.highlight_row or col == self.highlight_col:
                     text_pen = QPen( QColor( 0, 0, 0 ) )
                 else:
                     text_pen = QPen( QColor( 128, 128, 128 ) )
@@ -72,22 +92,22 @@ class AlignmentViewWidget( QWidget ):
                 # Site changed indicator
                 if row != 0 and char != self.sequences[row - 1][1][col]:
                     p.setPen( QPen( QColor( 0, 0, 0 ) ) )
-                    p.drawLine( QPoint( x + 4, y ), QPoint( x + XSTEP - 4, y ), )
+                    p.drawLine( QPoint( x + 4, y ), QPoint( x + COL_WIDTH - 4, y ), )
                 
-                x += XSTEP
+                x += COL_WIDTH
             
-            y += XSTEP
+            y += COL_WIDTH
     
     
     def get_pos( self, e: QMouseEvent ):
-        col = e.x() // XSTEP
-        row = e.y() // XSTEP
+        col = e.x() // COL_WIDTH
+        row = e.y() // COL_WIDTH
         
         if row < 0 or row >= len( self.sequences ):
             return None, None
         
-        if col >= RESCOL:
-            col = col + self.owner.ui.SCR_MAIN.value() - RESCOL
+        if col >= NUM_RESERVED_COLS:
+            col = col + self.owner.ui.SCR_MAIN.value() - NUM_RESERVED_COLS
             if 0 <= col < self.max_len:
                 return row, col
             else:
@@ -100,8 +120,8 @@ class AlignmentViewWidget( QWidget ):
     
     def mousePressEvent( self, e: QMouseEvent ):
         row, col = self.get_pos( e )
-        self.hcol = col
-        self.hrow = row
+        self.highlight_col = col
+        self.highlight_row = row
         
         if row is None:
             self.owner.ui.LBL_INFO.setText( "Not a valid selection." )
@@ -148,42 +168,60 @@ class AlignmentViewWidget( QWidget ):
         self.update()
 
 
-class FrmAlignment( QDialog ):
-    def __init__( self, parent, title:str,table: LookupTable, fasta: str ):
+class FrmAlignment( FrmBase ):
+    def __init__( self, parent ):
         """
         CONSTRUCTOR
         """
-        QDialog.__init__( self, parent )
-        self.ui = Ui_Dialog( self )
-        self.setWindowTitle(title)
+        super().__init__( parent )
+        self.ui = frm_alignment_designer.Ui_Dialog( self )
+        self.setWindowTitle( "Alignments" )
         
-        fastas: List[Tuple[str, str]] = list( bio_helper.parse_fasta( text = fasta ) )
-        
-        
-        self.seq_view = AlignmentViewWidget( None, table, fastas, self )
+        self.seq_view = AlignmentViewWidget( None, self )
         self.seq_view.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
         self.ui.GRID_MAIN.addWidget( self.seq_view, 0, 0 )
+    
+    
+    def update_view( self ):
+        model = self.get_model()
+        selection = self.get_selection()
         
-        win_width = self.seq_view.rect().width() // XSTEP
+        win_width = (self.seq_view.rect().width() // COL_WIDTH) - NUM_RESERVED_COLS
         self.ui.SCR_MAIN.setPageStep( win_width )
-        self.ui.SCR_MAIN.setMaximum( self.seq_view.max_len - win_width )
+        self.ui.SCR_MAIN.setMinimum( 0 )
+        self.ui.SCR_MAIN.setMaximum( max( 0, self.seq_view.max_len - win_width ) )
         self.ui.SCR_MAIN.setValue( 0 )
         self.ui.SCR_MAIN.valueChanged[int].connect( self.on_scroll_value_changed )
+        self.ui.BTN_SELECTION.setText( str( selection ) )
+        
+        
+        
+        component = array_helper.first_or_none( selection.components )
+        
+        
+        
+        if component:
+            self.ui.LBL_SELECTION_WARNING.setVisible( False )
+            self.seq_view.load( LookupTable( model.site_type ), component.get_alignment_by_accession() )
+        else:
+            self.ui.LBL_SELECTION_WARNING.setVisible( True )
+            self.seq_view.clear()
+        
+        self.repaint_view()
+    
+    
+    def on_selection_changed( self ):
+        self.update_view()
     
     
     def on_scroll_value_changed( self, _: int ):
+        self.repaint_view()
+    
+    
+    def repaint_view( self ):
         self.seq_view.update()
-    
-    
-    @staticmethod
-    def request( parent, title, table: LookupTable, fasta: str ):
-        if not fasta:
-            QMessageBox.warning(parent, "FASTA", "There is no FASTA data for this item.")
-            return
-        
-        frm = FrmAlignment( parent, title, table, fasta )
-        
-        frm.exec_()
+        self.ui.LBL_POSITION_START.setText( str( self.ui.SCR_MAIN.value() ) )
+        self.ui.LBL_POSITION_END.setText( str( self.ui.SCR_MAIN.value() + self.ui.SCR_MAIN.pageStep() ) )
     
     
     @exqtSlot()
@@ -191,7 +229,7 @@ class FrmAlignment( QDialog ):
         """
         Signal handler:
         """
-        self.ui.SCR_MAIN.setValue(0)
+        self.ui.SCR_MAIN.setValue( 0 )
     
     
     @exqtSlot()
@@ -199,20 +237,12 @@ class FrmAlignment( QDialog ):
         """
         Signal handler:
         """
-        self.ui.SCR_MAIN.setValue(self.ui.SCR_MAIN.maximum())
+        self.ui.SCR_MAIN.setValue( self.ui.SCR_MAIN.maximum() )
     
     
     @exqtSlot()
-    def on_BTNBOX_MAIN_accepted( self ) -> None:
+    def on_BTN_SELECTION_clicked( self ) -> None:
         """
         Signal handler:
         """
-        self.accept()
-    
-    
-    @exqtSlot()
-    def on_BTNBOX_MAIN_rejected( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.reject()
+        self.show_selection_menu()

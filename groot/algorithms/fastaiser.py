@@ -17,14 +17,14 @@ def to_fasta( item: ILegoVisualisable ):
     elif isinstance( item, LegoComponent ):
         return component_to_fasta( item )
     else:
-        raise SwitchError( "item", item, instance = True )
+        return "The {} data-type is not convertible to FASTA.".format( type( item ).__name__ )
 
 
 def component_to_fasta( component: LegoComponent, simplify_ids: bool = False ):
     fasta = []
     
     for subsequence in component.minor_subsequences:
-        assert isinstance(subsequence, LegoSubsequence)
+        assert isinstance( subsequence, LegoSubsequence )
         
         if simplify_ids:
             fasta.append( ">S{}".format( subsequence.sequence.id ) )

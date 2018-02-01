@@ -17,7 +17,7 @@ class ColourBlock:
     """
     
     
-    def __init__( self, colour: QColor ):
+    def __init__( self, colour: QColor ) -> None:
         self.colour = colour
         self.brush = QBrush( colour )
         
@@ -34,8 +34,6 @@ class ColourBlock:
         new_colour = qt_colour_helper.interpolate_colours( self.colour, colour, amount )
         
         return ColourBlock( new_colour )
-
-
 
 
 class EMode( Enum ):
@@ -76,10 +74,10 @@ class DRAWING:
                              "K": Pens.RED, "R": Pens.RED, "H": Pens.RED,
                              "D": Pens.CYAN, "E": Pens.CYAN,
                              "N": Pens.DARK_ORANGE, "Q": Pens.DARK_ORANGE,
-                             "P": Pens.LIGHT_RED ,
-                             "-":Pens.GRAY }
-    DNA_COLOUR_TABLE = { "A": Pens.YELLOW, "T": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE,"-":Pens.GRAY } 
-    RNA_COLOUR_TABLE = { "A": Pens.YELLOW, "U": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE ,"-":Pens.GRAY }
+                             "P": Pens.LIGHT_RED,
+                             "-": Pens.GRAY }
+    DNA_COLOUR_TABLE = { "A": Pens.YELLOW, "T": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE, "-": Pens.GRAY }
+    RNA_COLOUR_TABLE = { "A": Pens.YELLOW, "U": Pens.RED, "C": Pens.GREEN, "G": Pens.LIGHT_BLUE, "-": Pens.GRAY }
     
     # Colour of components
     COMPONENT_COLOURS = [QColor( 255, 0, 0 ),  # R
@@ -153,9 +151,7 @@ class EDomainFunction( MEnum ):
     :data FIXED_WIDTH: Fixed-width (parameter defines width)
     :data FIXED_COUNT: Fixed-count (parameter defines width)
     """
+    NONE = 0
     COMPONENT = 1
     FIXED_WIDTH = 2
     FIXED_COUNT = 3
-
-
-

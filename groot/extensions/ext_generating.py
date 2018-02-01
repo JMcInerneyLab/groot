@@ -1,9 +1,10 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, tree, nrfg, fuse
+from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
+from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
@@ -12,6 +13,25 @@ from mhelper import string_helper
 
 
 __mcmd_folder_name__ = "Generating"
+
+
+@command( names = ["make_domains", "create_domains", "find_domains"] )
+def make_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
+    """
+    Creates the domains.
+    Existing domains are always replaced.
+    Domains are only used for viewing and have no bearing on the actual calculations.
+    
+    :param mode:        Mode of domain generation 
+    :param param:       Parameter for mode. 
+    """
+    model = global_view.current_model()
+    
+    userdomains.create_userdomains( model, mode, param )
+    
+    MCMD.progress( "Domains created, there are now {} domains.".format( len( model.user_domains ) ) )
+    
+    return EChanges.DOMAINS
 
 
 @command( names = ["make_components", "create_components", "find_components"] )

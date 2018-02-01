@@ -21,16 +21,6 @@ def refresh( change: EChanges ) -> EChanges:
     return change
 
 
-@command( visibility = _VIS, threading = EThread.UNMANAGED )
-def view_alignments_gui( component: LegoComponent ) -> None:
-    """
-    Views the alignments in the GUI.
-    :param component:   Component to view alignments for
-    """
-    from groot.frontends.gui.forms.frm_alignment import FrmAlignment
-    
-    fasta = component.get_alignment_by_accession()
-    FrmAlignment.request( MENV.host.form, "Alignment for {}".format( component ), MENV.host.form.view.lookup_table, fasta )
 
 
 @command( visibility = _VIS, threading = EThread.UNMANAGED )

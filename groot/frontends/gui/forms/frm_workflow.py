@@ -1,11 +1,18 @@
-from groot.data import global_view
+from PyQt5.QtWidgets import QFileDialog
 from groot.frontends.gui.forms.designer import frm_workflow_designer
 
+from groot import extensions, constants
+from groot.data import global_view
+from groot.frontends.gui.forms.frm_alignment import FrmAlignment
 from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.frontends.gui.forms.frm_big_text import FrmBigText
+from groot.frontends.gui.forms.frm_fusions import FrmFusions
+from groot.frontends.gui.forms.frm_lego import FrmLego
 from groot.frontends.gui.forms.frm_samples import FrmSamples
+from groot.frontends.gui.forms.frm_webtree import FrmWebtree
 from groot.frontends.gui.gui_view_utils import EChanges
-from mhelper_qt import exqtSlot, exceptToGui
-from groot import extensions
+from mhelper import SwitchError
+from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 
 
 class FrmWorkflow( FrmBase ):
@@ -92,7 +99,22 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_files.file_save )
+        model = self.get_model()
+        OPTION_1 = "Save"
+        OPTION_2 = "Save as..."
+        
+        if not model.file_name:
+            choice = OPTION_2
+        else:
+            choice = self.show_menu( OPTION_1, OPTION_2 )
+        
+        if choice == OPTION_1:
+            extensions.ext_files.file_save( model.file_name )
+        elif choice == OPTION_2:
+            file_name = qt_gui_helper.browse_save( self, constants.DIALOGUE_FILTER )
+            
+            if file_name:
+                extensions.ext_files.file_save( file_name )
     
     
     @exqtSlot()
@@ -100,7 +122,25 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_files.import_file )
+        filters = "Valid files (*.fasta *.fa *.faa *.blast *.tsv *.composites *.txt *.comp)", "FASTA files (*.fasta *.fa *.faa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
+        
+        file_name, filter = QFileDialog.getOpenFileName( self, "Select file", None, ";;".join( filters ), options = QFileDialog.DontUseNativeDialog )
+        
+        if not file_name:
+            return
+        
+        filter_index = filters.index( filter )
+        
+        if filter_index == 0:
+            extensions.ext_files.import_file( self._model, file_name )
+        elif filter_index == 0:
+            extensions.ext_files.import_fasta( self._model, file_name )
+        elif filter_index == 1:
+            extensions.ext_files.import_blast( self._model, file_name )
+        elif filter_index == 2:
+            extensions.ext_files.import_composites( self._model, file_name )
+        else:
+            raise SwitchError( "filter_index", filter_index )
     
     
     @exqtSlot()
@@ -108,7 +148,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmBigText )
     
     
     @exqtSlot()
@@ -132,7 +172,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmLego )
     
     
     @exqtSlot()
@@ -156,7 +196,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmAlignment )
     
     
     @exqtSlot()
@@ -180,7 +220,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmWebtree )
     
     
     @exqtSlot()
@@ -204,7 +244,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmFusions )
     
     
     @exqtSlot()
@@ -228,4 +268,4 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        pass  # TODO
+        self.show_form( FrmWebtree )

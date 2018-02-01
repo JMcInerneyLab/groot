@@ -1,6 +1,6 @@
 from typing import List, Set
 
-from groot.data.lego_model import LegoComponent, ILeaf, LegoSequence
+from groot.data.lego_model import LegoComponent, ILeaf, LegoSequence, ILegoSelectable
 from mgraph import MGraph
 from mhelper import array_helper, string_helper, utf_helper
 
@@ -8,7 +8,7 @@ from mhelper import array_helper, string_helper, utf_helper
 _FusionPoint_ = "FusionPoint"
 
 
-class FusionEvent:
+class FusionEvent( ILegoSelectable ):
     """
     Describes a fusion event
     
@@ -46,7 +46,7 @@ class FusionEvent:
         return "{}".format( ",".join( x.__str__() for x in self.products ) )
 
 
-class FusionPoint( ILeaf ):
+class FusionPoint( ILeaf, ILegoSelectable ):
     def __init__( self, event: FusionEvent, component: LegoComponent, sequences: Set[ILeaf], outer_sequences: Set[ILeaf] ):
         self.event = event
         self.component = component
@@ -54,7 +54,7 @@ class FusionPoint( ILeaf ):
         self.outer_sequences = outer_sequences
         self.pertinent_inner = frozenset( self.sequences.intersection( self.event.component_c.major_sequences ) )
         self.pertinent_outer = frozenset( self.outer_sequences.intersection( set( self.event.component_a.major_sequences ).union( set( self.event.component_b.major_sequences ) ) ) )
-        
+    
     
     @property
     def count( self ):
@@ -97,7 +97,7 @@ class FusionPoint( ILeaf ):
     
     
     def str_id( self ):
-        return "{}{}".format(  self.event, utf_helper.subscript( str( self.count ) ) )
+        return "{}{}".format( self.event, utf_helper.subscript( str( self.count ) ) )
     
     
     def str_short( self ):
@@ -105,7 +105,7 @@ class FusionPoint( ILeaf ):
     
     
     def str_long( self ):
-        return "¨{} ⊇ {} ⊅ {}¨".format(  self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )
+        return "¨{} ⊇ {} ⊅ {}¨".format( self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )
 
 
 class NrfgEvent:

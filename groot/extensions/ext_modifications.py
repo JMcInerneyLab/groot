@@ -1,13 +1,12 @@
 import re
-from typing import List, Optional
+from typing import List
 
 from groot.algorithms import editor, importation
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoEdge, LegoSequence, LegoSubsequence
+from groot.data.lego_model import LegoComponent, LegoEdge, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
-
 
 
 __mcmd_folder_name__ = "Modifications"
@@ -93,24 +92,6 @@ def find_sequences( find: str ) -> EChanges:
     return EChanges.NONE
 
 
-@command()
-def remove_sequences( sequences: Optional[List[LegoSequence]] = None, find: Optional[str] = None ) -> EChanges:
-    """
-    Removes one or more sequences from the model.
-    :param find:      Optional regular expression specifying the sequence(s) to remove, by accession.
-    :param sequences: The sequences to remove
-    """
-    if sequences is None:
-        sequences = []
-    
-    if find:
-        sequences.extend( __find_sequences( find ) )
-    
-    editor.remove_sequences( sequences, no_fresh = False )
-    
-    MCMD.print( "Dropped {} sequences.".format( len( sequences ) ) )
-    
-    return EChanges.MODEL_ENTITIES
 
 
 def __find_sequences( find ):

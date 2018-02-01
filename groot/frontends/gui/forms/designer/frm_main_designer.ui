@@ -15,12 +15,115 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <item row="0" column="0">
      <widget class="QMdiArea" name="MDI_AREA"/>
     </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1101</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_Windows">
+    <property name="title">
+     <string>&amp;Windows</string>
+    </property>
+    <addaction name="ACT_SAMPLES"/>
+    <addaction name="ACT_WORKFLOW"/>
+    <addaction name="ACT_WIZARD"/>
+    <addaction name="ACT_LEGO"/>
+    <addaction name="ACT_TREE"/>
+    <addaction name="ACT_TEXT"/>
+    <addaction name="ACT_ENTITIES"/>
+    <addaction name="ACT_ALIGNMENTS"/>
+    <addaction name="ACT_FUSION"/>
+    <addaction name="ACT_INTERMAKE"/>
+    <addaction name="ACT_DOMAIN"/>
+    <addaction name="ACT_DEBUG"/>
+   </widget>
+   <addaction name="menu_Windows"/>
+  </widget>
+  <action name="ACT_WORKFLOW">
+   <property name="text">
+    <string>&amp;Workflow</string>
+   </property>
+  </action>
+  <action name="ACT_WIZARD">
+   <property name="text">
+    <string>&amp;Wizard</string>
+   </property>
+  </action>
+  <action name="ACT_LEGO">
+   <property name="text">
+    <string>&amp;Lego diagram</string>
+   </property>
+  </action>
+  <action name="ACT_TREE">
+   <property name="text">
+    <string>&amp;Tree diagram</string>
+   </property>
+  </action>
+  <action name="ACT_TEXT">
+   <property name="text">
+    <string>&amp;Textual data</string>
+   </property>
+  </action>
+  <action name="ACT_ENTITIES">
+   <property name="text">
+    <string>&amp;Model entities</string>
+   </property>
+  </action>
+  <action name="ACT_ALIGNMENTS">
+   <property name="text">
+    <string>&amp;Alignment viewer</string>
+   </property>
+  </action>
+  <action name="ACT_FUSION">
+   <property name="text">
+    <string>&amp;Fusion viewer</string>
+   </property>
+  </action>
+  <action name="ACT_SAMPLES">
+   <property name="text">
+    <string>&amp;Examples</string>
+   </property>
+  </action>
+  <action name="ACT_INTERMAKE">
+   <property name="text">
+    <string>&amp;Intermake</string>
+   </property>
+  </action>
+  <action name="ACT_DOMAIN">
+   <property name="text">
+    <string>&amp;Domain generator</string>
+   </property>
+  </action>
+  <action name="ACT_DEBUG">
+   <property name="text">
+    <string>De&amp;bug</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

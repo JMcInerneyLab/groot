@@ -27,10 +27,10 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_20">
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="TXT_FILENAME"/>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_25">
+      <widget class="QPushButton" name="BTN_BROWSE_FILE">
        <property name="text">
         <string>Browse</string>
        </property>
@@ -51,14 +51,14 @@
    <item>
     <layout class="QGridLayout" name="gridLayout_3">
      <item row="0" column="1">
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="BTN_ADD_FILE">
        <property name="text">
         <string>Add</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QPushButton" name="pushButton_23">
+      <widget class="QPushButton" name="BTN_REMOVE_FILE">
        <property name="text">
         <string>Remove</string>
        </property>
@@ -78,7 +78,7 @@
       </spacer>
      </item>
      <item row="0" column="0" rowspan="3">
-      <widget class="QTreeWidget" name="treeWidget">
+      <widget class="QTreeWidget" name="LST_FILES">
        <column>
         <property name="text">
          <string notr="true">1</string>
@@ -101,7 +101,7 @@
    <item>
     <layout class="QGridLayout" name="gridLayout_4">
      <item row="0" column="1">
-      <widget class="QSpinBox" name="spinBox"/>
+      <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label_20">
@@ -130,7 +130,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="comboBox"/>
+      <widget class="QComboBox" name="CMB_ALIGNMENT_METHOD"/>
      </item>
      <item row="0" column="2">
       <spacer name="horizontalSpacer_3">
@@ -159,7 +159,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="comboBox_2"/>
+      <widget class="QComboBox" name="CMB_TREE_METHOD"/>
      </item>
     </layout>
    </item>
@@ -179,7 +179,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_24">
+      <widget class="QPushButton" name="BTN_OK">
        <property name="text">
         <string>OK</string>
        </property>

@@ -11,7 +11,18 @@ from mhelper import array_helper, SwitchError
 from groot.data.lego_model import LegoSequence, LegoModel, LegoSubsequence, LegoUserDomain
 
 
-def fixed_width( sequence: LegoSequence, width: int = 25 ) -> List[LegoUserDomain]:
+def create_userdomains( model: LegoModel, switch: EDomainFunction, param: int ):
+    if not model.sequences:
+        raise ValueError( "Cannot generate domains because there are no sequences." )
+    
+    model.user_domains.clear()
+    
+    for sequence in model.sequences:
+        for domain in sequence_by_enum( sequence, switch, param ):
+            model.user_domains.add( domain )
+
+
+def sequence_fixed_width( sequence: LegoSequence, width: int = 25 ) -> List[LegoUserDomain]:
     r = []
     
     for i in range( 1, sequence.length + 1, width ):
@@ -20,7 +31,7 @@ def fixed_width( sequence: LegoSequence, width: int = 25 ) -> List[LegoUserDomai
     return r
 
 
-def fixed_count( sequence: LegoSequence, count: int = 4 ) -> List[LegoUserDomain]:
+def sequence_fixed_count( sequence: LegoSequence, count: int = 4 ) -> List[LegoUserDomain]:
     r = []
     
     for s, e in array_helper.divide_workload( sequence.length, count ):
@@ -29,17 +40,17 @@ def fixed_count( sequence: LegoSequence, count: int = 4 ) -> List[LegoUserDomain
     return r
 
 
-def by_predefined( subsequences: List[LegoSubsequence] ) -> List[LegoUserDomain]:
+def sequence_by_predefined( subsequences: List[LegoSubsequence] ) -> List[LegoUserDomain]:
     cuts = set()
     
     for subsequence in subsequences:
         cuts.add( subsequence.start )
         cuts.add( subsequence.end + 1 )
     
-    return by_cuts( subsequences[0].sequence, cuts )
+    return sequence_by_cuts( subsequences[0].sequence, cuts )
 
 
-def by_cuts( sequence: LegoSequence, cuts: Iterable[int] ):
+def sequence_by_cuts( sequence: LegoSequence, cuts: Iterable[int] ):
     """
     Creates domains by cutting up the sequence
     
@@ -67,7 +78,7 @@ def by_cuts( sequence: LegoSequence, cuts: Iterable[int] ):
     return r
 
 
-def by_component( sequence: LegoSequence ) -> List[LegoUserDomain]:
+def sequence_by_component( sequence: LegoSequence ) -> List[LegoUserDomain]:
     model: LegoModel = sequence.model
     
     components = model.components.find_components_for_minor_sequence( sequence )
@@ -83,15 +94,17 @@ def by_component( sequence: LegoSequence ) -> List[LegoUserDomain]:
     if not todo:
         return [LegoUserDomain( sequence, 1, sequence.length )]
     
-    return by_predefined( todo )
+    return sequence_by_predefined( todo )
 
 
-def by_enum( sequence, switch, param ):
+def sequence_by_enum( sequence, switch, param ):
+    if switch == EDomainFunction.NONE:
+        return [LegoUserDomain( sequence, 1, sequence.length )]
     if switch == EDomainFunction.COMPONENT:
-        return by_component( sequence )
+        return sequence_by_component( sequence )
     elif switch == EDomainFunction.FIXED_COUNT:
-        return fixed_count( sequence, param )
+        return sequence_fixed_count( sequence, param )
     elif switch == EDomainFunction.FIXED_WIDTH:
-        return fixed_width( sequence, param )
+        return sequence_fixed_width( sequence, param )
     else:
         raise SwitchError( "self.owner_model_view.options.domain_function", switch )

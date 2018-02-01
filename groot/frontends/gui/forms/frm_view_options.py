@@ -1,16 +1,13 @@
-from groot.data.lego_model import LegoViewOptions
-from groot.frontends.gui.gui_view import LegoView_Model
-from intermake import intermake_gui
-from mhelper_qt import exqtSlot
 from PyQt5.QtWidgets import QDialog, QWidget
-from groot.frontends.gui.gui_view_support import EMode, EDomainFunction
 from groot.frontends.gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
+from groot.data.lego_model import LegoViewOptions
+from groot.frontends.gui.forms.frm_base import FrmBase
+from intermake import intermake_gui
 
-class FrmViewOptions( QDialog ):
-    def __init__( self,
-                  parent: QWidget,
-                  options: LegoViewOptions ):
+
+class FrmViewOptions( FrmBase ):
+    def __init__( self, parent: QWidget ):
         """
         CONSTRUCTOR
         """
@@ -20,26 +17,41 @@ class FrmViewOptions( QDialog ):
         main = intermake_gui.default_style_sheet()
         self.setStyleSheet( main )
         
-        self.options: LegoViewOptions = options
+        self.options: LegoViewOptions = self.get_model().ui_options
         
         self.map( False )
+        
+        radios = (self.ui.RAD_COMPONENTS_IND,
+                  self.ui.RAD_COMPONENTS_NO,
+                  self.ui.RAD_COMPONENTS_YES,
+                  self.ui.RAD_MOVE_IND,
+                  self.ui.RAD_MOVE_NO,
+                  self.ui.RAD_MOVE_YES,
+                  self.ui.RAD_NAME_IND,
+                  self.ui.RAD_NAME_NO,
+                  self.ui.RAD_NAME_YES,
+                  self.ui.RAD_PIANO_IND,
+                  self.ui.RAD_PIANO_NO,
+                  self.ui.RAD_PIANO_YES,
+                  self.ui.RAD_POS_IND,
+                  self.ui.RAD_POS_NO,
+                  self.ui.RAD_POS_YES,
+                  self.ui.RAD_XSNAP_IND,
+                  self.ui.RAD_XSNAP_NO,
+                  self.ui.RAD_XSNAP_YES,
+                  self.ui.RAD_YSNAP_IND,
+                  self.ui.RAD_YSNAP_NO,
+                  self.ui.RAD_YSNAP_YES)
+        
+        for rad in radios:
+            rad.toggled[bool].connect( self.__on_radio_changed )
+    
+    
+    def __on_radio_changed( self, _: bool ):
+        self.map( True )
     
     
     def map( self, reverse ):
-        if reverse:
-            self.options.domain_function_parameter = self.ui.SPN_DOMAIN_PARAMETER.value()
-        else:
-            self.ui.SPN_DOMAIN_PARAMETER.setValue( self.options.domain_function_parameter )
-        
-        self.__map( reverse, self.options, "mode", { EMode.COMPONENT  : self.ui.RAD_MODE_COMPONENT,
-                                                     EMode.EDGE       : self.ui.RAD_MODE_EDGE,
-                                                     EMode.SEQUENCE   : self.ui.RAD_MODE_GENE,
-                                                     EMode.SUBSEQUENCE: self.ui.RAD_MODE_DOMAIN } )
-        
-        self.__map( reverse, self.options, "domain_function", { EDomainFunction.COMPONENT  : self.ui.RAD_DOMAIN_COMPONENT,
-                                                                EDomainFunction.FIXED_COUNT: self.ui.RAD_DOMAIN_FIXEDNUMBER,
-                                                                EDomainFunction.FIXED_WIDTH: self.ui.RAD_DOMAIN_FIXEDWIDTH } )
-        
         self.__map( reverse, self.options, "move_enabled", { True : self.ui.RAD_MOVE_YES,
                                                              None : self.ui.RAD_MOVE_IND,
                                                              False: self.ui.RAD_MOVE_NO } )
@@ -80,29 +92,3 @@ class FrmViewOptions( QDialog ):
             
             for k, v in mapping.items():
                 v.setChecked( value == k )
-    
-    
-    @classmethod
-    def request( cls, owner_window: QWidget, view: LegoView_Model ):
-        form = FrmViewOptions( owner_window, view.options )
-        
-        if form.exec_():
-            return True
-        else:
-            return False
-    
-    
-    @exqtSlot()
-    def on_buttonBox_accepted( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.map( True )
-    
-    
-    @exqtSlot()
-    def on_buttonBox_rejected( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass

@@ -2,7 +2,7 @@
 For creating a layout on the main view.
 """
 
-from groot.frontends.gui.gui_view import LegoView_UserDomain, LegoView_Model
+from groot.frontends.gui.gui_view import LegoView_UserDomain
 
 
 def align_about_domain( target_userdomain_view: LegoView_UserDomain ) -> None:

@@ -7,7 +7,7 @@ from typing import Dict, FrozenSet, Iterable, Set, Tuple
 from groot.algorithms import lego_graph
 from groot.algorithms.classes import FusionPoint
 from groot.algorithms.lego_graph import Split
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, ILeaf
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, ILeaf, LegoNrfg
 from intermake.engine.environment import MCMD
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, LogicError, ansi, ansi_helper, array_helper, string_helper
@@ -395,7 +395,7 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = True ):
                     c[0].add_edge_to( c[1] )
                     node.remove_node()
     
-    model.nrfg = nrfg
+    model.nrfg = LegoNrfg(nrfg)
 
 
 def __debug_splits( graph, query ):

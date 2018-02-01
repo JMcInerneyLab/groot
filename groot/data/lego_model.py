@@ -4,14 +4,13 @@ Holds the Lego model, and its dependencies.
 See class `LegoModel`.
 """
 
-from typing import Dict, Iterator, List, Optional, cast, Tuple, Set
-
 import re
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, cast
 
-from groot.frontends.gui.gui_view_support import EDomainFunction, EMode
+from groot.frontends.gui.gui_view_support import EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
 from mgraph import MGraph
-from mhelper import Logger, MEnum, NotFoundError, SwitchError, TTristate, array_helper, file_helper as FileHelper, string_helper, bio_helper, utf_helper
+from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, utf_helper
 
 
 TEXT_SUBSEQUENCE_FORMAT = "{}[{}:{}]"
@@ -21,8 +20,14 @@ TEXT_SEQ_FORMAT = "{}"
 _LegoModel_ = "LegoModel"
 __author__ = "Martin Rusilowicz"
 
+
 class ILeaf:
     pass
+
+
+class ILegoSelectable:
+    pass
+
 
 # noinspection PyAbstractClass
 class ILegoVisualisable( IVisualisable ):
@@ -57,7 +62,7 @@ class ETristate( MEnum ):
     NO = -1
 
 
-class LegoEdge( ILegoVisualisable ):
+class LegoEdge( ILegoVisualisable, ILegoSelectable ):
     """
     Edge from one subsequence (or set of subsequences) to another
     
@@ -341,7 +346,17 @@ class LegoSubsequence( ILegoVisualisable ):
         return self.end - self.start + 1
 
 
-class LegoSequence( ILegoVisualisable, ILeaf ):
+class LegoUserDomain( LegoSubsequence, ILegoSelectable ):
+    """
+    A user-domain is just domain (LegoSubsequence) we know exists in the UI.
+    """
+    
+    
+    def __init__( self, sequence: "LegoSequence", start: int, end: int ):
+        super().__init__( sequence, start, end )
+
+
+class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
     """
     Protein (or DNA) sequence
     """
@@ -428,7 +443,7 @@ class LegoSequence( ILegoVisualisable, ILeaf ):
 _GREEK = "αβγδϵζηθικλμνξοπρστυϕχψω"
 
 
-class LegoComponent( ILegoVisualisable ):
+class LegoComponent( ILegoVisualisable, ILegoSelectable ):
     """
     Stores information about a component of the (:class:`LegoModel`).
     
@@ -528,6 +543,10 @@ class LegoEdgeCollection:
         self.__by_sequence: Dict[LegoSequence, List[LegoEdge]] = { }
     
     
+    def __bool__( self ):
+        return bool( self.__edges )
+    
+    
     def __len__( self ):
         return len( self.__edges )
     
@@ -554,6 +573,10 @@ class LegoComponentCollection:
     def __init__( self, model: "LegoModel" ):
         self.__model = model
         self.__components: List[LegoComponent] = []
+    
+    
+    def __bool__( self ):
+        return bool( self.__components )
     
     
     def add( self, component: LegoComponent ):
@@ -631,6 +654,10 @@ class LegoSequenceCollection:
         self.__sequences: List[LegoSequence] = []
     
     
+    def __bool__( self ):
+        return bool( self.__sequences )
+    
+    
     def __len__( self ):
         return len( self.__sequences )
     
@@ -649,6 +676,48 @@ class LegoSequenceCollection:
     
     def index( self, sequence: LegoSequence ):
         return self.__sequences.index( sequence )
+
+
+class LegoUserDomainCollection:
+    def __init__( self, model: "LegoModel" ):
+        self.__model = model
+        self.__user_domains: List[LegoUserDomain] = []
+        self.__by_sequence: Dict[LegoSequence, List[LegoUserDomain]] = { }
+    
+    
+    def add( self, domain: LegoUserDomain ):
+        self.__user_domains.append( domain )
+        
+        if domain.sequence not in self.__by_sequence:
+            self.__by_sequence[domain.sequence] = []
+        
+        self.__by_sequence[domain.sequence].append( domain )
+    
+    
+    def clear( self ):
+        self.__user_domains.clear()
+        self.__by_sequence.clear()
+    
+    
+    def __bool__( self ):
+        return bool( self.__user_domains )
+    
+    
+    def __len__( self ):
+        return len( self.__user_domains )
+    
+    
+    def __iter__( self ) -> Iterator[LegoUserDomain]:
+        return iter( self.__user_domains )
+    
+    
+    def by_sequence( self, sequence: LegoSequence ) -> Iterable[LegoUserDomain]:
+        list = self.__by_sequence.get( sequence )
+        
+        if list is None:
+            return [LegoUserDomain( sequence, 1, sequence.length )]
+        else:
+            return list
 
 
 class LegoViewOptions:
@@ -678,9 +747,12 @@ class LegoViewOptions:
         self.view_positions: TTristate = None
         self.view_components: TTristate = None
         self.mode = EMode.SEQUENCE
-        self.domain_function: EDomainFunction = EDomainFunction.COMPONENT
-        self.domain_function_parameter: int = 10
-        self.domain_positions: Dict[Tuple[str, int], Tuple[int, int]] = { }
+        self.domain_positions: Dict[Tuple[int, int], Tuple[int, int]] = { }
+
+
+class LegoNrfg( ILegoSelectable ):
+    def __init__( self, graph: MGraph ):
+        self.graph = graph
 
 
 class LegoModel( ILegoVisualisable ):
@@ -720,8 +792,9 @@ class LegoModel( ILegoVisualisable ):
         self.file_name = None
         from groot.algorithms.classes import FusionEvent
         self.fusion_events = cast( List[FusionEvent], [] )
-        self.nrfg: MGraph = None
+        self.nrfg: LegoNrfg = None
         self.ui_options = LegoViewOptions()
+        self.user_domains = LegoUserDomainCollection( self )
     
     
     def visualisable_info( self ) -> UiInfo:
@@ -813,13 +886,3 @@ class LegoModel( ILegoVisualisable ):
                 return x
         
         raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
-
-
-class LegoUserDomain( LegoSubsequence ):
-    """
-    A user-domain is just domain (LegoSubsequence) we know exists in the UI.
-    """
-    
-    
-    def __init__( self, sequence: "LegoSequence", start: int, end: int ):
-        super().__init__( sequence, start, end )

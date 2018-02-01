@@ -6,14 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>951</width>
+    <height>859</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin">
+    <number>8</number>
+   </property>
+   <property name="topMargin">
+    <number>8</number>
+   </property>
+   <property name="rightMargin">
+    <number>8</number>
+   </property>
+   <property name="bottomMargin">
+    <number>8</number>
+   </property>
    <item>
     <widget class="QFrame" name="frame">
      <property name="frameShape">
@@ -24,43 +39,46 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_23">
       <property name="spacing">
-       <number>0</number>
+       <number>8</number>
       </property>
       <property name="leftMargin">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="topMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="rightMargin">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="bottomMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_COMPONENT">
-        <property name="minimumSize">
-         <size>
-          <width>48</width>
-          <height>0</height>
-         </size>
+       <widget class="QPushButton" name="BTN_CHANGE_SELECTION">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>16777215</height>
-         </size>
+        <property name="statusTip">
+         <string>Remove edge</string>
         </property>
+        <property name="text">
+         <string>Select</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="style" stdset="0">
+         <string>dropdown</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="RAD_SEL_COMPONENT">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>NRFG</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc">
-          <normaloff>:/network.svg</normaloff>:/network.svg</iconset>
+         <string>Components</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -68,60 +86,10 @@
         <property name="autoExclusive">
          <bool>true</bool>
         </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_COMPONENT_2">
-        <property name="minimumSize">
-         <size>
-          <width>48</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to component edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Comp</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/compartmentalise.svg</normaloff>:/compartmentalise.svg</iconset>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="BTN_SEL_SEQUENCE">
-        <property name="minimumSize">
-         <size>
-          <width>48</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>16777215</height>
-         </size>
-        </property>
+       <widget class="QRadioButton" name="RAD_SEL_GENES">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to sequence edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -130,10 +98,6 @@
         </property>
         <property name="text">
          <string>Genes</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/sequence.svg</normaloff>:/sequence.svg</iconset>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -144,25 +108,10 @@
         <property name="autoExclusive">
          <bool>true</bool>
         </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_SUBSEQUENCE">
-        <property name="minimumSize">
-         <size>
-          <width>48</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>16777215</height>
-         </size>
-        </property>
+       <widget class="QRadioButton" name="RAD_SEL_DOMAINS">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to subsequence edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -170,11 +119,7 @@
          <string>Remove (merge) splits</string>
         </property>
         <property name="text">
-         <string>Dom</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/subsequence.svg</normaloff>:/subsequence.svg</iconset>
+         <string>Domains</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -182,25 +127,23 @@
         <property name="autoExclusive">
          <bool>true</bool>
         </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_EDGE">
-        <property name="minimumSize">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
          <size>
-          <width>48</width>
-          <height>0</height>
+          <width>40</width>
+          <height>20</height>
          </size>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>48</width>
-          <height>16777215</height>
-         </size>
-        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BTN_REFRESH">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -208,91 +151,33 @@
          <string>Remove edge</string>
         </property>
         <property name="text">
-         <string>Edge</string>
+         <string>Refresh</string>
         </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/edge.svg</normaloff>:/edge.svg</iconset>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_5">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>8</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QToolButton" name="BTN_SEL_EDGE_2">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="statusTip">
-         <string>Remove edge</string>
-        </property>
+       <widget class="QPushButton" name="BTN_ALIGN">
         <property name="text">
-         <string>Change selection</string>
+         <string>Align</string>
         </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/edge.svg</normaloff>:/edge.svg</iconset>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        <property name="style" stdset="0">
+         <string>dropdown</string>
         </property>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_6">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>8</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_30">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+       <widget class="QPushButton" name="BTN_OPTIONS">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Options...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -300,36 +185,14 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_26">
-       <property name="text">
-        <string>Align</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="BTN_VIEW_SETTINGS">
-       <property name="icon">
-        <iconset resource="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc">
-         <normaloff>:/settings.svg</normaloff>:/settings.svg</iconset>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QLabel" name="LBL_NO_DOMAINS">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You have no domains defined, all genes will be shown as one domain. You need to &lt;a href=&quot;make_domains&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;generate domains&lt;/span&gt;&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QFrame" name="FRA_MAIN">

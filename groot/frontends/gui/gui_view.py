@@ -3,16 +3,16 @@ MVC architecture.
 
 Classes that manage the view of the model.
 """
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QKeyEvent, QLinearGradient, QPainter, QPolygonF
+from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from groot.algorithms import userdomains
-from groot.data.lego_model import ESiteType, ILegoVisualisable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions
-from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EDomainFunction, EMode, ESelect
-from mhelper import SwitchError, array_helper, override, misc_helper
+from groot.data import global_view
+from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions
+from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EMode
+from mhelper import array_helper, misc_helper, override
 from mhelper_qt import Pens, qt_colour_helper
 
 
@@ -78,7 +78,7 @@ class LegoViewInfo_Edge:
     
     
     def paint_edge( self, painter: QPainter ) -> None:
-        if not self.is_selected:
+        if not self.is_in_global_selection():
             return
         
         self.paint_to( painter, self.left, self.right, False )
@@ -125,9 +125,9 @@ class LegoViewInfo_Edge:
         painter.drawPolygon( QPolygonF( upper_points + lower_points + [upper_points[0]] ) )
     
     
-    @property
-    def is_selected( self ) -> bool:
-        return any( x.isSelected() for x in self.left.userdomain_views ) and any( x.isSelected() for x in self.right.userdomain_views )
+    def is_in_global_selection( self ) -> bool:
+        selection = global_view.current_selection()
+        return self.edge in selection
     
     
     def get_upper_and_lower( self ) -> Tuple[_LegoViewInfo_Side_, _LegoViewInfo_Side_]:
@@ -245,6 +245,23 @@ class LegoView_UserDomain( QGraphicsItem ):
         self.components: List[LegoComponent] = self.owner_model_view.model.components.find_components_for_minor_subsequence( self.domain )
     
     
+    def is_in_global_selection( self ):
+        model = self.owner_model_view.model
+        selection = global_view.current_selection()
+        
+        if self.domain in selection:
+            return True
+        
+        if self.domain.sequence in selection:
+            return True
+        
+        for comp in model.components.find_components_for_minor_subsequence( self.domain ):
+            if comp in selection:
+                return True
+        
+        return False
+    
+    
     @property
     def colour( self ) -> ColourBlock:
         """
@@ -339,7 +356,7 @@ class LegoView_UserDomain( QGraphicsItem ):
         painter.setPen( self.colour.pen )
         painter.drawRect( r )
         
-        is_selected = self.isSelected()
+        is_selected = self.is_in_global_selection()
         
         if is_selected:
             MARGIN = 4
@@ -455,23 +472,6 @@ class LegoView_UserDomain( QGraphicsItem ):
         return result
     
     
-    def keyPressEvent( self, e: QKeyEvent ):
-        # TODO: Reimplement
-        # if e.key() == Qt.Key_Left:
-        #     my_index = self.owner_sequence_view.subsequence_views.index( self )
-        #     my_index -= 1
-        #     if my_index >= 0:
-        #         self.owner_sequence_view.subsequence_views[ my_index ].setFocus()
-        # elif e.key() == Qt.Key_Right:
-        #     my_index = self.owner_sequence_view.subsequence_views.index( self )
-        #     my_index += 1
-        #     if my_index < len( self.owner_sequence_view.subsequence_views ):
-        #         self.owner_sequence_view.subsequence_views[ my_index ].setFocus()
-        # 
-        # self.__apply_colour( e )
-        pass
-    
-    
     def mousePressEvent( self, m: QGraphicsSceneMouseEvent ):
         """
         OVERRIDE
@@ -486,15 +486,15 @@ class LegoView_UserDomain( QGraphicsItem ):
             
             # If ctrl or meta is down, add to the selection 
             if (m.modifiers() & Qt.ControlModifier) or (m.modifiers() & Qt.MetaModifier):
-                select = ESelect.TOGGLE
+                toggle = True
             else:
-                select = ESelect.ONLY
+                toggle = False
                 
-                if self.isSelected():
-                    # If we are selected stop, this confuses with dragging from a design perspective
-                    return
+            if self.is_in_global_selection():
+                # If we are selected stop, this confuses with dragging from a design perspective
+                return
             
-            self.owner_model_view.select_userdomain_view( self, select )
+            self.owner_model_view.form.commit_selection( self.domain, toggle )
     
     
     def mouseDoubleClickEvent( self, m: QGraphicsSceneMouseEvent ):
@@ -618,10 +618,7 @@ class LegoView_Sequence:
         # Add new items
         previous_subsequence = None
         
-        switch = self.owner_model_view.options.domain_function
-        param = self.owner_model_view.options.domain_function_parameter
-        
-        userdomains_ = userdomains.by_enum( self.sequence, switch, param )
+        userdomains_ = self.owner_model_view.model.user_domains.by_sequence( self.sequence )
         
         for userdomain in userdomains_:
             subsequence_view = LegoView_UserDomain( userdomain, self, len( self.userdomain_views ), previous_subsequence )
@@ -631,7 +628,7 @@ class LegoView_Sequence:
     
     
     def paint_name( self, painter: QPainter ):
-        if not misc_helper.coalesce( self.owner_model_view.options.view_names, any( x.isSelected() for x in self.userdomain_views.values() ) ):
+        if not misc_helper.coalesce( self.owner_model_view.options.view_names, any( x.is_in_global_selection() for x in self.userdomain_views.values() ) ):
             return
         
         leftmost_subsequence = sorted( self.userdomain_views.values(), key = lambda xx: xx.pos().x() )[0]
@@ -784,15 +781,6 @@ class LegoView_AllEdges( QGraphicsItem ):
             sequence.paint_name( painter )
 
 
-class ILegoViewModelObserver:
-    def ILegoViewModelObserver_selection_changed( self ):
-        pass
-    
-    
-    def ILegoViewModelObserver_options_changed( self ):
-        pass
-
-
 class LookupTable:
     def __init__( self, type_: ESiteType ):
         self.type = type_
@@ -827,15 +815,15 @@ class LegoView_Model:
     """
     
     
-    def __init__( self, observer: ILegoViewModelObserver, view: QGraphicsView, model: LegoModel ) -> None:
+    def __init__( self, form, view: QGraphicsView, model: LegoModel ) -> None:
         """
-        CONSTRUCTOR
-        :param observer:                To who we report changes 
+        CONSTRUCTOR 
         :param view:                    To where we draw the view
         :param model:                   The model we represent
         """
+        from groot.frontends.gui.forms.frm_lego import FrmLego
+        self.form: FrmLego = form
         self.lookup_table = LookupTable( model.site_type )
-        self.observer: ILegoViewModelObserver = observer
         self.view: QGraphicsView = view
         self.model: LegoModel = model
         self.scene = QGraphicsScene()
@@ -863,21 +851,6 @@ class LegoView_Model:
         return self.model.ui_options
     
     
-    def _call_selection_changed( self ):
-        """
-        Calls the selection changed handler
-        We do this manually because the native Qt signal handler is raised for every slight change, and slows things down.
-        """
-        self.observer.ILegoViewModelObserver_selection_changed()
-    
-    
-    def _call_options_changed( self ):
-        """
-        Calls the options-changed handler
-        """
-        self.observer.ILegoViewModelObserver_options_changed()
-    
-    
     def update_edges( self ) -> LegoView_AllEdges:
         if self.edges_view:
             self.scene.removeItem( self.edges_view )
@@ -886,122 +859,6 @@ class LegoView_Model:
         self.scene.addItem( self.edges_view )
         
         return self.edges_view
-    
-    
-    def selected_userdomain_views( self ) -> Set[LegoView_UserDomain]:
-        result = set()
-        
-        for sequence_view in self.sequence_views.values():
-            for subsequence_view in sequence_view.userdomain_views.values():
-                if subsequence_view.isSelected():
-                    result.add( subsequence_view )
-        
-        return result
-    
-    
-    def selected_subsequence_expansions( self ) -> List[LegoSubsequence]:
-        """
-        This gets the list of selected subsequences, but joins together those which are adjacent.
-        :return: 
-        """
-        return LegoSubsequence.merge_list( list( self.selected_userdomains() ) )
-    
-    
-    def selected_userdomains( self ) -> Set[LegoUserDomain]:
-        """
-        Subsequences selected by the user
-        """
-        result = set( x.domain for x in self.selected_userdomain_views() )
-        
-        return result
-    
-    
-    def selected_domain( self ) -> Optional[LegoUserDomain]:
-        return array_helper.single_or_none( self.selected_userdomains() )
-    
-    
-    def selected_sequences( self ) -> Set[LegoSequence]:
-        """
-        Sequences selected by the user (complete or partial)
-        """
-        result = set( x.sequence for x in self.selected_userdomains() )
-        
-        return result
-    
-    
-    def selected_complete_sequences( self ) -> Set[LegoSequence]:
-        sel = self.selected_userdomains()
-        seqs = set( x.sequence for x in sel )
-        results = set()
-        
-        for seq in seqs:
-            if len( seq.subsequences ) == sum( x.sequence == seq for x in sel ):
-                results.add( seq )
-        
-        return results
-    
-    
-    def selected_complete_sequence( self ) -> Optional[LegoSequence]:
-        return array_helper.single_or_none( self.selected_complete_sequences() )
-    
-    
-    def selected_sequence( self ) -> Optional[LegoSequence]:
-        return array_helper.single_or_none( self.selected_sequences() )
-    
-    
-    def selected_edges( self, ) -> Set[LegoEdge]:
-        """
-        Edges selected by the user (complete or partial)
-        """
-        selected_subsequences = self.selected_userdomains()
-        
-        if len( selected_subsequences ) == 0:
-            return set()
-        
-        result = None  # type: Set[LegoEdge]
-        
-        for subsequence in selected_subsequences:
-            if result is None:
-                result = set( subsequence.edges )
-            else:
-                assert isinstance( result, set )
-                result = result.intersection( set( subsequence.edges ) )
-        
-        return result
-    
-    
-    def selected_edge( self ) -> Optional[LegoEdge]:
-        return array_helper.single_or_none( self.selected_edges() )
-    
-    
-    def selected_entities( self ) -> Set[ILegoVisualisable]:
-        mode = self.options.mode
-        
-        if mode == EMode.COMPONENT:
-            return self.selected_components()
-        elif mode == EMode.SUBSEQUENCE:
-            return self.selected_userdomains()
-        elif mode == EMode.SEQUENCE:
-            return self.selected_sequences()
-        elif mode == EMode.EDGE:
-            return self.selected_edges()
-        else:
-            raise SwitchError( "self.options.mode", mode )
-    
-    
-    def selected_components( self ) -> Set[LegoComponent]:
-        """
-        Components selected by the user (complete)
-        """
-        
-        r = set()
-        selected_userdomains = self.selected_subsequence_expansions()
-        
-        for component in self.model.components:
-            if all( any( λuserdomain.has_encompass( λsubsequence ) for λuserdomain in selected_userdomains ) for λsubsequence in component.minor_subsequences ):
-                r.add( component )
-        
-        return r
     
     
     def add_new_sequence( self, sequence: LegoSequence ):
@@ -1022,7 +879,6 @@ class LegoView_Model:
             self.add_new_sequence( sequence )
         
         self.recreate_edges()
-        self._call_selection_changed()
     
     
     def find_userdomain_views_for_subsequence( self, target: LegoSubsequence ):
@@ -1052,103 +908,12 @@ class LegoView_Model:
         self.scene.addItem( self.edges_view )
     
     
-    def remove_sequences( self, sequences: Iterable[LegoSequence] ):
-        for sequence in sequences:
-            sequence_view = self.find_sequence_view( sequence )
-            
-            for domain_view in sequence_view.userdomain_views:
-                self.scene.removeItem( domain_view )
-            
-            del self.sequence_views[sequence]
-        
-        self.update_edges()
-        self._call_selection_changed()
-    
-    
     def _clear_selection( self ):
         """
         Internal function (externally just use `select_all(ESelect.REMOVE)`, which calls the handler)
         """
         for x in self.userdomain_views.values():
             x.setSelected( False )
-    
-    
-    def select_left( self, select: ESelect = ESelect.APPEND ):
-        the_list = list( self.selected_userdomain_views() )
-        
-        with self.on_selecting( select ):
-            for subsequence_view in the_list:
-                x = subsequence_view.sibling_previous
-                
-                while x is not None:
-                    select.set( x )
-                    x = x.sibling_previous
-    
-    
-    def select_right( self, select: ESelect = ESelect.APPEND ):
-        the_list = list( self.selected_userdomain_views() )
-        
-        with self.on_selecting( select ):
-            for subsequence_view in the_list:
-                x = subsequence_view.sibling_next
-                
-                while x is not None:
-                    select.set( x )
-                    x = x.sibling_next
-    
-    
-    def select_direct_connections( self, select: ESelect = ESelect.APPEND ):
-        the_set = set( self.selected_userdomain_views() )
-        to_select = []
-        
-        for userdomain_view in the_set:
-            for edge in self.model.edges:
-                if edge.left.has_overlap( userdomain_view.domain ):
-                    to_select.append( edge.right )
-                elif edge.right.has_overlap( userdomain_view.domain ):
-                    to_select.append( edge.left )
-        
-        with self.on_selecting( select ) as select:
-            for subsequence in to_select:
-                self.select_overlapping_domains( subsequence, select )
-    
-    
-    def select_all( self, select: ESelect = ESelect.ONLY ) -> None:
-        """
-        Selects everything.
-        """
-        with self.on_selecting( select ) as select:
-            for subsequence_view in self.userdomain_views.values():
-                self.select_userdomain_view( subsequence_view, select )
-    
-    
-    def select_entity( self, entity: ILegoVisualisable, select: ESelect = ESelect.ONLY ):
-        if isinstance( entity, LegoSequence ):
-            self.select_sequence( entity, select )
-        elif isinstance( entity, LegoUserDomain ):
-            self.select_userdomain( entity, select )
-        elif isinstance( entity, LegoSubsequence ):
-            self.select_overlapping_domains( entity, select )
-        elif isinstance( entity, LegoEdge ):
-            self.select_edge( entity, select )
-        elif isinstance( entity, LegoComponent ):
-            self.select_component( entity, select )
-        else:
-            raise SwitchError( "entity", entity, instance = True )
-    
-    
-    def select_empty( self, select: ESelect = ESelect.ONLY ) -> None:
-        """
-        Selects subsequences with no `array` data.
-        """
-        self.select_all()
-        
-        for x in self.sequence_views.values():
-            if x.sequence.site_array is None:
-                for y in x.userdomain_views.values():
-                    select.set( y )
-        
-        self._call_selection_changed()
     
     
     def find_component_view( self, component: LegoComponent ) -> LegoView_Component:
@@ -1161,150 +926,3 @@ class LegoView_Model:
         :exception KeyError:
         """
         return self.sequence_views[sequence]
-    
-    
-    class __on_selecting:
-        def __init__( self, owner: "LegoView_Model", select: ESelect ):
-            assert isinstance( select, ESelect )
-            
-            self.owner = owner
-            self.select = select
-            self.original_updates = None
-            self.original_signals = None
-        
-        
-        def __enter__( self ):
-            if self.owner._selections == 0:
-                self.original_updates = self.owner.view.updatesEnabled()
-                self.original_signals = self.owner.view.signalsBlocked()
-                self.owner.view.setUpdatesEnabled( False )
-                self.owner.view.blockSignals( True )
-            
-            self.owner._selections += 1
-            
-            if self.select == ESelect.ONLY:
-                self.owner._clear_selection()
-                return ESelect.APPEND
-            
-            return self.select
-        
-        
-        def __exit__( self, exc_type, exc_val, exc_tb ):
-            self.owner._selections -= 1
-            assert self.owner._selections >= 0
-            
-            if self.owner._selections == 0:
-                self.owner.view.setUpdatesEnabled( self.original_updates )
-                self.owner.view.blockSignals( self.original_signals )
-                self.owner._call_selection_changed()
-    
-    
-    def on_selecting( self, select ):
-        return self.__on_selecting( self, select )
-    
-    
-    def select_edge( self, edge: LegoEdge, select: ESelect = ESelect.ONLY ):
-        """
-        Selects the specified `LegoEdge`.
-        If the selection mode is SEQUENCE or COMPONENT, the selection will be expanded accordingly.
-        """
-        with self.on_selecting( select ) as select:
-            if self.options.mode == EMode.SEQUENCE:
-                self.select_sequence( edge.left.sequence, select )
-                self.select_sequence( edge.right.sequence, select )
-            else:
-                for side in (edge.left, edge.right):
-                    for subsequence in side:
-                        self.select_userdomain( subsequence, select )  # nb. this expands for mode == COMPONENT for us
-    
-    
-    def select_component( self, component: LegoComponent, select: ESelect = ESelect.ONLY ):
-        """
-        Selects the specified `LegoComponent`.
-        If the selection mode is SEQUENCE, the selection will be expanded accordingly.
-        """
-        with self.on_selecting( select ) as select:
-            if self.options.mode == EMode.SEQUENCE:
-                for sequence in component.minor_sequences:
-                    self.select_sequence( sequence, select )
-            else:
-                for subsequence in component.minor_subsequences:
-                    for userdomain in self.find_userdomain_views_for_subsequence( subsequence ):
-                        self.select_userdomain_view( userdomain, select, True )
-    
-    
-    def select_sequence( self, sequence: LegoSequence, select: ESelect = ESelect.ONLY ):
-        """
-        Selects the specified `LegoSequence`.
-        If the selection mode is COMPONENT, the selection will be expanded accordingly.
-        """
-        with self.on_selecting( select ) as select:
-            if self.options.mode == EMode.SEQUENCE:
-                sequence_view = self.find_sequence_view( sequence )
-                
-                for subsequence_view in sequence_view.userdomain_views.values():
-                    self.select_userdomain_view( subsequence_view, select )
-            elif self.options.mode == EMode.COMPONENT:
-                component = self.model.components.find_component_for_major_sequence( sequence )
-                self.select_component( component, select )
-            else:
-                for domain_view in self.userdomain_views.values():
-                    if domain_view.domain.sequence is sequence:
-                        self.select_userdomain_view( domain_view, select )
-    
-    
-    def select_overlapping_domains( self, subsequence: LegoSubsequence, select: ESelect = ESelect.ONLY ):
-        """
-        Selects domain views that overlap the specified subsequence.
-        """
-        with self.on_selecting( select ) as select:
-            for domain_view in self.userdomain_views.values():
-                if domain_view.domain.has_overlap( subsequence ):
-                    self.select_userdomain_view( domain_view, select )
-    
-    
-    def select_userdomain_view( self, userdomain_view: LegoView_UserDomain, select: ESelect = ESelect.ONLY, absolute: bool = False ):
-        """
-        Selects the specified `LegoSubsequence`.
-        Unlike `select_userdomain` this does not account for the current selection mode and hence is a private function.
-        """
-        with self.on_selecting( select ) as select:
-            if self.options.mode == EMode.SUBSEQUENCE or self.options.mode == EMode.EDGE or absolute:
-                self.__select_subsequence_view( select, userdomain_view )
-            elif self.options.mode == EMode.SEQUENCE:
-                for sibling_view in userdomain_view.owner_sequence_view.userdomain_views.values():
-                    self.__select_subsequence_view( select, sibling_view )
-            elif self.options.mode == EMode.COMPONENT:
-                for component in self.model.components.find_components_for_minor_subsequence( userdomain_view.domain ):
-                    self.select_component( component, select )
-            else:
-                raise SwitchError( "self.options.mode", self.options.mode )
-    
-    
-    def __select_subsequence_view( self, select, subsequence_view ):
-        if select == ESelect.APPEND:
-            subsequence_view.setSelected( True )
-        elif select == ESelect.REMOVE:
-            subsequence_view.setSelected( False )
-        elif select == ESelect.TOGGLE:
-            subsequence_view.setSelected( not subsequence_view.isSelected() )
-        else:
-            raise SwitchError( "ESelect.set(item)", select )
-    
-    
-    def select_userdomain( self, userdomain: LegoUserDomain, select: ESelect = ESelect.ONLY, absolute: bool = False ):
-        """
-        Selects the specified `LegoSubsequence`.
-        If the selection mode is SEQUENCE or COMPONENT, the selection will be expanded accordingly.
-        """
-        with self.on_selecting( select ) as select:
-            if absolute or self.options.mode == EMode.EDGE or self.options.mode == EMode.SUBSEQUENCE:
-                view = self.find_domain_view( userdomain )
-                self.select_userdomain_view( view, select, absolute )
-            elif self.options.mode == EMode.SEQUENCE:
-                self.select_sequence( userdomain.sequence, select )
-            elif self.options.mode == EMode.COMPONENT:
-                for component in self.model.components.find_components_for_minor_subsequence( userdomain ):
-                    self.select_component( component, select )
-            else:
-                raise SwitchError( "self.options.mode", self.options.mode )

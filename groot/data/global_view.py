@@ -3,12 +3,23 @@ from typing import cast
 from os import path
 
 from groot.data.lego_model import LegoModel
+from groot.frontends.gui.gui_view_utils import LegoSelection
 from intermake import MENV, PathToVisualisable
 from intermake.hosts.console import ConsoleHost
 from mhelper import file_helper
 
 
-__model = cast( LegoModel, None )
+__model: LegoModel = None
+__selection: LegoSelection = LegoSelection()
+__selection_changed = set()
+
+
+def subscribe_to_selection_changed( fn ):
+    __selection_changed.add( fn )
+
+
+def unsubscribe_from_selection_changed( fn ):
+    __selection_changed.remove( fn )
 
 
 def current_status():
@@ -31,12 +42,24 @@ class _current_status:
         self.num_sequences = len( model.sequences )
         self.num_components = len( model.components )
         self.num_alignments = sum( len( x.minor_subsequences ) for x in model.components if x.alignment )
-        self.num_trees = sum(1 for x in model.components if x.tree)
-        self.num_fusions = len(model.fusion_events)
+        self.num_trees = sum( 1 for x in model.components if x.tree )
+        self.num_fusions = len( model.fusion_events )
 
 
 def current_model() -> LegoModel:
     return __model
+
+
+def current_selection() -> LegoSelection:
+    return __selection
+
+
+def set_selection( value: LegoSelection ):
+    global __selection
+    __selection = value
+    
+    for fn in __selection_changed:
+        fn()
 
 
 def set_model( model ):
