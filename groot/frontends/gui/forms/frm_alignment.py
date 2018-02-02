@@ -180,6 +180,8 @@ class FrmAlignment( FrmBase ):
         self.seq_view = AlignmentViewWidget( None, self )
         self.seq_view.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
         self.ui.GRID_MAIN.addWidget( self.seq_view, 0, 0 )
+        self.actions.bind_to_label(self.ui.LBL_SELECTION_WARNING)
+        self.actions.bind_to_select(self.ui.BTN_SELECTION)
     
     
     def update_view( self ):
@@ -194,11 +196,7 @@ class FrmAlignment( FrmBase ):
         self.ui.SCR_MAIN.valueChanged[int].connect( self.on_scroll_value_changed )
         self.ui.BTN_SELECTION.setText( str( selection ) )
         
-        
-        
         component = array_helper.first_or_none( selection.components )
-        
-        
         
         if component:
             self.ui.LBL_SELECTION_WARNING.setVisible( False )
@@ -245,4 +243,4 @@ class FrmAlignment( FrmBase ):
         """
         Signal handler:
         """
-        self.show_selection_menu()
+        pass

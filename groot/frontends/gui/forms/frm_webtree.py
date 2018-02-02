@@ -7,7 +7,9 @@ from groot.frontends.gui.forms.designer import frm_webtree_designer
 import intermake
 from groot.algorithms import graph_viewing
 from groot.data.lego_model import LegoComponent, LegoNrfg
-from groot.frontends.gui.forms.frm_base import ESelMenu, FrmBase
+from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.frontends.gui.gui_view_utils import ESelMenu
+from groot.data import global_view
 from intermake.engine.environment import MENV
 from mhelper import file_helper
 from mhelper_qt import exceptToGui, exqtSlot
@@ -29,6 +31,11 @@ class FrmWebtree( FrmBase ):
         self.__file_name = None
         self.browser = None
         
+        self.actions.bind_to_select( self.ui.BTN_SELECTION, ESelMenu.META_GRAPHS )
+        self.actions.bind_to_label( self.ui.LBL_NO_TREES_WARNING )
+        self.actions.bind_to_label( self.ui.LBL_NO_VISJS_WARNING )
+        self.actions.bind_to_label( self.ui.LBL_SELECTION_WARNING )
+        
         self.update_trees()
     
     
@@ -46,9 +53,12 @@ class FrmWebtree( FrmBase ):
     
     def update_trees( self ):
         selection = self.get_selection()
-        sel_text = str( selection )
         model = self.get_model()
+        status = global_view.current_status()
         trees = []
+        
+        self.ui.LBL_NO_VISJS_WARNING.setVisible( not global_view.options().visjs_path )
+        self.ui.LBL_NO_TREES_WARNING.setVisible( not status.trees )
         
         for item in selection:
             if isinstance( item, LegoComponent ):
@@ -56,16 +66,16 @@ class FrmWebtree( FrmBase ):
             elif isinstance( item, LegoNrfg ):
                 trees.append( item.graph )
             else:
-                self.ui.BTN_SELECTION.setText( sel_text + " (no trees)" )
                 self.file_name = None
+                self.ui.LBL_SELECTION_WARNING.setVisible( True )
                 return
         
         if not trees:
-            self.ui.BTN_SELECTION.setText( sel_text + " (no trees)" )
             self.file_name = None
+            self.ui.LBL_SELECTION_WARNING.setVisible( True )
             return
         
-        self.ui.BTN_SELECTION.setText( sel_text + " ({} trees)".format( len( trees ) ) )
+        self.ui.LBL_SELECTION_WARNING.setVisible( False )
         
         visjs = graph_viewing.create_vis_js( None, trees, model, title = False )
         self.file_name = path.join( MENV.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "temporary_visjs.html" )
@@ -81,7 +91,7 @@ class FrmWebtree( FrmBase ):
     
     
     @exqtSlot()
-    def on_BTN_OPTIONS_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'BTN_OPTIONS' does not appear in the designer file.
+    def on_BTN_OPTIONS_clicked( self ) -> None:  # TODO: BAD_HANDLER - The widget 'BTN_OPTIONS' does not appear in the designer file.
         """
         Signal handler:
         """
@@ -120,4 +130,4 @@ class FrmWebtree( FrmBase ):
         """
         Signal handler:
         """
-        self.show_selection_menu( ESelMenu.META_GRAPHS )
+        pass  # intentional

@@ -5,6 +5,7 @@ from os import path
 from groot.data.lego_model import LegoModel
 from groot.frontends.gui.gui_view_utils import LegoSelection
 from intermake import MENV, PathToVisualisable
+from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
 from mhelper import file_helper
 
@@ -95,3 +96,45 @@ def get_sample_data_folder():
     Obtains the sample data folder
     """
     return path.join( file_helper.get_directory( __file__, 2 ), "sampledata" )
+
+
+class GlobalOptions:
+    """
+    :attr recent_files: Files recently accessed.
+    :attr visjs_path:   Path to locate vis-js.
+    """
+    
+    
+    def __init__( self ):
+        self.recent_files = []
+        self.visjs_path = ""
+
+
+__global_options = None
+
+
+def options() -> GlobalOptions:
+    global __global_options
+    
+    if __global_options is None:
+        __global_options = MENV.local_data.store.get_and_init( "lego-options", GlobalOptions() )
+    
+    return __global_options
+
+
+def remember_file( file_name: str ) -> None:
+    """
+    PRIVATE
+    Adds a file to the recent list
+    """
+    opt = options()
+    
+    if file_name in opt.recent_files:
+        opt.recent_files.remove( file_name )
+    
+    opt.recent_files.append( file_name )
+    
+    while len( opt.recent_files ) > 10:
+        del opt.recent_files[0]
+    
+    MENV.local_data.store["lego-options"] = opt

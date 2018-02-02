@@ -2,12 +2,11 @@ from PyQt5.QtWidgets import QTreeWidgetItem
 from groot.frontends.gui.forms.designer import frm_debug_designer
 
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.gui_view import ILegoViewModelObserver
 from groot.frontends.gui.gui_view_utils import EChanges
 from mhelper_qt import exceptToGui
 
 
-class FrmDebug( FrmBase, ILegoViewModelObserver ):
+class FrmDebug( FrmBase ):
     @exceptToGui()
     def __init__( self, parent ):
         """

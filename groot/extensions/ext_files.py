@@ -3,14 +3,14 @@ import sys
 from os import path
 from typing import Optional
 
+import groot.data.global_view
 from groot import constants
 from groot.algorithms import importation, marshal
-from groot.data import global_view, user_options
+from groot.data import global_view
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, PathToVisualisable, command, console_explorer
 from intermake.engine.theme import Theme
-
-from mhelper import file_helper, io_helper, Filename, EFileMode, MOptional
+from mhelper import EFileMode, Filename, MOptional, file_helper
 
 
 __mcmd_folder_name__ = "Files"
@@ -113,10 +113,10 @@ def file_load_last():
     """
     Loads the last file from the recent list.
     """
-    if not user_options.options().recent_files:
+    if not groot.data.global_view.options().recent_files:
         raise ValueError( "Cannot load the last session because there are no recent sessions." )
     
-    file_load( user_options.options().recent_files[-1] )
+    file_load( groot.data.global_view.options().recent_files[-1] )
 
 
 @command( names = ["file_recent", "recent"] )
@@ -132,7 +132,7 @@ def file_recent():
             r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     r.append( "\nRECENT:" )
-    for file in user_options.options().recent_files:
+    for file in groot.data.global_view.options().recent_files:
         if file.lower().endswith( constants.BINARY_EXTENSION ):
             r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
@@ -156,7 +156,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None
     if not file_name:
         raise ValueError( "Cannot save because a filename has not been specified." )
     
-    user_options.remember_file( file_name )
+    groot.data.global_view.remember_file( file_name )
     
     sys.setrecursionlimit( 10000 )
     
@@ -203,7 +203,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     file_name = __fix_path( file_name )
     model = marshal.load_from_file( file_name )
     global_view.set_model( model )
-    user_options.remember_file( file_name )
+    groot.data.global_view.remember_file( file_name )
     MCMD.print( "Loaded model: {}".format( file_name ) )
     
     return EChanges.MODEL_OBJECT

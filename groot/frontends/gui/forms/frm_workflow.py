@@ -1,18 +1,9 @@
-from PyQt5.QtWidgets import QFileDialog
 from groot.frontends.gui.forms.designer import frm_workflow_designer
 
-from groot import extensions, constants
 from groot.data import global_view
-from groot.frontends.gui.forms.frm_alignment import FrmAlignment
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.forms.frm_big_text import FrmBigText
-from groot.frontends.gui.forms.frm_fusions import FrmFusions
-from groot.frontends.gui.forms.frm_lego import FrmLego
-from groot.frontends.gui.forms.frm_samples import FrmSamples
-from groot.frontends.gui.forms.frm_webtree import FrmWebtree
 from groot.frontends.gui.gui_view_utils import EChanges
-from mhelper import SwitchError
-from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
+from mhelper_qt import exceptToGui, exqtSlot
 
 
 class FrmWorkflow( FrmBase ):
@@ -83,7 +74,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        extensions.ext_files.file_new.run()
+        self.actions.new_model()
     
     
     @exqtSlot()
@@ -91,7 +82,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmSamples )
+        self.actions.show_samples_form()
     
     
     @exqtSlot()
@@ -109,12 +100,9 @@ class FrmWorkflow( FrmBase ):
             choice = self.show_menu( OPTION_1, OPTION_2 )
         
         if choice == OPTION_1:
-            extensions.ext_files.file_save( model.file_name )
+            self.actions.save_model()
         elif choice == OPTION_2:
-            file_name = qt_gui_helper.browse_save( self, constants.DIALOGUE_FILTER )
-            
-            if file_name:
-                extensions.ext_files.file_save( file_name )
+            self.actions.save_model_as()
     
     
     @exqtSlot()
@@ -122,25 +110,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        filters = "Valid files (*.fasta *.fa *.faa *.blast *.tsv *.composites *.txt *.comp)", "FASTA files (*.fasta *.fa *.faa)", "BLAST output (*.blast *.tsv)", "Composite finder output (*.composites)"
-        
-        file_name, filter = QFileDialog.getOpenFileName( self, "Select file", None, ";;".join( filters ), options = QFileDialog.DontUseNativeDialog )
-        
-        if not file_name:
-            return
-        
-        filter_index = filters.index( filter )
-        
-        if filter_index == 0:
-            extensions.ext_files.import_file( self._model, file_name )
-        elif filter_index == 0:
-            extensions.ext_files.import_fasta( self._model, file_name )
-        elif filter_index == 1:
-            extensions.ext_files.import_blast( self._model, file_name )
-        elif filter_index == 2:
-            extensions.ext_files.import_composites( self._model, file_name )
-        else:
-            raise SwitchError( "filter_index", filter_index )
+        self.actions.import_file()
     
     
     @exqtSlot()
@@ -148,7 +118,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmBigText )
+        self.actions.show_text_form()
     
     
     @exqtSlot()
@@ -156,7 +126,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_generating.make_components )
+        self.actions.create_components()
     
     
     @exqtSlot()
@@ -164,7 +134,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_dropping.drop_components )
+        self.actions.drop_components()
     
     
     @exqtSlot()
@@ -172,7 +142,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmLego )
+        self.actions.show_lego_form()
     
     
     @exqtSlot()
@@ -180,7 +150,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_generating.make_alignments )
+        self.actions.create_alignments()
     
     
     @exqtSlot()
@@ -188,7 +158,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_dropping.drop_alignment )
+        self.actions.drop_alignments()
     
     
     @exqtSlot()
@@ -196,7 +166,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmAlignment )
+        self.actions.show_alignments_form()
     
     
     @exqtSlot()
@@ -204,7 +174,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_generating.make_trees )
+        self.actions.create_trees()
     
     
     @exqtSlot()
@@ -212,7 +182,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_dropping.drop_tree )
+        self.actions.drop_trees()
     
     
     @exqtSlot()
@@ -220,7 +190,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmWebtree )
+        self.actions.show_tree_form()
     
     
     @exqtSlot()
@@ -228,7 +198,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_generating.make_fusions )
+        self.actions.create_fusions()
     
     
     @exqtSlot()
@@ -236,7 +206,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_dropping.drop_fusions )
+        self.actions.drop_fusions()
     
     
     @exqtSlot()
@@ -244,7 +214,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmFusions )
+        self.actions.show_fusion_form()
     
     
     @exqtSlot()
@@ -252,7 +222,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_generating.make_nrfg )
+        self.actions.create_nrfg()
     
     
     @exqtSlot()
@@ -260,7 +230,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.request( extensions.ext_dropping.drop_nrfg )
+        self.actions.drop_nrfg()
     
     
     @exqtSlot()
@@ -268,4 +238,4 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.show_form( FrmWebtree )
+        self.actions.show_tree_form()

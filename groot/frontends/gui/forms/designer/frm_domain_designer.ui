@@ -29,7 +29,7 @@
    <item>
     <widget class="QLabel" name="LBL_DATA_WARNING">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;file_load&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Load data&lt;/span&gt;&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;action:show_samples_form&quot;&gt;Load data&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -114,7 +114,7 @@
      <item>
       <widget class="QLabel" name="LBL_COMPONENT_WARNING">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires components. &lt;a href=&quot;make_components&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Create components&lt;/span&gt;&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires components. &lt;a href=&quot;action:create_components&quot;&gt;Create components&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="style" stdset="0">
         <string>warning</string>

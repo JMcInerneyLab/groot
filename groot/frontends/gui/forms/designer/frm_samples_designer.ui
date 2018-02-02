@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data is currently loaded. &lt;a href=&quot;FrmWorkflow&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Close&lt;/span&gt;&lt;/a&gt; the current first, or visit the &lt;a href=&quot;workflow&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;workflow&lt;/span&gt;&lt;/a&gt; to manipulate your data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data is currently loaded. &lt;a href=&quot;action:new_model&quot;&gt;Close&lt;/a&gt; the current first, or visit the &lt;a href=&quot;action:show_workflow_form&quot;&gt;workflow&lt;/a&gt; to manipulate your data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>

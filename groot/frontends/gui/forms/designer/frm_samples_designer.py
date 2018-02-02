@@ -56,7 +56,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.LBL_HAS_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Data is currently loaded. <a href=\"FrmWorkflow\"><span style=\" text-decoration: underline; color:#0000ff;\">Close</span></a> the current first, or visit the <a href=\"workflow\"><span style=\" text-decoration: underline; color:#0000ff;\">workflow</span></a> to manipulate your data.</p></body></html>"))
+        self.LBL_HAS_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Data is currently loaded. <a href=\"action:new_model\">Close</a> the current first, or visit the <a href=\"action:show_workflow_form\">workflow</a> to manipulate your data.</p></body></html>"))
         self.LBL_HAS_DATA_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.FRA_RECENT_2.setTitle(_translate("Dialog", "File system"))
         self.BTN_BROWSE.setText(_translate("Dialog", "Browse"))

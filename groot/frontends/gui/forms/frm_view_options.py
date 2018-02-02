@@ -92,3 +92,24 @@ class FrmViewOptions( FrmBase ):
             
             for k, v in mapping.items():
                 v.setChecked( value == k )
+@exqtSlot()
+            def on_BTN_CLEAR_RECENT_clicked(self) -> None:
+                """
+                Signal handler:
+                """
+                pass
+            
+@exqtSlot()
+            def on_BTN_VISJS_clicked(self) -> None:
+                """
+                Signal handler:
+                """
+                pass
+            
+@exqtSlot()
+            def on_BTN_INTERMAKE_ADVANCED_clicked(self) -> None:
+                """
+                Signal handler:
+                """
+                pass
+            

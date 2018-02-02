@@ -83,7 +83,7 @@ class Ui_Dialog(object):
         self.LBL_POSITION_START.setText(_translate("Dialog", "0"))
         self.LBL_POSITION_END.setText(_translate("Dialog", "0"))
         self.BTN_END.setText(_translate("Dialog", "End"))
-        self.LBL_SELECTION_WARNING.setText(_translate("Dialog", "Select a single component to view its alignment."))
+        self.LBL_SELECTION_WARNING.setText(_translate("Dialog", "<a href=\"action:show_selection\">Select</a> a single component to view its alignment."))
         self.LBL_SELECTION_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.LBL_INFO.setText(_translate("Dialog", "Alignment information"))
 

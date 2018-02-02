@@ -9,7 +9,6 @@ from groot.frontends.gui.forms.designer import frm_lego_designer
 from groot.algorithms import layout
 from groot.data.lego_model import LegoUserDomain
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.forms.frm_domain import FrmDomain
 from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
 from groot.frontends.gui.gui_view import LegoView_Model
 from groot.frontends.gui.gui_view_utils import EChanges, LegoSelection, MyView
@@ -49,11 +48,9 @@ class FrmLego( FrmBase ):
         
         self.model_view: LegoView_Model = None
         self.update_view()
+        self.actions.bind_to_label(self.ui.LBL_NO_DOMAINS)
+        self.actions.bind_to_select(self.ui.BTN_CHANGE_SELECTION)
     
-    
-    @exqtSlot( str )
-    def on_LBL_NO_DOMAINS_linkActivated( self, _: str ):
-        self.show_form( FrmDomain )
     
     
     def on_plugin_completed( self, changes: EChanges ):
@@ -156,4 +153,4 @@ class FrmLego( FrmBase ):
         """
         Signal handler:
         """
-        self.show_selection_menu()
+        pass

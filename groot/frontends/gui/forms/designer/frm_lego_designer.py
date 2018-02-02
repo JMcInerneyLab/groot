@@ -97,7 +97,7 @@ class Ui_Dialog(object):
         self.BTN_ALIGN.setText(_translate("Dialog", "Align"))
         self.BTN_ALIGN.setProperty("style", _translate("Dialog", "dropdown"))
         self.BTN_OPTIONS.setText(_translate("Dialog", "Options..."))
-        self.LBL_NO_DOMAINS.setText(_translate("Dialog", "<html><head/><body><p>You have no domains defined, all genes will be shown as one domain. You need to <a href=\"make_domains\"><span style=\" text-decoration: underline; color:#0000ff;\">generate domains</span></a> first.</p></body></html>"))
+        self.LBL_NO_DOMAINS.setText(_translate("Dialog", "<html><head/><body><p>You have no domains defined, all genes will be shown as one domain. You need to <a href=\"action:show_domain_form\">generate domains</a> first.</p></body></html>"))
         self.LBL_NO_DOMAINS.setProperty("style", _translate("Dialog", "warning"))
 
 

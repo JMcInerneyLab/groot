@@ -1,6 +1,5 @@
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QLayout
 from groot.frontends.gui.forms.designer import frm_windows_designer
 
 from groot.frontends.gui.forms.frm_alignment import FrmAlignment

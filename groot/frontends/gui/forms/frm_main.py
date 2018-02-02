@@ -1,15 +1,17 @@
 from typing import Dict, Type
-from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
-from intermake import AsyncResult, IGuiPluginHostWindow, intermake_gui
-from intermake.hosts.frontends.gui_qt.frm_intermake_main import FrmIntermakeMain
+
 from PyQt5.QtCore import QCoreApplication, Qt
-from PyQt5.QtGui import QColor, QCloseEvent
+from PyQt5.QtGui import QCloseEvent, QColor
 from PyQt5.QtWidgets import QMainWindow, QMdiSubWindow
+from groot.frontends.gui.forms.designer import frm_main_designer
 
 from groot.data import global_view
-from groot.frontends.gui.forms.designer import frm_main_designer
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
+from intermake import AsyncResult, IGuiPluginHostWindow, intermake_gui
+from intermake.engine.environment import MENV
+from mhelper import file_helper, SwitchError
+from mhelper_qt import exceptToGui, qt_gui_helper
 
 
 class FrmMain( QMainWindow, IGuiPluginHostWindow ):
@@ -37,15 +39,45 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         self.COLOUR_NOT_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea.background', "#C0C0C0" ) )
         
         self.ui.MDI_AREA.setBackground( self.COLOUR_EMPTY )
+        self.ui.MDI_AREA.setVisible( False )
         
         self.showMaximized()
         
         self.mdi_mode = False
         
         global_view.subscribe_to_selection_changed( self.on_selection_changed )
+        
+        from groot.frontends.gui.gui_menu import GuiMenu
+        self.actions = GuiMenu( self )
+        
+        txt = self.ui.LBL_FIRST_MESSAGE.text()
+        
+        txt = txt.replace( "$(VERSION)", MENV.version )
+        r = []
+        
+        r.append( "<h3>Recent files</h3><ul>" )
+        
+        for file in reversed( global_view.options().recent_files ):
+            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file, file_helper.get_filename_without_extension( file ) ) )
+        
+        r.append( '<li><a href="action:browse_open"><i>browse...</i></a></li>' )
+        r.append( "</ul>" )
+        
+        r.append( "<h3>Sample data</h3><ul>" )
+        
+        for file in global_view.get_samples():
+            r.append( '<li><a href="load_sample:{}">{}</a><li/>'.format( file, file_helper.get_filename_without_extension( file ) ) )
+        
+        r.append( '<li><a href="action:show_samples_form"><i>browse...</i></a></li>' )
+        r.append( "</ul>" )
+        
+        txt = txt.replace( "$(RECENT_FILES)", "\n".join( r ) )
+        
+        self.ui.LBL_FIRST_MESSAGE.setText( txt )
+        self.actions.gui_actions.bind_to_label( self.ui.LBL_FIRST_MESSAGE )
     
     
-    def closeEvent( self, e : QCloseEvent ):
+    def closeEvent( self, e: QCloseEvent ):
         global_view.unsubscribe_from_selection_changed( self.on_selection_changed )
     
     
@@ -55,6 +87,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def plugin_completed( self, result: AsyncResult ) -> None:
+        self.actions.gui_actions.dismiss_startup_screen()
         self.statusBar().showMessage( str( result ) )
         
         if result.is_error:
@@ -84,6 +117,8 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def show_form( self, form_class ):
+        self.actions.gui_actions.dismiss_startup_screen()
+        
         if form_class in self._mdi:
             form = self._mdi[form_class]
             form.setFocus()
@@ -99,110 +134,3 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         form.show()
         self._mdi[form_class] = form
         self.ui.MDI_AREA.setBackground( self.COLOUR_NOT_EMPTY )
-    
-    
-    @exqtSlot()
-    def on_ACT_WORKFLOW_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
-        self.show_form( FrmWorkflow )
-    
-    
-    @exqtSlot()
-    def on_ACT_WIZARD_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_wizard import FrmWizard
-        self.show_form( FrmWizard )
-    
-    
-    @exqtSlot()
-    def on_ACT_LEGO_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_lego import FrmLego
-        self.show_form( FrmLego )
-    
-    
-    @exqtSlot()
-    def on_ACT_TREE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_webtree import FrmWebtree
-        self.show_form( FrmWebtree )
-    
-    
-    @exqtSlot()
-    def on_ACT_TEXT_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_big_text import FrmBigText
-        self.show_form( FrmBigText )
-    
-    
-    @exqtSlot()
-    def on_ACT_ENTITIES_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
-        self.show_form( FrmSelectionList )
-    
-    
-    @exqtSlot()
-    def on_ACT_ALIGNMENTS_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_alignment import FrmAlignment
-        self.show_form( FrmAlignment )
-    
-    
-    @exqtSlot()
-    def on_ACT_FUSION_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_fusions import FrmFusions
-        self.show_form( FrmFusions )
-    
-    
-    @exqtSlot()
-    def on_ACT_SAMPLES_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_samples import FrmSamples
-        self.show_form( FrmSamples )
-    
-    
-    @exqtSlot()
-    def on_ACT_INTERMAKE_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.show_form( FrmIntermakeMain )
-    
-    
-    @exqtSlot()
-    def on_ACT_DOMAIN_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_domain import FrmDomain
-        self.show_form( FrmDomain )
-    
-    
-    @exqtSlot()
-    def on_ACT_DEBUG_triggered( self ) -> None:
-        """
-        Signal handler:
-        """
-        from groot.frontends.gui.forms.frm_debug import FrmDebug
-        self.show_form( FrmDebug )

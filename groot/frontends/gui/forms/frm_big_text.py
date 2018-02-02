@@ -20,6 +20,7 @@ class FrmBigText( FrmBase ):
         
         self.ANSI_SCHEME = qt_gui_helper.ansi_scheme_dark( family = 'Consolas,"Courier New",monospace' )
         self.on_refresh_data()
+        self.actions.bind_to_select(self.ui.BTN_SELECTION)
     
     
     def on_refresh_data( self ):
@@ -49,7 +50,7 @@ class FrmBigText( FrmBase ):
         """
         Signal handler:
         """
-        self.show_selection_menu()
+        pass #intentional
     
     
     @exqtSlot()

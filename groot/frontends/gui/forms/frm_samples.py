@@ -1,15 +1,15 @@
-from PyQt5.QtWidgets import QPushButton, QGridLayout, QCommandLinkButton
-from groot.frontends.gui.forms.designer import frm_samples_designer
 from typing import List
 
-from groot.frontends.gui.forms.frm_base import FrmBase
+from PyQt5.QtWidgets import QCommandLinkButton, QGridLayout, QPushButton
+from groot.frontends.gui.forms.designer import frm_samples_designer
+from groot.frontends.gui.forms.resources import resources
 
+import groot.data.global_view
+from groot.data import global_view
+from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
 from mhelper import file_helper
-from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
-from groot.data import global_view, user_options
-from groot import extensions, constants
-from groot.frontends.gui.forms.resources import resources
+from mhelper_qt import exceptToGui, exqtSlot
 
 
 class FrmSamples( FrmBase ):
@@ -45,7 +45,7 @@ class FrmSamples( FrmBase ):
         self.ui.FRA_RECENT.setLayout( layout )
         x, y = 0, 0
         
-        for recent_file in reversed( user_options.options().recent_files ):
+        for recent_file in reversed( groot.data.global_view.options().recent_files ):
             button = QCommandLinkButton()
             button.setText( file_helper.get_filename_without_extension( recent_file ) )
             button.setStatusTip( recent_file )
@@ -60,18 +60,17 @@ class FrmSamples( FrmBase ):
                 y += 1
         
         self.update_buttons()
+        self.actions.bind_to_label(self.ui.LBL_HAS_DATA_WARNING)
     
     
     def _select_sample_data( self, _: bool ):
         sender: QPushButton = self.sender()
-        
-        extensions.ext_files.file_sample( sender.text() )
+        self.actions.load_sample(sender.text())
     
     
     def _select_recent_file( self, _: bool ):
         sender: QPushButton = self.sender()
-        
-        extensions.ext_files.file_load( sender.statusTip() )
+        self.actions.load_file(sender.statusTip())
     
     
     def on_plugin_completed( self, change: EChanges ):
@@ -92,18 +91,9 @@ class FrmSamples( FrmBase ):
         return status
     
     
-    @exqtSlot( str )
-    def on_LBL_HAS_DATA_WARNING_linkActivated( self, _: str ):
-        from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
-        self.show_form( FrmWorkflow )
-    
-    
     @exqtSlot()
     def on_BTN_BROWSE_clicked( self ) -> None:
         """
         Signal handler:
         """
-        file_name = qt_gui_helper.browse_open( self, constants.DIALOGUE_FILTER )
-        
-        if file_name:
-            extensions.ext_files.file_load( file_name )
+        self.actions.browse_open()

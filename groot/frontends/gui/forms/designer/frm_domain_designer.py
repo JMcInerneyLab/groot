@@ -153,13 +153,13 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.LBL_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires sequences. <a href=\"file_load\"><span style=\" text-decoration: underline; color:#0000ff;\">Load data</span></a> first.</p></body></html>"))
+        self.LBL_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires sequences. <a href=\"action:show_samples_form\">Load data</a> first.</p></body></html>"))
         self.LBL_DATA_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.LBL_MAIN.setText(_translate("Dialog", "You currently have no domains defined."))
         self.RAD_EXISTING.setText(_translate("Dialog", "Keep existing domains"))
         self.RAD_NO.setText(_translate("Dialog", "No domains"))
         self.RAD_AUTO.setText(_translate("Dialog", "Automated domain detection"))
-        self.LBL_COMPONENT_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires components. <a href=\"make_components\"><span style=\" text-decoration: underline; color:#0000ff;\">Create components</span></a> first.</p></body></html>"))
+        self.LBL_COMPONENT_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires components. <a href=\"action:create_components\">Create components</a> first.</p></body></html>"))
         self.LBL_COMPONENT_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.RAD_SIZE.setText(_translate("Dialog", "Equally sized domains"))
         self.label_4.setText(_translate("Dialog", "- each with"))

@@ -1,19 +1,9 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
-
-from groot.data import global_view
 from groot.frontends.gui.forms.designer import frm_fusions_designer
 
-from groot.frontends.gui.forms.frm_alignment import FrmAlignment
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.forms.frm_big_text import FrmBigText
-from groot.frontends.gui.forms.frm_lego import FrmLego
-from groot.frontends.gui.forms.frm_samples import FrmSamples
-from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
-from groot.frontends.gui.forms.frm_webtree import FrmWebtree
-from groot.frontends.gui.gui_view_utils import EChanges
 from mhelper import string_helper
-from mhelper_qt import exqtSlot, exceptToGui
-from groot import extensions
+from mhelper_qt import exceptToGui
 
 
 class FrmFusions( FrmBase ):

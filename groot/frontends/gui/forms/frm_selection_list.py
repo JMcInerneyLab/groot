@@ -28,6 +28,8 @@ class FrmSelectionList( FrmBase ):
         self.ui.RAD_OTHER.toggled[bool].connect( self.__on_radio_changed )
         
         self.ui.LST_MAIN.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
+        
+        self.actions.bind_to_label( self.ui.LBL_NO_DATA_WARNING )
     
     
     def __on_item_changed( self, list_item: Any, column: int ):
@@ -39,17 +41,13 @@ class FrmSelectionList( FrmBase ):
     
     def __on_radio_changed( self, _: bool ):
         self.__refresh_lists()
-        
-    def on_LBL_NO_DATA_WARNING_linkActivated( self, _:str ):
-        from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
-        self.show_form(FrmWorkflow)
     
     
     def __refresh_lists( self ):
         selection = self.get_selection()
         model = self.get_model()
         
-        self.ui.LBL_NO_DATA_WARNING.setVisible(not model.sequences)
+        self.ui.LBL_NO_DATA_WARNING.setVisible( not model.sequences )
         
         self.ui.LST_MAIN.clear()
         self.ui.LBL_SELECTION_INFO.setText( str( selection ) )
@@ -115,5 +113,3 @@ class FrmSelectionList( FrmBase ):
     
     def on_selection_changed( self ):
         self.__refresh_lists()
-    
-    
