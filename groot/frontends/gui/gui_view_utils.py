@@ -382,11 +382,11 @@ def show_selection_menu(control:QWidget, actions, choice: ESelMenu = ESelMenu.AL
     assert isinstance(actions, GuiActions)
     
     if tag == 1:
-        actions.show_entities_form()
+        actions.show_entities()
     elif tag == 2:
-        actions.show_lego_form()
+        actions.show_lego()
     elif tag == 3:
-        actions.show_workflow_form()
+        actions.show_workflow()
     elif isinstance( tag, ILegoSelectable ):
         actions.set_selection( LegoSelection( frozenset( { tag } ) ) )
     else:

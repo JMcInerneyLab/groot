@@ -6,11 +6,11 @@ from PyQt5.QtWidgets import QMainWindow, QMdiSubWindow
 from groot.frontends.gui.forms.designer import frm_main_designer
 
 from groot.data import global_view
+from groot.data.global_view import EStartupMode
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import AsyncResult, IGuiPluginHostWindow, intermake_gui
-from intermake.engine.environment import MENV
-from mhelper import file_helper, SwitchError
+from mhelper import SwitchError
 from mhelper_qt import exceptToGui, qt_gui_helper
 
 
@@ -18,6 +18,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     """
     Main window
     """
+    INSTANCE = None
     
     
     @exceptToGui()
@@ -26,6 +27,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         CONSTRUCTOR
         """
         # QT stuff
+        FrmMain.INSTANCE = self
         QCoreApplication.setAttribute( Qt.AA_DontUseNativeMenuBar )
         QMainWindow.__init__( self )
         self.ui = frm_main_designer.Ui_MainWindow()
@@ -33,13 +35,12 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         self.setWindowTitle( "Lego Model Creator" )
         self.setStyleSheet( intermake_gui.default_style_sheet() )
         
-        self._mdi: Dict[Type[FrmBase], FrmBase] = { }
+        self.mdi: Dict[Type[FrmBase], FrmBase] = { }
         
-        self.COLOUR_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea[style="empty"].background', "#C0C0C0" ) )
-        self.COLOUR_NOT_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea.background', "#C0C0C0" ) )
+        self.COLOUR_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea[style="empty"].background', "#000000" ) )
+        self.COLOUR_NOT_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea.background', "#000000" ) )
         
         self.ui.MDI_AREA.setBackground( self.COLOUR_EMPTY )
-        self.ui.MDI_AREA.setVisible( False )
         
         self.showMaximized()
         
@@ -48,33 +49,20 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         global_view.subscribe_to_selection_changed( self.on_selection_changed )
         
         from groot.frontends.gui.gui_menu import GuiMenu
-        self.actions = GuiMenu( self )
+        self.menu_handler = GuiMenu( self )
         
-        txt = self.ui.LBL_FIRST_MESSAGE.text()
+        view = global_view.options().startup_mode
         
-        txt = txt.replace( "$(VERSION)", MENV.version )
-        r = []
-        
-        r.append( "<h3>Recent files</h3><ul>" )
-        
-        for file in reversed( global_view.options().recent_files ):
-            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file, file_helper.get_filename_without_extension( file ) ) )
-        
-        r.append( '<li><a href="action:browse_open"><i>browse...</i></a></li>' )
-        r.append( "</ul>" )
-        
-        r.append( "<h3>Sample data</h3><ul>" )
-        
-        for file in global_view.get_samples():
-            r.append( '<li><a href="load_sample:{}">{}</a><li/>'.format( file, file_helper.get_filename_without_extension( file ) ) )
-        
-        r.append( '<li><a href="action:show_samples_form"><i>browse...</i></a></li>' )
-        r.append( "</ul>" )
-        
-        txt = txt.replace( "$(RECENT_FILES)", "\n".join( r ) )
-        
-        self.ui.LBL_FIRST_MESSAGE.setText( txt )
-        self.actions.gui_actions.bind_to_label( self.ui.LBL_FIRST_MESSAGE )
+        if view == EStartupMode.STARTUP:
+            self.menu_handler.gui_actions.show_startup()
+        elif view == EStartupMode.WORKFLOW:
+            self.menu_handler.gui_actions.show_workflow()
+        elif view == EStartupMode.SAMPLES:
+            self.menu_handler.gui_actions.show_load_model()
+        elif view == EStartupMode.NOTHING:
+            pass
+        else:
+            raise SwitchError( "view", view )
     
     
     def closeEvent( self, e: QCloseEvent ):
@@ -84,10 +72,11 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     def on_selection_changed( self ):
         for form in self.iter_forms():
             form.on_selection_changed()
+            form.actions.on_selection_changed()
     
     
     def plugin_completed( self, result: AsyncResult ) -> None:
-        self.actions.gui_actions.dismiss_startup_screen()
+        self.menu_handler.gui_actions.dismiss_startup_screen()
         self.statusBar().showMessage( str( result ) )
         
         if result.is_error:
@@ -99,17 +88,23 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def iter_forms( self ):
-        return [x for x in self._mdi.values() if isinstance( x, FrmBase )]
+        return [x for x in self.mdi.values() if isinstance( x, FrmBase )]
     
     
     def remove_form( self, form ):
-        del self._mdi[type( form )]
+        del self.mdi[type( form )]
         
-        if not self._mdi:
+        if not self.mdi:
             self.ui.MDI_AREA.setBackground( self.COLOUR_EMPTY )
+            self.statusBar().showMessage( "YEHR CLERSERD ERL DA WERNDERS. DA SCRERN ERS BLER. ERPERN ER WERNDER FRERM DA MAHN TER MAHK ERT LERS BLER." )
     
     
-    def close_form( self, form: FrmBase ):
+    def close_form( self, form_type: Type[FrmBase] ):
+        form = self.mdi.get( form_type )
+        
+        if form is None:
+            return
+        
         if self.mdi_mode:
             form.parentWidget().close()
         else:
@@ -117,10 +112,10 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def show_form( self, form_class ):
-        self.actions.gui_actions.dismiss_startup_screen()
+        self.menu_handler.gui_actions.dismiss_startup_screen()
         
-        if form_class in self._mdi:
-            form = self._mdi[form_class]
+        if form_class in self.mdi:
+            form = self.mdi[form_class]
             form.setFocus()
             return
         
@@ -132,5 +127,5 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         form.setWindowFlag( Qt.Tool, True )
         form.show()
-        self._mdi[form_class] = form
+        self.mdi[form_class] = form
         self.ui.MDI_AREA.setBackground( self.COLOUR_NOT_EMPTY )

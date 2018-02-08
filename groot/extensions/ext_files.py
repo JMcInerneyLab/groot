@@ -127,14 +127,12 @@ def file_recent():
     r = []
     
     r.append( "SESSIONS:" )
-    for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
-        if file.lower().endswith( constants.BINARY_EXTENSION ):
-            r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
+    for file in groot.data.global_view.get_workspace_files():
+        r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     r.append( "\nRECENT:" )
-    for file in groot.data.global_view.options().recent_files:
-        if file.lower().endswith( constants.BINARY_EXTENSION ):
-            r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
+    for file in reversed( groot.data.global_view.options().recent_files ):
+        r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     MCMD.information( "\n".join( r ) )
 

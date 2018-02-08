@@ -125,7 +125,7 @@
    <item row="1" column="0">
     <widget class="QLabel" name="LBL_NO_DATA_WARNING">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;There is no data. &lt;a href=&quot;action:show_samples_form&quot;&gt;Load&lt;/a&gt; some data first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;There is no data. &lt;a href=&quot;action:show_load_model&quot;&gt;Load&lt;/a&gt; some data first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>

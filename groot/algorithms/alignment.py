@@ -1,4 +1,4 @@
-import groot.algorithms.extenal_runner
+import groot.algorithms.external_runner
 from groot.algorithms import fastaiser, external_tools
 from groot.data.lego_model import LegoComponent
 
@@ -13,9 +13,9 @@ def align( algorithm: str, component: LegoComponent ):
     if algorithm is None:
         algorithm = "default"
     
-    fn = groot.algorithms.extenal_runner.get_tool("align" , algorithm)
+    fn = groot.algorithms.external_runner.get_tool("align" , algorithm)
     
-    component.alignment = groot.algorithms.extenal_runner.run_in_temporary( fn, component.model, fasta )
+    component.alignment = groot.algorithms.external_runner.run_in_temporary( fn, component.model, fasta )
 
 
 def drop( component: LegoComponent ):

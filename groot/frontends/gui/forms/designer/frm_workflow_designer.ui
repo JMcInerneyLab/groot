@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>567</width>
+    <width>557</width>
     <height>600</height>
    </rect>
   </property>
@@ -15,118 +15,6 @@
     <width>400</width>
     <height>600</height>
    </size>
-  </property>
-  <property name="windowTitle">
-   <string>Dialog</string>
-  </property>
-  <property name="styleSheet">
-   <string notr="true">/* Special styles */
-
-QToolButton[style=&quot;listbutton&quot;]
-{
-    background   : #40C0FF;
-    border-style : outset;
-    border-width : 2px;
-    border-color : transparent;
-}
-
-QToolButton[style=&quot;listbutton&quot;]::hover
-{
-    background   : #B0D5E8;
-    border-color : blue;
-}
-
-QToolButton[style=&quot;listbutton&quot;]::pressed
-{
-    background   : #0040C0;
-    border-style : inset;
-}
-
-QLabel[style=&quot;icon&quot;]
-{
-    background    : #808080;
-    border-radius : 8px;
-}
-
-QLabel[style=&quot;warning&quot;]
-{
-    background    : #FFFF00;
-    color         : #FF0000;        
-}
-
-QFrame[style=&quot;heading&quot;]
-{
-    background    : #C0C0C0;
-    border-radius : 8px;
-    padding       : 4px;
-}
-
-QLabel[style=&quot;heading&quot;]
-{
-    background    : #C0C0C0;
-    border-radius : 4px;
-    margin        : 2px;
-    padding       : 2px;
-    color         : black;
-    font-weight   : bold;
-}
-
-QLabel[style=&quot;subheading&quot;]
-{
-    background    : #FFFFFF;
-    border-radius : 4px;
-    margin        : 2px;
-    padding       : 2px;
-    color         : black;
-    font-weight   : bold;
-}
-
-QLabel[style=&quot;helpbox&quot;]
-{
-    background : #FFFFD0;
-}
-
-QTextEdit[style=&quot;console&quot;]
-{
-    background : black;
-    color      : white;
-}
-
-QPushButton[style=&quot;completed&quot;]
-{
-    background    : #00C080;
-    color         : white;
-    padding       : 8px;
-    border-color  : white;
-    border-width  : 1px;
-    border-radius : 8px;
-}
-
-QPushButton[style=&quot;cancel&quot;]
-{
-    background    : #C00000;
-    color         : white;
-    padding       : 8px;
-    border-color  : white;
-    border-width  : 1px;
-    border-radius : 8px;
-}
-
-QMdiArea
-{
-    background : #6495ED;
-}
-
-QMdiArea[style=&quot;empty&quot;]
-{
-    background : #092049;
-}
-
-QPushButton[style=&quot;dropdown&quot;]
-{
-    qproperty-icon: url(:/dropdown.svg)
-}
-</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="19" column="0" colspan="2">
@@ -142,121 +30,198 @@ QPushButton[style=&quot;dropdown&quot;]
      </property>
     </spacer>
    </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_text_form&quot;&gt;data&lt;/a&gt; and generate some &lt;a href=&quot;action:create_components&quot;&gt;components&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0" colspan="2">
-    <widget class="QLabel" name="label_13">
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_lego_form&quot;&gt;domains&lt;/a&gt; and generate some &lt;a href=&quot;action:create_alignments&quot;&gt;alignments&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
    <item row="16" column="0">
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="LBL_NRFG">
      <property name="text">
       <string>NRFG</string>
      </property>
     </widget>
    </item>
    <item row="14" column="0">
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="LBL_FUSIONS">
      <property name="text">
       <string>Fusions</string>
      </property>
     </widget>
    </item>
    <item row="10" column="0">
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="LBL_ALIGNMENTS">
      <property name="text">
       <string>Alignments</string>
      </property>
     </widget>
    </item>
    <item row="12" column="1">
-    <widget class="QLineEdit" name="lineEdit_5">
+    <widget class="QLineEdit" name="TXT_TREES">
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
    <item row="12" column="0">
-    <widget class="QLabel" name="label_5">
+    <widget class="QLabel" name="LBL_TREES">
      <property name="text">
       <string>Trees</string>
      </property>
     </widget>
    </item>
    <item row="3" column="0">
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="LBL_SEQUENCES">
      <property name="text">
       <string>Sequences</string>
      </property>
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QLineEdit" name="lineEdit_2">
+    <widget class="QLineEdit" name="TXT_SEQUENCES">
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
    <item row="6" column="1">
-    <widget class="QLineEdit" name="lineEdit_3">
+    <widget class="QLineEdit" name="TXT_COMPONENTS">
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
    <item row="6" column="0">
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="LBL_COMPONENTS">
      <property name="text">
       <string>Components</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="0" colspan="2">
-    <widget class="QLabel" name="label_12">
+   <item row="10" column="1">
+    <widget class="QLineEdit" name="TXT_ALIGNMENTS">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="1">
+    <widget class="QLineEdit" name="TXT_NRFG">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="1">
+    <widget class="QLineEdit" name="TXT_FUSIONS">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="LBL_DOMAINS">
      <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_entities_form&quot;&gt;components&lt;/a&gt; and generate some &lt;a href=&quot;action:show_domain_form&quot;&gt;domains&lt;/a&gt;.</string>
+      <string>Domains</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="LBL_FILENAME">
+     <property name="text">
+      <string>File name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QLineEdit" name="TXT_DOMAINS">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="TXT_FILENAME">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="BTN_FILENAME">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="BTN_SEQUENCES">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QPushButton" name="BTN_COMPONENTS">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="2">
+    <widget class="QPushButton" name="BTN_DOMAINS">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <widget class="QPushButton" name="BTN_ALIGNMENTS">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="2">
+    <widget class="QPushButton" name="BTN_TREES">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="2">
+    <widget class="QPushButton" name="BTN_FUSIONS">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="2">
+    <widget class="QPushButton" name="BTN_NRFG">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_FILENAME">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Your model is not saved. You should &lt;a href=&quot;action:show_save_model&quot;&gt;save&lt;/a&gt; your model.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
      </property>
     </widget>
    </item>
-   <item row="18" column="0" colspan="2">
-    <widget class="QLabel" name="label_16">
-     <property name="text">
-      <string>You're all done, take a look at your &lt;a href=&quot;action:show_tree_form&quot;&gt;graph&lt;/a&gt;.</string>
+   <item row="5" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_SEQUENCES">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Your model is not saved. You should &lt;a href=&quot;action:save_model&quot;&gt;save&lt;/a&gt; your model.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="2">
-    <widget class="QLabel" name="label_18">
      <property name="text">
       <string>You need to &lt;a href=&quot;action:import_file&quot;&gt;import&lt;/a&gt; some data.</string>
      </property>
@@ -265,87 +230,122 @@ QPushButton[style=&quot;dropdown&quot;]
      </property>
     </widget>
    </item>
-   <item row="10" column="1">
-    <widget class="QLineEdit" name="lineEdit_4">
-     <property name="readOnly">
-      <bool>true</bool>
+   <item row="7" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_COMPONENTS">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-    </widget>
-   </item>
-   <item row="16" column="1">
-    <widget class="QLineEdit" name="lineEdit_7">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="1">
-    <widget class="QLineEdit" name="lineEdit_6">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="label_11">
      <property name="text">
-      <string>Domains</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>File name</string>
-     </property>
-    </widget>
-   </item>
-   <item row="17" column="0" colspan="2">
-    <widget class="QLabel" name="label_17">
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_fusion_form&quot;&gt;fusions&lt;/a&gt; and generate the &lt;a href=&quot;action:create_nrfg&quot;&gt;NRFG&lt;/a&gt;.</string>
+      <string>Check your &lt;a href=&quot;action:show_text_data&quot;&gt;data&lt;/a&gt; and generate some &lt;a href=&quot;action:create_components&quot;&gt;components&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="1">
-    <widget class="QLineEdit" name="lineEdit_8">
-     <property name="readOnly">
-      <bool>true</bool>
+   <item row="9" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_DOMAINS">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-    </widget>
-   </item>
-   <item row="15" column="0" colspan="2">
-    <widget class="QLabel" name="label_15">
      <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_tree_form&quot;&gt;trees&lt;/a&gt; and genrate some &lt;a href=&quot;action:create_fusions&quot;&gt;fusions&lt;/a&gt;.</string>
+      <string>Check your &lt;a href=&quot;action:show_entities&quot;&gt;components&lt;/a&gt; and generate some &lt;a href=&quot;action:show_domains&quot;&gt;domains&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
      </property>
     </widget>
    </item>
-   <item row="13" column="0" colspan="2">
-    <widget class="QLabel" name="label_14">
+   <item row="11" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_ALIGNMENTS">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_alignments_form&quot;&gt;alignments&lt;/a&gt; and generate some &lt;a href=&quot;action:create_trees&quot;&gt;trees&lt;/a&gt;.</string>
+      <string>Check your &lt;a href=&quot;action:show_lego&quot;&gt;domains&lt;/a&gt; and generate some &lt;a href=&quot;action:create_alignments&quot;&gt;alignments&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="lineEdit">
-     <property name="readOnly">
-      <bool>true</bool>
+   <item row="13" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_TREES">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Check your &lt;a href=&quot;action:show_alignments&quot;&gt;alignments&lt;/a&gt; and generate some &lt;a href=&quot;action:create_trees&quot;&gt;trees&lt;/a&gt;.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_FUSIONS">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Check your &lt;a href=&quot;action:show_trees&quot;&gt;trees&lt;/a&gt; and genrate some &lt;a href=&quot;action:create_fusions&quot;&gt;fusions&lt;/a&gt;.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_NRFG">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Check your &lt;a href=&quot;action:show_fusions&quot;&gt;fusions&lt;/a&gt; and generate the &lt;a href=&quot;action:create_nrfg&quot;&gt;NRFG&lt;/a&gt;.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_WARN_GRAPH">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>You're all done, take a look at your &lt;a href=&quot;action:show_trees&quot;&gt;graph&lt;/a&gt;.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

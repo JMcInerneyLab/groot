@@ -29,7 +29,7 @@
    <item>
     <widget class="QLabel" name="LBL_DATA_WARNING">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;action:show_samples_form&quot;&gt;Load data&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;action:show_load_model&quot;&gt;Load data&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>

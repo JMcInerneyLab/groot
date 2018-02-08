@@ -1,8 +1,8 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, consensus, tree, fuse
+from groot.algorithms import alignment, components, consensus, tree, fuse, editor
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent
+from groot.data.lego_model import LegoComponent, LegoSequence
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
@@ -10,6 +10,19 @@ from intermake.engine.environment import MCMD
 
 
 __mcmd_folder_name__ = "Generating"
+
+
+@command()
+def drop_sequences( sequences: List[LegoSequence] ):
+    """
+    Removes one or more sequences from the model.
+    
+    !THIS ACTION CANNOT BE UNDONE!
+    YOU WILL HAVE TO RELOAD YOUR DATA IF YOU WANT TO GET THE SEQUENCE(S) BACK.
+    
+    :param sequences:    One or more sequences to drop.
+    """
+    editor.remove_sequences( sequences, False )
 
 
 @command()

@@ -39,24 +39,61 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_21">
       <property name="spacing">
-       <number>0</number>
+       <number>8</number>
       </property>
       <property name="leftMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="topMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="rightMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="bottomMargin">
-       <number>0</number>
+       <number>1</number>
       </property>
       <item>
        <widget class="QPushButton" name="BTN_SELECTION">
         <property name="text">
          <string>Selection</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BTN_SAVE_TO_FILE">
+        <property name="text">
+         <string>Save to file</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BTN_BROWSE_HERE">
+        <property name="text">
+         <string>Inbuilt browser</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="BTN_SYSTEM_BROWSER">
+        <property name="text">
+         <string>System browser</string>
         </property>
         <property name="autoDefault">
          <bool>false</bool>
@@ -82,7 +119,7 @@
    <item>
     <widget class="QLabel" name="LBL_NO_TREES_WARNING">
      <property name="text">
-      <string>You have no trees or graphs, go to the &lt;a href=&quot;action:show_workflow_form&quot;&gt;workflow&lt;/a&gt;.</string>
+      <string>You have no trees or graphs, go to the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -92,7 +129,7 @@
    <item>
     <widget class="QLabel" name="LBL_NO_VISJS_WARNING">
      <property name="text">
-      <string>vis.js is not &lt;a href=&quot;action:show_view_options_form&quot;&gt;configured&lt;/a&gt;. You won't be able to see the graphs.</string>
+      <string>vis.js is not &lt;a href=&quot;action:show_options&quot;&gt;configured&lt;/a&gt;. You won't be able to see the graphs.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -110,7 +147,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="WIDGET_OPEN" native="true">
+    <widget class="QLabel" name="LBL_TITLE">
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="WIDGET_OTHER" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -118,51 +165,16 @@
       </sizepolicy>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item row="0" column="0">
-       <widget class="QPushButton" name="BTN_SYSTEM_BROWSER">
+       <widget class="QLabel" name="LBL_NO_INBUILT">
         <property name="text">
-         <string>Show in system browser</string>
+         <string>&lt;p&gt;The inbuilt browser has been turned off in the &lt;a href=&quot;action:show_options&quot;&gt;settings&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Either &lt;a href=&quot;action:enable_inbuilt_browser&quot;&gt;enable&lt;/a&gt; the inbuilt browser or use the external browser.&lt;/p&gt;</string>
         </property>
-        <property name="autoDefault">
-         <bool>false</bool>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="BTN_BROWSE_HERE">
-        <property name="text">
-         <string>Show in this window</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>

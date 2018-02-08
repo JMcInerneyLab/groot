@@ -1,88 +1,107 @@
-from PyQt5.QtWidgets import QMainWindow, QMenuBar, QMenu, QAction, QFileDialog, QMessageBox, QLabel, QPushButton
 from typing import Callable, Optional
 
-from groot import extensions, constants
-from groot.frontends.gui.gui_view_utils import LegoSelection, ESelMenu
+import re
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QAction, QFileDialog, QLabel, QMainWindow, QMenu, QMenuBar, QPushButton, QToolTip
+
+
+from intermake import intermake_gui
+from groot import constants, extensions
+from groot.data import global_view
 from groot.frontends.gui import gui_view_utils
-from intermake.engine.environment import MENV
+from groot.frontends.gui.gui_view_utils import ESelMenu, LegoSelection
 from intermake.engine.plugin import Plugin
 from intermake.engine.plugin_arguments import ArgsKwargs
 from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
 from mhelper import SwitchError, file_helper
 from mhelper_qt import exceptToGui, qt_gui_helper
-from groot.data import global_view
 
 
 class GuiMenu:
-    def __init__( self, form: QMainWindow ):
-        self.form = form
-        self.menu_bar: QMenuBar = self.form.menuBar()
+    def __init__( self, frm_main: QMainWindow ):
+        from groot.frontends.gui.forms.frm_main import FrmMain
+        self.frm_main: FrmMain = frm_main
+        self.menu_bar: QMenuBar = self.frm_main.menuBar()
         self.menus = { }
         self.actions = []
-        self.gui_actions: GuiActions = GuiActions( self.form, self.form )
-        self.select_button: QPushButton = None
-        self.select_choice: ESelMenu = ESelMenu.ALL
+        self.gui_actions: GuiActions = GuiActions( self.frm_main, self.frm_main )
         
         a = self.gui_actions
         
-        self.add_action( "File", "&New" )
-        self.add_action( "File", "&Open" )
-        self.add_action( "File", "&Save" )
-        self.add_action( "File", "Save &as" )
+        self.mnu_file = self.add_menu( ["File"] )
+        self.add_action( "File", "&New", fn = a.new_model )
+        self.add_action( "File", "&Open", fn = a.show_load_model, checked = a.is_load_file_visible )
+        self.add_action( "File", "&Save", fn = a.save_model )
+        self.add_action( "File", "Save &as", fn = a.show_save_model, checked = a.is_save_file_visible )
         self.add_action( "File", "Recent", "r" )
         self.add_action( "File", "-" )
-        self.add_action( "File", "&Show samples", fn = a.show_samples_form )
-        self.add_action( "File", "&Show workflow", fn = a.show_workflow_form )
-        self.add_action( "File", "&Show wizard", fn = a.show_wizard_form )
+        self.add_action( "File", "&Show options", fn = a.show_options, checked = a.is_options_visible )
         self.add_action( "File", "-" )
         self.add_action( "File", "E&xit", fn = a.close_application )
         
-        self.add_action( "Data", "&Import" )
-        self.add_action( "Data", "&Show model entities", fn = a.show_entities_form )
-        self.add_action( "Data", "&Show text data", fn = a.show_text_form )
+        self.mnu_data = self.add_menu( ["Data"] )
+        self.add_action( "Data", "&Show workflow", fn = a.show_workflow, checked = a.is_workflow_visible )
+        self.add_action( "Data", "&Show wizard", fn = a.show_wizard, checked = a.is_wizard_visible )
+        self.add_action( "Data", "-" )
+        self.add_action( "Data", "&Import", fn = a.import_file )
+        self.add_action( "Data", "&Show model entities", fn = a.show_entities, checked = a.is_entities_visible )
+        self.add_action( "Data", "&View text", fn = a.show_text_data, checked = a.is_text_visible )
         
+        self.mnu_components = self.add_menu( ["Components"] )
         self.add_action( "Components", "&Create", fn = a.create_components )
         self.add_action( "Components", "&Drop", fn = a.drop_components )
-        self.add_action( "Components", "&Show lego diagram", fn = a.show_lego_form )
+        self.add_action( "Components", "&View lego", fn = a.show_lego, checked = a.is_lego_visible )
         
-        self.add_action( "Domains", "&Create", fn = a.show_domain_form )
-        self.add_action( "Domains", "&Drop", fn = a.show_domain_form )
-        self.add_action( "Domains", "&Show lego diagram", fn = a.show_lego_form )
+        self.mnu_domains = self.add_menu( ["Domains"] )
+        self.add_action( "Domains", "&Modify", fn = a.show_domains, checked = a.is_domain_visible )
+        self.add_action( "Domains", "&View lego", fn = a.show_lego, checked = a.is_lego_visible )
         
-        self.add_action( "Alignments", "&Create", fn = a.create_alignments )
+        self.mnu_alignments = self.add_menu( ["Alignments"] )
+        self.add_action( "Alignments", "&Create alignment...", fn = a.show_create_alignment, checked = a.is_create_alignment_visible )
         self.add_action( "Alignments", "&Drop", fn = a.drop_alignments )
-        self.add_action( "Alignments", "&Show alignments", fn = a.show_alignments_form )
+        self.add_action( "Alignments", "&View alignments", fn = a.show_alignments, checked = a.is_alignments_visible )
         
-        self.add_action( "Trees", "&Create", fn = a.create_trees )
+        self.mnu_trees = self.add_menu( ["Trees"] )
+        self.add_action( "Trees", "&Create trees...", fn = a.show_create_trees, checked = a.is_create_tree_visible )
         self.add_action( "Trees", "&Drop", fn = a.drop_trees )
-        self.add_action( "Trees", "&Show tree visualiser", fn = a.show_tree_form )
+        self.add_action( "Trees", "&View trees", fn = a.show_trees, checked = a.is_tree_visible )
         
+        self.mnu_fusions = self.add_menu( ["Fusions"] )
         self.add_action( "Fusions", "&Create", fn = a.create_fusions )
         self.add_action( "Fusions", "&Drop", fn = a.drop_fusions )
-        self.add_action( "Fusions", "&Show fusions", fn = a.show_fusion_form )
+        self.add_action( "Fusions", "&Show fusions", fn = a.show_fusions, checked = a.is_fusion_visible )
         
-        self.add_action( "NRFG", "&Create", fn = a.create_nrfg )
-        self.add_action( "NRFG", "&Drop", fn = a.drop_nrfg )
-        self.add_action( "NRFG", "&Show tree visualiser", fn = a.show_tree_form )
+        self.mnu_nrfg = self.add_menu( ["Nrfg"] )
+        self.add_action( "Nrfg", "&Create", fn = a.create_nrfg )
+        self.add_action( "Nrfg", "&Drop", fn = a.drop_nrfg )
+        self.add_action( "Nrfg", "&Show tree visualiser", fn = a.show_trees, checked = a.is_tree_visible )
         
-        self.add_action( "Windows", "&Show workflow", fn = a.show_workflow_form )
-        self.add_action( "Windows", "&Show wizard", fn = a.show_wizard_form )
-        self.add_action( "Windows", "&Show samples", fn = a.show_samples_form )
-        self.add_action( "Windows", "&Show lego diagram", fn = a.show_lego_form )
-        self.add_action( "Windows", "&Show alignment viewer", fn = a.show_alignments_form )
-        self.add_action( "Windows", "&Show text data", fn = a.show_text_form )
-        self.add_action( "Windows", "&Show model entities", fn = a.show_entities_form )
-        self.add_action( "Windows", "&Show fusion", fn = a.show_fusion_form )
-        self.add_action( "Windows", "&Show intermake", fn = a.show_intermake_form )
-        self.add_action( "Windows", "&Show domain", fn = a.show_domain_form )
-        self.add_action( "Windows", "&Show debug", fn = a.show_debug_form )
+        self.mnu_windows = self.add_menu( ["Windows"] )
+        self.add_action( "Windows", "&Show options", fn = a.show_options, checked = a.is_workflow_visible )
+        self.add_action( "Windows", "&Show workflow", fn = a.show_workflow, checked = a.is_workflow_visible )
+        self.add_action( "Windows", "&Show wizard", fn = a.show_wizard, checked = a.is_wizard_visible )
+        self.add_action( "Windows", "&Show samples", fn = a.show_load_model, checked = a.is_load_file_visible )
+        self.add_action( "Windows", "&Show samples", fn = a.show_save_model, checked = a.is_save_file_visible )
+        self.add_action( "Windows", "&Show lego diagram", fn = a.show_lego, checked = a.is_lego_visible )
+        self.add_action( "Windows", "&Show alignment viewer", fn = a.show_alignments, checked = a.is_alignments_visible )
+        self.add_action( "Windows", "&Show text data", fn = a.show_text_data, checked = a.is_text_visible )
+        self.add_action( "Windows", "&Show model entities", fn = a.show_entities, checked = a.is_entities_visible )
+        self.add_action( "Windows", "&Show fusion", fn = a.show_fusions, checked = a.is_fusion_visible )
+        self.add_action( "Windows", "&Show intermake", fn = a.show_intermake, checked = a.is_intermake_visible )
+        self.add_action( "Windows", "&Show domain", fn = a.show_domains, checked = a.is_domain_visible )
+        self.add_action( "Windows", "&Show debug", fn = a.show_debug_form, checked = a.is_debug_visible )
+        self.add_action( "Windows", "&Show startup", fn = a.show_startup, checked = a.is_startup_visible )
+        self.add_action( "Windows", "&Show version", fn = a.show_version, checked = a.is_version_visible )
+        self.add_action( "Windows", "&Show create trees", fn = a.show_create_trees, checked = a.is_create_tree_visible )
+        self.add_action( "Windows", "&Show create alignment", fn = a.show_create_alignment, checked = a.is_create_alignment_visible )
         
+        self.mnu_help = self.add_menu( ["Help"] )
         self.add_action( "Help", "&Show readme", fn = a.show_help )
-        self.add_action( "Help", "&Show version", fn = a.show_version )
+        self.add_action( "Help", "&Show version", fn = a.show_version, checked = a.is_version_visible )
     
     
-    def add_action( self, *texts: str, fn: Callable[[], None] = None ):
-        menu = self.get_menu( texts[:-1] )
+    def add_action( self, *texts: str, fn: Callable[[], None] = None, checked = None ):
+        menu = self.add_menu( texts[:-1] )
         final = texts[-1]
         
         if final == "-":
@@ -97,6 +116,11 @@ class GuiMenu:
         if fn:
             action.TAG_function = fn
             action.triggered[bool].connect( self.__on_action )
+        action.TAG_checked = checked
+        
+        if checked is not None:
+            action.setCheckable( True )
+        
         self.actions.append( action )
         menu.addAction( action )
     
@@ -114,7 +138,7 @@ class GuiMenu:
             menu.addAction( action )
     
     
-    def get_menu( self, texts ):
+    def add_menu( self, texts ):
         menu_path = ""
         menu = self.menu_bar
         
@@ -124,8 +148,10 @@ class GuiMenu:
             
             if not new_menu:
                 new_menu = QMenu()
+                new_menu.setStyleSheet( intermake_gui.default_style_sheet() )
                 new_menu.setTitle( text )
                 self.menus[menu_path] = new_menu
+                new_menu.aboutToShow.connect( self.__on_menu_about_to_show )
                 menu.addMenu( new_menu )
             
             menu = new_menu
@@ -133,8 +159,17 @@ class GuiMenu:
         return menu
     
     
+    def __on_menu_about_to_show( self ):
+        menu: QMenu = self.frm_main.sender()
+        for action in menu.actions():
+            assert isinstance( action, QAction )
+            
+            if hasattr( action, "TAG_checked" ) and action.TAG_checked:
+                action.setChecked( action.TAG_checked() )
+    
+    
     def __on_action( self, _: bool ):
-        sender = self.form.sender()
+        sender = self.frm_main.sender()
         
         if hasattr( sender, "TAG_file" ):
             file_name = sender.TAG_file
@@ -146,19 +181,23 @@ class GuiMenu:
 
 
 class GuiActions:
-    def __init__( self, form, window ):
-        self.form = form
+    def __init__( self, frm_main, window ):
+        from groot.frontends.gui.forms.frm_main import FrmMain
+        assert isinstance( frm_main, FrmMain )
+        self.frm_main = frm_main
         self.window = window
+        self.select_button: QPushButton = None
+        self.select_choice: ESelMenu = ESelMenu.ALL
     
     
     @exceptToGui()
     def close_application( self ):
-        self.form.close()
+        self.frm_main.close()
     
     
     @exceptToGui()
     def get_model( self ):
-        global_view.current_model()
+        return global_view.current_model()
     
     
     @exceptToGui()
@@ -168,7 +207,15 @@ class GuiActions:
     
     @exceptToGui()
     def save_model( self ):
-        extensions.ext_files.file_save( self.get_model().file_name )
+        if self.get_model().file_name:
+            extensions.ext_files.file_save( self.get_model().file_name )
+        else:
+            self.show_save_model()
+    
+    
+    @exceptToGui()
+    def save_model_using( self, file_name: str ):
+        extensions.ext_files.file_save( file_name )
     
     
     @exceptToGui()
@@ -203,102 +250,147 @@ class GuiActions:
     
     
     @exceptToGui()
-    def show_workflow_form( self ) -> None:
+    def show_workflow( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
-        self.form.show_form( FrmWorkflow )
+        self.frm_main.show_form( FrmWorkflow )
     
     
     @exceptToGui()
-    def show_wizard_form( self ) -> None:
+    def show_wizard( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_wizard import FrmWizard
-        self.form.show_form( FrmWizard )
+        self.frm_main.show_form( FrmWizard )
     
     
     @exceptToGui()
-    def show_lego_form( self ) -> None:
+    def show_options( self ) -> None:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
+        self.frm_main.show_form( FrmViewOptions )
+    
+    
+    @exceptToGui()
+    def show_lego( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_lego import FrmLego
-        self.form.show_form( FrmLego )
+        self.frm_main.show_form( FrmLego )
     
     
     @exceptToGui()
-    def show_tree_form( self ) -> None:
+    def show_trees( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_webtree import FrmWebtree
-        self.form.show_form( FrmWebtree )
+        self.frm_main.show_form( FrmWebtree )
     
     
     @exceptToGui()
-    def show_text_form( self ) -> None:
+    def show_text_data( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_big_text import FrmBigText
-        self.form.show_form( FrmBigText )
+        self.frm_main.show_form( FrmBigText )
     
     
     @exceptToGui()
-    def show_entities_form( self ) -> None:
+    def show_create_trees( self ) -> None:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateTrees
+        self.frm_main.show_form( FrmCreateTrees )
+    
+    
+    @exceptToGui()
+    def show_create_alignment( self ) -> None:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateAlignment
+        self.frm_main.show_form( FrmCreateAlignment )
+    
+    
+    @exceptToGui()
+    def show_entities( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
-        self.form.show_form( FrmSelectionList )
+        self.frm_main.show_form( FrmSelectionList )
     
     
     @exceptToGui()
-    def show_alignments_form( self ) -> None:
+    def show_alignments( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_alignment import FrmAlignment
-        self.form.show_form( FrmAlignment )
+        self.frm_main.show_form( FrmAlignment )
     
     
     @exceptToGui()
-    def show_fusion_form( self ) -> None:
+    def show_fusions( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_fusions import FrmFusions
-        self.form.show_form( FrmFusions )
+        self.frm_main.show_form( FrmFusions )
     
     
     @exceptToGui()
-    def show_samples_form( self ) -> None:
+    def show_load_model( self ) -> None:
         """
         Signal handler:
         """
-        from groot.frontends.gui.forms.frm_samples import FrmSamples
-        self.form.show_form( FrmSamples )
+        from groot.frontends.gui.forms.frm_samples import FrmLoadFile
+        self.frm_main.show_form( FrmLoadFile )
     
     
     @exceptToGui()
-    def show_intermake_form( self ) -> None:
+    def show_save_model( self ) -> None:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_samples import FrmSaveFile
+        self.frm_main.show_form( FrmSaveFile )
+    
+    
+    @exceptToGui()
+    def show_intermake( self ) -> None:
         """
         Signal handler:
         """
         from intermake.hosts.frontends.gui_qt.frm_intermake_main import FrmIntermakeMain
-        self.form.show_form( FrmIntermakeMain )
+        self.frm_main.show_form( FrmIntermakeMain )
     
     
     @exceptToGui()
-    def show_domain_form( self ) -> None:
+    def show_domains( self ) -> None:
         """
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_domain import FrmDomain
-        self.form.show_form( FrmDomain )
+        self.frm_main.show_form( FrmDomain )
+    
+    
+    @exceptToGui()
+    def show_startup( self ) -> None:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_startup import FrmStartup
+        self.frm_main.show_form( FrmStartup )
     
     
     @exceptToGui()
@@ -307,7 +399,160 @@ class GuiActions:
         Signal handler:
         """
         from groot.frontends.gui.forms.frm_debug import FrmDebug
-        self.form.show_form( FrmDebug )
+        self.frm_main.show_form( FrmDebug )
+    
+    
+    @exceptToGui()
+    def is_workflow_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
+        return FrmWorkflow in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_options_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
+        return FrmViewOptions in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_wizard_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_wizard import FrmWizard
+        return FrmWizard in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_lego_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_lego import FrmLego
+        return FrmLego in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_tree_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_webtree import FrmWebtree
+        return FrmWebtree in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_create_tree_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateTrees
+        return FrmCreateTrees in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_create_alignment_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateAlignment
+        return FrmCreateAlignment in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_text_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_big_text import FrmBigText
+        return FrmBigText in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_entities_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
+        return FrmSelectionList in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_alignments_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_alignment import FrmAlignment
+        return FrmAlignment in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_fusion_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_fusions import FrmFusions
+        return FrmFusions in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_load_file_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_samples import FrmLoadFile
+        return FrmLoadFile in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_save_file_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_samples import FrmSaveFile
+        return FrmSaveFile in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_intermake_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from intermake.hosts.frontends.gui_qt.frm_intermake_main import FrmIntermakeMain
+        return FrmIntermakeMain in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_domain_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_domain import FrmDomain
+        return FrmDomain in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_debug_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_debug import FrmDebug
+        return FrmDebug in self.frm_main.mdi
+    
+    
+    @exceptToGui()
+    def is_startup_visible( self ) -> bool:
+        """
+        Signal handler:
+        """
+        from groot.frontends.gui.forms.frm_startup import FrmStartup
+        return FrmStartup in self.frm_main.mdi
     
     
     def create_nrfg( self ):
@@ -374,26 +619,41 @@ class GuiActions:
     
     
     def show_version( self ):
-        QMessageBox.about( self.window, self.form.windowTitle(), MENV.name + " - " + str( MENV.version ) )
+        from groot.frontends.gui.forms.frm_about import FrmAbout
+        self.frm_main.show_form( FrmAbout )
+    
+    
+    def is_version_visible( self ):
+        from groot.frontends.gui.forms.frm_about import FrmAbout
+        return FrmAbout in self.frm_main.mdi
     
     
     def dismiss_startup_screen( self ):
-        self.form.ui.FRA_HELP.setVisible( False )
-        self.form.ui.MDI_AREA.setVisible( True )
+        from groot.frontends.gui.forms.frm_startup import FrmStartup
+        self.frm_main.close_form( FrmStartup )
     
     
     def bind_to_label( self, label: QLabel ):
         label.linkActivated[str].connect( self.by_url )
         label.linkHovered[str].connect( self.show_status_message )
+        
+        for x in re.findall( 'href="([^"]+)"', label.text() ):
+            if not self.by_url( x, validate = True ):
+                raise ValueError( "«{}» is not a valid Groot URL.".format( x ) )
     
     
     def bind_to_select( self, button: QPushButton, choice: ESelMenu = ESelMenu.ALL ):
         self.select_button = button
         self.select_choice = choice
         
-        self.select_button.setProperty("style", "dropdown")
+        self.select_button.setProperty( "style", "dropdown" )
         self.select_button.setText( str( self.get_selection() ) )
         self.select_button.clicked.connect( self.show_selection )
+    
+    
+    def on_selection_changed( self ):
+        if self.select_button is not None:
+            self.select_button.setText( str( self.get_selection() ) )
     
     
     def get_selection( self ):
@@ -401,61 +661,38 @@ class GuiActions:
     
     
     def show_status_message( self, text: str ):
-        self.form.statusBar().showMessage( text )
+        self.frm_main.statusBar().showMessage( text )
+        QToolTip.showText( QCursor.pos(), text )
     
     
-    def by_url( self, link: str ):
-        if link == "action:show_workflow_form":
-            self.show_workflow_form()
-        elif link == "action:show_wizard_form":
-            self.show_wizard_form()
-        elif link == "action:dismiss_startup_screen":
-            self.dismiss_startup_screen()
-        elif link == "action:new_model":
-            self.new_model()
-        elif link == "action:save_model":
-            self.save_model()
-        elif link == "action:show_help":
-            self.show_help()
-        elif link == "action:show_domain_form":
-            self.show_domain_form()
-        elif link == "action:show_lego_form":
-            self.show_lego_form()
-        elif link == "action:create_alignments":
-            self.create_alignments()
-        elif link == "action:show_alignments_form":
-            self.show_alignments_form()
-        elif link == "action:create_trees":
-            self.create_trees()
-        elif link == "action:show_tree_form":
-            self.show_tree_form()
-        elif link == "action:create_fusions":
-            self.create_fusions()
-        elif link == "action:create_nrfg":
-            self.create_nrfg()
-        elif link == "action:create_nrfg":
-            self.show_fusion_form()
-        elif link == "action:show_samples_form":
-            self.show_samples_form()
-        elif link == "action:show_selection":
-            self.show_selection()
-        elif link == "action:show_entities_form":
-            self.show_entities_form()
-        elif link == "action:create_components":
-            self.create_components()
-        elif link == "action:browse_open":
-            self.browse_open()
-        elif link == "action:show_text_form":
-            self.show_text_form()
-        elif link == "action:create_components":
-            self.create_components()
-        elif link == "action:import_file":
-            self.import_file()
-        elif link.startswith( "load_file:" ):
-            self.load_file( link.split( ":", 1 )[1] )
-        elif link.startswith( "load_sample:" ):
-            self.load_sample( link.split( ":", 1 )[1] )
+    def by_url( self, link: str, validate = False ):
+        key, value = link.split( ":", 1 )
+        
+        if key == "action":
+            if validate:
+                return hasattr( self, value )
+            
+            fn = getattr( self, value )
+            fn()
+        elif key == "save_file":
+            if validate:
+                return True
+            
+            self.save_model_using( value )
+        elif key == "load_file":
+            if validate:
+                return True
+            
+            self.load_file( value )
+        elif key == "load_sample":
+            if validate:
+                return True
+            
+            self.load_sample( value )
         else:
+            if validate:
+                return False
+            
             raise SwitchError( "link", link )
     
     
@@ -472,3 +709,12 @@ class GuiActions:
     
     def set_selection( self, value: LegoSelection ):
         global_view.set_selection( value )
+
+    def enable_inbuilt_browser( self ):
+        from groot.frontends.gui.forms.frm_webtree import FrmWebtree
+        form = self.frm_main.mdi.get(FrmWebtree)
+        
+        if form is None:
+            return
+        
+        form.enable_inbuilt_browser()

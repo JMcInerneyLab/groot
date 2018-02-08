@@ -1,13 +1,15 @@
-from typing import cast
+from typing import cast, List
 
 from os import path
-
+import os
+import time
+from groot import constants
 from groot.data.lego_model import LegoModel
 from groot.frontends.gui.gui_view_utils import LegoSelection
 from intermake import MENV, PathToVisualisable
 from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
-from mhelper import file_helper
+from mhelper import file_helper, MEnum
 
 
 __model: LegoModel = None
@@ -40,11 +42,14 @@ class _current_status:
         self.nrfg = (model.nrfg is not None)
         self.data = self.blast or self.fasta
         self.empty = not self.file and not self.data
+        self.file_name = model.file_name
+        self.domains = (len( model.user_domains ) != 0)
         self.num_sequences = len( model.sequences )
         self.num_components = len( model.components )
         self.num_alignments = sum( len( x.minor_subsequences ) for x in model.components if x.alignment )
         self.num_trees = sum( 1 for x in model.components if x.tree )
         self.num_fusions = len( model.fusion_events )
+        self.num_domains = len( model.user_domains )
 
 
 def current_model() -> LegoModel:
@@ -90,12 +95,45 @@ def get_samples():
     return file_helper.sub_dirs( sample_data_folder )
 
 
+def get_workspace_files() -> List[str]:
+    """
+    INTERNAL
+    Obtains the list of workspace files
+    """
+    r = []
+    
+    for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
+        if file.lower().endswith( constants.BINARY_EXTENSION ):
+            r.append( file )
+    
+    return r
+
+
 def get_sample_data_folder():
     """
     PRIVATE
     Obtains the sample data folder
     """
     return path.join( file_helper.get_directory( __file__, 2 ), "sampledata" )
+
+
+class EBrowseMode( MEnum ):
+    ASK = 0
+    SYSTEM = 1
+    INBUILT = 2
+
+
+class EStartupMode( MEnum ):
+    STARTUP = 0
+    WORKFLOW = 1
+    SAMPLES = 2
+    NOTHING = 3
+
+
+class RecentFile:
+    def __init__( self, file_name ):
+        self.file_name = file_name
+        self.time = time.time()
 
 
 class GlobalOptions:
@@ -106,8 +144,10 @@ class GlobalOptions:
     
     
     def __init__( self ):
-        self.recent_files = []
+        self.recent_files: List[RecentFile] = []
         self.visjs_path = ""
+        self.browse_mode = EBrowseMode.ASK
+        self.startup_mode = EStartupMode.STARTUP
 
 
 __global_options = None
@@ -117,7 +157,7 @@ def options() -> GlobalOptions:
     global __global_options
     
     if __global_options is None:
-        __global_options = MENV.local_data.store.get_and_init( "lego-options", GlobalOptions() )
+        __global_options = MENV.local_data.store.bind( "lego-options", GlobalOptions() )
     
     return __global_options
 
@@ -137,4 +177,8 @@ def remember_file( file_name: str ) -> None:
     while len( opt.recent_files ) > 10:
         del opt.recent_files[0]
     
-    MENV.local_data.store["lego-options"] = opt
+    save_global_options()
+
+
+def save_global_options():
+    MENV.local_data.store.commit( "lego-options" )

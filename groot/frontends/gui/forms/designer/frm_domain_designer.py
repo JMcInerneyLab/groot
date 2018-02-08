@@ -153,7 +153,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.LBL_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires sequences. <a href=\"action:show_samples_form\">Load data</a> first.</p></body></html>"))
+        self.LBL_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Requires sequences. <a href=\"action:show_load_model\">Load data</a> first.</p></body></html>"))
         self.LBL_DATA_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.LBL_MAIN.setText(_translate("Dialog", "You currently have no domains defined."))
         self.RAD_EXISTING.setText(_translate("Dialog", "Keep existing domains"))

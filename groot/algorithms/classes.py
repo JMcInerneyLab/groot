@@ -106,15 +106,3 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     def str_long( self ):
         return "¨{} ⊇ {} ⊅ {}¨".format( self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )
-
-
-class NrfgEvent:
-    def __init__( self, event: FusionEvent, aπ: FusionPoint, bπ: FusionPoint, aΛ: MGraph, aΔ: MGraph, bΛ: MGraph, bΔ: MGraph, dΔ: MGraph ) -> None:
-        self.event = event
-        self.aπ = aπ
-        self.bπ = bπ
-        self.aΛ = aΛ
-        self.aΔ = aΔ
-        self.bΔ = bΔ
-        self.bΛ = bΛ
-        self.dΔ = dΔ

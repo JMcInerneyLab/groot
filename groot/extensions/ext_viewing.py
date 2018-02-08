@@ -7,7 +7,7 @@ import pyperclip
 from os import path
 
 import intermake
-from groot.algorithms import components, external_tools, fastaiser, graph_viewing, userdomains
+from groot.algorithms import components, external_runner, fastaiser, graph_viewing, userdomains
 from groot.algorithms.classes import FusionPoint
 from groot.constants import EFormat, EOut
 from groot.data import global_view
@@ -32,18 +32,13 @@ def algorithm_help():
     Prints available algorithms.
     """
     r = []
-    d = defaultdict( list )
+    d = external_runner.list_algorithms()
     
-    for x, xv in external_tools.__dict__.items():
-        if not x.startswith( "_" ) and "_" in x and inspect.isfunction( xv ):
-            y = x.split( "_", 1 )
-            d[y[0]].append( (y[1], xv) )
-    
-    for k, v in sorted( d.items(), key = lambda x: x[0] ):
+    for algo_type, algo_dict in sorted( d.items(), key = lambda x: x[0] ):
         r.append( "" )
-        r.append( Theme.TITLE + "========== " + k + " ==========" + Theme.RESET )
+        r.append( Theme.TITLE + "========== " + algo_type + " ==========" + Theme.RESET )
         
-        for name, function in v:
+        for name, function in algo_dict.items():
             if name != "default":
                 r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
                 r.append( "    " + (function.__doc__ or "").strip() )

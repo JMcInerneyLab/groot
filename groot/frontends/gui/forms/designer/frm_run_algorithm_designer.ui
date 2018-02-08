@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>789</width>
+    <height>624</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Generate tree</string>
+     </property>
+     <property name="style" stdset="0">
+      <string notr="true">title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_WARN_REQUIREMENTS">
+     <property name="text">
+      <string>&lt;html&gt;&lt;body&gt;You need to &lt;a href=&quot;action:create_alignments&quot;&gt;create the aligmments&lt;/a&gt; before creating the trees.&lt;/body&lt;/html&gt;</string>
+     </property>
+     <property name="style" stdset="0">
+      <string notr="true">warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_WARN_ALREADY">
+     <property name="text">
+      <string>You already have a tree generated.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string notr="true">warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Algorithm</string>
+     </property>
+     <property name="style" stdset="0">
+      <string notr="true">heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="FRA_MAIN">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_HELP">
+     <property name="text">
+      <string>Select the algorithm you'd like to use. Remember, you can add your own algorithms to Groot as well!</string>
+     </property>
+     <property name="style" stdset="0">
+      <string notr="true">helpbox</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_OK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

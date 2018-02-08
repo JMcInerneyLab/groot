@@ -2,8 +2,8 @@ from groot.frontends.gui.forms.designer import frm_domain_designer
 
 from groot.frontends.gui.forms.frm_base import FrmBase
 
-
 from groot import extensions
+
 from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from mhelper import SwitchError
@@ -28,8 +28,8 @@ class FrmDomain( FrmBase ):
         
         self.update_options()
         
-        self.actions.bind_to_label(self.ui.LBL_DATA_WARNING)
-        self.actions.bind_to_label(self.ui.LBL_COMPONENT_WARNING)
+        self.actions.bind_to_label( self.ui.LBL_DATA_WARNING )
+        self.actions.bind_to_label( self.ui.LBL_COMPONENT_WARNING )
     
     
     def on_plugin_completed( self, change: EChanges ):

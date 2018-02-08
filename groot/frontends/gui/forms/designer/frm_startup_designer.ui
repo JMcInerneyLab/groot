@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>327</height>
+   </rect>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QFrame" name="frame">
+     <property name="styleSheet">
+      <string notr="true">QFrame[style=&quot;grootunique&quot;]
+{
+background: qlineargradient(spread:pad, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(208, 208, 208, 255), stop:0.0985222 rgba(255, 255, 255, 255), stop:1 rgba(229, 229, 229, 255));
+color: black;
+}</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>grootunique</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="LBL_FIRST_MESSAGE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel
+{
+padding: 32;
+background: transparent;
+}</string>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;h1&gt;Groot&lt;/h1&gt;
+&lt;p&gt;&lt;i&gt;Groot version $(VERSION)&lt;/i&gt;&lt;/p&gt;
+&lt;p&gt;Would you like to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Grootle around yourself in the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Have a magical &lt;a href=&quot;action:show_wizard&quot;&gt;wizard&lt;/a&gt; do everything for you&lt;/li&gt;
+&lt;li&gt;Stand alone and &lt;a href=&quot;action:dismiss_startup_screen&quot;&gt;dismiss&lt;/a&gt; this message.&lt;/li&gt;
+&lt;li&gt;View the &lt;a href=&quot;action:show_help&quot;&gt;documentation&lt;/a&gt; online.&lt;/li&gt;
+&lt;/ul&gt;
+$(RECENT_FILES)
+&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>802</width>
-    <height>630</height>
+    <width>885</width>
+    <height>877</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,15 +21,45 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="LBL_TITLE_MAIN">
+       <property name="text">
+        <string>Load data</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>title</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_REFRESH">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="style" stdset="0">
+        <string>refresh</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QLabel" name="LBL_HAS_DATA_WARNING">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data is currently loaded. &lt;a href=&quot;action:new_model&quot;&gt;Close&lt;/a&gt; the current first, or visit the &lt;a href=&quot;action:show_workflow_form&quot;&gt;workflow&lt;/a&gt; to manipulate your data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data is currently loaded. &lt;a href=&quot;action:new_model&quot;&gt;Close&lt;/a&gt; the current session first, or visit the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt; to manipulate your data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -37,41 +67,147 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="FRA_RECENT_2">
+    <widget class="QLabel" name="LBL_TITLE_WORKSPACE">
+     <property name="text">
+      <string>Workspace</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="BTN_SHOW_WORKSPACE">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="title">
-      <string>File system</string>
+     <property name="text">
+      <string>Show</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QPushButton" name="BTN_BROWSE">
-        <property name="text">
-         <string>Browse</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <property name="style" stdset="0">
+      <string>dropdown</string>
+     </property>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="FRA_RECENT">
-     <property name="title">
+    <widget class="QFrame" name="FRA_WORKSPACE">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <layout class="QGridLayout" name="LAY_WORKSPACE"/>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLineEdit" name="TXT_WORKSPACE"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_NEW_WORKSPACE">
+       <property name="text">
+        <string>New</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_TITLE_RECENT">
+     <property name="text">
       <string>Recent files</string>
      </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="FRA_SAMPLES">
-     <property name="title">
+    <widget class="QToolButton" name="BTN_SHOW_RECENT">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Show</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>dropdown</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="FRA_RECENT">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <layout class="QGridLayout" name="LAY_RECENT"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_TITLE_SAMPLE">
+     <property name="text">
       <string>Sample data</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="BTN_SHOW_SAMPLE">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Show</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>dropdown</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="FRA_SAMPLE">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <layout class="QGridLayout" name="LAY_SAMPLE"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_TITLE_FILESYSTEM">
+     <property name="text">
+      <string>File system</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="BTN_BROWSE">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Browse...</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -90,6 +226,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

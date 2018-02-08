@@ -1,30 +1,22 @@
-from typing import Optional
-
-from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QAction, QDialog, QMenu
+from PyQt5.QtWidgets import QDialog
 
 from groot.data import global_view
-from groot.data.lego_model import ILegoSelectable, LegoSequence
 from groot.frontends.gui.gui_menu import GuiActions
 from groot.frontends.gui.gui_view_utils import EChanges, LegoSelection
-from intermake import ArgsKwargs, intermake_gui
-from intermake.engine.plugin import Plugin
-from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
-from mhelper import MFlags, SwitchError
-from mhelper_qt import menu_helper
-
-
-
+from intermake import intermake_gui
+from mhelper_qt import menu_helper, exceptToGui
 
 
 class FrmBase( QDialog ):
+    @exceptToGui()
     def __init__( self, parent ):
         from groot.frontends.gui.forms.frm_main import FrmMain
+        assert isinstance(parent, FrmMain)
+        self.frm_main: FrmMain = parent
         super().__init__( parent )
-        self.parent: FrmMain = parent
         self.setStyleSheet( intermake_gui.default_style_sheet() )
-        self.actions : GuiActions = GuiActions( self.parent, self )
+        self.actions: GuiActions = GuiActions( self.frm_main, self )
     
     
     def on_plugin_completed( self, change: EChanges ):
@@ -60,14 +52,8 @@ class FrmBase( QDialog ):
             self.set_selection( LegoSelection( selection.items - { item } ) )
     
     
-    
-    
-    
     def get_selection( self ) -> LegoSelection:
         return global_view.current_selection()
-    
-    
-    
     
     
     def get_model( self ):
@@ -75,7 +61,7 @@ class FrmBase( QDialog ):
     
     
     def closeEvent( self, event: QCloseEvent ):
-        self.parent.remove_form( self )
+        self.frm_main.remove_form( self )
     
     
     def show_menu( self, *args ):
@@ -83,11 +69,4 @@ class FrmBase( QDialog ):
     
     
     def show_form( self, form_class ):
-        self.parent.show_form( form_class )
-    
-    
-    def close_form( self, form ):
-        self.parent.close_form( form )
-    
-    
-    
+        self.frm_main.show_form( form_class )

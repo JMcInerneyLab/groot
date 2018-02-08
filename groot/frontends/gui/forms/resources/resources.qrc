@@ -1,5 +1,8 @@
 <RCC>
   <qresource>
+    <file>manchester_logo.png</file>
+    <file>groot_logo.png</file>
+    <file>bbsrc_logo.png</file>
     <file>align_adjacent.svg</file>
     <file>align_component.svg</file>
     <file>align_left.svg</file>

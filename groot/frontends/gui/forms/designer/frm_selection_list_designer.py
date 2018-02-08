@@ -71,6 +71,6 @@ class Ui_Dialog(object):
         self.RAD_EDGES.setText(_translate("Dialog", "Edges"))
         self.RAD_COMPONENTS.setText(_translate("Dialog", "Components"))
         self.RAD_OTHER.setText(_translate("Dialog", "Other"))
-        self.LBL_NO_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>There is no data. <a href=\"action:show_samples_form\">Load</a> some data first.</p></body></html>"))
+        self.LBL_NO_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>There is no data. <a href=\"action:show_load_model\">Load</a> some data first.</p></body></html>"))
         self.LBL_NO_DATA_WARNING.setProperty("style", _translate("Dialog", "warning"))
 

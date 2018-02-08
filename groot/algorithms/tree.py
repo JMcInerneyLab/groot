@@ -1,6 +1,6 @@
 from typing import Optional
 
-import groot.algorithms.extenal_runner
+import groot.algorithms.external_runner
 from groot.algorithms import importation
 from groot.data.lego_model import LegoComponent
 
@@ -14,17 +14,14 @@ def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     if component.alignment is None:
         raise ValueError( "Cannot generate the tree because the alignment has not yet been specified." )
     
-    fn = groot.algorithms.extenal_runner.get_tool( "tree", algorithm )
+    fn = groot.algorithms.external_runner.get_tool( "tree", algorithm )
     
     # Read the result
-    newick = groot.algorithms.extenal_runner.run_in_temporary( fn, component.model, component.alignment )
+    newick = groot.algorithms.external_runner.run_in_temporary( fn, component.model, component.alignment )
     component.tree = importation.import_newick( newick, component.model )
 
 
 def drop( component: LegoComponent ) -> bool:
-    if component.consensus:
-        raise ValueError( "Refusing to drop the tree because there is already a consensus tree for this component. Did you mean to drop the consensus first?" )
-    
     if component.model.fusion_events:
         raise ValueError( "Refusing to drop the tree because there are fusion events which may be using it. Did you mean to drop the fusion events first?" )
     

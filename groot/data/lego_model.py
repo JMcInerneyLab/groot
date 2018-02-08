@@ -753,6 +753,10 @@ class LegoViewOptions:
 class LegoNrfg( ILegoSelectable ):
     def __init__( self, graph: MGraph ):
         self.graph = graph
+    
+    
+    def __str__( self ):
+        return "NRFG"
 
 
 class LegoModel( ILegoVisualisable ):

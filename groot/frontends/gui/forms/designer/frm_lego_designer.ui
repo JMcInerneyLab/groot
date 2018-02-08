@@ -187,7 +187,7 @@
    <item>
     <widget class="QLabel" name="LBL_NO_DOMAINS">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You have no domains defined, all genes will be shown as one domain. You need to &lt;a href=&quot;action:show_domain_form&quot;&gt;generate domains&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You have no domains defined, all genes will be shown as one domain. You need to &lt;a href=&quot;action:show_domains&quot;&gt;generate domains&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>

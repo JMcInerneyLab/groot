@@ -8,11 +8,11 @@ from typing import Tuple, Set, cast, List
 
 from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoEdge, LegoSubsequence
 from intermake.engine.environment import MCMD
-from mhelper import Logger, ImplementationError, array_helper
+from mhelper import Logger, ImplementationError, array_helper, string_helper
 from mhelper.component_helper import ComponentFinder
 
 
-LOG_MAJOR = Logger( "comp.major", False )
+LOG_MAJOR = Logger( "comp.major", True )
 LOG_MINOR = Logger( "comp.minor", True )
 LOG_GRAPH = Logger( "comp.graph", False )
 
@@ -72,7 +72,6 @@ def __clear( model: LegoModel ) -> None:
     Clears the components from the model.
     """
     model.components.clear()
-    
 
 
 def __detect_major( model: LegoModel, tolerance: int ) -> None:
@@ -91,10 +90,21 @@ def __detect_major( model: LegoModel, tolerance: int ) -> None:
     :param model:       Model
     :param tolerance:   Tolerance value 
     """
-    # Create new components
+    # Find connected components
     components = ComponentFinder()
     
+    # Basic assertions
     LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
+    missing_edges = []
+    
+    for sequence in model.sequences:
+        edges = model.edges.find_sequence( sequence )
+        
+        if not edges:
+            missing_edges.append( sequence )
+    
+    if missing_edges:
+        raise ValueError( "Refusing to detect components because some sequences have no edges: «{}»".format( string_helper.format_array( missing_edges ) ) )
     
     # Iterate sequences
     for sequence_alpha in model.sequences:

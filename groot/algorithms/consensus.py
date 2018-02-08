@@ -1,6 +1,6 @@
 from typing import Iterable, Optional
 
-import groot.algorithms.extenal_runner
+import groot.algorithms.external_runner
 from groot.algorithms import graph_viewing, importation
 from groot.data.lego_model import LegoModel, LegoSequence
 from mgraph import MGraph, MNode
@@ -32,9 +32,9 @@ def tree_consensus( algorithm: Optional[str], model: LegoModel, graphs: Iterable
         
         newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
     
-    fn = groot.algorithms.extenal_runner.get_tool( "consensus", algorithm )
+    fn = groot.algorithms.external_runner.get_tool( "consensus", algorithm )
     
-    consensus_newick = groot.algorithms.extenal_runner.run_in_temporary( fn, model, "\n".join( newick ) + "\n" )
+    consensus_newick = groot.algorithms.external_runner.run_in_temporary( fn, model, "\n".join( newick ) + "\n" )
     
     root_ref = ByRef[MNode]( None )
     result = importation.import_newick( consensus_newick, model, root_ref )

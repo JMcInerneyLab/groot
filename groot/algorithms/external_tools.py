@@ -8,8 +8,8 @@ Please see the pre-defined `_default` functions for details.
 """
 import re
 
-from groot.algorithms import extenal_runner
-from groot.data.lego_model import LegoModel, ESiteType
+from groot.data.lego_model import ESiteType, LegoModel
+from intermake import subprocess_helper
 from mhelper import bio_helper, file_helper, ignore
 
 
@@ -37,7 +37,8 @@ def consensus_paup( model: LegoModel, trees ):
                 GetTrees file=temp_file.nex;
                 SaveTrees file=out_file.nwk format=Newick replace=yes;
                 quit;"""
-    
+
+    # noinspection SpellCheckingInspection
     GARBAGE = ("P A U P \\*",
                "Version .*",
                "Mon .*",
@@ -60,7 +61,7 @@ def consensus_paup( model: LegoModel, trees ):
     file_helper.write_all_text( "in_file.nwk", trees )
     file_helper.write_all_text( "in_file.paup", SCRIPT )
     
-    extenal_runner.run_subprocess( ["paup", "in_file.paup", "-n"], garbage = GARBAGE )
+    subprocess_helper.run_subprocess( ["paup", "in_file.paup", "-n"], garbage = GARBAGE )
     
     return file_helper.read_all_text( "out_file.nwk" )
 
@@ -98,16 +99,17 @@ def tree_default( model: LegoModel, alignment ):
 def tree_raxml( model: LegoModel, alignment ):
     """
     Uses Raxml to generate the tree.
+    The model used is GTRCAT for RNA sequences, and PROTGAMMAWAG for protein sequences.
     """
     file_helper.write_all_text( "in_file.fasta", alignment )
     bio_helper.convert_file( "in_file.fasta", "in_file.phy", "fasta", "phylip" )
     
-    if model.site_type == ESiteType.DNA:
+    if model.site_type in (ESiteType.DNA, ESiteType.RNA):
         method = "GTRCAT"
     else:
         method = "PROTGAMMAWAG"
     
-    extenal_runner.run_subprocess( "raxml -T 4 -m {} -p 1 -s in_file.phy -# 20 -n t".format( method ).split( " " ) )
+    subprocess_helper.run_subprocess( "raxml -T 4 -m {} -p 1 -s in_file.phy -# 20 -n t".format( method ).split( " " ) )
     
     return file_helper.read_all_text( "RAxML_bestTree.t" )
 
@@ -123,13 +125,13 @@ def align_default( model: LegoModel, fasta ):
     return align_muscle( model, fasta )
 
 
-def align_muscle( model: LegoModel, fasta ):
+def align_muscle( _: LegoModel, fasta ):
     """
     Uses MUSCLE to align.
     """
     file_helper.write_all_text( "in_file.fasta", fasta )
     
-    extenal_runner.run_subprocess( "muscle -in in_file.fasta -out out_file.fasta".split( " " ) )
+    subprocess_helper.run_subprocess( "muscle -in in_file.fasta -out out_file.fasta".split( " " ) )
     
     return file_helper.read_all_text( "out_file.fasta" )
 

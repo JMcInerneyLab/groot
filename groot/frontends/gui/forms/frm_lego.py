@@ -98,9 +98,9 @@ class FrmLego( FrmBase ):
         if toggle:
             selection = self.get_selection()
             select = selection.items.union( select ) - selection.items.intersection( select )
-            self.set_selection( LegoSelection( select ) )
+            self.actions.set_selection( LegoSelection( select ) )
         else:
-            self.set_selection( LegoSelection( frozenset( select ) ) )
+            self.actions.set_selection( LegoSelection( frozenset( select ) ) )
     
     
     @exqtSlot()
