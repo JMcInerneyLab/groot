@@ -1,13 +1,11 @@
-import inspect
 import os
-from collections import defaultdict
+from os import path
 from typing import Callable, Iterable, List, Optional, TypeVar
 
 import pyperclip
-from os import path
 
 import intermake
-from groot.algorithms import components, external_runner, fastaiser, graph_viewing, userdomains
+from groot.algorithms import alignment, components, fastaiser, graph_viewing, tree, userdomains
 from groot.algorithms.classes import FusionPoint
 from groot.constants import EFormat, EOut
 from groot.data import global_view
@@ -32,13 +30,11 @@ def algorithm_help():
     Prints available algorithms.
     """
     r = []
-    d = external_runner.list_algorithms()
-    
-    for algo_type, algo_dict in sorted( d.items(), key = lambda x: x[0] ):
+    for module in (tree, alignment):
         r.append( "" )
-        r.append( Theme.TITLE + "========== " + algo_type + " ==========" + Theme.RESET )
+        r.append( Theme.TITLE + "========== " + module.__name__ + " ==========" + Theme.RESET )
         
-        for name, function in algo_dict.items():
+        for name, function in module.algorithms:
             if name != "default":
                 r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
                 r.append( "    " + (function.__doc__ or "").strip() )
@@ -182,7 +178,7 @@ def print_trees( graph: Optional[MGraph] = None,
                 continue
         
         if model.nrfg:
-            trees.append( (str( "NRFG" ), model.nrfg) )
+            trees.append( (str( "NRFG" ), model.nrfg.graph) )
     else:
         if out == EOut.NORMAL:
             name = "unknown"
@@ -191,7 +187,7 @@ def print_trees( graph: Optional[MGraph] = None,
                 if graph is component.tree:
                     name = str( component )
             
-            if graph is model.nrfg:
+            if model.nrfg is not None and graph is model.nrfg.graph:
                 name = "NRFG"
         else:
             name = None
@@ -376,7 +372,7 @@ def print_sequences( domain: EDomainFunction = EDomainFunction.COMPONENT, parame
             else:
                 r.append( "Ø " )
             
-            subsequences = userdomains.by_enum( sequence, domain, parameter )
+            subsequences = userdomains.sequence_by_enum( sequence, domain, parameter )
             
             for subsequence in subsequences:
                 components = model.components.find_components_for_minor_subsequence( subsequence )
@@ -465,7 +461,7 @@ def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optio
 
 
 @command( names = ["print_fusions", "fusions"] )
-def print_fusions( verbose: bool = False ) -> EChanges:
+def print_fusions() -> EChanges:
     """
     Estimates model fusions. Does not affect the model.
     
@@ -475,12 +471,24 @@ def print_fusions( verbose: bool = False ) -> EChanges:
     
     model = global_view.current_model()
     
-    for fusion_event in model.fusion_events:
-        results.append( "{}".format( fusion_event ) )
-        results.append( "" )
+    for event in model.fusion_events:
+        results.append( "- name               {}".format( event ) )
+        results.append( "  component a        {}".format( event.component_a ) )
+        results.append( "  component b        {}".format( event.component_b ) )
+        results.append( "  component c        {}".format( event.component_c ) )
+        results.append( "  index              {}".format( event.index ) )
+        results.append( "  products           {}".format( string_helper.format_array( event.products ) ) )
+        results.append( "  future products    {}".format( string_helper.format_array( event.future_products ) ) )
+        results.append( "  points             {}".format( string_helper.format_array( event.points ) ) )
         
-        for fusion_point in fusion_event.points:
-            __format_fusion_point( fusion_point, results, verbose )
+        for point in event.points:
+            results.append( "     -   name               {}".format( point ) )
+            results.append( "         component          {}".format( point.component ) )
+            results.append( "         count              {}".format( point.count ) )
+            results.append( "         outer sequences    {}".format( string_helper.format_array( point.outer_sequences ) ) )
+            results.append( "         pertinent inner    {}".format( string_helper.format_array( point.pertinent_inner ) ) )
+            results.append( "         pertinent outer    {}".format( string_helper.format_array( point.pertinent_outer ) ) )
+            results.append( "         sequences          {}".format( string_helper.format_array( point.sequences ) ) )
             results.append( "" )
         
         results.append( "" )
@@ -488,18 +496,6 @@ def print_fusions( verbose: bool = False ) -> EChanges:
     MCMD.information( "\n".join( results ) )
     
     return EChanges.INFORMATION
-
-
-def __format_fusion_point( fusion_point: FusionPoint, results, verbose ):
-    if not verbose:
-        results.append( "  •  {}".format( str( fusion_point ) ) )
-        results.append( "         {} : {}".format( fusion_point.count, ",".join( sorted( str( x ) for x in fusion_point.sequences ) ) ) )
-        return
-    
-    results.append( "  •  component         {}".format( fusion_point.component ) )
-    results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.intersections ) ) )
-    results.append( "     intersect         {}".format( string_helper.format_array( fusion_point.event.orig_intersections ) ) )
-    results.append( "     sequences         {}".format( string_helper.format_array( fusion_point.sequences ) ) )
 
 
 @command( visibility = visibilities.ADVANCED )

@@ -1,8 +1,6 @@
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton, QSpacerItem, QSizePolicy
 from groot.frontends.gui.forms.designer import frm_run_algorithm_designer
-
-from groot.algorithms import external_runner
-from groot.algorithms.external_runner import EAlgoType
+from groot.algorithms import tree, alignment
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot import ext_generating
@@ -11,7 +9,7 @@ from mhelper_qt import exceptToGui, exqtSlot
 
 class FrmRunAlgorithm( FrmBase ):
     @exceptToGui()
-    def __init__( self, parent, title, algo_type, prereq, exists ):
+    def __init__( self, parent, title, prereq, exists, module ):
         """
         CONSTRUCTOR
         """
@@ -20,17 +18,14 @@ class FrmRunAlgorithm( FrmBase ):
         self.setWindowTitle( title )
         self.radios = []
         
-        algos = external_runner.list_algorithms()
-        
         layout = QVBoxLayout()
         self.ui.FRA_MAIN.setLayout( layout )
         
-        for prefix, function in algos[algo_type].items():
+        for name, function in module.algorithms:
             rad = QRadioButton()
-            rad.setText( prefix )
+            rad.setText( name )
             rad.toggled[bool].connect( self.on_radio_toggled )
             self.radios.append( rad )
-            rad.TAG_function = function
             layout.addWidget( rad )
         
         layout.addItem( QSpacerItem( 0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding ) )
@@ -109,9 +104,9 @@ class FrmCreateTrees( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Trees",
-                          EAlgoType.TREE,
                           '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body</html>',
-                          '<html><body>Trees already exist, you can <a href="action:show_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body</html>' )
+                          '<html><body>Trees already exist, you can <a href="action:show_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body</html>',
+                          tree )
 
 
 class FrmCreateAlignment( FrmRunAlgorithm ):
@@ -134,6 +129,6 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Alignments",
-                          EAlgoType.ALIGN,
                           '<html><body>You need to <a href="action:create_components">create the components</a> before creating the alignments.</body</html>',
-                          '<html><body>Alignments already exist, you can <a href="action:show_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body</html>' )
+                          '<html><body>Alignments already exist, you can <a href="action:show_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body</html>',
+                          alignment )

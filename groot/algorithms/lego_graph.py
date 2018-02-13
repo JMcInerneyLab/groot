@@ -12,11 +12,16 @@ from mhelper import ansi, TTristate
 _TGetSequences = Union[Iterable[MNode], FollowParams]
 
 
+            
+        
+
 class Split:
     def __init__( self, inside: FrozenSet[ILeaf], outside: FrozenSet[ILeaf] ):
         self.inside: FrozenSet[ILeaf] = inside
         self.outside: FrozenSet[ILeaf] = outside
         self.all = frozenset( itertools.chain( self.inside, self.outside ) )
+        
+    
     
     
     def intersection( self, x: AbstractSet[ILeaf] ):
@@ -36,7 +41,7 @@ class Split:
             else:
                 r.append( ansi.FORE_RED + str( x ) + ansi.FORE_RESET )
         
-        return ", ".join( r )
+        return "·".join( r )
         
         # return string_helper.format_array( self.all, sort = True )+" = "+ ansi.FORE_GREEN + string_helper.format_array( self.inside, sort = True ) + ansi.RESET + " ¦ " + ansi.FORE_RED + string_helper.format_array( self.outside, sort = True ) + ansi.RESET
     

@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QMenu, QMenuBar
 from groot.frontends.gui.forms.designer import frm_workflow_designer
 
 from groot.data import global_view

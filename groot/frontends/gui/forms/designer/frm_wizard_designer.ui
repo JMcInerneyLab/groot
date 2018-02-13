@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1169</width>
-    <height>910</height>
+    <width>1167</width>
+    <height>894</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,12 +15,42 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Groot Wizard</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_HELP_TITLE">
+     <property name="text">
+      <string>The wizard performs the complete Groot workflow at once. If you'd like to be guided through step-by-step, consider using the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt; instead.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="label_7">
      <property name="text">
       <string>Filename</string>
      </property>
      <property name="style" stdset="0">
       <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>Specify the file where your output should be saved. You can open this file to view it in Groot after the wizard completes.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
      </property>
     </widget>
    </item>
@@ -45,6 +75,16 @@
      </property>
      <property name="style" stdset="0">
       <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>Specify at least one FASTA file and its corresponding BLAST file.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
      </property>
     </widget>
    </item>
@@ -95,6 +135,16 @@
      </property>
      <property name="style" stdset="0">
       <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_13">
+     <property name="text">
+      <string>Setup the algorithms and choose your tools.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
      </property>
     </widget>
    </item>
@@ -166,6 +216,16 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>When you're ready, click OK to run the wizard.</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>helpbox</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -189,6 +249,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

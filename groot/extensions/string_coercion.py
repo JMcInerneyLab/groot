@@ -9,10 +9,11 @@ from groot.data.lego_model import LegoComponent, LegoSequence
 from intermake.helpers.coercion_extensions import VISUALISABLE_COERCION
 from mgraph import MGraph
 
+
 def setup():
     class MGraphCoercer( stringcoercion.Coercer ):
         def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return info.annotation.is_directly_below( MGraph )
+            return self.PRIORITY.HIGH if info.annotation.is_directly_below( MGraph ) else False
         
         
         def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
@@ -20,7 +21,10 @@ def setup():
             model = global_view.current_model()
             
             if txt == "nrfg":
-                return model.nrfg
+                if model.nrfg is None:
+                    raise stringcoercion.CoercionError( "The model does not have an NRFG.", cancel = True )
+                
+                return model.nrfg.graph
             
             for i, component in enumerate( model.components ):
                 assert isinstance( component, LegoComponent )
@@ -57,4 +61,3 @@ def setup():
     
     stringcoercion.register( MSequenceCoercer() )
     stringcoercion.register( MGraphCoercer() )
-    VISUALISABLE_COERCION.register_as_visualisable( MGraph )

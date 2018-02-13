@@ -1,8 +1,38 @@
-from typing import Optional
+from typing import Optional, Callable, Dict
 
 import groot.algorithms.external_runner
 from groot.algorithms import importation
-from groot.data.lego_model import LegoComponent
+from groot.data.lego_model import LegoComponent, LegoModel
+
+
+DAlgorithm = Callable[[LegoModel, str], str]
+"""A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
+
+algorithms: Dict[str, DAlgorithm] = { }
+default_algorithm = None
+
+
+def register_algorithm( fn: DAlgorithm ) -> DAlgorithm:
+    """
+    Registers a tree algorithm.
+    Can be used as a decorator.
+    
+    :param fn:  Function matching the `DAlgorithm` delegate.
+    :return:    `fn` 
+    """
+    global default_algorithm
+    
+    name: str = fn.__name__
+    
+    if name.startswith( "tree_" ):
+        name = name[6:]
+    
+    if default_algorithm is None:
+        default_algorithm = name
+    
+    algorithms[name] = fn
+    
+    return fn
 
 
 def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
@@ -14,7 +44,10 @@ def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     if component.alignment is None:
         raise ValueError( "Cannot generate the tree because the alignment has not yet been specified." )
     
-    fn = groot.algorithms.external_runner.get_tool( "tree", algorithm )
+    if not algorithm:
+        algorithm = default_algorithm
+    
+    fn = algorithms[algorithm]
     
     # Read the result
     newick = groot.algorithms.external_runner.run_in_temporary( fn, component.model, component.alignment )

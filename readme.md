@@ -135,7 +135,7 @@ We didn't specify a path, or an extension, so you'll notice Gʀᴏᴏᴛ has add
 Preparing your data
 -------------------
 
-Gʀᴏᴏᴛ follows a pretty-much linear workflow, execute the following command to find out where we're at:
+Gʀᴏᴏᴛ follows a linear workflow, execute the `status` command to find out where we're at:
 
 ```bash
 $   status
@@ -363,10 +363,10 @@ Meta-data
 ---------
 
 ```ini
-language= python3
-author= martin rusilowicz
-date= 2017
-keywords= blast, genomics, genome, gene, nrgf, graphs, intermake
-host= bitbucket
-type=application,application-gui,application-cli
+language    = python3
+author      = martin rusilowicz
+date        = 2017
+keywords    = blast, genomics, genome, gene, nrgf, graphs, intermake
+host        = bitbucket
+type        = application,application-gui,application-cli
 ```

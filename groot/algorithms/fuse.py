@@ -7,11 +7,12 @@ from typing import List, Set
 from groot.algorithms import lego_graph
 from groot.algorithms.classes import FusionEvent, FusionPoint
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
-from mgraph import MGraph, MNode
-from mhelper import Logger, array_helper
+from mgraph import MGraph, MNode, MEdge
+from mhelper import Logger, array_helper, string_helper
 
 
-__LOG = Logger( "fusion", False )
+__LOG = Logger( "fusion", True )
+__LOG_ISOLATION = Logger( "isolation", True )
 
 
 def remove_fusions( model: LegoModel ) -> int:
@@ -31,7 +32,11 @@ def remove_fusions( model: LegoModel ) -> int:
         
         for node in graph.get_nodes():
             if isinstance( node.data, FusionPoint ):
-                assert len( node.edges ) == 2
+                if len( node.edges ) == 1:
+                    to_delete.append( node )
+                    continue
+                
+                assert len( node.edges ) == 2, len( node.edges )
                 
                 # Remove the old node
                 graph.add_edge( node.parent, node.child )
@@ -45,7 +50,7 @@ def remove_fusions( model: LegoModel ) -> int:
     return removed_count
 
 
-def find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
+def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
     """
     Finds the fusion events in the model.
     
@@ -90,7 +95,7 @@ def find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
                     if len( event_b.products ) == 1 and f in event.products:
                         for component in (event_b.component_a, event_b.component_b):
                             if component in event.products:
-                                __LOG( "INTERSECTIONS {} SHOULD LOSE {} BECAUSE THATS ALREADY IN {}", event, f, event_b )
+                                __LOG( "EVENT {} SHOULD LOSE PRODUCT {} BECAUSE THAT'S ALREADY IN EVENT {}", event, f, event_b )
                                 event.products.remove( f )
                                 __LOG( "NOW INTERSECTIONS ARE {}", event )
                                 continue_ = True
@@ -120,7 +125,7 @@ def find_all_fusion_points( model: LegoModel ) -> None:
     if __fusions_exist( model ):
         raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
     
-    for event in find_fusion_events( model ):
+    for event in __find_fusion_events( model ):
         __LOG( "Processing fusion event: {}", event )
         event.points = []
         
@@ -198,8 +203,11 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    isolation_points = graph.find_isolation_points( is_inside = lambda node: isinstance( node.data, LegoSequence ) and node.data in inside,
-                                                    is_outside = lambda node: isinstance( node.data, LegoSequence ) and node.data in outside )
+    inside_nodes = set( node for node in graph if (isinstance( node.data, LegoSequence ) and node.data in inside) )
+    outside_nodes = set( node for node in graph if (isinstance( node.data, LegoSequence ) and node.data in outside) )
+    
+    __LOG( graph.to_ascii() )
+    isolation_points = list( isolate( graph, inside_nodes, outside_nodes ) )
     
     __LOG( "----There are {} isolation points on {} ¦ {}", len( isolation_points ), inside, outside )
     
@@ -223,8 +231,8 @@ def __find_fusion_points( fusion_event: FusionEvent,
         graph.add_edge( fusion_node, edge.right )
         edge.remove_edge()
         
-        sequences = lego_graph.get_split_leaves( isolation_point.all_outside_nodes )
-        outer_sequences = lego_graph.get_split_leaves( isolation_point.all_inside_nodes )
+        sequences = lego_graph.get_split_leaves( isolation_point.outside_nodes )
+        outer_sequences = lego_graph.get_split_leaves( isolation_point.inside_nodes )
         fusion_point = FusionPoint( fusion_event, component, sequences, outer_sequences )
         fusion_node.data = fusion_point
         results.append( fusion_point )
@@ -232,3 +240,76 @@ def __find_fusion_points( fusion_event: FusionEvent,
     __LOG( "----{} results", len( results ) )
     
     return results
+
+
+class EdgeInfo:
+    def __init__( self,
+                  edge: MEdge,
+                  flip_edge: bool,
+                  inside_nodes: Set[MNode],
+                  outside_nodes: Set[MNode],
+                  inside_request: Set[MNode],
+                  outside_request: Set[MNode] ):
+        self.edge = edge
+        self.flip_edge = flip_edge
+        self.inside_nodes = inside_nodes
+        self.outside_nodes = outside_nodes
+        
+        self.inside_count = len( self.inside_nodes )
+        self.outside_count = len( self.outside_nodes )
+        self.inside_incorrect = [x for x in inside_request if x in outside_nodes]
+        self.outside_incorrect = [x for x in outside_request if x in inside_nodes]
+        
+        if flip_edge:
+            self.internal_node = edge.right
+            self.external_node = edge.left
+        else:
+            self.internal_node = edge.left
+            self.external_node = edge.right
+
+
+def prepare_graph( graph: MGraph,
+                   inside_request: Set[MNode],
+                   outside_request: Set[MNode] ):
+    results = []
+    for edge in graph.edges:
+        assert isinstance( edge, MEdge )
+        left_nodes, right_nodes = edge.cut_nodes()
+        results.append( EdgeInfo( edge, False, left_nodes, right_nodes, inside_request, outside_request ) )
+        results.append( EdgeInfo( edge, True, right_nodes, left_nodes, inside_request, outside_request ) )
+    return results
+
+
+def isolate( graph: MGraph,
+             inside_request: Set[MNode],
+             outside_request: Set[MNode],
+             debug_level: int = 0 ):
+    __LOG_ISOLATION.indent = debug_level
+    __LOG_ISOLATION( "READY TO ISOLATE" )
+    __LOG_ISOLATION( "*ISOL* INSIDE:  (n={}) {}", len( inside_request ), inside_request, sort = True )
+    __LOG_ISOLATION( "*ISOL* OUTSIDE: (n={}) {}", len( outside_request ), outside_request, sort = True )
+    
+    edges: List[EdgeInfo] = prepare_graph( graph, inside_request, outside_request )
+    
+    __LOG_ISOLATION( "{} EDGES", len( edges ) )
+    
+    valid_edges = [x for x in edges if not x.inside_incorrect]
+    best_correct_score = min( len( x.outside_incorrect ) for x in valid_edges )
+    best_correct = [x for x in valid_edges if len( x.outside_incorrect ) == best_correct_score]
+    best_correct_count = min( x.inside_count for x in best_correct )
+    best: EdgeInfo = array_helper.first_or_error( x for x in best_correct if x.inside_count == best_correct_count )
+    
+    __LOG_ISOLATION( "BEST ISOLATION:" )
+    __LOG_ISOLATION( "*BEST* FLIP EDGE         {}", best.flip_edge )
+    __LOG_ISOLATION( "*BEST* INSIDE INCORRECT  (n={}) {}", len( best.inside_incorrect ), best.inside_incorrect, sort = True )
+    __LOG_ISOLATION( "*BEST* INSIDE            (n={}) {}", len( best.inside_nodes ), best.inside_nodes, sort = True )
+    __LOG_ISOLATION( "*BEST* OUTSIDE INCORRECT (n={}) {}", len( best.outside_incorrect ), best.outside_incorrect, sort = True )
+    __LOG_ISOLATION( "*BEST* OUTSIDE           (n={}) {}", len( best.outside_nodes ), best.outside_nodes, sort = True )
+    
+    yield best
+    
+    if best.outside_incorrect:
+        __LOG_ISOLATION( "REMAINING" )
+        yield from isolate( graph, inside_request, best.outside_incorrect )
+    
+    __LOG_ISOLATION.indent = 0

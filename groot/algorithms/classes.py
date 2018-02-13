@@ -62,7 +62,7 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     
     def __repr__( self ):
-        return self.str_short()
+        return self.str_id()
     
     
     def __eq__( self, other ):
@@ -86,6 +86,9 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     def __format_elements( self, y ):
         r = []
+        
+        if len(y) == 0:
+            return "∅"
         
         for x in y:
             if isinstance( x, LegoSequence ):

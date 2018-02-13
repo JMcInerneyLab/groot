@@ -2,8 +2,7 @@ from PyQt5.QtWidgets import QFileDialog, QTreeWidgetItem
 from groot.frontends.gui.forms.designer import frm_wizard_designer
 
 from groot import extensions
-from groot.algorithms import external_runner
-from groot.algorithms.external_runner import EAlgoType
+from groot.algorithms import tree, alignment
 from groot.frontends.gui.forms.frm_base import FrmBase
 from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 
@@ -18,13 +17,14 @@ class FrmWizard( FrmBase ):
         self.ui = frm_wizard_designer.Ui_Dialog( self )
         self.setWindowTitle( "Wizard" )
         
-        algos = external_runner.list_algorithms()
         
-        for key in algos[EAlgoType.ALIGN].keys():
-            self.ui.CMB_ALIGNMENT_METHOD.addItem(key)
-            
-        for key in algos[EAlgoType.TREE].keys():
-            self.ui.CMB_TREE_METHOD.addItem(key)
+        for key in alignment.algorithms:
+            self.ui.CMB_ALIGNMENT_METHOD.addItem( key )
+        
+        for key in tree.algorithms:
+            self.ui.CMB_TREE_METHOD.addItem( key )
+        
+        self.actions.bind_to_label( self.ui.LBL_HELP_TITLE )
     
     
     @exqtSlot()

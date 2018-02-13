@@ -1,18 +1,9 @@
-import inspect
 import os
 import shutil
-from collections import defaultdict
-from typing import Callable, Dict, Optional
-
-from groot.algorithms import external_tools
+from typing import Optional
 from intermake.engine import constants
 from intermake.engine.environment import MENV
-from mhelper import MEnum, file_helper
-
-
-class EAlgoType( MEnum ):
-    TREE = 1
-    ALIGN = 2
+from mhelper import file_helper
 
 
 def run_in_temporary( function, *args, **kwargs ):
@@ -51,20 +42,3 @@ def get_tool( prefix, tool: Optional[str] ):
         raise ValueError( "No such «{}» algorithm as «{}». (the «{}» function does not exist in the `external_tools` module.)".format( prefix, tool, name ) )
 
 
-def list_algorithms() -> Dict[EAlgoType, Dict[str, Callable]]:
-    d = defaultdict( dict )
-    
-    for attr_name, attr_value in external_tools.__dict__.items():
-        if not attr_name.startswith( "_" ) and "_" in attr_name and inspect.isfunction( attr_value ):
-            prefix, suffix = attr_name.split( "_", 1 )
-            
-            if prefix == "tree":
-                algo_type = EAlgoType.TREE
-            elif prefix == "align":
-                algo_type = EAlgoType.ALIGN
-            else:
-                continue
-            
-            d[algo_type][suffix] = attr_value
-    
-    return dict( d )

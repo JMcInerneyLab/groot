@@ -501,7 +501,7 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
     
     
     def __str__( self ) -> str:
-        return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )
+        return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )[0]
         # return _GREEK[self.index % len( _GREEK )].lower() ⨍
     
     
