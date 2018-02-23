@@ -8,31 +8,45 @@ from mgraph import MNode, MGraph, FollowParams
 from mhelper import ansi, TTristate
 
 
-
 _TGetSequences = Union[Iterable[MNode], FollowParams]
 
 
-            
-        
-
 class Split:
+    """
+    Defines an edge in a tree.
+    """
+    
+    
     def __init__( self, inside: FrozenSet[ILeaf], outside: FrozenSet[ILeaf] ):
+        """
+        CONSTRUCTOR
+        :param inside:      Nodes inside the edge 
+        :param outside:     Node outside the edge 
+        """
         self.inside: FrozenSet[ILeaf] = inside
         self.outside: FrozenSet[ILeaf] = outside
         self.all = frozenset( itertools.chain( self.inside, self.outside ) )
-        
     
     
+    def intersection( self, other: AbstractSet[ILeaf] ) -> "Split":
+        """
+        Returns a split that encompasses the intersection of this split and an `other`.
+        """
+        return Split( frozenset( self.inside.intersection( other ) ),
+                      frozenset( self.outside.intersection( other ) ) )
     
-    def intersection( self, x: AbstractSet[ILeaf] ):
-        return Split( frozenset( self.inside.intersection( x ) ),
-                      frozenset( self.outside.intersection( x ) ) )
     
-    def is_bad( self ):
+    def is_redundant( self ) -> bool:
+        """
+        A split is bad if it has no nodes on one side of the edge.
+        """
         return not self.inside or not self.outside
     
     
     def __str__( self ):
+        """
+        OVERRIDE 
+        """
         r = []
         
         for x in sorted( self.all, key = str ):
@@ -48,13 +62,17 @@ class Split:
     
     @property
     def is_empty( self ):
+        """
+        A split is empty if it has no inside nodes.
+        TODO: Is this a bad use case of is_redundant?
+        """
         return len( self.inside ) == 0
     
     
     def is_evidenced_by( self, other: "Split" ) -> TTristate:
         """
-        A split is evidenced by another if it is a subset of it
-        No evidence can be provided if the other set of leaves is not a subset 
+        A split is evidenced by an `other` if it is a subset of the `other`.
+        No evidence can be provided if the `other` set of leaves is not a subset 
         """
         if not self.all.issubset( other.all ):
             return None
@@ -63,25 +81,38 @@ class Split:
     
     
     def __len__( self ):
+        """
+        Number of inside nodes.
+        """
         return len( self.inside )
     
     
     def __hash__( self ):
+        """
+        OVERRIDE
+        Hash of the split. See `__eq__`.
+        """
         return hash( (self.inside, self.outside) )
     
     
     def __eq__( self, other ):
+        """
+        OVERRIDE
+        Splits are equal if they share the same inside and outside nodes.
+        """
         return isinstance( other, Split ) and self.inside == other.inside and self.outside == other.outside
 
 
 def get_sequences( nodes: Iterable[MNode] ) -> Set[LegoSequence]:
     return set( node.data for node in nodes if isinstance( node.data, LegoSequence ) )
 
+
 def get_fusions( nodes: Iterable[MNode] ) -> Set[FusionPoint]:
     return set( node.data for node in nodes if isinstance( node.data, FusionPoint ) )
 
+
 def get_fusion_nodes( nodes: Iterable[MNode] ) -> List[MNode]:
-    return [ node for node in nodes if isinstance( node.data, FusionPoint ) ]
+    return [node for node in nodes if isinstance( node.data, FusionPoint )]
 
 
 def is_clade( node: MNode ) -> bool:

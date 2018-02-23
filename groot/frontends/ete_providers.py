@@ -7,7 +7,7 @@ from mgraph import DNodeToText, MGraph
 
 
 def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
-    ascii = tree_from_newick( target.to_newick( formatter ) ).get_ascii( show_internal = True )
+    ascii = tree_from_newick( target.to_newick( fname = formatter ) ).get_ascii( show_internal = True )
     
     for sequence in model.sequences:
         component = model.components.find_component_for_major_sequence(sequence)
@@ -18,7 +18,7 @@ def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
 
 
 def show_tree( target: MGraph, model: LegoModel, formatter : DNodeToText ):
-    tree__ = tree_from_newick( target.to_newick( formatter ) )
+    tree__ = tree_from_newick( target.to_newick( fname = formatter ) )
     colours = ["#C00000", "#00C000", "#C0C000", "#0000C0", "#C000C0", "#00C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFC0"]
     
     for n in tree__.traverse():

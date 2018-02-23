@@ -62,7 +62,7 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     
     def __repr__( self ):
-        return self.str_id()
+        return self.str_long()
     
     
     def __eq__( self, other ):
@@ -87,7 +87,7 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     def __format_elements( self, y ):
         r = []
         
-        if len(y) == 0:
+        if len( y ) == 0:
             return "∅"
         
         for x in y:
@@ -96,7 +96,7 @@ class FusionPoint( ILeaf, ILegoSelectable ):
             elif isinstance( x, FusionPoint ):
                 r.append( x.str_id() )
         
-        return string_helper.format_array( r, sort = True )
+        return string_helper.format_array( r, join = ",", sort = True )
     
     
     def str_id( self ):
@@ -108,4 +108,4 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     
     def str_long( self ):
-        return "¨{} ⊇ {} ⊅ {}¨".format( self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )
+        return "¨{}⊇{}⊅{}¨".format( self.event, self.__format_elements( self.pertinent_inner ), self.__format_elements( self.pertinent_outer ) )

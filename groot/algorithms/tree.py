@@ -25,7 +25,7 @@ def register_algorithm( fn: DAlgorithm ) -> DAlgorithm:
     name: str = fn.__name__
     
     if name.startswith( "tree_" ):
-        name = name[6:]
+        name = name[5:]
     
     if default_algorithm is None:
         default_algorithm = name

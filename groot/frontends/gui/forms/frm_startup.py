@@ -1,5 +1,6 @@
 from groot.frontends.gui.forms.designer import frm_startup_designer
 from groot.data import global_view
+from groot.data.global_view import RecentFile
 from groot.frontends.gui.forms.frm_base import FrmBase
 from intermake.engine.environment import MENV
 from mhelper import file_helper
@@ -24,7 +25,8 @@ class FrmStartup( FrmBase ):
         r.append( "<h3>Recent files</h3><ul>" )
         
         for file in reversed( global_view.options().recent_files ):
-            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file, file_helper.get_filename_without_extension( file ) ) )
+            assert isinstance(file, RecentFile)
+            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file, file_helper.get_filename_without_extension( file.file_name ) ) )
         
         r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( self.actions.browse_open.__name__ ) )
         r.append( "</ul>" )

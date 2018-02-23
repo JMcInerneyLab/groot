@@ -20,8 +20,6 @@ DNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "T": ansi.FORE_RED, "C": ansi.FORE_G
 RNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "U": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE, "-": ansi.FORE_BRIGHT_BLACK }
 
 
-
-
 def component_to_ansi( component: LegoComponent ) -> str:
     return component_to_ansi_fore( component ) + str( component ) + ansi.RESET
 
@@ -34,7 +32,7 @@ def component_to_ansi_back( component: LegoComponent ):
     return Theme.PROGRESSION_BACK[component.index % len( Theme.PROGRESSION_BACK )]
 
 
-def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model: LegoModel = None ):
+def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model: LegoModel = None, x = 1, n = 99999 ):
     table = __table_from_type( site_type )
     
     result = []
@@ -55,8 +53,18 @@ def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model:
         
         result_line = []
         
-        for char in sites:
+        s = (x - 1)
+        
+        if s != 0:
+            result_line.append( ansi.FORE_WHITE + ansi.BACK_BLUE + "…" + ansi.RESET )
+        
+        e = s + n
+        
+        for char in sites[s:e]:
             result_line.append( table.get( char, ansi.FORE_BRIGHT_BLACK ) + char )
+        
+        if e < len( sites ) - 1:
+            result_line.append( ansi.FORE_WHITE + ansi.BACK_BLUE + "…" )
         
         result.append( "".join( result_line ) + ansi.RESET )
     

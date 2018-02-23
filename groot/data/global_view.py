@@ -9,7 +9,7 @@ from groot.frontends.gui.gui_view_utils import LegoSelection
 from intermake import MENV, PathToVisualisable
 from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
-from mhelper import file_helper, MEnum
+from mhelper import file_helper, MEnum, array_helper
 
 
 __model: LegoModel = None
@@ -32,16 +32,16 @@ def current_status():
 class _current_status:
     def __init__( self ):
         model = current_model()
-        self.file = bool( model.file_name )
-        self.align = (not model.components.is_empty and all( x.alignment is not None for x in model.components ))
-        self.blast = (len( model.edges ) != 0)
-        self.fasta = (len( model.sequences ) != 0 and all( x.site_array for x in model.sequences ))
-        self.fusions = (bool( model.fusion_events ))
-        self.comps = (len( model.components ) != 0)
-        self.trees = (not model.components.is_empty and all( x.tree is not None for x in model.components ))
-        self.nrfg = (model.nrfg is not None)
-        self.data = self.blast or self.fasta
-        self.empty = not self.file and not self.data
+        self.is_file = bool( model.file_name )
+        self.is_align = (not model.components.is_empty and all( x.alignment is not None for x in model.components ))
+        self.is_blast = (len( model.edges ) != 0)
+        self.is_fasta = (len( model.sequences ) != 0 and all( x.site_array for x in model.sequences ))
+        self.is_fusions = (bool( model.fusion_events ))
+        self.is_comps = (len( model.components ) != 0)
+        self.is_trees = (not model.components.is_empty and all( x.tree is not None for x in model.components ))
+        self.is_nrfg = (model.nrfg is not None)
+        self.is_any_data = self.is_blast or self.is_fasta
+        self.is_empty = not self.is_file and not self.is_any_data
         self.file_name = model.file_name
         self.domains = (len( model.user_domains ) != 0)
         self.num_sequences = len( model.sequences )
@@ -169,10 +169,14 @@ def remember_file( file_name: str ) -> None:
     """
     opt = options()
     
-    if file_name in opt.recent_files:
-        opt.recent_files.remove( file_name )
+    array_helper.remove_where( opt.recent_files, lambda x: not isinstance( x, RecentFile ) )  # remove legacy data
     
-    opt.recent_files.append( file_name )
+    for recent_file in opt.recent_files:
+        if recent_file.file_name == file_name:
+            opt.recent_files.remove( recent_file )
+            break
+    
+    opt.recent_files.append( RecentFile( file_name ) )
     
     while len( opt.recent_files ) > 10:
         del opt.recent_files[0]

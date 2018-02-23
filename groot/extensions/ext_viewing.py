@@ -34,7 +34,7 @@ def algorithm_help():
         r.append( "" )
         r.append( Theme.TITLE + "========== " + module.__name__ + " ==========" + Theme.RESET )
         
-        for name, function in module.algorithms:
+        for name, function in module.algorithms.items():
             if name != "default":
                 r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
                 r.append( "    " + (function.__doc__ or "").strip() )
@@ -87,20 +87,25 @@ def print_status() -> EChanges:
 
 
 @command( names = ["print_alignments", "alignments"] )
-def print_alignments( component: Optional[List[LegoComponent]] = None ) -> EChanges:
+def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0 ) -> EChanges:
     """
     Prints the alignment for a component.
     :param component:   Component to print alignment for. If not specified prints all alignments.
+    :param x:           Starting index (where 1 is the first site).
+    :param n:           Number of sites to display. If zero a number of sites appropriate to the current UI will be determined.
     """
     to_do = cli_view_utils.get_component_list( component )
     m = global_view.current_model()
+    
+    if not n:
+        n = MENV.host.console_width - 5
     
     for component_ in to_do:
         MCMD.print( graph_viewing.print_header( component_ ) )
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
-            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m ) )
+            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m, x, n ) )
     
     return EChanges.INFORMATION
 
@@ -122,20 +127,6 @@ def print_help() -> str:
         r[i] = r[i].strip()
     
     return "\n".join( r )
-
-
-@help_command()
-def specify_graph_help() -> str:
-    """
-    To specify a tree of a component use:
-        * The component name.
-        * A pointer to the component in the virtual directory tree.
-        
-    To specify the NRFG use:
-        * The text "nrfg".
-        * A pointer to the NRFG in the virtual directory tree.
-    """
-    pass
 
 
 @command( names = ["print", "print_trees", "trees", "print_tree", "tree"] )
@@ -180,17 +171,14 @@ def print_trees( graph: Optional[MGraph] = None,
         if model.nrfg:
             trees.append( (str( "NRFG" ), model.nrfg.graph) )
     else:
-        if out == EOut.NORMAL:
-            name = "unknown"
-            
-            for component in model.components:
-                if graph is component.tree:
-                    name = str( component )
-            
-            if model.nrfg is not None and graph is model.nrfg.graph:
-                name = "NRFG"
-        else:
-            name = None
+        name = "unknown"
+        
+        for component in model.components:
+            if graph is component.tree:
+                name = str( component )
+        
+        if model.nrfg is not None and graph is model.nrfg.graph:
+            name = "NRFG"
         
         trees.append( (name, graph) )
     

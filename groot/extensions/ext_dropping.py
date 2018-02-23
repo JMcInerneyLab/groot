@@ -56,10 +56,10 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
     return EChanges.COMP_DATA
 
 
-@command()
+@command( names = ["drop_tree", "drop_trees"] )
 def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
-    Removes component trees.
+    Removes component tree(s).
     
     :param component:   Component, or `None` for all.
     :return: 

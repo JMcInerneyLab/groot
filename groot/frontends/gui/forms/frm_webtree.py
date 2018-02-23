@@ -71,29 +71,29 @@ class FrmWebtree( FrmBase ):
         selection = self.get_selection()
         model = self.get_model()
         status = global_view.current_status()
-        trees = []
+        names_and_graphs = []
         
         self.ui.LBL_NO_VISJS_WARNING.setVisible( not global_view.options().visjs_path )
-        self.ui.LBL_NO_TREES_WARNING.setVisible( not status.trees )
+        self.ui.LBL_NO_TREES_WARNING.setVisible( not status.is_trees )
         
         for item in selection:
             if isinstance( item, LegoComponent ):
-                trees.append( item.tree )
+                names_and_graphs.append( (str( item ), item.tree) )
             elif isinstance( item, LegoNrfg ):
-                trees.append( item.graph )
+                names_and_graphs.append( (str( item ), item.graph) )
             else:
                 self.file_name = None
                 self.ui.LBL_SELECTION_WARNING.setVisible( True )
                 return
         
-        if not trees:
+        if not names_and_graphs:
             self.file_name = None
             self.ui.LBL_SELECTION_WARNING.setVisible( True )
             return
         
         self.ui.LBL_SELECTION_WARNING.setVisible( False )
         
-        visjs = graph_viewing.create_vis_js( None, trees, model, inline_title = False, title = "{} - {} - {}".format( MENV.name, model.name, str( selection ) ) )
+        visjs = graph_viewing.create_vis_js( None, names_and_graphs, model, inline_title = False, title = "{} - {} - {}".format( MENV.name, model.name, str( selection ) ) )
         self.file_name = path.join( MENV.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "temporary_visjs.html" )
         
         file_helper.write_all_text( self.file_name, visjs )
@@ -144,7 +144,7 @@ class FrmWebtree( FrmBase ):
     
     def __disable_inbuilt_browser( self ):
         self.ui.BTN_BROWSE_HERE.setVisible( False )
-        self.ui.LBL_NO_INBUILT.setVisible(False)
+        self.ui.LBL_NO_INBUILT.setVisible( False )
     
     
     def enable_inbuilt_browser( self ):

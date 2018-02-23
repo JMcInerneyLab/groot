@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains
+from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains, importation
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
@@ -85,6 +85,7 @@ def make_alignments( algorithm: Optional[str] = None, component: Optional[List[L
     return EChanges.COMP_DATA
 
 
+
 @command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
 def make_trees( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ):
     """
@@ -139,13 +140,18 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
 
 
 @command( names = ["make_nrfg", "create_nrfg"] )
-def make_nrfg() -> EChanges:
+def make_nrfg( cutoff: float = 0.5, dirty: bool = False, no_super: bool = True ) -> EChanges:
     """
     Creates the N-rooted fusion graph.
+    :param cutoff:      Cutoff on consensus 
+    :param dirty:       Leave graph dirty. You don't want this.
+                        Turn it off to see how the NRFG is fused together. 
+    :param no_super:    Drop supersets from trees. You want this.
+                        Turn if off to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities).
     """
     model = global_view.current_model()
     
-    nrfg.create_nrfg( model )
+    nrfg.create_nrfg( model, cutoff = cutoff, clean = not dirty, no_super = no_super )
     
     MCMD.progress( "NRFG created OK." )
     

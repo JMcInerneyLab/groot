@@ -75,7 +75,7 @@ class Ui_Dialog(object):
 "</ul>\n"
 "\n"
 "<h2>Images</h2>\n"
-"Images made by Freepik and Good Ware from www.flaticon.com\n"
+"Images made by Freepik, Google and Good Ware from www.flaticon.com\n"
 "<ul>\n"
 "<li>Webpage: https://www.flaticon.com</li>\n"
 "</ul>\n"

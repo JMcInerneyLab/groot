@@ -2,6 +2,12 @@ Groot
 =====
 Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
+Gʀᴏᴏᴛ:
+* Is accessible. Gʀᴏᴏᴛ had **command line, GUI and Python library** capabilities.
+* Is understandable. Gʀᴏᴏᴛ follows a simple MVC architecture with **heavily documented source code**.
+* **Is free**. Users are invited to call upon the library or modify the source code to suit their own needs.
+
+
 [](toc)
 
 Installation
@@ -31,18 +37,18 @@ You can also use Gʀᴏᴏᴛ in your own Python applications:
 $   import groot
 ```
 
-For other modes, please see the `Iɴᴛᴇʀᴍᴀᴋᴇ` documentation.
+For advanced functionality, please see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
 
 If the `groot` command does not start Gʀᴏᴏᴛ then you have not set Pʏᴛʜᴏɴ up correctly.
 
 Tutorial
 --------
 
-### Introduction ###
-
 ### Getting started ###
 
 For this tutorial, we'll be using the CLI, because it's much easier to explain.
+
+We'll assume you have Gʀᴏᴏᴛ installed and working.
 
 Start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
 

@@ -6,89 +6,306 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1167</width>
-    <height>894</height>
+    <width>1175</width>
+    <height>876</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="label_9">
-     <property name="text">
-      <string>Groot Wizard</string>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="1" rowspan="3">
+    <widget class="QLabel" name="label">
+     <property name="minimumSize">
+      <size>
+       <width>128</width>
+       <height>100</height>
+      </size>
      </property>
-     <property name="style" stdset="0">
-      <string>title</string>
+     <property name="maximumSize">
+      <size>
+       <width>128</width>
+       <height>100</height>
+      </size>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="../resources/resources.qrc">:/wizard_logo.jpg</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QLabel" name="LBL_HELP_TITLE">
+   <item row="6" column="0" colspan="2">
+    <widget class="QLabel" name="label_10">
      <property name="text">
-      <string>The wizard performs the complete Groot workflow at once. If you'd like to be guided through step-by-step, consider using the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt; instead.</string>
+      <string>Give your session a name.</string>
      </property>
      <property name="style" stdset="0">
       <string>helpbox</string>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="7" column="0" colspan="2">
+    <widget class="QLineEdit" name="TXT_FILENAME"/>
+   </item>
+   <item row="5" column="0" colspan="2">
     <widget class="QLabel" name="label_7">
      <property name="text">
-      <string>Filename</string>
+      <string>Name</string>
      </property>
      <property name="style" stdset="0">
       <string>heading</string>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QLabel" name="label_10">
+   <item row="12" column="0" colspan="2">
+    <widget class="QLabel" name="label_13">
      <property name="text">
-      <string>Specify the file where your output should be saved. You can open this file to view it in Groot after the wizard completes.</string>
+      <string>Choose your tools.</string>
      </property>
      <property name="style" stdset="0">
       <string>helpbox</string>
      </property>
     </widget>
    </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_20">
+   <item row="9" column="0" colspan="2">
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>Specify at least one FASTA file and a corresponding BLAST file.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0" colspan="2">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QLineEdit" name="TXT_FILENAME"/>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_20">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Component tolerance</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_21">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Alignment method</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="CMB_ALIGNMENT_METHOD">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_22">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Tree method</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="CMB_TREE_METHOD">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="BTN_BROWSE_FILE">
-       <property name="text">
-        <string>Browse</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_23">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Pause to review</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_DATA">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Data</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_COMPONENTS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Components</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_ALIGNMENTS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Alignments</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_TREES">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Trees</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_FUSIONS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Fusions</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Data</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>heading</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_11">
-     <property name="text">
-      <string>Specify at least one FASTA file and its corresponding BLAST file.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>helpbox</string>
-     </property>
-    </widget>
-   </item>
-   <item>
+   <item row="10" column="0" colspan="2">
     <layout class="QGridLayout" name="gridLayout_3">
      <item row="0" column="1">
       <widget class="QPushButton" name="BTN_ADD_FILE">
@@ -119,6 +336,9 @@
      </item>
      <item row="0" column="0" rowspan="3">
       <widget class="QTreeWidget" name="LST_FILES">
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
        <column>
         <property name="text">
          <string notr="true">1</string>
@@ -128,97 +348,18 @@
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QLabel" name="label_19">
-     <property name="text">
-      <string>Algorithms</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>heading</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_13">
-     <property name="text">
-      <string>Setup the algorithms and choose your tools.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>helpbox</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QGridLayout" name="gridLayout_4">
-     <item row="0" column="1">
-      <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE"/>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_20">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Component tolerance</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_22">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Tree method</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="CMB_ALIGNMENT_METHOD"/>
-     </item>
-     <item row="0" column="2">
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_21">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Alignment method</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="CMB_TREE_METHOD"/>
-     </item>
-    </layout>
-   </item>
-   <item>
+   <item row="15" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_14">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string>When you're ready, click OK to run the wizard.</string>
+        <string>When you're ready, click review to continue...</string>
        </property>
        <property name="style" stdset="0">
         <string>helpbox</string>
@@ -226,22 +367,106 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QPushButton" name="BTN_OK">
        <property name="text">
-        <string>OK</string>
+        <string>Review</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="LBL_HELP_TITLE">
+     <property name="text">
+      <string>The wizard performs the complete Groot workflow at once. If you'd like to play by yourself, consider using the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt; instead.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Data</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_15">
+     <property name="text">
+      <string>History</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0" colspan="2">
+    <widget class="QLabel" name="label_24">
+     <property name="text">
+      <string>Power on</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Groot Wizard</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0" colspan="2">
+    <widget class="QLabel" name="label_19">
+     <property name="text">
+      <string>Methods and parameters</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_12">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Already have a set of preferred settings? Select them here.</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>helpbox</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_RECENT">
+       <property name="text">
+        <string>Load</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>dropdown</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_SAVE">
+       <property name="text">
+        <string>Save</string>
        </property>
       </widget>
      </item>
@@ -251,6 +476,7 @@
  </widget>
  <resources>
   <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,48 +1,105 @@
-from numpy import record
 from typing import Optional, cast
 
-from groot.algorithms import editor
+from groot.algorithms import editor, marshal
 from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence
-from intermake.engine.environment import MCMD
+from intermake import MCMD, common_commands
 from mgraph import MGraph, MNode
-from mhelper import file_helper, bio_helper, ByRef, Logger
+from mhelper import file_helper, bio_helper, ByRef, Logger, MFlags
 
 
 LOG = Logger( "import" )
 
 
-def import_directory( model: LegoModel, directory: str ):
+class EImportFilter( MFlags ):
+    """
+    :data DATA: Data files (`.fasta`, `.blast`, `.composites`)
+    :data MODE: Model files (`.groot`)
+    :data SCRIPT: Scripts (`.imk`)
+    """
+    DATA: "EImportFilter" = 1 << 0
+    MODEL: "EImportFilter" = 1 << 1
+    SCRIPT: "EImportFilter" = 1 << 2
+
+
+def import_directory( model: LegoModel, directory: str, query: bool, filter: EImportFilter ) -> None:
     """
     Imports all importable files from a specified directory
+    
+    :param query:     When true, nothing will change but output will be sent to MCMD. 
     :param model:     Model to import into
     :param directory: Directory to import
+    :param filter:      Filter on import
     :return: 
     """
     contents = file_helper.list_dir( directory )
     
-    for file_name in contents:
-        import_file( model, file_name, skip_bad_extensions = True )
+    if filter.DATA:
+        for file_name in contents:
+            import_file( model, file_name, skip_bad_extensions = True, filter = EImportFilter.DATA, query = query )
+    
+    if filter.SCRIPT:
+        for file_name in contents:
+            import_file( model, file_name, skip_bad_extensions = True, filter = EImportFilter.SCRIPT, query = query )
 
 
-def import_file( model: LegoModel, file_name: str, *, skip_bad_extensions: bool = False ):
+def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, filter: EImportFilter, query: bool ) -> None:
     ext = file_helper.get_extension( file_name ).lower()
     
-    if ext in (".blast", ".tsv"):
-        import_blast( model, file_name )
-    elif ext in (".fasta", ".fa", ".faa"):
-        import_fasta( model, file_name )
-    elif ext in (".composites", ".comp"):
-        import_composites( model, file_name )
-    elif not skip_bad_extensions:
-        raise ValueError( "Cannot import the file '{}' because I don't recognise the extension '{}'.".format( file_name, ext ) )
+    if filter.DATA:
+        if ext in (".blast", ".tsv"):
+            if not query:
+                import_blast( model, file_name )
+                return
+            else:
+                MCMD.print( "BLAST: «{}».".format( file_name ) )
+                return
+        elif ext in (".fasta", ".fa", ".faa"):
+            if not query:
+                import_fasta( model, file_name )
+                return
+            else:
+                MCMD.print( "FASTA: «{}».".format( file_name ) )
+                return
+        elif ext in (".composites", ".comp"):
+            if not query:
+                import_composites( model, file_name )
+                return
+            else:
+                MCMD.progress( "Composites «{}».".format( file_name ) )
+                return
+    
+    if filter.SCRIPT:
+        if ext == ".imk":
+            if not query:
+                MCMD.progress( "Run script «{}».".format( file_name ) )
+                common_commands.source( file_name )
+                return
+            else:
+                MCMD.print( "Script: «{}».".format( file_name ) )
+                return
+    
+    if filter.MODEL:
+        if ext == ".groot":
+            if not query:
+                marshal.load_from_file( file_name )
+                return
+            else:
+                MCMD.print( "Model: «{}».".format( file_name ) )
+                return
+    
+    if skip_bad_extensions:
+        return
+    
+    raise ValueError( "Cannot import the file '{}' because I don't recognise the extension '{}'.".format( file_name, ext ) )
 
 
-def import_fasta( model: LegoModel, file_name: str ):
+def import_fasta( model: LegoModel, file_name: str ) -> None:
     """
     API
     Imports a FASTA file.
     If data already exists in the model, only sequence data matching sequences already in the model is loaded.
     """
+    MCMD.progress( "Import FASTA from «{}».".format( file_name ) )
     model.comments.append( "IMPORT_FASTA \"{}\"".format( file_name ) )
     
     with LOG( "IMPORT FASTA FROM '{}'".format( file_name ) ):
@@ -53,7 +110,7 @@ def import_fasta( model: LegoModel, file_name: str ):
         extra_data = "FASTA from '{}'".format( file_name )
         
         for name, sequence_data in bio_helper.parse_fasta( file = file_name ):
-            sequence = editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False )
+            sequence = editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False, True )
             
             if sequence:
                 LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( sequence_data ) ) )
@@ -71,12 +128,13 @@ def import_fasta( model: LegoModel, file_name: str ):
     MCMD.print( "Imported Fasta from «{}».".format( file_name ) )
 
 
-def import_blast( model: LegoModel, file_name: str ):
+def import_blast( model: LegoModel, file_name: str ) -> None:
     """
     API
     Imports a BLAST file.
     If data already exists in the model, only lines referencing existing sequences are imported.
     """
+    MCMD.progress( "Import BLAST from «{}».".format( file_name ) )
     model.comments.append( "IMPORT_BLAST \"{}\"".format( file_name ) )
     
     obtain_only = model._has_data()
@@ -127,8 +185,8 @@ def import_blast( model: LegoModel, file_name: str ):
                     if not (subject_length - TOL) <= query_length <= (subject_length + TOL):
                         raise ValueError( "Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format( query_length, subject_length, line ) )
                     
-                    query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line, False )
-                    subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False )
+                    query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
+                    subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
                     
                     if query_s and subject_s and query_s is not subject_s:
                         query = LegoSubsequence( query_s, query_start, query_end )
@@ -139,11 +197,12 @@ def import_blast( model: LegoModel, file_name: str ):
     MCMD.print( "Imported Blast from «{}».".format( file_name ) )
 
 
-def import_composites( model: LegoModel, file_name: str ):
+def import_composites( model: LegoModel, file_name: str ) -> None:
     """
     API
     Imports a COMPOSITES file
     """
+    MCMD.progress( "Import composites from «{}».".format( file_name ) )
     model.comments.append( "IMPORT_COMPOSITES \"{}\"".format( file_name ) )
     
     with LOG( "IMPORT COMPOSITES FROM '{}'".format( file_name ) ):
@@ -161,7 +220,7 @@ def import_composites( model: LegoModel, file_name: str ):
                     
                     # COMPOSITE!
                     composite_name = line[1:]
-                    composite_sequence = editor.make_sequence( model, composite_name, False, 0, line, False )
+                    composite_sequence = editor.make_sequence( model, composite_name, False, 0, line, False, True )
                     composite_sequence.comments.append( "FILE '{}' LINE {}".format( file_name, line_number ) )
                 elif "\t" in line:
                     # FAMILY!
@@ -179,7 +238,7 @@ def import_composites( model: LegoModel, file_name: str ):
                     # composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
-                    sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False )
+                    sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False, True )
                     sequence.comments.append( "Family '{}'".format( fam_name ) )
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     
@@ -220,7 +279,7 @@ def import_sequence_reference( name: str, model: LegoModel, *, allow_empty: bool
     
     if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
         return None
-    elif name.startswith( "S" ) and all( x.isdigit() for x in name[1:] ):
+    elif LegoSequence.is_legacy_accession( name ):
         return model.find_sequence_by_id( int( name[1:] ) )
     else:
         return model.find_sequence_by_accession( name )

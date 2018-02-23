@@ -109,10 +109,10 @@ class FrmSamples( FrmBase ):
             status = global_view.current_status()
             
             for button in self._buttons:
-                button.setEnabled( status.empty )
+                button.setEnabled( status.is_empty )
             
-            self.ui.BTN_BROWSE.setEnabled( status.empty )
-            self.ui.LBL_HAS_DATA_WARNING.setVisible( not status.empty )
+            self.ui.BTN_BROWSE.setEnabled( status.is_empty )
+            self.ui.LBL_HAS_DATA_WARNING.setVisible( not status.is_empty )
     
     
     @exqtSlot()

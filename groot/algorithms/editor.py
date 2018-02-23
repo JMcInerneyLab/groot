@@ -4,10 +4,10 @@ Functions that actually edit the model.
 In order to maintain correct within-model relationships, the model should only be edited via these functions.
 """
 
-from typing import List, Iterable
+from typing import List, Iterable, Union
 from uuid import uuid4
 
-from groot.data.lego_model import LegoModel, LegoSequence, LegoSubsequence, LegoEdge
+from groot.data.lego_model import LegoModel, LegoSequence, LegoSubsequence, LegoEdge, LegoComponent
 from mhelper import Logger, array_helper
 
 
@@ -19,7 +19,8 @@ def make_sequence( model: LegoModel,
                    obtain_only: bool,
                    initial_length: int,
                    extra_data: object,
-                   no_fresh: bool ) -> LegoSequence:
+                   no_fresh: bool,
+                   retrieve: bool ) -> LegoSequence:
     """
     Creates the specified sequence, or returns it if it already exists.
     """
@@ -37,9 +38,10 @@ def make_sequence( model: LegoModel,
     
     result = None
     
-    for sequence in model.sequences:
-        if sequence.accession == accession:
-            result = sequence
+    if retrieve:
+        for sequence in model.sequences:
+            if sequence.accession == accession:
+                result = sequence
     
     if result is None and not obtain_only:
         result = LegoSequence( model, accession, model._get_incremental_id() )
@@ -105,45 +107,30 @@ def unlink_edge( edge: LegoEdge, subsequence: "LegoSubsequence", no_fresh: bool 
         unlink_all_edges( subsequence.sequence.model, edge, no_fresh )
 
 
-
-def merge_subsequences( model: LegoModel, all: Iterable[LegoSubsequence], no_fresh: bool ):
-    assert_model_freshness( model, no_fresh )
-    
-    all = sorted( all, key = lambda x: x.start )
-    
-    if len( all ) <= 1:
-        raise ValueError( "Cannot merge a list '{}' of less than two elements.".format( all ) )
-    
-    for left, right in array_helper.lagged_iterate( all ):
-        if left.sequence != right.sequence:
-            raise ValueError( "merge_subsequences attempted but the subsequences '{}' and '{}' are not in the same sequence.".format( left, right ) )
-        
-        if right.start != left.end + 1:
-            raise ValueError( "merge_subsequences attempted but the subsequences '{}' and '{}' are not adjacent.".format( left, right ) )
-    
-    first = all[0]
-    first.end = all[-1].end
-    
-    for other in all[1:]:
-        __inherit_subsequence( first, other, no_fresh )
-        other.sequence.subsequences.remove( other )
-        __destroy_subsequence( other, no_fresh )
-
-
-def __destroy_subsequence( subsequence: LegoSubsequence, no_fresh: bool ):
-    for edge in list( subsequence.edges ):
-        unlink_edge( edge, subsequence, no_fresh )
-    
-    assert len( subsequence.edges ) == 0, subsequence.edges
-    subsequence.is_destroyed = True
-
-
-def add_new_sequence( model: LegoModel, no_fresh: bool ) -> LegoSequence:
+def add_new_sequence( model: LegoModel, accession: str, no_fresh: bool ) -> LegoSequence:
     """
     Creates a new sequence
     """
     assert_model_freshness( model, no_fresh )
-    return make_sequence( model, str( uuid4() ), False, 10, "user-created", no_fresh )
+    return make_sequence( model, accession, False, 0, "user-created", no_fresh, False )
+
+
+def add_new_component( index: int, model: LegoModel, sequences: List[LegoSequence], subsequences: List[Union[LegoSequence, LegoSubsequence]] ) -> LegoComponent:
+    """
+    Creates a new component
+    """
+    if model.has_any_tree():
+        raise ValueError( "Refusing to generate components once tree generation has begun. Did you mean to drop the trees first?" )
+    
+    true_index = len( model.components )
+    
+    if index != -1 and index != true_index:
+        raise ValueError( "Refusing to generate component because the index ({}) is not sequential ({}).", index, true_index )
+    
+    c = LegoComponent( model, true_index, sequences )
+    c.minor_subsequences = subsequences
+    model.components.add( c )
+    return c
 
 
 def add_new_edge( left: LegoSubsequence, right: LegoSubsequence, no_fresh: bool ) -> LegoEdge:
@@ -157,8 +144,6 @@ def add_new_edge( left: LegoSubsequence, right: LegoSubsequence, no_fresh: bool 
     left.sequence.model.edges.add( edge )
     
     return edge
-
-
 
 
 def remove_sequences( sequences: List[LegoSequence], no_fresh: bool ):

@@ -9,6 +9,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, cast
 
 from groot.frontends.gui.gui_view_support import EMode
 from intermake import EColour, IVisualisable, UiInfo, resources
+from intermake.engine.environment import MENV
 from mgraph import MGraph
 from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, utf_helper
 
@@ -22,15 +23,25 @@ __author__ = "Martin Rusilowicz"
 
 
 class ILeaf:
+    """
+    Things that can be leaves in trees.
+    Genes (`LegoSequence`) and fusions (`FusionPoint`). 
+    """
     pass
 
 
 class ILegoSelectable:
+    """
+    Components of the model the user can select.
+    """
     pass
 
 
 # noinspection PyAbstractClass
 class ILegoVisualisable( IVisualisable ):
+    """
+    Things the user can visualise.
+    """
     pass
 
 
@@ -84,6 +95,9 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable ):
     
     
     def visualisable_info( self ) -> UiInfo:
+        """
+        OVERRIDE
+        """
         return UiInfo( name = str( self ),
                        comment = "",
                        type_name = "Edge",
@@ -93,7 +107,11 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable ):
                        extra_named = (self.left, self.right) )
     
     
-    def __contains__( self, item ) -> bool:
+    def __contains__( self, item: "LegoSequence" ) -> bool:
+        """
+        OVERRIDE
+        Does the edge specify a sequence as either of its endpoints? 
+        """
         return item in self.left or item in self.right
     
     
@@ -103,6 +121,9 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable ):
     
     
     def __str__( self ) -> str:
+        """
+        OVERRIDE 
+        """
         if self.is_destroyed:
             return "DELETED_EDGE"
         
@@ -237,6 +258,9 @@ class LegoSubsequence( ILegoVisualisable ):
     
     @classmethod
     def list_union( cls, options: List["LegoSubsequence"] ):
+        """
+        Returns a `LegoSubsequence` that encompasses all `LegoSubsequence`s in the list.
+        """
         a = options[0]
         
         for i in range( 1, len( options ) ):
@@ -245,31 +269,48 @@ class LegoSubsequence( ILegoVisualisable ):
         return a
     
     
-    def has_overlap( self, two: "LegoSubsequence" ):
+    def has_overlap( self, two: "LegoSubsequence" ) -> bool:
+        """
+        Returns if the `two` `LegoSubsequence`s overlap.
+        """
         if self.sequence is not two.sequence:
             return False
         
         return self.start <= two.end and two.start <= self.end
     
     
-    def has_encompass( self, two: "LegoSubsequence" ):
+    def has_encompass( self, two: "LegoSubsequence" ) -> bool:
+        """
+        Returns if the first of the `two` `LegoSubsequence`s encompasses the other.
+        """
         if self.sequence is not two.sequence:
             return False
         
         return self.start <= two.start and self.end >= two.end
     
     
-    def union( self, two: "LegoSubsequence" ):
+    def union( self, two: "LegoSubsequence" ) -> "LegoSubsequence":
+        """
+        Returns a `LegoSubsequence` that is the union of the `two`.
+        If the `two` do not overlap the result is undefined.
+        """
         assert self.sequence is two.sequence
         return LegoSubsequence( self.sequence, min( self.start, two.start ), max( self.end, two.end ) )  # todo: doesn't account for non-overlapping ranges
     
     
-    def intersection( self, two: "LegoSubsequence" ):
+    def intersection( self, two: "LegoSubsequence" ) -> "LegoSubsequence":
+        """
+        Returns a `LegoSubsequence` that is the intersection of the `two`.
+        If the `two` do not overlap the result is undefined.
+        """
         assert self.sequence is two.sequence
         return LegoSubsequence( self.sequence, max( self.start, two.start ), min( self.end, two.end ) )  # todo: doesn't account for non-overlapping ranges
     
     
     def visualisable_info( self ) -> UiInfo:
+        """
+        OVERRIDE 
+        """
         return UiInfo( name = str( self ),
                        comment = "",
                        type_name = "Subsequence",
@@ -348,21 +389,35 @@ class LegoSubsequence( ILegoVisualisable ):
 
 class LegoUserDomain( LegoSubsequence, ILegoSelectable ):
     """
-    A user-domain is just domain (LegoSubsequence) we know exists in the UI.
+    A user-domain is just domain (LegoSubsequence) which the user has defined.
     """
-    
-    
-    def __init__( self, sequence: "LegoSequence", start: int, end: int ):
-        super().__init__( sequence, start, end )
+    pass
 
 
 class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
     """
     Protein (or DNA) sequence
+    
+    :attr id:           Internal ID. An arbitrary number guaranteed to be unique within the model.
+    :attr accession:    Database accession. Note that this can't look like an accession produced by the `legacy_accession` property.
+    :attr model:        Owning model.
+    :attr site_array:   Site data. This can be `None` before the data is loaded in. The length must match `length`.
+    :attr comments:     Comments on the sequence.
+    :attr length:       Length of the sequence. This must match `site_array`, it that is set.
     """
+    
+    _ID_FORMAT = re.compile( "^S[0-9]+$" )
+    """Used to identify legacy format accessions."""
     
     
     def __init__( self, model: "LegoModel", accession: str, id: int ) -> None:
+        """
+        CONSTRUCTOR
+        See class attributes for parameter descriptions.
+        """
+        if LegoSequence.is_legacy_accession( accession ):
+            raise ValueError( "You have a sequence with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using accessions that only contain numbers prefixed by an 'S'.".format( accession, MENV.name ) )
+        
         self.id: int = id
         self.accession: str = accession  # Database accession (ID)
         self.model: "LegoModel" = model
@@ -370,6 +425,23 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
         self.is_root: bool = False
         self.comments: List[str] = []
         self.length = 1
+    
+    
+    @staticmethod
+    def is_legacy_accession( name: str ):
+        """
+        Determines if an accession was created via the `legacy_accession` function.
+        """
+        return bool( LegoSequence._ID_FORMAT.match( name ) )
+    
+    
+    @property
+    def legacy_accession( self ):
+        """
+        We make an accession for compatibility with programs that still use Phylip format.
+        We can't just use a number because some programs mistake this for a line count.
+        """
+        return "S{}".format( self.id )
     
     
     def get_totality( self ) -> LegoSubsequence:
@@ -389,7 +461,7 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
                        value = "{} sites".format( self.length ),
                        colour = EColour.BLUE,
                        icon = resources.folder,
-                       extra = { "id"       : self.id,
+                       extra = { "id"       : self.legacy_accession,
                                  "length"   : self.length,
                                  "accession": self.accession,
                                  "is_root"  : self.is_root,
@@ -420,6 +492,9 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
     
     
     def _ensure_length( self, new_length: int ) -> None:
+        """
+        Ensures the length of the sequence accommodates `new_length`.
+        """
         assert isinstance( new_length, int )
         
         if new_length == 0:
@@ -430,6 +505,14 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable ):
     
     
     def sub_sites( self, start: int, end: int ) -> Optional[str]:
+        """
+        Retrieves a portion of the sequence.
+        Indices are 1 based and inclusive.
+        
+        :param start:       Start index 
+        :param end:         End index 
+        :return:            Substring, or `None` if no site array is available. 
+        """
         if self.site_array is None:
             return None
         
@@ -457,6 +540,10 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
     
     
     def __init__( self, model: _LegoModel_, index: int, major_sequences: List[LegoSequence] ):
+        """
+        CONSTRUCTOR
+        See class attributes for parameter descriptions.
+        """
         from mgraph import MGraph
         self.model: LegoModel = model
         self.index: int = index
@@ -484,6 +571,9 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
     
     
     def visualisable_info( self ) -> UiInfo:
+        """
+        OVERRIDE
+        """
         return UiInfo( name = str( self ),
                        comment = str( self.__doc__ ),
                        type_name = "Component",
@@ -501,8 +591,10 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
     
     
     def __str__( self ) -> str:
+        """
+        OVERRIDE 
+        """
         return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )[0]
-        # return _GREEK[self.index % len( _GREEK )].lower() ⨍
     
     
     def minor_subsequences( self ) -> List[LegoSubsequence]:
@@ -537,7 +629,20 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
 
 
 class LegoEdgeCollection:
+    """
+    The collection of edges, held by the model.
+    
+    :attr __model:          Owning model.
+    :attr __edges:          Edge list
+    :attr __by_sequence:    Lookup table, sequence to edge list.
+    """
+    
+    
     def __init__( self, model: "LegoModel" ):
+        """
+        CONSTRUCTOR
+        See class attributes for parameter descriptions. 
+        """
         self.__model = model
         self.__edges: List[LegoEdge] = []
         self.__by_sequence: Dict[LegoSequence, List[LegoEdge]] = { }
@@ -625,7 +730,15 @@ class LegoComponentCollection:
             if sequence in component.major_sequences:
                 return component
         
-        raise NotFoundError( "Sequence does not have a component." )
+        raise NotFoundError( "Sequence «{}» does not have a component.".format( sequence ) )
+    
+    
+    def find_component_by_name( self, name: str ) -> LegoComponent:
+        for component in self.__components:
+            if str( component ) == name:
+                return component
+        
+        raise NotFoundError( "Cannot find the component with the name «{}».".format( name ) )
     
     
     def has_sequence( self, sequence: LegoSequence ) -> bool:
@@ -671,6 +784,9 @@ class LegoSequenceCollection:
     
     
     def add( self, sequence: LegoSequence ):
+        if any( x.accession == sequence.accession for x in self.__sequences ):
+            raise ValueError( "Cannot add a sequence «{}» to the model because its accession is already in use.".format( sequence ) )
+        
         array_helper.ordered_insert( self.__sequences, sequence, lambda x: x.accession )
     
     
@@ -761,7 +877,9 @@ class LegoNrfg( ILegoSelectable ):
 
 class LegoModel( ILegoVisualisable ):
     """
-    At it's apex, the model comprises:
+    The model used by Groot.
+    
+    At its apex, the model comprises:
     
         1. The set of sequences
             i. Their FASTA (or "site") data
@@ -771,13 +889,12 @@ class LegoModel( ILegoVisualisable ):
         3. The subsequences as defined by the edge-sequence relations
             
         4. The set of connected components
-              i. Their major sequences
-              ii. Their minor subsequences
+              i.   Their major sequences
+              ii.  Their minor subsequences
               iii. Their FASTA alignment
-              iiii. Their trees
-              v. Their consensus trees
+              iv.  Their trees
                 
-        5. The NRF graph
+        5. The NRFG
     """
     
     
@@ -799,6 +916,10 @@ class LegoModel( ILegoVisualisable ):
         self.nrfg: LegoNrfg = None
         self.ui_options = LegoViewOptions()
         self.user_domains = LegoUserDomainCollection( self )
+    
+    
+    def has_any_tree( self ):
+        return any( x.tree for x in self.components )
     
     
     def visualisable_info( self ) -> UiInfo:

@@ -1,9 +1,9 @@
 import re
-from typing import List
+from typing import List, Optional
 
 from groot.algorithms import editor, importation
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoEdge, LegoSubsequence
+from groot.data.lego_model import LegoComponent, LegoEdge, LegoSubsequence, LegoSequence
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
@@ -12,17 +12,14 @@ from intermake.engine.environment import MCMD
 __mcmd_folder_name__ = "Modifications"
 
 
-
-
-
-
 @command()
 def set_tree( component: LegoComponent, tree: str ) -> EChanges:
     """
     Sets a component tree manually.
     
     :param component:   Component 
-    :param tree:        Tree to set. In newick format. 
+    :param tree:        Tree to set. In Newick format. 
+                        Either gene accessions OR gene internal IDs may be provided.
     """
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
@@ -48,10 +45,7 @@ def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
     return EChanges.COMP_DATA
 
 
-
-
-
-def new_edge( left: LegoSubsequence, right : LegoSubsequence ) -> EChanges:
+def new_edge( left: LegoSubsequence, right: LegoSubsequence ) -> EChanges:
     """
     Adds a new edge to the model.
     :param left:     Subsequence to create the edge from 
@@ -62,22 +56,42 @@ def new_edge( left: LegoSubsequence, right : LegoSubsequence ) -> EChanges:
 
 
 @command()
-def new_sequence() -> EChanges:
+def new_sequence( accessions: List[str] ) -> EChanges:
     """
     Adds a new sequence to the model
+    
+    :param accessions: Sequence accession(s)
     """
     model = global_view.current_model()
-    editor.add_new_sequence( model, no_fresh = False )
+    for accession in accessions:
+        sequence = editor.add_new_sequence( model, accession, no_fresh = False )
+        MCMD.progress( "Added: {}".format( sequence ) )
     return EChanges.MODEL_ENTITIES
 
 
-def merge_subsequences( subsequences: List[LegoSubsequence] ) -> EChanges:
+@command()
+def new_component( index: int, sequences: List[LegoSequence], minor_sequences: Optional[List[LegoSequence]] = None, subsequences: Optional[List[LegoSubsequence]] = None ) -> EChanges:
     """
-    Merges the specified subsequences, combining them into one, bigger, subsequence.
-    :param subsequences:    Subsequences to merge
+    Adds a new component to the model
+    
+    :param index:               Component index. This is a check value and must match the next assigned component. If this is `-1` then no check is performed (not recommended).
+    :param sequences:           Sequences (major) of the component. 
+    :param minor_sequences:     Subsequences (minor) of the component, as an alternative to the `subsequences` parameter.
+                                Component will be invalid for tree generation if this option is used.
+    :param subsequences:        Domains (minor) of the component, as an alternative to the `minor_sequences` parameter.
+                                This allows the component to be used for tree generation, but requires that the domains of the components are known. 
     """
     model = global_view.current_model()
-    editor.merge_subsequences( model, subsequences, no_fresh = False )
+    
+    if subsequences is None:
+        subsequences = []
+    
+    if minor_sequences is not None:
+        subsequences.extend( [x.get_totality() for x in minor_sequences] )
+    
+    component = editor.add_new_component( index, model, sequences, subsequences )
+    MCMD.progress( "Added: {}".format( component ) )
+    
     return EChanges.MODEL_ENTITIES
 
 
@@ -90,8 +104,6 @@ def find_sequences( find: str ) -> EChanges:
     """
     __find_sequences( find )
     return EChanges.NONE
-
-
 
 
 def __find_sequences( find ):

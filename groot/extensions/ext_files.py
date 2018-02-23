@@ -1,11 +1,10 @@
-import os
 import sys
 from os import path
 from typing import Optional
 
 import groot.data.global_view
-from groot import constants
 from groot.algorithms import importation, marshal
+from groot.algorithms.importation import EImportFilter
 from groot.data import global_view
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, PathToVisualisable, command, console_explorer
@@ -20,11 +19,13 @@ EXT_BLAST = ".blast"
 
 
 @command( names = ["file_sample", "sample"] )
-def file_sample( name: Optional[str] = None, view: bool = False ) -> EChanges:
+def file_sample( name: Optional[str] = None, query: bool = False, load: bool = False ) -> EChanges:
     """
-    Lists the available samples, or loads the specified sample
-    :param view:    When set the sample is viewed but not loaded.
-    :param name:    Name of sample 
+    Lists the available samples, or loads the specified sample.
+    
+    :param name:    Name of sample. 
+    :param query:   When set the sample is viewed but not loaded. 
+    :param load:    When set data is imported but any scripts (if present) are not run.
     :return: 
     """
     if name:
@@ -33,11 +34,12 @@ def file_sample( name: Optional[str] = None, view: bool = False ) -> EChanges:
         if not path.isdir( file_name ):
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
         
-        if view:
-            MCMD.print( 'import_directory "{}"'.format( file_name ) )
+        if not query:
+            MCMD.progress( "Loading sample dataset «{}».".format( file_name ) )
         else:
-            MCMD.print( "Loading sample dataset. This is the same as running 'import.directory' on \"{}\".".format( file_name ) )
-            return import_directory( file_name )
+            MCMD.print( "Sample data: «{}».".format( file_name ) )
+        
+        return import_directory( file_name, filter = (EImportFilter.DATA | EImportFilter.SCRIPT) if not load else EImportFilter.DATA, query = query )
     else:
         for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
@@ -98,12 +100,18 @@ def import_fasta( file_name: Filename[EFileMode.READ, EXT_FASTA] ) -> EChanges:
 @command()
 def import_file( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
-    Imports a file into the model
-    :param file_name:   File to import 
-    :return: 
+    Imports a file into the model.
+    How it is imported is based on the extension:
+        `.groot`     --> `file_load`
+        `.fasta`     --> `import_fasta`
+        `.blast`     --> `import_blast`
+        `.composite` --> `import_composite`
+        `.imk`       --> `source` (runs the script)
+    
+    :param file_name:   File to import.
     """
     with MCMD.action( "Importing file" ):
-        importation.import_file( global_view.current_model(), file_name )
+        importation.import_file( global_view.current_model(), file_name, skip_bad_extensions = False, filter = EImportFilter.ALL, query = False )
     
     return EChanges.MODEL_ENTITIES
 
@@ -168,18 +176,29 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None
 
 
 @command()
-def import_directory( directory: str, reset: bool = True ):
+def import_directory( directory: str,
+                      reset: bool = True,
+                      filter: EImportFilter = (EImportFilter.DATA | EImportFilter.SCRIPT),
+                      query: bool = False
+                      ) -> EChanges:
     """
     Imports all importable files from a specified directory
-    :param reset:     Whether to clear data from the model first.
-    :param directory: Name of directory to import
-    :return: 
+    
+    :param reset:       Whether to clear data from the model first.
+    :param directory:   Name of directory to import
+    :param filter:      Filter files to import.
+    :param query:       Query the directory (don't import anything).
     """
     if reset:
-        file_new()
+        if not query:
+            file_new()
+        else:
+            MCMD.print( "Importing will start a new model." )
     
-    with MCMD.action( "Importing directory" ):
-        importation.import_directory( global_view.current_model(), directory )
+    importation.import_directory( global_view.current_model(), directory, query, filter )
+    
+    if query:
+        return EChanges.NONE
     
     if reset:
         if MENV.host.is_cli:
@@ -194,15 +213,13 @@ def import_directory( directory: str, reset: bool = True ):
 def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Loads the model from a file
+    
     :param file_name:   File to load.
                         If you don't specify a path, the `$(DATA_FOLDER)sessions` folder will be assumed
                         (If you'd like to use the current "working" directory, use the prefix `./`)
     """
     file_name = __fix_path( file_name )
-    model = marshal.load_from_file( file_name )
-    global_view.set_model( model )
-    groot.data.global_view.remember_file( file_name )
-    MCMD.print( "Loaded model: {}".format( file_name ) )
+    marshal.load_from_file( file_name )
     
     return EChanges.MODEL_OBJECT
 

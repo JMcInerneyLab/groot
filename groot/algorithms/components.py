@@ -12,8 +12,8 @@ from mhelper import Logger, ImplementationError, array_helper, string_helper
 from mhelper.component_helper import ComponentFinder
 
 
-LOG_MAJOR = Logger( "comp.major", True )
-LOG_MINOR = Logger( "comp.minor", True )
+LOG_MAJOR = Logger( "comp.major", False )
+LOG_MINOR = Logger( "comp.minor", False )
 LOG_GRAPH = Logger( "comp.graph", False )
 
 

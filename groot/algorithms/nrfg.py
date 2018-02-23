@@ -15,14 +15,16 @@ from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, ILeaf,
 
 _TDataByComponent = Dict[LegoComponent, Tuple[FrozenSet[LegoSequence], Set[FrozenSet[LegoSequence]]]]
 
-__LOG_SPLITS = Logger( "nrfg.splits", False, { "join": "·" } )
-__LOG_EVIDENCE = Logger( "nrfg.evidence", False, { "join": "·" } )
-__LOG_FIND = Logger( "nrfg.find", False, { "join": "·" } )
-__LOG_CREATE = Logger( "nrfg.create", True, { "join": "·" } )
-__LOG_SEW = Logger( "nrfg.sew", True, { "join": "·" } )
-__LOG_DEBUG = Logger( "nrfg.debug", True, { "join": "·" } )
-__LOG_CLEAN = Logger( "nrfg.clean", True, { "join": "·" } )
+__log_settings = { "join": "·", "sort": False }
+__LOG_SPLITS = Logger( "nrfg.splits", False, __log_settings )
+__LOG_EVIDENCE = Logger( "nrfg.evidence", False, __log_settings )
+__LOG_FIND = Logger( "nrfg.find", False, __log_settings )
+__LOG_CREATE = Logger( "nrfg.create", False, __log_settings )
+__LOG_SEW = Logger( "nrfg.sew", False, __log_settings )
+__LOG_DEBUG = Logger( "nrfg.debug", False, __log_settings )
+__LOG_CLEAN = Logger( "nrfg.clean", False, __log_settings )
 __LOG_MAKE = Logger( "nrfg.make", False )
+del __log_settings
 
 
 def __make_graph_from_splits( splits: Iterable[Split] ) -> MGraph:
@@ -137,12 +139,12 @@ def expand_leaves( X: FrozenSet[ILeaf] ) -> FrozenSet[LegoSequence]:
         if isinstance( x, LegoSequence ):
             r.append( x )
         elif isinstance( x, FusionPoint ):
-            r.append(x) # TODO
+            r.append( x )  # TODO
     
     return frozenset( r )
 
 
-def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = True ) -> None:
+def create_nrfg( model: LegoModel, cutoff: float, clean: bool , no_super:bool ) -> None:
     """
     Creates the NRFG.
     
@@ -153,8 +155,8 @@ def create_nrfg( model: LegoModel, cutoff: float = 0.5, clean: bool = True ) -> 
     """
     all_splits, data_by_component = __nrfg_1_collect_splits( model )
     viable_splits = __nrfg_2_collect_evidence( all_splits, cutoff, data_by_component, model )
-    all_gene_sets, gene_set_to_fusion = __nrfg_3_find_points( model )
-    destinations, minigraphs, sources = __nrfg_4_graphs_from_points( all_gene_sets, gene_set_to_fusion, viable_splits )
+    leaf_subsets = __nrfg_3_find_subsets( model, no_super )
+    destinations, minigraphs, sources = __nrfg_4_graphs_from_subsets( leaf_subsets, viable_splits )
     nrfg = __nrfg_5_sew_points( destinations, minigraphs, sources )
     __nrfg_debug_splits( nrfg, viable_splits )
     if clean:
@@ -297,66 +299,106 @@ def __nrfg_2_collect_evidence( all_splits: Set[Split],
     return viable_splits
 
 
-def __nrfg_3_find_points( model: LegoModel
-                          ) -> Tuple[Set[FrozenSet[LegoSequence]],
-                                     Dict[FrozenSet[ILeaf], List[FusionPoint]]]:
+def __nrfg_3_find_subsets( model: LegoModel,
+                           no_super : bool
+                           ) -> Set[FrozenSet[ILeaf]]:
     """
     NRFG PHASE III.
     
-    # Now for the composite stuff. We need to separate all our graphs into mini-graphs.
-    # Each minigraph must contain its sequences (`LegoSequence`), and the fusion points
-    # (`FusionPoint`) showing where that graph fits into the big picture.
+    Find the gene sets
+    
+    :remarks:
+    
+    Now for the composite stuff. We need to separate all our graphs into mini-graphs.
+    Each minigraph must contain...
+          ...its genes (`LegoSequence`)
+          ...the fusion points (`FusionPoint`)
+              - showing where that graph fits into the big picture.
+              
+    In this stage we collect "gene_sets", representing the set of sequences in each minigraph.
+    We also make a dictionary of "gene_set_to_fusion", representing which fusion points are matched to each "gene set".
     
     :param model:   Model to operate upon 
-    :return:        Tuple of:
-                        0. The set of gene sets
-                        1. A dictionary of:
-                            K. A gene set
-                            V. A list of fusion points
+    :return:        The set of gene sets
     """
     
     __LOG_FIND.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FIND POINTS WITH SAME GENES ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
-    all_gene_sets: Set[FrozenSet[LegoSequence]] = set()
+    
+    # Define our output variables
+    all_gene_sets: Set[FrozenSet[ILeaf]] = set()
     gene_set_to_fusion: Dict[FrozenSet[ILeaf], List[FusionPoint]] = defaultdict( list )
     
+    # Iterate over the fusion points 
     for fusion_event in model.fusion_events:
         for fusion_point in fusion_event.points:
+            # Each fusion point splits the graph into two halves ("inside" and "outside" that point)
+            # Each half defines one of our minigraphs.
             pertinent_inner = frozenset( fusion_point.pertinent_inner )
             pertinent_outer = frozenset( fusion_point.pertinent_outer )
             all_gene_sets.add( pertinent_inner )
             all_gene_sets.add( pertinent_outer )
+            
+            # Note that multiple points may define the same graphs, hence here we specify which points define which graphs. 
             gene_set_to_fusion[pertinent_inner].append( fusion_point )
             gene_set_to_fusion[pertinent_outer].append( fusion_point )
     
     to_remove = set()
     
+    # Some of our gene sets will ̶d̶e̶v̶o̶i̶d̶ ̶o̶f̶ ̶g̶e̶n̶e̶s shit
+    
+    # Drop these now 
     for gene_set in all_gene_sets:
         if not any( isinstance( x, LegoSequence ) for x in gene_set ):
+            # No genes in this set
+            __LOG_FIND( "DROP GENE SET (EMPTY): {}", gene_set )
             to_remove.add( gene_set )
-        else:
-            __LOG_FIND( "GENE SET: {}", gene_set )
-            for fusion_point in gene_set_to_fusion[gene_set]:
-                __LOG_FIND( "    POINT: {}", fusion_point )
+            continue
+        
+        if no_super:
+            remaining = set(gene_set)
+                
+            for gene_set_2 in all_gene_sets:
+                if gene_set_2 is not gene_set:
+                    if gene_set_2.issubset(gene_set):
+                        remaining -= gene_set_2
+                    
+            if not remaining:
+                # Gene set is a superset of other sets
+                __LOG_FIND( "DROP GENE SET (SUPERSET): {}", gene_set )
+                to_remove.add( gene_set )
+                continue
+            
+        # Good gene set (keep)
+        __LOG_FIND( "KEEP GENE SET: {}", gene_set )
+        for fusion_point in gene_set_to_fusion[gene_set]:
+            __LOG_FIND( "    POINT: {}", fusion_point )
     
     for gene_set in to_remove:
         all_gene_sets.remove( gene_set )
     
-    return all_gene_sets, gene_set_to_fusion
+    # Finally, complement our gene sets with the fusion points they are adjacent to
+    # We'll need these to know where our graph fits into the big picture
+    results: Set[FrozenSet[ILeaf]] = set()
+    
+    for gene_set in all_gene_sets:
+        new_set = set( gene_set )
+        new_set.update( gene_set_to_fusion[gene_set] )
+        results.add( frozenset( new_set ) )
+    
+    return results
 
 
-def __nrfg_4_graphs_from_points( all_gene_sets: Set[FrozenSet[LegoSequence]],
-                                 gene_set_to_fusion: Dict[FrozenSet[ILeaf], List[FusionPoint]],
-                                 viable_splits: Set[Split]
-                                 ) -> Tuple[Set[int],
-                                            List[MGraph],
-                                            Set[int]]:
+def __nrfg_4_graphs_from_subsets( leaf_subsets: Set[FrozenSet[ILeaf]],
+                                  viable_splits: Set[Split]
+                                  ) -> Tuple[Set[int],
+                                             List[MGraph],
+                                             Set[int]]:
     """
     NRFG PHASE IV.
     
     Creates graphs from the gene sets.
     
-    :param all_gene_sets:           Set of all gene sets
-    :param gene_set_to_fusion:      Mapping of gene sets to the fusions contained within 
+    :param leaf_subsets:            Set of all leaf subsets (i.e. the minigraph nodes) 
     :param viable_splits:           Set of splits permitted by the consensus 
     :return:                        Tuple of:
                                         1. Destinations (node UIDs)
@@ -370,21 +412,19 @@ def __nrfg_4_graphs_from_points( all_gene_sets: Set[FrozenSet[LegoSequence]],
     minigraphs = []
     destinations = set()
     sources = set()
-    for gene_set_ in all_gene_sets:
-        fused_gene_set: Set[ILeaf] = set( gene_set_ )
-        
-        for fusion_point in gene_set_to_fusion[gene_set_]:
-            assert isinstance( fusion_point, FusionPoint )
-            fused_gene_set.add( fusion_point )
+    for leaf_set in leaf_subsets:
+        __LOG_CREATE.pause( "***** LEAF SET {} *****", leaf_set )
         
         relevant_splits = set()
         
-        __LOG_CREATE.pause( "***** GENE SET {} *****", fused_gene_set )
+        __LOG_CREATE.pause( "LEAF SET {}", leaf_set )
         
         for split in viable_splits:
-            if split.all.issuperset( fused_gene_set ):  # S c G
-                intersection = split.intersection( fused_gene_set )
-                if intersection.is_bad():
+            leaf_set_sequences = frozenset( x for x in leaf_set if isinstance( x, LegoSequence ) )
+            
+            if split.all.issuperset( leaf_set_sequences ):  # S c G
+                intersection = split.intersection( leaf_set )
+                if intersection.is_redundant():
                     __LOG_CREATE( "  BAD: {} “{}”", split, intersection )
                 elif intersection not in relevant_splits:
                     __LOG_CREATE( "  OK : {} “{}”", split, intersection )
@@ -392,14 +432,18 @@ def __nrfg_4_graphs_from_points( all_gene_sets: Set[FrozenSet[LegoSequence]],
                 else:
                     __LOG_CREATE( "  REP: {} “{}”", split, intersection )
             else:
-                missing = fused_gene_set - split.all
+                missing = leaf_set - split.all
                 if not missing:
                     __LOG_CREATE( "ERROR" )
+                
                 __LOG_CREATE( "  NSU: {}", split )
                 __LOG_CREATE( "    -: {}", missing )
         
         if not relevant_splits:
-            raise LogicError( "I cannot reconstruct this graph because all splits for the gene set «{}» were rejected. The reasons for rejections have not been retained in memory. Please turn on logging and investigate history to see details.".format( fused_gene_set ) )
+            msg = "I cannot reconstruct this graph because all splits for the gene set «{}» were rejected. " \
+                  "The reasons for rejections have not been retained in memory. " \
+                  "Please turn on logging and investigate history to see details."
+            raise LogicError( msg.format( leaf_set ) )
         
         minigraph = __make_graph_from_splits( relevant_splits )
         minigraphs.append( minigraph )
@@ -416,7 +460,7 @@ def __nrfg_4_graphs_from_points( all_gene_sets: Set[FrozenSet[LegoSequence]],
                 sources.add( node.uid )
         
         __LOG_CREATE( minigraph.to_ascii() )
-        __LOG_CREATE( "END OF GENE SET {}", fused_gene_set, key = "nrfg.289" )
+        __LOG_CREATE( "END OF GENE SET {}", leaf_set, key = "nrfg.289" )
     
     return destinations, minigraphs, sources
 
@@ -440,6 +484,7 @@ def __nrfg_6_clean_graph( nrfg: MGraph, sources ):
         if lego_graph.is_fusion( node ):
             if node.uid in sources:
                 node.remove_node_safely()
+        
         if lego_graph.is_clade( node ):
             in_ = len( node.edges.incoming )
             out_ = len( node.edges.outgoing )
@@ -460,9 +505,9 @@ def __nrfg_debug_splits( nrfg, viable_splits ):
     supported = __debug_splits( nrfg, viable_splits )
     unsupported = viable_splits - supported
     for split in unsupported:
-        MCMD.print( ansi.FORE_RED + "unsupported: " + ansi.RESET + str( split ) )
+        __LOG_DEBUG( ansi.FORE_RED + "unsupported: " + ansi.RESET + str( split ) )
     for split in supported:
-        MCMD.print( ansi.FORE_GREEN + "supported: " + ansi.RESET + str( split ) )
+        __LOG_DEBUG( ansi.FORE_GREEN + "supported: " + ansi.RESET + str( split ) )
 
 
 def __nrfg_5_sew_points( destinations, minigraphs, sources ):

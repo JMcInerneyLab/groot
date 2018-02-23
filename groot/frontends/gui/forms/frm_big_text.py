@@ -20,7 +20,14 @@ class FrmBigText( FrmBase ):
         
         self.ANSI_SCHEME = qt_gui_helper.ansi_scheme_dark( family = 'Consolas,"Courier New",monospace' )
         self.on_refresh_data()
-        self.actions.bind_to_select(self.ui.BTN_SELECTION)
+        self.actions.bind_to_select( self.ui.BTN_SELECTION )
+        
+        self.ui.RAD_BLAST.toggled[bool].connect( self.on_option_changed )
+        self.ui.RAD_FASTA.toggled[bool].connect( self.on_option_changed )
+    
+    
+    def on_option_changed( self, _: bool ) -> None:
+        self.on_refresh_data()
     
     
     def on_refresh_data( self ):
@@ -50,7 +57,7 @@ class FrmBigText( FrmBase ):
         """
         Signal handler:
         """
-        pass #intentional
+        pass  # intentional
     
     
     @exqtSlot()
@@ -59,6 +66,6 @@ class FrmBigText( FrmBase ):
         Signal handler:
         """
         file_name = qt_gui_helper.browse_save( self, "All files (*.*)" )
-
+        
         if file_name:
             file_helper.write_all_text( file_name, self.ui.TXT_MAIN.toPlainText() )

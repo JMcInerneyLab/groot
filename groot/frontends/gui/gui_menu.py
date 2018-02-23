@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import re
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QFileDialog, QLabel, QMainWindow, QMenu, QMenuBar, QPushButton, QToolTip
-
+from groot.data.global_view import RecentFile
 
 from intermake import intermake_gui
 from groot import constants, extensions
@@ -92,8 +92,10 @@ class GuiMenu:
         self.add_action( "Windows", "&Show debug", fn = a.show_debug_form, checked = a.is_debug_visible )
         self.add_action( "Windows", "&Show startup", fn = a.show_startup, checked = a.is_startup_visible )
         self.add_action( "Windows", "&Show version", fn = a.show_version, checked = a.is_version_visible )
+        self.add_action( "Windows", "&Show create trees", fn = a.show_trees, checked = a.is_tree_visible )
         self.add_action( "Windows", "&Show create trees", fn = a.show_create_trees, checked = a.is_create_tree_visible )
         self.add_action( "Windows", "&Show create alignment", fn = a.show_create_alignment, checked = a.is_create_alignment_visible )
+        self.add_action( "Windows", "&Show wizard progress", fn = a.show_wizard_progress, checked = a.is_wizard_progress_visible )
         
         self.mnu_help = self.add_menu( ["Help"] )
         self.add_action( "Help", "&Show readme", fn = a.show_help )
@@ -130,8 +132,12 @@ class GuiMenu:
             menu.setEnabled( False )
         
         for item in reversed( global_view.options().recent_files ):
+            if not isinstance( item, RecentFile ):
+                # Legacy data, discard
+                continue
+            
             action = QAction()
-            action.setText( file_helper.get_filename_without_extension( item ) )
+            action.setText( file_helper.get_filename_without_extension( item.file_name ) )
             action.TAG_file = item
             action.triggered[bool].connect( self.__on_action )
             self.actions.append( action )
@@ -188,6 +194,17 @@ class GuiActions:
         self.window = window
         self.select_button: QPushButton = None
         self.select_choice: ESelMenu = ESelMenu.ALL
+    
+    
+    @exceptToGui()
+    def close_window( self ):
+        self.window.close()
+    
+    
+    @exceptToGui()
+    def wizard_next( self ):
+        # TODO
+        raise NotImplementedError( "TODO" )  # TODO
     
     
     @exceptToGui()
@@ -252,7 +269,7 @@ class GuiActions:
     @exceptToGui()
     def show_workflow( self ) -> None:
         """
-        Signal handler:
+        Shows FrmWorkflow
         """
         from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
         self.frm_main.show_form( FrmWorkflow )
@@ -261,7 +278,7 @@ class GuiActions:
     @exceptToGui()
     def show_wizard( self ) -> None:
         """
-        Signal handler:
+        Shows FrmWizard
         """
         from groot.frontends.gui.forms.frm_wizard import FrmWizard
         self.frm_main.show_form( FrmWizard )
@@ -270,7 +287,7 @@ class GuiActions:
     @exceptToGui()
     def show_options( self ) -> None:
         """
-        Signal handler:
+        Shows FrmViewOptions
         """
         from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
         self.frm_main.show_form( FrmViewOptions )
@@ -279,7 +296,7 @@ class GuiActions:
     @exceptToGui()
     def show_lego( self ) -> None:
         """
-        Signal handler:
+        Shows FrmLego
         """
         from groot.frontends.gui.forms.frm_lego import FrmLego
         self.frm_main.show_form( FrmLego )
@@ -288,7 +305,7 @@ class GuiActions:
     @exceptToGui()
     def show_trees( self ) -> None:
         """
-        Signal handler:
+        Shows FrmWebtree
         """
         from groot.frontends.gui.forms.frm_webtree import FrmWebtree
         self.frm_main.show_form( FrmWebtree )
@@ -297,7 +314,7 @@ class GuiActions:
     @exceptToGui()
     def show_text_data( self ) -> None:
         """
-        Signal handler:
+        Shows FrmBigText
         """
         from groot.frontends.gui.forms.frm_big_text import FrmBigText
         self.frm_main.show_form( FrmBigText )
@@ -306,7 +323,7 @@ class GuiActions:
     @exceptToGui()
     def show_create_trees( self ) -> None:
         """
-        Signal handler:
+        Shows FrmCreateTrees
         """
         from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateTrees
         self.frm_main.show_form( FrmCreateTrees )
@@ -315,7 +332,7 @@ class GuiActions:
     @exceptToGui()
     def show_create_alignment( self ) -> None:
         """
-        Signal handler:
+        Shows FrmCreateAlignment
         """
         from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateAlignment
         self.frm_main.show_form( FrmCreateAlignment )
@@ -324,7 +341,7 @@ class GuiActions:
     @exceptToGui()
     def show_entities( self ) -> None:
         """
-        Signal handler:
+        Shows FrmSelectionList
         """
         from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
         self.frm_main.show_form( FrmSelectionList )
@@ -333,7 +350,7 @@ class GuiActions:
     @exceptToGui()
     def show_alignments( self ) -> None:
         """
-        Signal handler:
+        Shows FrmAlignment
         """
         from groot.frontends.gui.forms.frm_alignment import FrmAlignment
         self.frm_main.show_form( FrmAlignment )
@@ -342,7 +359,7 @@ class GuiActions:
     @exceptToGui()
     def show_fusions( self ) -> None:
         """
-        Signal handler:
+        Shows FrmFusions
         """
         from groot.frontends.gui.forms.frm_fusions import FrmFusions
         self.frm_main.show_form( FrmFusions )
@@ -351,7 +368,7 @@ class GuiActions:
     @exceptToGui()
     def show_load_model( self ) -> None:
         """
-        Signal handler:
+        Shows FrmLoadFile
         """
         from groot.frontends.gui.forms.frm_samples import FrmLoadFile
         self.frm_main.show_form( FrmLoadFile )
@@ -360,16 +377,25 @@ class GuiActions:
     @exceptToGui()
     def show_save_model( self ) -> None:
         """
-        Signal handler:
+        Shows FrmSaveFile
         """
         from groot.frontends.gui.forms.frm_samples import FrmSaveFile
         self.frm_main.show_form( FrmSaveFile )
     
     
     @exceptToGui()
+    def show_wizard_progress( self ) -> None:
+        """
+        Shows FrmWizardActive
+        """
+        from groot.frontends.gui.forms.frm_wizard_active import FrmWizardActive
+        self.frm_main.show_form( FrmWizardActive )
+    
+    
+    @exceptToGui()
     def show_intermake( self ) -> None:
         """
-        Signal handler:
+        Shows the intermake window (FrmIntermakeMain)
         """
         from intermake.hosts.frontends.gui_qt.frm_intermake_main import FrmIntermakeMain
         self.frm_main.show_form( FrmIntermakeMain )
@@ -378,7 +404,7 @@ class GuiActions:
     @exceptToGui()
     def show_domains( self ) -> None:
         """
-        Signal handler:
+        Shows FrmDomain
         """
         from groot.frontends.gui.forms.frm_domain import FrmDomain
         self.frm_main.show_form( FrmDomain )
@@ -387,7 +413,7 @@ class GuiActions:
     @exceptToGui()
     def show_startup( self ) -> None:
         """
-        Signal handler:
+        Shows FrmStartup
         """
         from groot.frontends.gui.forms.frm_startup import FrmStartup
         self.frm_main.show_form( FrmStartup )
@@ -396,7 +422,7 @@ class GuiActions:
     @exceptToGui()
     def show_debug_form( self ) -> None:
         """
-        Signal handler:
+        Shows FrmDebug
         """
         from groot.frontends.gui.forms.frm_debug import FrmDebug
         self.frm_main.show_form( FrmDebug )
@@ -405,7 +431,7 @@ class GuiActions:
     @exceptToGui()
     def is_workflow_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
         return FrmWorkflow in self.frm_main.mdi
@@ -414,7 +440,7 @@ class GuiActions:
     @exceptToGui()
     def is_options_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
         return FrmViewOptions in self.frm_main.mdi
@@ -423,7 +449,7 @@ class GuiActions:
     @exceptToGui()
     def is_wizard_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_wizard import FrmWizard
         return FrmWizard in self.frm_main.mdi
@@ -432,7 +458,7 @@ class GuiActions:
     @exceptToGui()
     def is_lego_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_lego import FrmLego
         return FrmLego in self.frm_main.mdi
@@ -441,7 +467,7 @@ class GuiActions:
     @exceptToGui()
     def is_tree_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_webtree import FrmWebtree
         return FrmWebtree in self.frm_main.mdi
@@ -450,7 +476,7 @@ class GuiActions:
     @exceptToGui()
     def is_create_tree_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateTrees
         return FrmCreateTrees in self.frm_main.mdi
@@ -459,7 +485,7 @@ class GuiActions:
     @exceptToGui()
     def is_create_alignment_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateAlignment
         return FrmCreateAlignment in self.frm_main.mdi
@@ -468,7 +494,7 @@ class GuiActions:
     @exceptToGui()
     def is_text_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_big_text import FrmBigText
         return FrmBigText in self.frm_main.mdi
@@ -477,16 +503,25 @@ class GuiActions:
     @exceptToGui()
     def is_entities_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
         return FrmSelectionList in self.frm_main.mdi
     
     
     @exceptToGui()
+    def is_wizard_progress_visible( self ) -> bool:
+        """
+        Returns if the form is visible
+        """
+        from groot.frontends.gui.forms.frm_wizard_active import FrmWizardActive
+        return FrmWizardActive in self.frm_main.mdi
+    
+    
+    @exceptToGui()
     def is_alignments_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_alignment import FrmAlignment
         return FrmAlignment in self.frm_main.mdi
@@ -495,7 +530,7 @@ class GuiActions:
     @exceptToGui()
     def is_fusion_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_fusions import FrmFusions
         return FrmFusions in self.frm_main.mdi
@@ -504,7 +539,7 @@ class GuiActions:
     @exceptToGui()
     def is_load_file_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_samples import FrmLoadFile
         return FrmLoadFile in self.frm_main.mdi
@@ -513,7 +548,7 @@ class GuiActions:
     @exceptToGui()
     def is_save_file_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_samples import FrmSaveFile
         return FrmSaveFile in self.frm_main.mdi
@@ -522,7 +557,7 @@ class GuiActions:
     @exceptToGui()
     def is_intermake_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from intermake.hosts.frontends.gui_qt.frm_intermake_main import FrmIntermakeMain
         return FrmIntermakeMain in self.frm_main.mdi
@@ -531,7 +566,7 @@ class GuiActions:
     @exceptToGui()
     def is_domain_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_domain import FrmDomain
         return FrmDomain in self.frm_main.mdi
@@ -540,7 +575,7 @@ class GuiActions:
     @exceptToGui()
     def is_debug_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_debug import FrmDebug
         return FrmDebug in self.frm_main.mdi
@@ -549,7 +584,7 @@ class GuiActions:
     @exceptToGui()
     def is_startup_visible( self ) -> bool:
         """
-        Signal handler:
+        Returns if the form is visible
         """
         from groot.frontends.gui.forms.frm_startup import FrmStartup
         return FrmStartup in self.frm_main.mdi
@@ -709,10 +744,11 @@ class GuiActions:
     
     def set_selection( self, value: LegoSelection ):
         global_view.set_selection( value )
-
+    
+    
     def enable_inbuilt_browser( self ):
         from groot.frontends.gui.forms.frm_webtree import FrmWebtree
-        form = self.frm_main.mdi.get(FrmWebtree)
+        form = self.frm_main.mdi.get( FrmWebtree )
         
         if form is None:
             return

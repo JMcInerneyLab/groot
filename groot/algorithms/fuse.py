@@ -1,18 +1,17 @@
 """
 Model for finding fusion events.
 """
-
 from typing import List, Set
+from mgraph import MGraph, MNode, MEdge
+from mhelper import Logger, array_helper
 
 from groot.algorithms import lego_graph
 from groot.algorithms.classes import FusionEvent, FusionPoint
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
-from mgraph import MGraph, MNode, MEdge
-from mhelper import Logger, array_helper, string_helper
 
 
 __LOG = Logger( "fusion", True )
-__LOG_ISOLATION = Logger( "isolation", True )
+__LOG_ISOLATION = Logger( "isolation", False )
 
 
 def remove_fusions( model: LegoModel ) -> int:
@@ -49,6 +48,27 @@ def remove_fusions( model: LegoModel ) -> int:
     
     return removed_count
 
+def find_all_fusion_points( model: LegoModel ) -> None:
+    """
+    Finds the fusion points in the model.
+    i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
+    """
+    r: List[FusionEvent] = []
+    
+    if __fusions_exist( model ):
+        raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
+    
+    for event in __find_fusion_events( model ):
+        __LOG( "Processing fusion event: {}", event )
+        event.points = []
+        
+        for component in model.components:
+            for point in __find_fusion_points( event, component ):
+                event.points.append( point )
+        
+        r.append( event )
+    
+    model.fusion_events = r
 
 def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
     """
@@ -78,6 +98,10 @@ def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
             __LOG( "FORMING {}", ab_ints )
             results.append( FusionEvent( index, component_a, component_b, ab_ints ) )
             index += 1
+        else:
+            __LOG( "NOT A FUSION:" )
+            __LOG( "{} AND {}", component_a, component_b )
+            __LOG( "FORMING {}", ab_ints )
     
     #
     # Some fusions will form things actually formed by other fusions
@@ -115,27 +139,7 @@ def __fusions_exist( model: LegoModel ):
     return False
 
 
-def find_all_fusion_points( model: LegoModel ) -> None:
-    """
-    Finds the fusion points in the model.
-    i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
-    """
-    r: List[FusionEvent] = []
-    
-    if __fusions_exist( model ):
-        raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
-    
-    for event in __find_fusion_events( model ):
-        __LOG( "Processing fusion event: {}", event )
-        event.points = []
-        
-        for component in model.components:
-            for point in __find_fusion_points( event, component ):
-                event.points.append( point )
-        
-        r.append( event )
-    
-    model.fusion_events = r
+
 
 
 def __find_fusion_points( fusion_event: FusionEvent,
@@ -179,6 +183,9 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     # The `intersection_aliases` correspond to βγδ in the above diagram
     
+    __LOG( "component.minor_sequences = {}", component.minor_sequences )
+    __LOG( "fusion_event.component_a.major_sequences = {}", fusion_event.component_a.major_sequences )
+    __LOG( "fusion_event.component_b.major_sequences = {}", fusion_event.component_b.major_sequences )
     
     component_sequences = set( component.minor_sequences )
     

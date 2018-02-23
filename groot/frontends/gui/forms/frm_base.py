@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from groot.data import global_view
 from groot.frontends.gui.gui_menu import GuiActions
@@ -12,7 +12,7 @@ class FrmBase( QDialog ):
     @exceptToGui()
     def __init__( self, parent ):
         from groot.frontends.gui.forms.frm_main import FrmMain
-        assert isinstance(parent, FrmMain)
+        assert isinstance( parent, FrmMain )
         self.frm_main: FrmMain = parent
         super().__init__( parent )
         self.setStyleSheet( intermake_gui.default_style_sheet() )
@@ -36,6 +36,14 @@ class FrmBase( QDialog ):
         pass
     
     
+    def alert( self, message: str ):
+        msg = QMessageBox()
+        msg.setText( message )
+        msg.setWindowTitle( self.windowTitle() )
+        msg.setIcon( QMessageBox.Warning )
+        msg.exec_()
+    
+    
     def set_selected( self, item, selected ):
         selection: LegoSelection = self.get_selection()
         existing = item in selection
@@ -45,11 +53,11 @@ class FrmBase( QDialog ):
         
         if selected:
             if selection.is_empty() or selection.selection_type() != type( item ):
-                self.set_selection( LegoSelection( frozenset( { item } ) ) )
+                self.actions.set_selection( LegoSelection( frozenset( { item } ) ) )
             else:
-                self.set_selection( LegoSelection( selection.items.union( { item } ) ) )
+                self.actions.set_selection( LegoSelection( selection.items.union( { item } ) ) )
         else:
-            self.set_selection( LegoSelection( selection.items - { item } ) )
+            self.actions.set_selection( LegoSelection( selection.items - { item } ) )
     
     
     def get_selection( self ) -> LegoSelection:
