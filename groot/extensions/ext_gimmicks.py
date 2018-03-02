@@ -1,31 +1,21 @@
 from typing import Optional, List
 
+from os import path
+
+from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, command, visibilities, common_commands
-from mhelper import EFileMode, Filename, file_helper
+from mgraph import MGraph, importing
+from mhelper import EFileMode, Filename, file_helper, io_helper
 from groot.extensions import ext_files
-from groot.algorithms import alignment as alignment_, tree as tree_
+from groot.algorithms import alignment as alignment_, tree as tree_, graph_viewing
 from groot.algorithms.walkthrough import Walkthrough
 
 
 __mcmd_folder_name__ = "Gimmicks"
-
-
-@command( visibility = visibilities.ADVANCED )
-def print_sites( type: ESiteType, text: str ) -> EChanges:
-    """
-    Prints a sequence in colour
-    :param type: Type of sites to display.
-    :param text: Sequence (raw data without headers) 
-    """
-    MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
-    
-    return EChanges.NONE
-
-
 __EXT_FASTA = ".fasta"
 
 
@@ -40,6 +30,33 @@ def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -
     MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
     
     return EChanges.NONE
+
+
+@command( visibility = visibilities.ADVANCED )
+def view_graph( text: str, title: Optional[str] = None ):
+    """
+    Views a graph in visjs.
+    :param text:    Text representing the graph, created with `MGraph.to_compact` OR a filename, created with `MGRAPH.to_csv`.
+    :param title:   Title of graph (optional)
+    """
+    g = MGraph()
+    
+    if path.isfile( text ):
+        try:
+            importing.import_edgelist( g, file_helper.read_all_text( text ), delimiter = "\t" )
+        except Exception as ex:
+            raise ValueError( "Invalid file: " + text ) from ex
+    else:
+        importing.import_compact( g, text )
+    
+    visjs = graph_viewing.create_vis_js( graph = [("custom-graph", g)],
+                                         title = title,
+                                         inline_title = title is not None )
+    
+    MCMD.print( str( g ) )
+    
+    with io_helper.open_write( "open", extension = ".html" ) as file_out:
+        file_out.write( visjs )
 
 
 @command( visibility = visibilities.ADVANCED )
@@ -80,7 +97,7 @@ def __review( review, msg, fns, *, retry = True ):
         elif switch == "retry":
             return False
         elif switch == "pause":
-            common_commands.cli()
+            common_commands.start_cli()
         elif switch == "abort":
             raise ValueError( "User cancelled." )
 

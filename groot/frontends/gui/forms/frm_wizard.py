@@ -5,8 +5,9 @@ from typing import List, Dict
 from groot.algorithms import alignment, tree, walkthrough
 from groot.algorithms.walkthrough import Walkthrough
 from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.frontends.gui.forms.frm_sample_browser import FrmSampleBrowser
 from intermake.engine.environment import MENV
-from mhelper import array_helper
+from mhelper import array_helper, file_helper
 from mhelper_qt import exceptToGui, exqtSlot
 
 
@@ -160,3 +161,20 @@ class FrmWizard( FrmBase ):
         walkthroughs.append( walkthrough )
         
         MENV.local_data.store[SETTINGS_KEY] = walkthroughs
+    
+    
+    @exqtSlot()
+    def on_BTN_SAMPLES_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        sample = FrmSampleBrowser.request( self )
+        
+        if sample:
+            self.ui.LST_FILES.clear()
+            
+            for file in file_helper.list_dir( sample ):
+                if file.endswith(".blast") or file.endswith(".fasta"):
+                    item = QTreeWidgetItem()
+                    item.setText( 0, file )
+                    self.ui.LST_FILES.addTopLevelItem( item )

@@ -53,6 +53,9 @@ class _current_status:
 
 
 def current_model() -> LegoModel:
+    if __model is None:
+        new_model()
+    
     return __model
 
 
@@ -71,7 +74,8 @@ def set_selection( value: LegoSelection ):
 def set_model( model ):
     global __model
     __model = model
-    MENV.root = model
+    MENV.configure( using = constants.APP_NAME,
+                    root = model )
     
     if isinstance( MENV.host, ConsoleHost ):
         MENV.host.browser_path = PathToVisualisable.root_path( MENV.root )
@@ -83,7 +87,13 @@ def new_model():
     set_model( LegoModel() )
 
 
-new_model()
+def get_sample_contents( name: str ) -> List[str]:
+    if not path.sep in name:
+        name = path.join( get_sample_data_folder(), name )
+    
+    all_files = file_helper.list_dir( name )
+    
+    return [x for x in all_files if x.endswith( ".blast" ) or x.endswith( ".fasta" )]
 
 
 def get_samples():
@@ -109,12 +119,20 @@ def get_workspace_files() -> List[str]:
     return r
 
 
-def get_sample_data_folder():
+def get_sample_data_folder( name: str = None ):
     """
     PRIVATE
     Obtains the sample data folder
     """
-    return path.join( file_helper.get_directory( __file__, 2 ), "sampledata" )
+    sdf = path.join( file_helper.get_directory( __file__, 2 ), "sample_data" )
+    
+    if not name:
+        return sdf
+    
+    if path.sep in name:
+        return name
+    
+    return path.join( sdf, name )
 
 
 class EBrowseMode( MEnum ):
@@ -148,6 +166,7 @@ class GlobalOptions:
         self.visjs_path = ""
         self.browse_mode = EBrowseMode.ASK
         self.startup_mode = EStartupMode.STARTUP
+        self.visjs_component_view = False
 
 
 __global_options = None

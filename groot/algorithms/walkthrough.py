@@ -54,7 +54,7 @@ class Walkthrough:
         self.view = view
         self.__stage = 0
         self.is_paused = True
-        self.is_completed = True
+        self.is_completed = False
         self.__result = EChanges.NONE
         self.pause_reason = "start"
     
@@ -98,13 +98,15 @@ class Walkthrough:
     
     
     def __line( self, title ):
+        title = "WIZARD: " + title
+        title = " ".join( title.upper() )
         MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
         MCMD.progress( string_helper.centre_align( " " + title + " ", MENV.host.console_width, Theme.C.SHADE ) )
         MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
     
     
     def step( self ) -> EChanges:
-        if not self.is_completed:
+        if self.is_completed:
             raise ValueError( "The walkthrough has already completed." )
         
         self.is_paused = False
@@ -116,14 +118,14 @@ class Walkthrough:
         
         if self.__stage == len( self.__stages ):
             MCMD.progress( "The walkthrough is complete." )
-            self.is_completed = False
+            self.is_completed = True
         
         return self.__result
     
     
     def __fn9_view_nrfg( self ):
         if self.view:
-            self.__result |= ext_viewing.print_trees( global_view.current_model().nrfg.graph, EFormat.VISJS )
+            self.__result |= ext_viewing.print_trees( graph = global_view.current_model().nrfg.graph, format = EFormat.VISJS, file = "open" )
     
     
     def __fn8_make_nrfg( self ):
@@ -165,7 +167,7 @@ class Walkthrough:
         self.__result |= ext_generating.make_components( self.tolerance )
         
         if self.pause_components:
-            self.__pause( "components generated", (ext_viewing.print_sequences, ext_viewing.print_components) )
+            self.__pause( "components generated", (ext_viewing.print_genes, ext_viewing.print_components) )
     
     
     def __fn3_import_data( self ):
@@ -174,7 +176,7 @@ class Walkthrough:
             self.__result |= ext_files.import_file( import_ )
         
         if self.pause_import:
-            self.__pause( "data imported", (ext_viewing.print_sequences,) )
+            self.__pause( "data imported", (ext_viewing.print_genes,) )
     
     
     def __fn2_save_model( self ):

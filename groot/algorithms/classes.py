@@ -62,7 +62,7 @@ class FusionPoint( ILeaf, ILegoSelectable ):
     
     
     def __repr__( self ):
-        return self.str_long()
+        return self.str_short()
     
     
     def __eq__( self, other ):

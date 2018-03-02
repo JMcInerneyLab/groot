@@ -16,16 +16,15 @@ __version__ = "0.0.0.37"
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 def __setup():
     from intermake import MENV
-    from groot.extensions import string_coercion
+    from groot import constants
     from groot.frontends.gui import gui_host
     
-    string_coercion.setup()
-    gui_host.setup()
-    
-    MENV.name = "GROOT"
-    MENV.abv_name = "groot"
-    MENV.version = __version__
-
+    if MENV.configure( name = constants.APP_NAME,
+                       abv_name = "groot",
+                       version = __version__,
+                       host_provider = gui_host.setup() ):
+        from groot.extensions import string_coercion
+        string_coercion.setup()
 
 __setup()
 
@@ -33,7 +32,7 @@ from groot import extensions
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ MAIN EXPORTS       ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing
+from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator
 from groot.algorithms.extendable import align, tree
 from intermake import run_jupyter
 

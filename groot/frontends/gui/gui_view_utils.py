@@ -1,15 +1,22 @@
-from random import randint
+"""
+Collection of miscellany for dealing with the GUI in GROOT.
+"""
+
 from typing import FrozenSet, Iterable
 
-from mhelper import MFlags, array_helper, string_helper, SwitchError
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QColor, QWheelEvent
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QAction, QWidget
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QWheelEvent
+from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QWidget
 
-from groot.data.lego_model import ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain
 from groot.data import global_view
+from groot.data.lego_model import ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain
+from mhelper import MFlags, SwitchError, array_helper, string_helper
+
 
 class ESelMenu( MFlags ):
+    """
+    What to display in the "select this" menu.
+    """
     SEQUENCES = 1 << 0
     DOMAINS = 1 << 1
     EDGES = 1 << 2
@@ -21,8 +28,15 @@ class ESelMenu( MFlags ):
     LEGO = 1 << 8
     RELATIONAL = 1 << 9
     META_GRAPHS = COMPONENTS | NRFG
-    
+
+
 class LegoSelection:
+    """
+    IMMUTABLE
+    Represents the selection made by the user.
+    """
+    
+    
     def __init__( self, items: Iterable[ILegoSelectable] = None ):
         if items is None:
             items = frozenset()
@@ -77,6 +91,10 @@ class LegoSelection:
 
 
 class MyView( QGraphicsView ):
+    """
+    Subclasses QGraphicsView to provide mouse zooming. 
+    """
+    
     def wheelEvent( self, event: QWheelEvent ):
         """
         Zoom in or out of the view.
@@ -103,23 +121,12 @@ class MyView( QGraphicsView ):
             self.translate( delta.x(), delta.y() )
 
 
-def random_colour():
-    return QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) )
-
-
-def triangle( sequence ):
-    """
-    Yields the triangle
-    """
-    for i, a in enumerate( sequence ):
-        for j in range( 0, i ):
-            yield a, sequence[j]
-
-
 class EChanges( MFlags ):
     """
     Describes the changes after a command has been issued.
-    Used by the GUI.
+    These are returned by most of the GROOT user-commands.
+    When the GUI receives an EChanges object, it updates the pertinent data.
+    The CLI does nothing with the object.
     
     :data MODEL_OBJECT:     The model object itself has changed.
                             Implies FILE_NAME, MODEL_ENTITIES
@@ -143,6 +150,10 @@ class EChanges( MFlags ):
 
 
 class SelectionManipulator:
+    """
+    Manipulates a selection.
+    
+    """
     def select_left( self, model: LegoModel, selection: LegoSelection ) -> LegoSelection:
         select = set()
         
@@ -188,7 +199,8 @@ class SelectionManipulator:
         """
         return LegoSelection( model.user_domains )
 
-def show_selection_menu(control:QWidget, actions, choice: ESelMenu = ESelMenu.ALL):
+
+def show_selection_menu( control: QWidget, actions, choice: ESelMenu = ESelMenu.ALL ):
     model = global_view.current_model()
     selection = global_view.current_selection()
     alive = []
@@ -209,7 +221,6 @@ def show_selection_menu(control:QWidget, actions, choice: ESelMenu = ESelMenu.AL
         
         for option in (OPTION_1, OPTION_2, OPTION_3, OPTION_4, OPTION_5, OPTION_6, OPTION_7):
             action = QAction()
-            action.setCheckable( True )
             action.setText( option )
             action.tag = option
             alive.append( action )
@@ -377,9 +388,9 @@ def show_selection_menu(control:QWidget, actions, choice: ESelMenu = ESelMenu.AL
         return
     
     tag = selected.tag
-
+    
     from groot.frontends.gui.gui_menu import GuiActions
-    assert isinstance(actions, GuiActions)
+    assert isinstance( actions, GuiActions )
     
     if tag == 1:
         actions.show_entities()

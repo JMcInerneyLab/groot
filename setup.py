@@ -24,7 +24,9 @@ setup( name = "groot",
                            "colorama",  # ui (cli)
                            "mgraph",
                            "stringcoercion",
-                           "PyQt5", # ui (GUI)
-                           "sip"],  # ui (GUI)
+                           "PyQt5",  # ui (GUI)
+                           "sip",  # ui (GUI)
+                           "dendropy",
+                           ],
        python_requires = ">=3.6"
        )

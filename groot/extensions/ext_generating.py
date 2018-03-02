@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains, importation
+from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
@@ -8,7 +8,6 @@ from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
-from mgraph import MGraph
 from mhelper import string_helper
 
 
@@ -35,22 +34,27 @@ def make_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
 
 
 @command( names = ["make_components", "create_components", "find_components"] )
-def make_components( tolerance: int = 0 ) -> EChanges:
+def make_components( major_tol: int = 0, minor_tol: Optional[int] = None, debug: bool = False ) -> EChanges:
     """
     Detects composites in the model.
-    :param tolerance:   Tolerance on overlap, in sites.
+    :param major_tol:   Tolerance on overlap, in sites.
+    :param minor_tol:   Tolerance on overlap, in sites. If `None` uses the `major_tol`.
+    :param debug:       Internal parameter.
     """
+    if minor_tol is None:
+        minor_tol = major_tol
+    
     model = global_view.current_model()
     
     if len( model.edges ) == 0:
         raise ValueError( "Refusing to make components because there is no edge data. Did you mean to load the edge data (BLAST) first?" )
     
     with MCMD.action( "Component detection" ):
-        components.detect( model, tolerance )
+        components.detect( model, major_tol, minor_tol, debug )
     
     for component in model.components:
         if len( component.major_sequences ) == 1:
-            MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tolerance ) )
+            MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}/{}?".format( major_tol, minor_tol ) )
             break
     
     MCMD.progress( "{} components detected.".format( len( model.components ) ) )
@@ -83,7 +87,6 @@ def make_alignments( algorithm: Optional[str] = None, component: Optional[List[L
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return EChanges.COMP_DATA
-
 
 
 @command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
@@ -156,14 +159,3 @@ def make_nrfg( cutoff: float = 0.5, dirty: bool = False, no_super: bool = True )
     MCMD.progress( "NRFG created OK." )
     
     return EChanges.MODEL_DATA
-
-
-@command()
-def split_graph( tree: MGraph ) -> EChanges:
-    """
-    Shows the splits for a tree.
-    :param tree:   Tree to split.
-    """
-    nrfg.reduce_and_rebuild( tree )
-    
-    return EChanges.NONE

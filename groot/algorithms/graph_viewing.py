@@ -1,18 +1,15 @@
 import re
-from os import path
-from typing import Sequence, Tuple, Optional
+from typing import Optional, Sequence, Tuple, Union
 
-import itertools
-
-import groot.data.global_view
 from groot.algorithms.classes import FusionPoint
 from groot.constants import EFormat
-from groot.data.lego_model import ILeaf, LegoComponent, LegoSequence, LegoModel
+from groot.data import global_view
+from groot.data.lego_model import ILeaf, LegoComponent, LegoModel, LegoSequence
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
-from intermake import MENV, Theme
-from mgraph import DNodeToText, MGraph, MNode
-from mhelper import SwitchError, ansi, array_helper, file_helper
+from intermake import Theme
+from mgraph import DNodeToText, MGraph, MNode, NodeStyle, exporting, UNodeToText
+from mhelper import SwitchError, ansi
 
 
 NEXT_SPECIAL = "["
@@ -278,144 +275,71 @@ def create( format_str: Optional[str], graphs: Sequence[Tuple[str, MGraph]], mod
     text = []
     
     if mode == EFormat.VISJS:
-        text.append( create_vis_js( format_str, graphs, model ) )
+        text.append( create_vis_js( graph = graphs, fnode = format_str ) )
     else:
         formatter = create_user_formatter( format_str )
         
         for name, tree in graphs:
-            if name:
+            if name and len( graphs ) > 1:
                 text.append( print_header( name ) )
             
             if mode == EFormat.ASCII:
-                text.append( tree.to_ascii( formatter ) )
+                text.append( exporting.export_ascii( tree, fnode = formatter ) )
             elif mode == EFormat.ETE_ASCII:
                 text.append( ete_providers.tree_to_ascii( tree, model, formatter ) )
-            elif mode == EFormat.DEBUG:
-                text.append( tree_to_debug( model, tree ) )
             elif mode == EFormat.NEWICK:
-                text.append( tree.to_newick( formatter ) )
+                text.append( exporting.export_newick( tree, fnode = formatter ) )
             elif mode == EFormat.ETE_GUI:
                 ete_providers.show_tree( tree, model, formatter )
-            elif mode == EFormat.SVG:
-                text.append( tree.to_svg( formatter ) )
-            elif mode == EFormat.HTML:
-                text.append( tree.to_svg( formatter, html = True ) )
             elif mode == EFormat.CSV:
-                text.append( tree.to_csv( formatter ) )
+                text.append( exporting.export_edgelist( tree, fnode = formatter ) )
+            elif mode == EFormat.TSV:
+                text.append( exporting.export_edgelist( tree, fnode = formatter, delimiter = "\t" ) )
             else:
                 raise SwitchError( "mode", mode )
     
     return "\n".join( text )
 
 
-def create_vis_js( format_str: Optional[str], names_and_graphs: Sequence[Tuple[str, MGraph]], model: LegoModel, inline_title: bool = True, title: str = None ) -> str:
-    """
-    Creates a vis.js html file, to view a graph.
-     
-    :param format_str:          String describing how the nodes are formatted. See `specify_graph_help` for details. 
-    :param names_and_graphs:    Sequence of graphs. See `create`. 
-    :param model:               Source model 
-    :param inline_title:        When `True` a heading is added to the page. 
-    :param title:               The title of the page. When `None` a default title is suggested.
-                                Note that the title will always show in the title bar, even if `inline_title` is `False`. 
-    :return:                    A string containing the HTML. 
-    """
-    # Page heading
-    if inline_title:
-        prefix = "<p><b>$(TITLE)</b></p><p>$(COMMENT)</p>"
+def create_vis_js( graph: Union[MGraph, Sequence[MGraph], Sequence[Tuple[str, MGraph]]],
+                   *,
+                   fnode: UNodeToText = None,
+                   inline_title: bool = False,
+                   title: str = None,
+                   rooted = True ):
+    if global_view.options().visjs_component_view:
+        node_styler = style_by_component
     else:
-        prefix = ""
+        node_styler = None
     
-    # Page title
-    include_labels = len( names_and_graphs ) != 1
-    
-    if not title:
-        title = MENV.name + " - " + model.name
-        
-        if not include_labels:
-            title += " - " + names_and_graphs[0][0]
-    
-    # Get graph information
-    graphs = [x[1] for x in names_and_graphs]
-    all_nodes = [λnode for λgraph in graphs for λnode in λgraph.nodes]
-    all_edges = [λedge for λgraph in graphs for λedge in λgraph.edges]
-    nodes = array_helper.create_index_lookup( itertools.chain( all_nodes, names_and_graphs ) )
-    node_to_string = create_user_formatter( format_str, ansi = False )
-    
-    # Add the nodes
-    node_list = []
-    
-    for node, node_id in nodes.items():
-        if isinstance( node, MNode ):
-            # Nodes...
-            if isinstance( node.data, LegoSequence ):
-                # ...gene
-                component = model.components.find_component_for_major_sequence( node.data )
-                colours = ["#C0392B",
-                           "#9B59B6",
-                           "#2980B9",
-                           "#1ABC9C",
-                           "#27AE60",
-                           "#F1C40F",
-                           "#E74C3C",
-                           "#8E44AD",
-                           "#3498DB",
-                           "#239B56",
-                           "#16A085",
-                           "#2ECC71",
-                           "#F39C12",
-                           "#D35400"]
-                colour = colours[component.index % len( colours )]
-                shape = 'box'
-            elif isinstance( node.data, FusionPoint ):
-                # ...fusion
-                colour = "#FF0000"
-                shape = 'star'
-            elif node.data is None:
-                # ...clade
-                colour = "#FFFFFF"
-                shape = 'circle'
-            else:
-                # ...something else :(
-                raise SwitchError( "node.data", node.data, instance = True )
-            
-            node_list.append( "{{shape:'{}', id: {}, label: '{}', color: '{}'}},".format( shape,
-                                                                                          node_id,
-                                                                                          node_to_string( node ),
-                                                                                          colour ) )
-        elif isinstance( node, tuple ):
-            # Labels...
-            name, graph = node
-            
-            if include_labels:
-                node_list.append( "{{shape:'text', id: {}, label: '{}', color: '#FFFFC0', font:{{size:32}}}},".format( node_id, name ) )
-        else:
-            # Something else...
-            raise SwitchError( "node", node, instance = True )
-    
-    # Add the edges
-    edge_list = []
-    
-    for edge in all_edges:
-        edge_list.append( "{{from: {}, to: {}, color:{{color:'#000000'}}}},".format( nodes[edge.left],
-                                                                                     nodes[edge.right] ) )
-    
-    # Fake edges to the labels
-    for name_graph in names_and_graphs:
-        if include_labels:
-            node_id_1 = nodes[name_graph[1].first_node]
-            node_id_2 = nodes[name_graph]
-            edge_list.append( "{{from: {}, to: {}, dashes:'true', color:{{color:'#C0C0C0'}}, smooth:{{enabled:'false'}}}},".format( node_id_1, node_id_2 ) )
-    
-    # Output the page
-    HTML_T = file_helper.read_all_text( path.join( file_helper.get_directory( __file__, ), "vis_js_template.html" ) )
-    HTML_T = HTML_T.replace( "$(PREFIX)", prefix )
-    HTML_T = HTML_T.replace( "$(TITLE)", title )
-    HTML_T = HTML_T.replace( "$(PATH)", path.join( groot.data.global_view.options().visjs_path, "" ) if groot.data.global_view.options().visjs_path else "" )
-    HTML_T = HTML_T.replace( "$(COMMENT)", "File automatically generated by Groot. Please replace this line with your own description." )
-    HTML_T = HTML_T.replace( "$(NODES)", "\n".join( node_list ) )
-    HTML_T = HTML_T.replace( "$(EDGES)", "\n".join( edge_list ) )
-    return HTML_T
+    return exporting.export_vis_js( graph = graph,
+                                    visjs_path = global_view.options().visjs_path,
+                                    fnode = fnode,
+                                    inline_title = inline_title,
+                                    title = title,
+                                    rooted = rooted,
+                                    node_styler = node_styler )
+
+
+def style_by_component( style: NodeStyle ):
+    if isinstance( style.node.data, LegoSequence ):
+        # ...gene
+        component = style.node.data.model.components.find_component_for_major_sequence( style.node.data )
+        colours = ["#C0392B",
+                   "#9B59B6",
+                   "#2980B9",
+                   "#1ABC9C",
+                   "#27AE60",
+                   "#F1C40F",
+                   "#E74C3C",
+                   "#8E44AD",
+                   "#3498DB",
+                   "#239B56",
+                   "#16A085",
+                   "#2ECC71",
+                   "#F39C12",
+                   "#D35400"]
+        style.background = colours[component.index % len( colours )]
 
 
 def print_header( x ):
@@ -425,18 +349,3 @@ def print_header( x ):
     return "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET
 
 
-def tree_to_debug( model: LegoModel, tree: MGraph ) -> str:
-    """
-    Debugging feature only.
-    Gets a description of the `import_info` for a tree.
-    """
-    rx = []
-    r = re.compile( ":[0-9.]+" )
-    for line in tree.import_info:
-        line = r.sub( "", line )
-        for s in sorted( model.sequences, key = lambda x: -len( str( x.id ) ) ):
-            assert isinstance( s, LegoSequence )
-            line = line.replace( s.legacy_accession, s.accession )
-        rx.append( line )
-    rrx = "\n".join( rx )
-    return rrx

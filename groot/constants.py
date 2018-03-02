@@ -1,4 +1,4 @@
-from mhelper import MEnum
+from mhelper import MEnum, SwitchError
 
 
 class EFormat( MEnum ):
@@ -16,37 +16,32 @@ class EFormat( MEnum ):
     ASCII = 2
     ETE_GUI = 3
     ETE_ASCII = 4
-    SVG = 5
-    HTML = 6
     CSV = 7
-    DEBUG = 8
     VISJS = 9
-
-
-class EOut( MEnum ):
-    """
-    Output mode.
+    TSV = 10
     
-    :data DEFAULT:   The default is:
-                        If filename specified              = FILE
-                        If output is HTML, SVG or VISJS    = OPEN
-                        Other                              = NORMAL
-    :data NORMAL:    Display in current UI
-    :data STDOUT:    Write to STDOUT (regardless of current UI).
-    :data CLIP:      Write to clipboard.
-    :data FILE:      Write to file.
-    :data FILEOPEN:  Write to file and open it.
-    :data OPEN:      Write to a temporary file and open it.
-    """
-    DEFAULT = 0
-    NORMAL = 1
-    STDOUT = 2
-    CLIP = 3
-    FILE = 4
-    OPEN = 5
-    FILEOPEN = 6
+    
+    def to_extension( self ):
+        if self == EFormat.NEWICK:
+            return ".nwk"
+        elif self == EFormat.ASCII:
+            return ".txt"
+        elif self == EFormat.ETE_ASCII:
+            return ".txt"
+        elif self == EFormat.ETE_GUI:
+            return ""
+        elif self == EFormat.CSV:
+            return ".csv"
+        elif self == EFormat.TSV:
+            return ".tsv"
+        elif self == EFormat.VISJS:
+            return ".html"
+        else:
+            raise SwitchError( "self", self )
+
 
 BINARY_EXTENSION = ".groot"
 DIALOGUE_FILTER = "Genomic n-rooted fusion graph (*.groot)"
 DIALOGUE_FILTER_FASTA = "FASTA (*.fasta)"
 DIALOGUE_FILTER_NEWICK = "Newick tree (*.newick)"
+APP_NAME = "GROOT"

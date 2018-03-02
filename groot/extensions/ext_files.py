@@ -59,14 +59,16 @@ def file_new() -> EChanges:
 
 
 @command()
-def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST] ) -> EChanges:
+def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
     """
     Imports a BLAST file into the model 
+    :param length:      Cutoff on alignment (query) length `None` for no filter. 
+    :param evalue:      Cutoff on evalue. `None` for no filter (this is not the default). 
     :param file_name:   File to import 
     :return: 
     """
     with MCMD.action( "Importing BLAST" ):
-        importation.import_blast( global_view.current_model(), file_name )
+        importation.import_blast( global_view.current_model(), file_name, evalue, length )
     
     return EChanges.MODEL_ENTITIES
 

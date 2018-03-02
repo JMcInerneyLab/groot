@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 import groot.algorithms.external_runner
 from groot.algorithms import graph_viewing, importation
 from groot.data.lego_model import LegoModel, LegoSequence
-from mgraph import MGraph, MNode
+from mgraph import MGraph, MNode, exporting
 from mhelper import ByRef, array_helper
 
 
@@ -30,7 +30,7 @@ def tree_consensus( algorithm: Optional[str], model: LegoModel, graphs: Iterable
         if not aa:
             raise ValueError( "Refusing to generate a consensus because at least one graph has no sequence data: {}".format( graph ) )
         
-        newick.append( graph.to_newick( graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
+        newick.append( exporting.export_newick( graph, fnode = graph_viewing.FORMATTER.prefixed_sequence_internal_id ) )
     
     fn = groot.algorithms.external_runner.get_tool( "consensus", algorithm )
     

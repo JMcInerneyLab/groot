@@ -1,22 +1,16 @@
-import os
-from os import path
 from typing import Callable, Iterable, List, Optional, TypeVar
 
-import pyperclip
-
-import intermake
 from groot.algorithms import alignment, components, fastaiser, graph_viewing, tree, userdomains
-from groot.algorithms.classes import FusionPoint
-from groot.constants import EFormat, EOut
+from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.lego_model import ILegoVisualisable, LegoComponent
 from groot.extensions import ext_files, ext_generating
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD, MENV, Plugin, Table, Theme, command, help_command, visibilities
+from intermake import MCMD, MENV, Plugin, Table, Theme, cli_helper, command, help_command, visibilities
 from mgraph import MGraph
-from mhelper import ByRef, Filename, MOptional, SwitchError, ansi, file_helper, string_helper
+from mhelper import ByRef, Filename, MOptional, ansi, io_helper, string_helper
 
 
 __mcmd_folder_name__ = "Viewing"
@@ -45,7 +39,7 @@ def algorithm_help():
     return "\n".join( r )
 
 
-@command( names = ["print_fasta", "fasta"] )
+@command( names = ["print_fasta", "fasta", "ps"] )
 def print_fasta( target: ILegoVisualisable ) -> EChanges:
     """
     Presents the FASTA sequences for an object.
@@ -68,6 +62,7 @@ def print_status() -> EChanges:
     r.append( Theme.HEADING + "Model" + Theme.RESET )
     r.append( "Project name:  {}".format( __get_status_line_comment( bool( model.sequences ), p, ext_files.import_blast, model.name ) ) )
     r.append( "File name:     {}".format( __get_status_line_comment( model.file_name is not None, p, ext_files.file_save, model.file_name if model.file_name else "Unsaved" ) ) )
+    p.value = False
     r.append( "" )
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
     r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, ext_files.import_blast ) ) )
@@ -86,10 +81,11 @@ def print_status() -> EChanges:
     return EChanges.INFORMATION
 
 
-@command( names = ["print_alignments", "alignments"] )
-def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0 ) -> EChanges:
+@command( names = ["print_alignments", "print_alignment", "alignments", "alignment", "pa"] )
+def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
     """
     Prints the alignment for a component.
+    :param file:        File to write to. See `file_write_help`. If this is empty then colours and headings are also printed. 
     :param component:   Component to print alignment for. If not specified prints all alignments.
     :param x:           Starting index (where 1 is the first site).
     :param n:           Number of sites to display. If zero a number of sites appropriate to the current UI will be determined.
@@ -100,12 +96,24 @@ def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n 
     if not n:
         n = MENV.host.console_width - 5
     
+    r = []
+    
+    colour = not file
+    
     for component_ in to_do:
-        MCMD.print( graph_viewing.print_header( component_ ) )
+        if colour or len( to_do ) > 1:
+            r.append( graph_viewing.print_header( component_ ) )
+        
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
-            MCMD.information( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m, x, n ) )
+            if colour:
+                r.append( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m, x, n ) )
+            else:
+                r.append( component_.alignment )
+    
+    with io_helper.open_write( file ) as file_out:
+        file_out.write( "\n".join( r ) + "\n" )
     
     return EChanges.INFORMATION
 
@@ -129,36 +137,23 @@ def print_help() -> str:
     return "\n".join( r )
 
 
-@command( names = ["print", "print_trees", "trees", "print_tree", "tree"] )
+@command( names = ["print_trees", "print_tree", "trees", "tree", "pt"] )
 def print_trees( graph: Optional[MGraph] = None,
-                 view: EFormat = EFormat.ASCII,
-                 format: str = None,
-                 out: EOut = EOut.DEFAULT,
-                 file: MOptional[Filename] = None ) -> EChanges:
+                 format: EFormat = EFormat.ASCII,
+                 file: MOptional[Filename] = None,
+                 fnode: str = None
+                 ) -> EChanges:
     """
     Prints trees or graphs
     
-    :param file:        File to write the output to.
-    :param out:         Output.
-    :param graph:       What to print. See `specify_graph_help` for details.
-                        All graphs are printed if nothing is specified.
-    :param format:      How to format the nodes. See `print_help`.
-    :param view:        How to view the tree.
+    :param file:       File to write the output to. See `file_write_help`.
+    :param graph:      What to print. See `specify_graph_help` for details.
+                       All graphs are printed if nothing is specified.
+    :param fnode:      How to format the nodes. See `print_help`.
+    :param format:     How to view the tree.
     """
     model = global_view.current_model()
     trees = []
-    
-    if file:
-        if out not in (EOut.DEFAULT, EOut.FILE, EOut.FILEOPEN):
-            raise ValueError( "Cannot specify both the `out` and `file` parameters." )
-        
-        if out == EOut.DEFAULT:
-            out = EOut.FILE
-    elif out == EOut.DEFAULT:
-        if view in (EFormat.VISJS, EFormat.HTML, EFormat.SVG):
-            out = EOut.OPEN
-        else:
-            out = EOut.NORMAL
     
     if graph is None:
         for component_ in model.components:
@@ -182,40 +177,15 @@ def print_trees( graph: Optional[MGraph] = None,
         
         trees.append( (name, graph) )
     
-    text = graph_viewing.create( format, trees, model, view )
+    text = graph_viewing.create( fnode, trees, model, format )
     
-    if out == EOut.NORMAL:
-        MCMD.information( text )
-    elif out == EOut.STDOUT:
-        print( text )
-    elif out == EOut.CLIP:
-        pyperclip.copy( text )
-        MCMD.information( "Output copied to clipboard." )
-    elif out == EOut.FILE:
-        file_helper.write_all_text( file, text )
-    elif out == EOut.OPEN:
-        extension = { EFormat.ASCII    : ".txt",
-                      EFormat.DEBUG    : ".txt",
-                      EFormat.NEWICK   : ".nwk",
-                      EFormat.ETE_ASCII: ".txt",
-                      EFormat.ETE_GUI  : ".txt",
-                      EFormat.SVG      : ".svg",
-                      EFormat.HTML     : ".html",
-                      EFormat.CSV      : ".csv",
-                      EFormat.VISJS    : ".html" }[view]
-        file_name = path.join( MENV.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "groot_temporary{}".format( extension ) )
-        file_helper.write_all_text( file_name, text )
-        os.system( "open \"{}\"".format( file_name ) )
-    elif out == EOut.FILEOPEN:
-        file_helper.write_all_text( file, text )
-        os.system( "open \"{}\"".format( file ) )
-    else:
-        raise SwitchError( "out", out )
+    with io_helper.open_write( file, format.to_extension() ) as file_out:
+        file_out.write( text + "\n" )
     
     return EChanges.INFORMATION
 
 
-@command( names = ["print_interlinks", "interlinks"] )
+@command( names = ["print_interlinks", "print_interlink", "interlinks", "interlink", "pi"] )
 def print_component_edges( component: Optional[LegoComponent] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.
@@ -232,8 +202,9 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
         `end`    is the average of the end of the destination entry point
         `length` is the average length of the sequences in the destination 
 
-    :param component: Component to print. If not specified prints a summary of all components.
-    :param verbose:   Print everything!
+    :param component: Component to print.
+                      If not specified prints a summary of all components.
+    :param verbose:   Print all the things!
     """
     model = global_view.current_model()
     
@@ -315,10 +286,10 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     return EChanges.INFORMATION
 
 
-@command( names = ["print_edges", "edges"] )
+@command( names = ["print_edges", "print_edge", "edges", "edge", "pe"] )
 def print_edges() -> EChanges:
     """
-    Prints model edges
+    Prints model edges.
     """
     
     model = global_view.current_model()
@@ -329,14 +300,14 @@ def print_edges() -> EChanges:
     return EChanges.NONE
 
 
-@command( names = ["print_sequences", "sequences"] )
-def print_sequences( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter: int = 0 ) -> EChanges:
+@command( names = ["print_genes", "print_gene", "genes", "gene", "pg"] )
+def print_genes( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter: int = 0 ) -> EChanges:
     """
-    Prints the sequences (as components)
+    Prints the genes (highlighting components).
+    Note: Use :func:`print_fasta` or :func:`print_alignments` to show the actual sites.
     
-    :param domain:      How to break up the sequences 
-    :param parameter:   Parameter on `domain` 
-    :return: 
+    :param domain:      How to break up the sequences.
+    :param parameter:   Parameter on `domain`. 
     """
     
     model = global_view.current_model()
@@ -388,7 +359,7 @@ def print_sequences( domain: EDomainFunction = EDomainFunction.COMPONENT, parame
     return EChanges.INFORMATION
 
 
-@command( names = ["print_components", "components"] )
+@command( names = ["print_components", "print_component", "components", "component", "pc"] )
 def print_components( verbose: bool = False ) -> EChanges:
     """
     Prints the major components.
@@ -402,13 +373,24 @@ def print_components( verbose: bool = False ) -> EChanges:
         `major` is the component name
         `sequences` is the list of components in that sequence
         
-    :param verbose: Print verbose information
+    :param verbose: Print verbose information (only with `legacy` parameter)
     
     """
     model = global_view.current_model()
     
     if not model.components:
         raise ValueError( "Cannot print major components because components have not been calculated." )
+    
+    if verbose:
+        for component in model.components:
+            MCMD.print( cli_helper.format_title( component ) )
+            MCMD.print( "MAJOR-SE: {}".format( string_helper.format_array( component.major_sequences, sort = True ) ) )
+            MCMD.print( "MINOR-SE: {}".format( string_helper.format_array( component.minor_sequences, sort = True ) ) )
+            MCMD.print( "MINOR-SS: {}".format( string_helper.format_array( component.minor_subsequences ) ) )
+            MCMD.print( "INCOMING: {}".format( string_helper.format_array( component.incoming_components(), sort = True ) ) )
+            MCMD.print( "OUTGOING: {}".format( string_helper.format_array( component.outgoing_components(), sort = True ) ) )
+        
+        return EChanges.INFORMATION
     
     message = Table()
     
@@ -421,7 +403,7 @@ def print_components( verbose: bool = False ) -> EChanges:
     
     MCMD.print( message.to_string() )
     
-    return EChanges.INFORMATION | print_component_edges( verbose = verbose )
+    return EChanges.INFORMATION | print_component_edges()
 
 
 def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:
@@ -448,12 +430,10 @@ def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optio
         return Theme.STATUS_YES + message + Theme.RESET
 
 
-@command( names = ["print_fusions", "fusions"] )
+@command( names = ["print_fusions", "print_fusion", "fusions", "fusion", "pf"] )
 def print_fusions() -> EChanges:
     """
     Estimates model fusions. Does not affect the model.
-    
-    :param verbose: Verbose output
     """
     results: List[str] = []
     

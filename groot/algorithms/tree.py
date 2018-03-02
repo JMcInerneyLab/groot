@@ -47,6 +47,9 @@ def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     if not algorithm:
         algorithm = default_algorithm
     
+    if not algorithm in algorithms:
+        raise ValueError( "No such tree algorithm as «{}».".format( algorithm ) )
+    
     fn = algorithms[algorithm]
     
     # Read the result

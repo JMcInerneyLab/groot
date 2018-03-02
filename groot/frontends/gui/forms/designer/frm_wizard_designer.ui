@@ -307,20 +307,6 @@
    </item>
    <item row="10" column="0" colspan="2">
     <layout class="QGridLayout" name="gridLayout_3">
-     <item row="0" column="1">
-      <widget class="QPushButton" name="BTN_ADD_FILE">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QPushButton" name="BTN_REMOVE_FILE">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="1">
       <spacer name="verticalSpacer">
        <property name="orientation">
@@ -334,7 +320,31 @@
        </property>
       </spacer>
      </item>
-     <item row="0" column="0" rowspan="3">
+     <item row="1" column="1">
+      <widget class="QPushButton" name="BTN_REMOVE_FILE">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="BTN_ADD_FILE">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QPushButton" name="BTN_SAMPLES">
+       <property name="text">
+        <string>Sample</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>dropdown</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="4">
       <widget class="QTreeWidget" name="LST_FILES">
        <attribute name="headerVisible">
         <bool>false</bool>

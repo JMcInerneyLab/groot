@@ -172,11 +172,11 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     if fusion_event.component_c is component:
         __LOG( "Base of graph" )
-        first: MNode = graph.first_node
+        first: MNode = graph.root
         root = first.add_parent()
         root.make_root()
         assert isinstance( component, LegoComponent )
-        sequences = lego_graph.get_sequences( graph ).intersection( set( fusion_event.component_c.major_sequences ) )
+        sequences = lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_sequences ) )
         result = FusionPoint( fusion_event, component, sequences, set() )
         root.data = result
         return [result]
@@ -238,8 +238,8 @@ def __find_fusion_points( fusion_event: FusionEvent,
         graph.add_edge( fusion_node, edge.right )
         edge.remove_edge()
         
-        sequences = lego_graph.get_split_leaves( isolation_point.outside_nodes )
-        outer_sequences = lego_graph.get_split_leaves( isolation_point.inside_nodes )
+        sequences = lego_graph.get_ileaf_data( isolation_point.outside_nodes )
+        outer_sequences = lego_graph.get_ileaf_data( isolation_point.inside_nodes )
         fusion_point = FusionPoint( fusion_event, component, sequences, outer_sequences )
         fusion_node.data = fusion_point
         results.append( fusion_point )

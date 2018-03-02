@@ -40,8 +40,11 @@ def clear( component: LegoComponent ):
 def align( algorithm: str, component: LegoComponent ):
     fasta = fastaiser.component_to_fasta( component, simplify_ids = True )
     
-    if algorithm is None:
+    if not algorithm:
         algorithm = default_algorithm
+    
+    if not algorithm in algorithms:
+        raise ValueError( "No such alignment algorithm as «{}».".format( algorithm ) )
     
     fn = algorithms[algorithm]
     

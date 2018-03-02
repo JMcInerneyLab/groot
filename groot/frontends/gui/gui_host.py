@@ -1,3 +1,5 @@
+from intermake.hosts.base import DMultiHostProvider
+
 
 def __create_lego_gui_host():
     from typing import cast
@@ -23,10 +25,12 @@ def __create_lego_gui_host():
             cast( None, intermake_resources_rc )
             from groot.frontends.gui.forms.frm_main import FrmMain
             return FrmMain()
-
+    
+    
     return LegoGuiHost()
 
-def setup():
-    from intermake import MENV, create_simple_host_provider_from_class
+
+def setup() -> DMultiHostProvider:
+    from intermake import create_simple_host_provider_from_class
     from intermake.hosts.console import ConsoleHost
-    MENV.host_provider = create_simple_host_provider_from_class( ConsoleHost, __create_lego_gui_host )
+    return create_simple_host_provider_from_class( ConsoleHost, __create_lego_gui_host )

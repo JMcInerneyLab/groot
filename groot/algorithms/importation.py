@@ -3,7 +3,7 @@ from typing import Optional, cast
 from groot.algorithms import editor, marshal
 from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence
 from intermake import MCMD, common_commands
-from mgraph import MGraph, MNode
+from mgraph import MGraph, MNode, importing
 from mhelper import file_helper, bio_helper, ByRef, Logger, MFlags
 
 
@@ -46,7 +46,7 @@ def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, fi
     ext = file_helper.get_extension( file_name ).lower()
     
     if filter.DATA:
-        if ext in (".blast", ".tsv"):
+        if ext == ".blast":
             if not query:
                 import_blast( model, file_name )
                 return
@@ -99,7 +99,6 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
     Imports a FASTA file.
     If data already exists in the model, only sequence data matching sequences already in the model is loaded.
     """
-    MCMD.progress( "Import FASTA from «{}».".format( file_name ) )
     model.comments.append( "IMPORT_FASTA \"{}\"".format( file_name ) )
     
     with LOG( "IMPORT FASTA FROM '{}'".format( file_name ) ):
@@ -128,15 +127,12 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
     MCMD.print( "Imported Fasta from «{}».".format( file_name ) )
 
 
-def import_blast( model: LegoModel, file_name: str ) -> None:
+def import_blast( model: LegoModel, file_name: str, evalue: float = None, length: int = None ) -> None:
     """
     API
     Imports a BLAST file.
     If data already exists in the model, only lines referencing existing sequences are imported.
     """
-    MCMD.progress( "Import BLAST from «{}».".format( file_name ) )
-    model.comments.append( "IMPORT_BLAST \"{}\"".format( file_name ) )
-    
     obtain_only = model._has_data()
     
     LOG( "IMPORT {} BLAST FROM '{}'", "MERGE" if obtain_only else "NEW", file_name )
@@ -175,8 +171,12 @@ def import_blast( model: LegoModel, file_name: str ) -> None:
                     e_value = float( e[10] )
                     LOG( "BLAST SAYS {} {}:{} ({}) --> {} {}:{} ({})".format( query_accession, query_start, query_end, query_length, subject_accession, subject_start, subject_end, subject_length ) )
                     
-                    if e_value > 1e-10:
+                    if evalue is not None and e_value > evalue:
                         LOG( "REJECTED E VALUE" )
+                        continue
+                    
+                    if length is not None and query_length < length:
+                        LOG( "REJECTED LENGTH" )
                         continue
                     
                     assert query_length > 0 and subject_length > 0
@@ -253,7 +253,7 @@ def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None 
     """
     Imports a newick string as an MGraph object.
     """
-    g: MGraph = MGraph.from_newick( newick, root_ref )
+    g: MGraph = importing.import_newick( MGraph(), newick, root_ref = root_ref )
     
     for node in g.nodes:
         node.data = import_sequence_reference( cast( str, node.data ), model, allow_empty = True )

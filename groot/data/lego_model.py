@@ -14,7 +14,6 @@ from mgraph import MGraph
 from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, utf_helper
 
 
-TEXT_SUBSEQUENCE_FORMAT = "{}[{}:{}]"
 TEXT_EDGE_FORMAT = "{}[{}:{}]--{}[{}:{}]"
 TEXT_SEQ_FORMAT = "{}"
 
@@ -117,7 +116,7 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable ):
     
     @staticmethod
     def to_string( sequence: "LegoSequence", start: int, end: int, sequence_b: "LegoSequence", start_b: int, end_b: int ) -> str:
-        return TEXT_EDGE_FORMAT.format( sequence.accession, start, end, sequence_b.accession, start_b, end_b )
+        return LegoSubsequence.to_string( sequence, start, end ) + "--" + LegoSubsequence.to_string( sequence_b, start_b, end_b )
     
     
     def __str__( self ) -> str:
@@ -172,6 +171,14 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable ):
             return item
         else:
             raise SwitchError( "position.item", item, instance = True )
+    
+    
+    def sides( self, item: TSide ) -> Tuple["LegoSubsequence", "LegoSubsequence"]:
+        """
+        As `sides` but returns both items.
+        """
+        position = self.position( item )
+        return (self.right, self.left) if position else (self.left, self.right)
     
     
     def side( self, item: TSide, opposite = False ) -> "LegoSubsequence":
@@ -261,6 +268,9 @@ class LegoSubsequence( ILegoVisualisable ):
         """
         Returns a `LegoSubsequence` that encompasses all `LegoSubsequence`s in the list.
         """
+        if not options:
+            raise ValueError( "Cannot obtain a union of subsequences for an empty list." )
+        
         a = options[0]
         
         for i in range( 1, len( options ) ):
@@ -301,10 +311,17 @@ class LegoSubsequence( ILegoVisualisable ):
     def intersection( self, two: "LegoSubsequence" ) -> "LegoSubsequence":
         """
         Returns a `LegoSubsequence` that is the intersection of the `two`.
-        If the `two` do not overlap the result is undefined.
+        :except NotFoundError: The `two` do not overlap.
         """
         assert self.sequence is two.sequence
-        return LegoSubsequence( self.sequence, max( self.start, two.start ), min( self.end, two.end ) )  # todo: doesn't account for non-overlapping ranges
+        
+        start = max( self.start, two.start )
+        end = min( self.end, two.end )
+        
+        if start > end:
+            raise NotFoundError( "Cannot create `intersection` for non-overlapping ranges «{}» and «{}».".format( self, two ) )
+        
+        return LegoSubsequence( self.sequence, start, end )
     
     
     def visualisable_info( self ) -> UiInfo:
@@ -327,7 +344,7 @@ class LegoSubsequence( ILegoVisualisable ):
     
     @staticmethod
     def to_string( sequence, start, end ) -> str:
-        return TEXT_SUBSEQUENCE_FORMAT.format( sequence.accession, start, end )
+        return "{}[{}:{}({})]".format( sequence.accession, start, end, end - start + 1 )
     
     
     def __str__( self ) -> str:
@@ -597,21 +614,14 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
         return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )[0]
     
     
-    def minor_subsequences( self ) -> List[LegoSubsequence]:
-        """
-        Finds subsequences related by this component.
-        """
-        return self.minor_subsequences
-    
-    
-    def incoming_components( self ) -> "List[LegoComponent]":
+    def incoming_components( self ) -> List["LegoComponent"]:
         """
         Returns components which implicitly form part of this component.
         """
         return [component for component in self.model.components if any( x in component.minor_sequences for x in self.major_sequences ) and component is not self]
     
     
-    def outgoing_components( self ) -> "List[LegoComponent]":
+    def outgoing_components( self ) -> List["LegoComponent"]:
         """
         Returns components which implicitly form part of this component.
         """
@@ -626,6 +636,14 @@ class LegoComponent( ILegoVisualisable, ILegoSelectable ):
         See `__detect_minor` for the definition.
         """
         return list( set( subsequence.sequence for subsequence in self.minor_subsequences ) )
+    
+    
+    def get_minor_subsequence_by_sequence( self, sequence: LegoSequence ) -> LegoSubsequence:
+        for subsequence in self.minor_subsequences:
+            if subsequence.sequence is sequence:
+                return subsequence
+        
+        raise NotFoundError( "Sequence «{}» not in component «{}».".format( sequence, self ) )
 
 
 class LegoEdgeCollection:
