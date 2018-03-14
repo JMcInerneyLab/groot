@@ -54,50 +54,293 @@
        <number>1</number>
       </property>
       <item>
-       <widget class="QPushButton" name="BTN_SELECTION">
-        <property name="text">
-         <string>Selection</string>
+       <widget class="QGroupBox" name="GRP_WORKFLOW">
+        <property name="title">
+         <string>Workflow</string>
         </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QToolButton" name="BTN_WORKFLOW">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Workflow</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc">
+             <normaloff>:/intermake/dropdown.svg</normaloff>:/intermake/dropdown.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_CREATE">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Create</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/create.svg</normaloff>:/groot/create.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_REMOVE">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Remove</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/remove.svg</normaloff>:/groot/remove.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_VIEW">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>View</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/view.svg</normaloff>:/groot/view.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Viewer</string>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="BTN_SAVE_TO_FILE">
-        <property name="text">
-         <string>Save to file</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="BTN_BROWSE_HERE">
-        <property name="text">
-         <string>Inbuilt browser</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="BTN_SYSTEM_BROWSER">
-        <property name="text">
-         <string>System browser</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QToolButton" name="BTN_SELECTION">
+           <property name="minimumSize">
+            <size>
+             <width>192</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>192</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Selection</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/check.svg</normaloff>:/groot/check.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextBesideIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_SYSTEM_BROWSER">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>System
+browser</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/external.svg</normaloff>:/groot/external.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_BROWSE_HERE">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>View
+here</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/internal.svg</normaloff>:/groot/internal.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_SAVE_TO_FILE">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Save</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/save.svg</normaloff>:/groot/save.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -119,17 +362,7 @@
    <item>
     <widget class="QLabel" name="LBL_NO_TREES_WARNING">
      <property name="text">
-      <string>You have no trees or graphs, go to the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="LBL_NO_VISJS_WARNING">
-     <property name="text">
-      <string>vis.js is not &lt;a href=&quot;action:show_options&quot;&gt;configured&lt;/a&gt;. You won't be able to see the graphs.</string>
+      <string>You have no trees or graphs, go to the &lt;a href=&quot;action:view_workflow&quot;&gt;workflow&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -139,7 +372,7 @@
    <item>
     <widget class="QLabel" name="LBL_SELECTION_WARNING">
      <property name="text">
-      <string>There are no trees in the &lt;a href=&quot;action:show_selection&quot;&gt;current selection&lt;/a&gt;.</string>
+      <string>There are no trees in the &lt;a href=&quot;action:view_entities&quot;&gt;current selection&lt;/a&gt;.</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
@@ -168,7 +401,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="LBL_NO_INBUILT">
         <property name="text">
-         <string>&lt;p&gt;The inbuilt browser has been turned off in the &lt;a href=&quot;action:show_options&quot;&gt;settings&lt;/a&gt;.&lt;/p&gt;
+         <string>&lt;p&gt;The inbuilt browser has been turned off in the &lt;a href=&quot;action:view_options&quot;&gt;settings&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Either &lt;a href=&quot;action:enable_inbuilt_browser&quot;&gt;enable&lt;/a&gt; the inbuilt browser or use the external browser.&lt;/p&gt;</string>
         </property>
         <property name="alignment">
@@ -191,6 +424,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -18,15 +18,16 @@ setup( name = "groot",
                    "groot.frontends.gui.forms.designer",
                    ],
        entry_points = { "console_scripts": ["groot = groot.__main__:main"] },
-       install_requires = ["intermake",  # architecture
-                           "mhelper",  # general
+       install_requires = ["intermake",  # MJR, architecture
+                           "mhelper",  # MJR, general
                            "pyperclip",  # clipboard
                            "colorama",  # ui (cli)
-                           "mgraph",
-                           "stringcoercion",
+                           "mgraph", # MJR
+                           "stringcoercion", # MJR
                            "PyQt5",  # ui (GUI)
                            "sip",  # ui (GUI)
                            "dendropy",
+                           "mgvis", # MJR (bundler)
                            ],
        python_requires = ">=3.6"
        )

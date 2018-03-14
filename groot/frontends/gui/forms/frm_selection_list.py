@@ -4,10 +4,12 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTreeWidgetItem
 from groot.frontends.gui.forms.designer import frm_selection_list_designer
 
+from groot import constants
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.gui_view_utils import EChanges
+from groot.frontends.gui.gui_view_utils import LegoSelection
+from groot.frontends.gui import gui_workflow
 from mhelper import ignore
-from mhelper_qt import exceptToGui
+from mhelper_qt import exceptToGui, exqtSlot
 
 
 class FrmSelectionList( FrmBase ):
@@ -21,15 +23,18 @@ class FrmSelectionList( FrmBase ):
         self.setWindowTitle( "Selection" )
         self.__refresh_lists()
         
-        self.ui.RAD_COMPONENTS.toggled[bool].connect( self.__on_radio_changed )
-        self.ui.RAD_DOMAINS.toggled[bool].connect( self.__on_radio_changed )
-        self.ui.RAD_EDGES.toggled[bool].connect( self.__on_radio_changed )
-        self.ui.RAD_GENES.toggled[bool].connect( self.__on_radio_changed )
-        self.ui.RAD_OTHER.toggled[bool].connect( self.__on_radio_changed )
+        self.bind_to_label( self.ui.LBL_NO_DATA_WARNING )
+        self.bind_to_select( self.ui.BTN_CHANGE_SELECTION )
+        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
+                                   self.ui.BTN_WORKFLOW,
+                                   self.ui.BTN_CREATE,
+                                   self.ui.BTN_REMOVE,
+                                   self.ui.BTN_VIEW,
+                                   gui_workflow.VISUALISERS.VIEW_ENTITIES,
+                                   gui_workflow.STAGES.FASTA_2 )
         
-        self.ui.LST_MAIN.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
-        
-        self.actions.bind_to_label( self.ui.LBL_NO_DATA_WARNING )
+        self.ui.LST_ALL.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
+        self.ui.LST_SELECTED.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
     
     
     def __on_item_changed( self, list_item: Any, column: int ):
@@ -39,77 +44,164 @@ class FrmSelectionList( FrmBase ):
         self.set_selected( item, checked )
     
     
-    def __on_radio_changed( self, _: bool ):
-        self.__refresh_lists()
+    def __add( self, item, list = None ):
+        if list is None:
+            list = self.ui.LST_ALL
+        
+        selected = item in self.get_selection()
+        item1 = QTreeWidgetItem()
+        item1.setCheckState( 0, Qt.Checked if selected else Qt.Unchecked )
+        item1.setText( 0, str( item ) )
+        item1.tag = item
+        list.addTopLevelItem( item1 )
     
     
     def __refresh_lists( self ):
-        selection = self.get_selection()
         model = self.get_model()
         
-        self.ui.LBL_NO_DATA_WARNING.setVisible( not model.sequences )
+        self.ui.LBL_NO_DATA_WARNING.setVisible( model.get_status( constants.STAGES.BLAST_1 ).is_none )
         
-        self.ui.LST_MAIN.clear()
-        self.ui.LBL_SELECTION_INFO.setText( str( selection ) )
+        self.ui.LST_SELECTED.clear()
+        self.ui.LST_ALL.clear()
         
-        if self.ui.RAD_GENES.isChecked():
-            for sequence in model.sequences:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if sequence in selection else Qt.Unchecked )
-                item.setText( 0, str( sequence ) )
-                item.tag = sequence
-                self.ui.LST_MAIN.addTopLevelItem( item )
+        for item in self.get_selection():
+            self.__add( item, self.ui.LST_SELECTED )
         
-        if self.ui.RAD_COMPONENTS.isChecked():
-            for component in model.components:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if component in selection else Qt.Unchecked )
-                item.setText( 0, str( component ) )
-                item.tag = component
-                self.ui.LST_MAIN.addTopLevelItem( item )
+        w = self.workflow
         
-        if self.ui.RAD_DOMAINS.isChecked():
-            for user_domain in model.user_domains:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if user_domain in selection else Qt.Unchecked )
-                item.setText( 0, str( user_domain ) )
-                item.tag = user_domain
-                self.ui.LST_MAIN.addTopLevelItem( item )
+        if w == gui_workflow.STAGES.BLAST_1:
+            title = "Edges"
+            for item in model.edges:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.FASTA_2:
+            title = "Genes"
+            for item in model.sequences:
+                self.__add( item )
+        elif w in (gui_workflow.STAGES.COMPONENTS_3, gui_workflow.STAGES.ALIGNMENTS_5, gui_workflow.STAGES.TREES_6):
+            title = "Components"
+            for item in model.components:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.DOMAINS_4:
+            title = "Domains"
+            for item in model.user_domains:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.FUSIONS_7:
+            title = "Fusions"
+            for item in model.fusion_events:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.SPLITS_8:
+            title = "Splits"
+            for item in model.nrfg.splits:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.CONSENSUS_9:
+            title = "Consensus"
+            for item in model.nrfg.consensus:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.SUBSETS_10:
+            title = "Subsets"
+            for item in model.nrfg.subsets:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.SUBGRAPHS_11:
+            title = "Subgraphs"
+            for item in model.nrfg.minigraphs:
+                self.__add( item )
+        elif w == gui_workflow.STAGES.FUSED_12:
+            title = "Raw NRFG"
+            if model.nrfg.fusion_graph_unclean:
+                self.__add( model.nrfg.fusion_graph_unclean )
+        elif w in (gui_workflow.STAGES.CLEANED_13, gui_workflow.STAGES.CHECKED_14):
+            title = "NRFG"
+            if model.nrfg.fusion_graph_unclean:
+                self.__add( model.nrfg.fusion_graph_unclean )
+        else:
+            title = "No workflow mode"
         
-        if self.ui.RAD_EDGES.isChecked():
-            for edge in model.edges:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if edge in selection else Qt.Unchecked )
-                item.setText( 0, str( edge ) )
-                item.tag = edge
-                self.ui.LST_MAIN.addTopLevelItem( item )
-        
-        if self.ui.RAD_OTHER.isChecked():
-            if model.nrfg:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if model.nrfg in selection else Qt.Unchecked )
-                item.setText( 0, str( model.nrfg ) )
-                item.tag = model.nrfg
-                self.ui.LST_MAIN.addTopLevelItem( item )
-            
-            for fusion in model.fusion_events:
-                item = QTreeWidgetItem()
-                item.setCheckState( 0, Qt.Checked if fusion in selection else Qt.Unchecked )
-                item.setText( 0, str( fusion ) )
-                item.tag = fusion
-                self.ui.LST_MAIN.addTopLevelItem( item )
-                
-                for point in fusion.points:
-                    item2 = QTreeWidgetItem()
-                    item2.setCheckState( 0, Qt.Checked if point in selection else Qt.Unchecked )
-                    item2.setText( 0, str( point ) )
-                    item.tag = point
-                    item.addChild( item2 )
+        self.ui.LBL_ALL.setText( title )
     
     
-    def on_plugin_completed( self, change: EChanges ):
+    def on_plugin_completed( self ):
         self.__refresh_lists()
     
     
     def on_selection_changed( self ):
         self.__refresh_lists()
+    
+    
+    @exqtSlot()
+    def on_BTN_WORKFLOW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_CREATE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_REMOVE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_VIEW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_CHANGE_SELECTION_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_REFRESH_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.__refresh_lists()
+    
+    
+    @exqtSlot()
+    def on_BTN_SELECT_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        items = self.ui.LST_ALL.selectedItems()
+        
+        if len( items ) == 1:
+            item: QTreeWidgetItem = items[0].tag
+            self.set_selected( item, True )
+    
+    
+    @exqtSlot()
+    def on_BTN_DESELECT_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        items = self.ui.LST_SELECTED.selectedItems()
+        
+        if len( items ) == 1:
+            item: QTreeWidgetItem = items[0].tag
+            self.set_selected( item, False )
+    
+    
+    @exqtSlot()
+    def on_BTN_CLEAR_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.set_selection( LegoSelection() )

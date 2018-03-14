@@ -1,14 +1,6 @@
-from typing import Iterable, Set, Tuple, FrozenSet, AbstractSet, List, Callable
-
-import itertools
-
-from groot.algorithms.classes import FusionPoint
-from groot.data.lego_model import LegoSequence, ILeaf
-from mgraph import MNode, MGraph, FollowParams, DNodePredicate
-from mhelper import ansi, TTristate, string_helper
-
-
-
+from typing import Iterable, List, Set
+from mgraph import MNode
+from groot.data.lego_model import ILeaf, LegoSequence, FusionPoint
 
 
 def get_sequence_data( nodes: Iterable[MNode] ) -> Set[LegoSequence]:

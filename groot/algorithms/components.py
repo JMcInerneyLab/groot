@@ -21,7 +21,7 @@ LOG_GRAPH = Logger( "comp.graph", False )
 def detect( model: LegoModel, major_tol: int, minor_tol: int, debug: bool ) -> None:
     """
     Detects model components.
-    See :function:`ext_generating.make_components` for parameter details.
+    See :function:`ext_generating.create_components` for parameter details.
     
     :returns: nothing, the components are written to :attr:`model.components`.
     """

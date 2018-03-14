@@ -1,7 +1,6 @@
 from typing import Callable, Dict
 
 import groot.algorithms.external_runner
-from groot.algorithms import fastaiser
 from groot.data.lego_model import LegoComponent, LegoModel
 
 
@@ -38,7 +37,7 @@ def clear( component: LegoComponent ):
 
 
 def align( algorithm: str, component: LegoComponent ):
-    fasta = fastaiser.component_to_fasta( component, simplify_ids = True )
+    fasta = component.to_legacy_fasta()
     
     if not algorithm:
         algorithm = default_algorithm

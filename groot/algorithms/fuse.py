@@ -6,11 +6,10 @@ from mgraph import MGraph, MNode, MEdge
 from mhelper import Logger, array_helper
 
 from groot.algorithms import lego_graph
-from groot.algorithms.classes import FusionEvent, FusionPoint
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, FusionPoint, FusionEvent
 
 
-__LOG = Logger( "fusion", True )
+__LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
 
 
@@ -57,7 +56,7 @@ def find_all_fusion_points( model: LegoModel ) -> None:
     
     if __fusions_exist( model ):
         raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
-    
+        
     for event in __find_fusion_events( model ):
         __LOG( "Processing fusion event: {}", event )
         event.points = []
@@ -68,7 +67,8 @@ def find_all_fusion_points( model: LegoModel ) -> None:
         
         r.append( event )
     
-    model.fusion_events = r
+    for x in r:
+        model.fusion_events.add(x)
 
 def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
     """
@@ -293,8 +293,8 @@ def isolate( graph: MGraph,
              debug_level: int = 0 ):
     __LOG_ISOLATION.indent = debug_level
     __LOG_ISOLATION( "READY TO ISOLATE" )
-    __LOG_ISOLATION( "*ISOL* INSIDE:  (n={}) {}", len( inside_request ), inside_request, sort = True )
-    __LOG_ISOLATION( "*ISOL* OUTSIDE: (n={}) {}", len( outside_request ), outside_request, sort = True )
+    __LOG_ISOLATION( "*ISOLATE* INSIDE:  (n={}) {}", len( inside_request ), inside_request, sort = True )
+    __LOG_ISOLATION( "*ISOLATE* OUTSIDE: (n={}) {}", len( outside_request ), outside_request, sort = True )
     
     edges: List[EdgeInfo] = prepare_graph( graph, inside_request, outside_request )
     
@@ -317,6 +317,6 @@ def isolate( graph: MGraph,
     
     if best.outside_incorrect:
         __LOG_ISOLATION( "REMAINING" )
-        yield from isolate( graph, inside_request, best.outside_incorrect )
+        yield from isolate( graph, inside_request, set(best.outside_incorrect) )
     
     __LOG_ISOLATION.indent = 0

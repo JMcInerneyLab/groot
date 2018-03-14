@@ -6,40 +6,43 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>808</width>
-    <height>1117</height>
+    <width>705</width>
+    <height>516</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
    <item row="0" column="0">
-    <widget class="QLabel" name="LBL_MAIN">
-     <property name="styleSheet">
-      <string notr="true">margin: 32px;</string>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
      </property>
-     <property name="text">
-      <string>&lt;h1&gt;About Groot&lt;/h1&gt;
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>664</width>
+        <height>1169</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="LBL_MAIN">
+         <property name="styleSheet">
+          <string notr="true">margin: 32px;</string>
+         </property>
+         <property name="text">
+          <string>&lt;h1&gt;About Groot&lt;/h1&gt;
 &lt;b&gt;Groot is free software.&lt;/b&gt;
 
 &lt;h2&gt;Acknowledgements&lt;/h2&gt;
 &lt;table cellpadding=&quot;16&quot;&gt;
   &lt;tr&gt;
-    &lt;td&gt;&lt;img width=&quot;128&quot; source=&quot;:/manchester_logo.png&quot;/&gt;&lt;/td&gt;
-    &lt;td&gt;&lt;img width=&quot;128&quot; source=&quot;:/bbsrc_logo.png&quot;/&gt;&lt;/td&gt; 
+    &lt;td&gt;&lt;img width=&quot;128&quot; source=&quot;:/groot/manchester_logo.png&quot;/&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;img width=&quot;128&quot; source=&quot;:/groot/bbsrc_logo.png&quot;/&gt;&lt;/td&gt; 
   &lt;/tr&gt;
 &lt;tr&gt;
     &lt;td&gt;The University Of Manchester&lt;/td&gt;
@@ -54,7 +57,7 @@ Groot is copyright (c) Martin Rusilowicz
 &lt;li&gt;Webpage: www.bitbucket.org/mjr129/groot&lt;/li&gt;
 &lt;li&gt;License: https://www.gnu.org/licenses/agpl-3.0.html&lt;/li&gt;
 &lt;/ul&gt;&lt;br/&gt;
-&lt;img width=&quot;96&quot; source=&quot;:/groot_logo.png&quot;/&gt;
+&lt;img width=&quot;96&quot; source=&quot;:/groot/groot_logo.png&quot;/&gt;
 
 &lt;h2&gt;Intermake&lt;/h2&gt;
 Intermake is copyright (c) Martin Rusilowicz
@@ -63,7 +66,7 @@ Intermake is copyright (c) Martin Rusilowicz
 &lt;li&gt;Webpage: www.bitbucket.org/mjr129/intermake&lt;/li&gt;
 &lt;li&gt;License: https://www.gnu.org/licenses/agpl-3.0.html&lt;/li&gt;
 &lt;/ul&gt;&lt;br/&gt;
-&lt;img width=&quot;96&quot; source=&quot;:/intermake_logo.png&quot;/&gt;
+&lt;img width=&quot;96&quot; source=&quot;:/intermake/intermake_logo.png&quot;/&gt;
 
 &lt;h2&gt;Qt5&lt;/h2&gt;
 Qt is copyright (c) The Qt Company
@@ -71,7 +74,7 @@ Qt is copyright (c) The Qt Company
 &lt;li&gt;Version: $(QT)
 &lt;li&gt;Webpage: https://www.qt.io/&lt;/li&gt;
 &lt;/ul&gt;&lt;br/&gt;
-&lt;img width=&quot;96&quot; source=&quot;:/qt_logo.png&quot;/&gt;
+&lt;img width=&quot;96&quot; source=&quot;:/intermake/qt_logo.png&quot;/&gt;
 
 &lt;h2&gt;PyQt5&lt;/h2&gt;
 PyQt5 is copyright (c) Riverbank Computing Limited
@@ -88,7 +91,11 @@ Images made by Freepik, Google and Good Ware from www.flaticon.com
 
 
 </string>
-     </property>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

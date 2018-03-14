@@ -5,6 +5,7 @@ from typing import Optional
 
 import re
 import stringcoercion
+from groot import constants
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence
 from mgraph import MGraph
@@ -15,9 +16,13 @@ from stringcoercion import CoercionError
 def setup():
     class MGraphCoercer( stringcoercion.Coercer ):
         """
-        **Graphs and trees** are referenced by the _index_ of their component, or the _text_ "nrfg", for the NRFG.
+        **Graphs and trees** are referenced by one of the following:
+            * `nrfg` - the _NRFG_
+            * `unrfg` - the _NRFG_ prior to cleaning
+            * `c:xxx` - The graph for the _component with index_ `xxx`
+            * `m:xxx` - The _minigraph with index_ xxx
+            * `xxx` - The _component with the name_ `xxx`
         """
-        
         
         def can_handle( self, info: stringcoercion.CoercionInfo ):
             return self.PRIORITY.HIGH if info.annotation.is_directly_below( MGraph ) else False
@@ -28,10 +33,25 @@ def setup():
             model = global_view.current_model()
             
             if txt == "nrfg":
-                if model.nrfg is None:
-                    raise stringcoercion.CoercionError( "The model does not have an NRFG." )
+                if model.nrfg.fusion_graph_clean is None:
+                    raise stringcoercion.CoercionError( "The model does not have an NRFG (clean)." )
                 
-                return model.nrfg.graph
+                return model.nrfg.fusion_graph_clean
+            
+            if txt == "unrfg":
+                if model.nrfg.fusion_graph_unclean is None:
+                    raise stringcoercion.CoercionError( "The model does not have an NRFG (unclean)." )
+                
+                return model.nrfg.fusion_graph_unclean
+            
+            if txt.startswith( constants.MINIGRAPH_PREFIX ):
+                try:
+                    i = int( txt[2:] )
+                except ValueError:
+                    pass
+                else:
+                    if 0 <= i < len( model.nrfg.minigraphs ):
+                        return model.nrfg.minigraphs[i]
             
             try:
                 component = info.collection.coerce( LegoComponent, info.source )
@@ -110,7 +130,9 @@ def setup():
     
     class MComponentCoercer( stringcoercion.Coercer ):
         """
-        **Components** are referenced by their _index_ or _name_.
+        **Components** are referenced by:
+            * `xxx` where `xxx` is the _name_ of the component
+            * `c:xxx` where `xxx` is the _index_ of the component
         """
         
         
@@ -121,10 +143,11 @@ def setup():
         def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
             model = global_view.current_model()
             
-            try:
-                return model.components[string_helper.to_int( info.source )]
-            except:
-                pass
+            if info.source.lower().startswith( constants.COMPONENT_PREFIX ):
+                try:
+                    return model.components[string_helper.to_int( info.source[2:] )]
+                except:
+                    pass
             
             try:
                 model.components.find_component_by_name( info.source )

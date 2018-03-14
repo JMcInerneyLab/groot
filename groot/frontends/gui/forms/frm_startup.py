@@ -2,6 +2,7 @@ from groot.frontends.gui.forms.designer import frm_startup_designer
 from groot.data import global_view
 from groot.data.global_view import RecentFile
 from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.frontends.gui import gui_workflow
 from intermake.engine.environment import MENV
 from mhelper import file_helper
 from mhelper_qt import exceptToGui
@@ -26,9 +27,9 @@ class FrmStartup( FrmBase ):
         
         for file in reversed( global_view.options().recent_files ):
             assert isinstance(file, RecentFile)
-            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file, file_helper.get_filename_without_extension( file.file_name ) ) )
+            r.append( '<li><a href="load_file:{}">{}</a></li>'.format( file.file_name, file_helper.get_filename_without_extension( file.file_name ) ) )
         
-        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( self.actions.browse_open.__name__ ) )
+        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.VISUALISERS.ACT_FILE_OPEN ) )
         r.append( "</ul>" )
         
         r.append( "<h3>Sample data</h3><ul>" )
@@ -36,10 +37,10 @@ class FrmStartup( FrmBase ):
         for file in global_view.get_samples():
             r.append( '<li><a href="load_sample:{}">{}</a><li/>'.format( file, file_helper.get_filename_without_extension( file ) ) )
         
-        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( self.actions.show_load_model.__name__ ) )
+        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.VISUALISERS.VIEW_OPEN_FILE ) )
         r.append( "</ul>" )
         
         txt = txt.replace( "$(RECENT_FILES)", "\n".join( r ) )
         
         self.ui.LBL_FIRST_MESSAGE.setText( txt )
-        self.actions.bind_to_label( self.ui.LBL_FIRST_MESSAGE )
+        self.bind_to_label( self.ui.LBL_FIRST_MESSAGE )

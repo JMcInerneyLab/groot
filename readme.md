@@ -3,7 +3,7 @@ Groot
 Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
 Gʀᴏᴏᴛ:
-* Is accessible. Gʀᴏᴏᴛ had **command line, GUI and Python library** capabilities.
+* Is accessible. Gʀᴏᴏᴛ has **command line, friendly GUI and Python library** capabilities.
 * Is understandable. Gʀᴏᴏᴛ follows a simple MVC architecture with **heavily documented source code**.
 * **Is free**. Users are invited to call upon the library or modify the source code to suit their own needs.
 
@@ -13,13 +13,20 @@ Gʀᴏᴏᴛ:
 Installation
 ------------
 
-Please download Gʀᴏᴏᴛ using [Pɪᴩ](https://packaging.python.org/tutorials/installing-packages), i.e. from Bᴀꜱʜ:
+Please make sure you have Python (3.6+) and Pɪᴩ installed first!
+If you'd like to visualise trees please download vis.js also.
+
+* Python: https://www.python.org/downloads/
+* Pip: https://pip.pypa.io/en/stable/installing/
+
+
+Then download Gʀᴏᴏᴛ using Pip, i.e. from Bᴀꜱʜ:
 
 ```bash
 $   sudo pip install groot
 ```
 
-You can then start Gʀᴏᴏᴛ in _Command Line Interactive_ (CLI) mode:
+You should then be able to start Gʀᴏᴏᴛ in its _Command Line Interactive_ (CLI) mode:
 
 ```bash
 $   groot
@@ -39,18 +46,32 @@ $   import groot
 
 For advanced functionality, please see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
 
-If the `groot` command does not start Gʀᴏᴏᴛ then you have not set Pʏᴛʜᴏɴ up correctly.
+_**If the `groot` command does not start Gʀᴏᴏᴛ then you have not got Pʏᴛʜᴏɴ set up correctly**_
 
 Tutorial
 --------
 
 ### Getting started ###
 
-For this tutorial, we'll be using the CLI, because it's much easier to explain.
+Groot has a nice GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
+It's much easier to explain and we get to cover all the specific details.
+The workflow we'll be following looks like this:
 
-We'll assume you have Gʀᴏᴏᴛ installed and working.
+0. Load FASTA data       
+0. Load BLAST data       
+0. Make components
+0. Make alignments       
+0. Make trees            
+0. Make fusions          
+0. Candidate splits  
+0. Viable splits     
+0. Subsets               
+0. Subgraphs             
+0. Stitch                
+0. Clean                 
+0. Check
 
-Start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
+We'll assume you have Gʀᴏᴏᴛ installed and working, so start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
 
 ```bash
 $   groot
@@ -61,27 +82,29 @@ Once in Gʀᴏᴏᴛ, type `help` for help.
 
 ```bash
 $  help
-   ECO help
-   INF   help................................
+   
+#  INF   help................................
 
    You are in command-line mode.
    ...
 ```
 
+There are three groups of workflow commands in Groot, the `make.` commands, used to advance the workflow, the `drop.` commands, used to go back a step, and the `print.` commands, used to display information. For instance, to create the NRFG it's `make.nrfg`, to view it it's `print.nrfg`, and to delete it and go back a step, it's `drop.nrfg`. Type `cmdlist` to see all the commands.
+
 ### Introduction to the sample data ###
  
-Gʀᴏᴏᴛ comes with a sample library, let's get started by seeing what's available:
+Gʀᴏᴏᴛ comes with a sample library, get started by seeing what's available:
  
 ```bash
 $   file.sample
-    ECO file.sample
+    
     INF seqgen
         sera
         simple
         triptych
 ```
 
-The _triptych_ sample contains a set genes which have undergone two recombination events "X" and "Y":
+The _triptych_ sample contains a set of genes which have undergone two recombination events "X" and "Y":
 
 ```bash
     ALPHA      BETA
@@ -105,17 +128,20 @@ Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the tr
 
 ### Loading the sample ###
 
-The `sample` command can be used to load the sample files automatically, but for sake of this tutorial, we will load the data manually.
+The `sample` command can be used to load the sample files automatically, but for the sake of providing a tutorial, we will load the data manually.
 
-Unless you can remember where you installed the files to earlier, you can find out where the sample is located by executing the following command:
+Unless you can remember where Pip installed the files to earlier, you can find out where the sample is located by executing the following command:
 
 ```bash
-$   sample triptych +view
-    ECO sample name=triptych view=True
-    INF import_directory "/blah/blah/blah/triptych"
+$   sample triptych +query
+    
+#   INF import_directory "/blah/blah/blah/triptych"
 ```
 
-The `+view` bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves. The _import_directory_ bit of the output tells us where the sample lives. Your path will look different to mine.
+The `+query` bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves.
+The _import_directory_ bit of the output tells us where the sample lives.
+Write that down.
+Remember, your path will look different to mine.
 
 You can now load the files into Gʀᴏᴏᴛ:
 
@@ -126,12 +152,12 @@ $   import.fasta /blah/blah/blah/triptych/triptych.fasta
 
 You should notice that at this point the prompt changes from _Empty model_ to _Unsaved model_.
 
-Let's save our model with a better name:
+Unsaved model isn't very informative, so save our model with a more interesting name:
 
 ```bash
 $   save tri
-    ECO file.save file_name=tri
-    PRG  │ file_save...
+    
+#   PRG  │ file_save...
     PRG  │ -Saving file...
     INF Saved model: /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
 ```
@@ -145,8 +171,8 @@ Gʀᴏᴏᴛ follows a linear workflow, execute the `status` command to find out
 
 ```bash
 $   status
-    ECO print.status
-    INF tri
+    
+#   INF tri
         /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
     
         Sequences
@@ -159,25 +185,26 @@ $   status
         Alignments:    0/0
         Trees:         0/0
         Consensus:     0/0
+        . . .
 ```
 
 It should be clear what we have to do next:
 
 ```bash
 $   make.components
-    ECO make.components
-    PRG  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
+    
+#   PRG  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
     PRG  │ -Component detection                                                             │ DONE                                     │                         │ +00:00      ⏎
     WRN There are components with just one sequence in them. Maybe you meant to use a tolerance higher than 0?
 ```
 
-While not always the case, here we can see Gʀᴏᴏᴛ has identified a problem.
+While not always the case, here, we can see Gʀᴏᴏᴛ has identified a problem.
 We can confirm this manually:
 
 ```bash
 $   print.components
-    ECO print.components
-    INF ┌─────────────────────────────────────────────────────────────────────────┐
+    
+#   INF ┌─────────────────────────────────────────────────────────────────────────┐
         │ major elements of components                                            │
         ├──────────────────────────────┬──────────────────────────────────────────┤
         │ component                    │ major elements                           │
@@ -202,12 +229,15 @@ $   print.components
         └──────────────────────────────┴──────────────────────────────────────────┘
 ```
 
-Our components are messed up; Gʀᴏᴏᴛ has found 16 components, which is excessive, and many of these only contain one sequence. We can use a higher tolerance on the `make.components` to allow some differences between the similarity regions identified by Bʟᴀꜱᴛ. The default of zero will almost always be too low. Try the command again, but specify a higher tolerance.
+Our components are messed up; Gʀᴏᴏᴛ has found 16 components, which is excessive, and many of these only contain one sequence.
+Solve the problem by using a higher tolerance on the `make.components` to allow some differences between the BLAST regions.
+The default of zero will almost always be too low.
+Try the command again, but specify a higher tolerance.
 
 ```bash
 $   make.components tolerance=10
-    ECO make.components tolerance=10
-    PRG  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
+    
+#   PRG  │ make_components                                                                  │                                          │                         │ +00:00      ⏎
     PRG  │ -Component detection                                                             │ DONE                                     │                         │ +00:00      ⏎
 ```
 
@@ -215,8 +245,8 @@ No error this time.  let's see what we have:
 
 ```bash
 $   print.components
-    ECO print.components
-    INF ┌─────────────────────────────────────────────────────────────────────────┐
+    
+#   INF ┌─────────────────────────────────────────────────────────────────────────┐
         │ major elements of components                                            │
         ├──────────────────────────────┬──────────────────────────────────────────┤
         │ component                    │ major elements                           │
@@ -249,7 +279,7 @@ You can checkout your alignments by entering `print.alignments`:
 $   print.alignments
 ```
 
-Everything looks okay, so invoke the tree-generation:
+Everything looks okay, so invoke tree-generation:
 
 ```bash
 $   make.tree
@@ -257,36 +287,86 @@ $   make.tree
 
 Tree generation can take a while, and we probably don't want to do it again, so maker sure to save our model:
 
-The tree-generating step in particular can take a while! Remember to save your model when it's done.
-
 ```bash
 $   save
-    ECO file.save
+
+#   ECO file.save
     PRG  │ file_save
     PRG  │ -Saving file
     INF Saved model: /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
 ```
 
 When all the trees are generated, we'll want to get a consensus.
+Groot uses its own internal consensus generator.
+We can zoom to the NRFG by using the `create.nrfg` command,  
 
 ```bash
 $   make.consensus
 ```
 
 This finally leaves us in a position to create the NRFG.
-Note that the above commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although these can be changed.
 
-
+Note that the above commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although all of these can be changed.
 
 Creating the NRFG
 -----------------
 
-TODO
+We have a tree for each component now, but this isn't a graph, and the information in each tree probably conflicts.
+We can use "splits" to resolve the conflicts.
+A "split" defines a tree by what appears on the left and right of its edges.
+This provides a quick and easy method of generating a consensus between our trees.
+Generate the list of all the possible splits:
+
+```bash
+$   make.splits
+``` 
+
+And then find out which ones receive majority support in our trees:
+
+```bash
+$   make.consensus
+```
+
+We set the split data aside for the moment and generate the gene "subsets", each subset is a portion of the original trees that is uncontaminated by a fusion event.
+
+```bash
+$   make.subsets
+```
+
+Now we can combine these subsets with our consensus splits to make subgraphs - graphs of each subset that use only splits supported by our majority consensus.
+
+```bash
+$   make.subgraphs
+```  
+
+We can then create the NRFG by stitching these subgraphs back together.
+
+```bash
+$   make.nrfg
+```
+
+Good times. But the NRFG is not yet complete. Stitching probably resulted in some trailing ends, we need to trim these.
+
+```bash
+$   make.clean
+```
+
+Finally, we can check the NRFG for errors.
+
+```bash
+$   make.checks
+```
+
+And we're all done!
+
+Now you've done the tutorial, try using the GUI - it's a lot easier to check the workflow is progressing smoothly and view large trees.
+
 
 Program architecture
 --------------------
 
 Gʀᴏᴏᴛ uses a simple MVC architecture:
+
 * The model:
     * The dynamic model (`lego_model.py`):
         * Sequences
@@ -315,10 +395,12 @@ Troubleshooting
 
 Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section.
 
-Image copyrights
-----------------
+Image credits
+-------------
 
 Freepik
+Smashicons
+Google
 
 Installation from source
 ------------------------
@@ -364,6 +446,27 @@ $   python -m groot %*
 ```
 
 You should then be able to run the projects as normal.
+
+Terminology
+-----------
+
+List of terms used in Groot. 
+Legacy terms and aliases are listed on the right because some of these are still used in the Groot source code (if not shown to the user in the program).
+
+| Term         | Description                                                                                   | Legacy name(s)
+|--------------|-----------------------------------------------------------------------------------------------|--------------------
+| Fusion event | An event in the evolution in which 2 genes join                                               | Event
+| Fusion point | The realisation of a fusion event within an individual tree                                   | Point
+| Splits       | The set of edges found within all trees                                                       | Candidate splits
+| Consensus    | A subset of splits supported by the majority-rule consensus                                   | Consensus splits, viable splits
+| NRFG         | The N-rooted fusion graph                                                                     | Stitched graph, sewed graph, fusion graph
+| Genes        | The input genes or sequences                                                                  | Sequences
+| Domains      | Part of a gene (conventional or imputed, Groot doesn't care)                                  | Subsequences
+| Sites        | The site data for the genes (FASTA)                                                           | FASTA data
+| Edges        | How the genes are connected (BLAST)                                                           | BLAST data
+| Subgraphs    | Stage of NRFG creation representing a part of the evolution free of fusions                   | Minigraphs
+| Subsets      | The predecessors to the subgraphs - a set of genes free of fusion events                      | Gene subsets
+| Split        | An edge of a tree represented as the left and right leaf-sets                                 | Edge (of a tree)
 
 Meta-data
 ---------

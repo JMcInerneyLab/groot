@@ -127,7 +127,7 @@ class Ui_Dialog(object):
         self.LBL_TITLE_MAIN.setText(_translate("Dialog", "Load data"))
         self.LBL_TITLE_MAIN.setProperty("style", _translate("Dialog", "title"))
         self.BTN_REFRESH.setProperty("style", _translate("Dialog", "refresh"))
-        self.LBL_HAS_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Data is currently loaded. <a href=\"action:new_model\">Close</a> the current session first, or visit the <a href=\"action:show_workflow\">workflow</a> to manipulate your data.</p></body></html>"))
+        self.LBL_HAS_DATA_WARNING.setText(_translate("Dialog", "<html><head/><body><p>Data is currently loaded. <a href=\"action:new_model\">Close</a> the current session first, or visit the <a href=\"action:view_workflow\">workflow</a> to manipulate your data.</p></body></html>"))
         self.LBL_HAS_DATA_WARNING.setProperty("style", _translate("Dialog", "warning"))
         self.LBL_TITLE_WORKSPACE.setText(_translate("Dialog", "Workspace"))
         self.LBL_TITLE_WORKSPACE.setProperty("style", _translate("Dialog", "heading"))

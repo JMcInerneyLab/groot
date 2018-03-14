@@ -17,8 +17,8 @@ class FrmDebug( FrmBase ):
         self.setWindowTitle( "Debug" )
     
     
-    def on_plugin_completed( self, change: EChanges ):
-        self.add( "COMPLETED: {}".format( change ) )
+    def on_plugin_completed( self ):
+        self.add( "COMPLETED" )
     
     
     def on_selection_changed( self ):

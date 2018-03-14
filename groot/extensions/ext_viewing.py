@@ -1,14 +1,15 @@
-from typing import Callable, Iterable, List, Optional, TypeVar
+from typing import List, Optional, TypeVar
 
-from groot.algorithms import alignment, components, fastaiser, graph_viewing, tree, userdomains
-from groot.constants import EFormat
+from groot import constants
+from groot.algorithms import alignment, components, graph_viewing, tree, userdomains
+from groot.constants import EFormat, LegoStage
 from groot.data import global_view
-from groot.data.lego_model import ILegoVisualisable, LegoComponent
+from groot.data.lego_model import ILegoVisualisable, LegoComponent, IHasFasta
 from groot.extensions import ext_files, ext_generating
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD, MENV, Plugin, Table, Theme, cli_helper, command, help_command, visibilities
+from intermake import MCMD, MENV, Table, Theme, cli_helper, command, help_command, visibilities
 from mgraph import MGraph
 from mhelper import ByRef, Filename, MOptional, ansi, io_helper, string_helper
 
@@ -39,13 +40,17 @@ def algorithm_help():
     return "\n".join( r )
 
 
-@command( names = ["print_fasta", "fasta", "ps"] )
+@command( names = ["print_fasta", "fasta"] )
 def print_fasta( target: ILegoVisualisable ) -> EChanges:
     """
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
     """
-    MCMD.information( cli_view_utils.colour_fasta_ansi( fastaiser.to_fasta( target ), global_view.current_model().site_type ) )
+    if isinstance( target, IHasFasta ):
+        MCMD.information( cli_view_utils.colour_fasta_ansi( target.to_fasta(), global_view.current_model().site_type ) )
+    else:
+        MCMD.warning( "Target «{}» does not have FASTA data.".format( target ) )
+    
     return EChanges.INFORMATION
 
 
@@ -60,28 +65,33 @@ def print_status() -> EChanges:
     p = ByRef[bool]( False )
     r = []
     r.append( Theme.HEADING + "Model" + Theme.RESET )
-    r.append( "Project name:  {}".format( __get_status_line_comment( bool( model.sequences ), p, ext_files.import_blast, model.name ) ) )
-    r.append( "File name:     {}".format( __get_status_line_comment( model.file_name is not None, p, ext_files.file_save, model.file_name if model.file_name else "Unsaved" ) ) )
+    r.append( "Project name:  {}".format( model.name ) )
+    r.append( "File name:     {}".format( __get_status( p, constants.STAGES.FILE_0, ext_files.file_save ) ) )
     p.value = False
     r.append( "" )
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
-    r.append( "Sequences:     {}".format( __get_status_line( p, model.sequences, lambda _: True, ext_files.import_blast ) ) )
-    r.append( "FASTA:         {}".format( __get_status_line( p, model.sequences, lambda x: x.site_array, ext_files.import_fasta ) ) )
-    r.append( "Components:    {}".format( __get_status_line( p, model.sequences, lambda x: model.components.has_sequence( x ), ext_generating.make_components ) ) )
+    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_1, ext_files.import_blast ) ) )
+    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_2, ext_files.import_fasta ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "Components" + Theme.RESET )
-    r.append( "Components:    {}".format( __get_status_line( p, model.components, lambda x: True, ext_generating.make_components ) ) )
-    r.append( "Alignments:    {}".format( __get_status_line( p, model.components, lambda x: x.alignment, ext_generating.make_alignments ) ) )
-    r.append( "Trees:         {}".format( __get_status_line( p, model.components, lambda x: x.tree, ext_generating.make_trees ) ) )
+    r.append( "Components:    {}".format( __get_status( p, constants.STAGES.COMPONENTS_3, ext_generating.create_components ) ) )
+    r.append( "Alignments:    {}".format( __get_status( p, constants.STAGES.ALIGNMENTS_5, ext_generating.create_alignments ) ) )
+    r.append( "Trees:         {}".format( __get_status( p, constants.STAGES.TREES_6, ext_generating.create_trees ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "NRFG" + Theme.RESET )
-    r.append( "Fusion points: {}".format( __get_status_line( p, [model], lambda x: x.fusion_events, ext_generating.make_fusions ) ) )
-    r.append( "Fusion graph : {}".format( __get_status_line( p, [model], lambda x: x.nrfg, ext_generating.make_nrfg ) ) )
+    r.append( "Fusion points: {}".format( __get_status( p, constants.STAGES.FUSIONS_7, ext_generating.create_fusions ) ) )
+    r.append( "Candidates:    {}".format( __get_status( p, constants.STAGES.SPLITS_8, ext_generating.create_splits ) ) )
+    r.append( "Viable:        {}".format( __get_status( p, constants.STAGES.CONSENSUS_9, ext_generating.create_consensus ) ) )
+    r.append( "Leaf subsets:  {}".format( __get_status( p, constants.STAGES.SUBSETS_10, ext_generating.create_subsets ) ) )
+    r.append( "Minigraphs:    {}".format( __get_status( p, constants.STAGES.SUBGRAPHS_11, ext_generating.create_subgraphs ) ) )
+    r.append( "Sewed graph:   {}".format( __get_status( p, constants.STAGES.FUSED_12, ext_generating.create_fused ) ) )
+    r.append( "Cleaned graph: {}".format( __get_status( p, constants.STAGES.CLEANED_13, ext_generating.create_cleaned ) ) )
+    r.append( "Checked graph: {}".format( __get_status( p, constants.STAGES.CHECKED_14, ext_generating.create_checked ) ) )
     MCMD.print( "\n".join( r ) )
     return EChanges.INFORMATION
 
 
-@command( names = ["print_alignments", "print_alignment", "alignments", "alignment", "pa"] )
+@command( names = ["print_alignments", "alignments"] )
 def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
     """
     Prints the alignment for a component.
@@ -137,7 +147,7 @@ def print_help() -> str:
     return "\n".join( r )
 
 
-@command( names = ["print_trees", "print_tree", "trees", "tree", "pt"] )
+@command( names = ["print_trees", "trees"] )
 def print_trees( graph: Optional[MGraph] = None,
                  format: EFormat = EFormat.ASCII,
                  file: MOptional[Filename] = None,
@@ -163,8 +173,8 @@ def print_trees( graph: Optional[MGraph] = None,
                 MCMD.print( "I cannot draw the tree for component «{}» because it has not yet been generated.".format( component_ ) )
                 continue
         
-        if model.nrfg:
-            trees.append( (str( "NRFG" ), model.nrfg.graph) )
+        if model.nrfg.fusion_graph_clean:
+            trees.append( (str( "NRFG" ), model.nrfg.fusion_graph_clean) )
     else:
         name = "unknown"
         
@@ -172,8 +182,11 @@ def print_trees( graph: Optional[MGraph] = None,
             if graph is component.tree:
                 name = str( component )
         
-        if model.nrfg is not None and graph is model.nrfg.graph:
+        if model.nrfg.fusion_graph_clean is not None and graph is model.nrfg.fusion_graph_clean:
             name = "NRFG"
+        
+        if model.nrfg.fusion_graph_unclean is not None and graph is model.nrfg.fusion_graph_unclean:
+            name = "NRFG (unclean)"
         
         trees.append( (name, graph) )
     
@@ -185,7 +198,7 @@ def print_trees( graph: Optional[MGraph] = None,
     return EChanges.INFORMATION
 
 
-@command( names = ["print_interlinks", "print_interlink", "interlinks", "interlink", "pi"] )
+@command( names = ["print_interlinks", "interlinks"] )
 def print_component_edges( component: Optional[LegoComponent] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.
@@ -286,7 +299,7 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     return EChanges.INFORMATION
 
 
-@command( names = ["print_edges", "print_edge", "edges", "edge", "pe"] )
+@command( names = ["print_edges", "edges"] )
 def print_edges() -> EChanges:
     """
     Prints model edges.
@@ -300,7 +313,7 @@ def print_edges() -> EChanges:
     return EChanges.NONE
 
 
-@command( names = ["print_genes", "print_gene", "genes", "gene", "pg"] )
+@command( names = ["print_genes", "genes"] )
 def print_genes( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter: int = 0 ) -> EChanges:
     """
     Prints the genes (highlighting components).
@@ -359,7 +372,7 @@ def print_genes( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter:
     return EChanges.INFORMATION
 
 
-@command( names = ["print_components", "print_component", "components", "component", "pc"] )
+@command( names = ["print_components", "components"] )
 def print_components( verbose: bool = False ) -> EChanges:
     """
     Prints the major components.
@@ -384,11 +397,7 @@ def print_components( verbose: bool = False ) -> EChanges:
     if verbose:
         for component in model.components:
             MCMD.print( cli_helper.format_title( component ) )
-            MCMD.print( "MAJOR-SE: {}".format( string_helper.format_array( component.major_sequences, sort = True ) ) )
-            MCMD.print( "MINOR-SE: {}".format( string_helper.format_array( component.minor_sequences, sort = True ) ) )
-            MCMD.print( "MINOR-SS: {}".format( string_helper.format_array( component.minor_subsequences ) ) )
-            MCMD.print( "INCOMING: {}".format( string_helper.format_array( component.incoming_components(), sort = True ) ) )
-            MCMD.print( "OUTGOING: {}".format( string_helper.format_array( component.outgoing_components(), sort = True ) ) )
+            MCMD.print( component.to_details() )
         
         return EChanges.INFORMATION
     
@@ -406,31 +415,25 @@ def print_components( verbose: bool = False ) -> EChanges:
     return EChanges.INFORMATION | print_component_edges()
 
 
-def __get_status_line( warned: ByRef[bool], the_list: Iterable[T], test: Callable[[T], bool], plugin: Plugin ) -> str:
-    assert isinstance( plugin, Plugin ), plugin
-    total = 0
-    filtered = 0
+def __get_status( warned: ByRef[bool], stage: LegoStage, incomplete, *, yes = None ):
+    status = global_view.current_model().get_status( stage )
     
-    for x in the_list:
-        total += 1
-        if test( x ):
-            filtered += 1
-    
-    return __get_status_line_comment( filtered and filtered == total, warned, plugin, "{}/{}".format( filtered, total ) )
-
-
-def __get_status_line_comment( is_done: bool, warned: ByRef[bool], plugin: Optional[Plugin], message ):
-    if not is_done:
-        if not warned.value and plugin is not None:
-            warned.value = True
-            return Theme.STATUS_NO + message + Theme.COMMENT + " - Consider running " + Theme.COMMAND_NAME + MENV.host.translate_name( plugin.name ) + Theme.RESET
-        else:
-            return Theme.STATUS_NO + message + Theme.RESET
+    if status.is_complete:
+        r = Theme.STATUS_YES + (yes or str( status )) + Theme.RESET
     else:
-        return Theme.STATUS_YES + message + Theme.RESET
+        if status.is_partial:
+            r = Theme.STATUS_INTERMEDIATE + str( status ) + Theme.RESET
+        else:
+            r = Theme.STATUS_NO + str( status ) + Theme.RESET
+        
+        if not warned.value:
+            warned.value = True
+            r += " - Consider running " + Theme.COMMAND_NAME + incomplete.__name__ + Theme.RESET
+    
+    return r
 
 
-@command( names = ["print_fusions", "print_fusion", "fusions", "fusion", "pf"] )
+@command( names = ["print_fusions", "fusions"] )
 def print_fusions() -> EChanges:
     """
     Estimates model fusions. Does not affect the model.
@@ -462,6 +465,64 @@ def print_fusions() -> EChanges:
         results.append( "" )
     
     MCMD.information( "\n".join( results ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
+def print_candidates( component: Optional[LegoComponent] = None ) -> EChanges:
+    """
+    Prints NRFG candidate splits.
+    :param component:   Component, or `None` for the global split set.
+    """
+    model = global_view.current_model()
+    
+    if component:
+        for x in component.splits:
+            MCMD.information( str( x ) )
+    else:
+        for x in model.nrfg.splits:
+            MCMD.information( str( x ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
+def print_viable() -> EChanges:
+    """
+    Prints NRFG viable splits.
+    """
+    
+    model = global_view.current_model()
+    
+    for x in model.nrfg.consensus:
+        MCMD.information( str( x ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
+def print_subsets() -> EChanges:
+    """
+    Prints NRFG subsets.
+    """
+    model = global_view.current_model()
+    
+    for x in model.nrfg.subsets:
+        MCMD.information( string_helper.format_array( x, sort = True, autorange = True ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
+def print_minigraphs() -> EChanges:
+    """
+    Prints the names of the NRFG minigraphs (you'll need to use `print_trees` to print the actual trees).
+    """
+    model = global_view.current_model()
+    
+    for i in range( len( model.nrfg.minigraphs ) ):
+        MCMD.information( "{}{} - {}".format( constants.MINIGRAPH_PREFIX, i, model.nrfg.minigraphs[i] ) )
     
     return EChanges.INFORMATION
 

@@ -1,15 +1,15 @@
-import re
 from typing import Optional, Sequence, Tuple, Union
 
-from groot.algorithms.classes import FusionPoint
-from groot.constants import EFormat
-from groot.data import global_view
-from groot.data.lego_model import ILeaf, LegoComponent, LegoModel, LegoSequence
-from groot.frontends import ete_providers
-from groot.frontends.cli import cli_view_utils
+import mgvis
 from intermake import Theme
 from mgraph import DNodeToText, MGraph, MNode, NodeStyle, exporting, UNodeToText
 from mhelper import SwitchError, ansi
+
+from groot.constants import EFormat
+from groot.data import global_view
+from groot.data.lego_model import ILeaf, LegoComponent, LegoModel, LegoSequence, FusionPoint
+from groot.frontends import ete_providers
+from groot.frontends.cli import cli_view_utils
 
 
 NEXT_SPECIAL = "["
@@ -313,7 +313,7 @@ def create_vis_js( graph: Union[MGraph, Sequence[MGraph], Sequence[Tuple[str, MG
         node_styler = None
     
     return exporting.export_vis_js( graph = graph,
-                                    visjs_path = global_view.options().visjs_path,
+                                    visjs_path = mgvis.get_path(),
                                     fnode = fnode,
                                     inline_title = inline_title,
                                     title = title,

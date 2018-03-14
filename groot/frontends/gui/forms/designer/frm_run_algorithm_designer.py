@@ -11,13 +11,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def __init__(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(789, 624)
+        Dialog.resize(853, 673)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QtWidgets.QLabel(Dialog)
-        self.label.setProperty("style", "title")
-        self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label)
+        self.LBL_TITLE = QtWidgets.QLabel(Dialog)
+        self.LBL_TITLE.setProperty("style", "title")
+        self.LBL_TITLE.setObjectName("LBL_TITLE")
+        self.verticalLayout.addWidget(self.LBL_TITLE)
         self.LBL_WARN_REQUIREMENTS = QtWidgets.QLabel(Dialog)
         self.LBL_WARN_REQUIREMENTS.setProperty("style", "warning")
         self.LBL_WARN_REQUIREMENTS.setObjectName("LBL_WARN_REQUIREMENTS")
@@ -58,9 +58,9 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        self.label.setText(_translate("Dialog", "Generate tree"))
-        self.LBL_WARN_REQUIREMENTS.setText(_translate("Dialog", "<html><body>You need to <a href=\"action:create_alignments\">create the aligmments</a> before creating the trees.</body</html>"))
-        self.LBL_WARN_ALREADY.setText(_translate("Dialog", "You already have a tree generated."))
+        self.LBL_TITLE.setText(_translate("Dialog", "Generate tree"))
+        self.LBL_WARN_REQUIREMENTS.setText(_translate("Dialog", "text goes here"))
+        self.LBL_WARN_ALREADY.setText(_translate("Dialog", "text goes here"))
         self.label_2.setText(_translate("Dialog", "Algorithm"))
         self.LBL_HELP.setText(_translate("Dialog", "Select the algorithm you\'d like to use. Remember, you can add your own algorithms to Groot as well!"))
         self.BTN_OK.setText(_translate("Dialog", "OK"))

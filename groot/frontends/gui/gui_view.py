@@ -10,7 +10,7 @@ from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter,
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
 from groot.data import global_view
-from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions
+from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions, EPosition
 from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EMode
 from mhelper import array_helper, misc_helper, override
 from mhelper_qt import Pens, qt_colour_helper
@@ -634,7 +634,9 @@ class LegoView_Sequence:
         leftmost_subsequence = sorted( self.userdomain_views.values(), key = lambda xx: xx.pos().x() )[0]
         text = self.sequence.accession
         
-        if self.sequence.is_root:
+        if self.sequence.position == EPosition.OUTGROUP:
+            text = "←" + text
+        if self.sequence.position == EPosition.ROOT:
             text = "↑" + text
         
         r = leftmost_subsequence.window_rect()

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, consensus, tree, fuse, editor
+from groot.algorithms import alignment, components, tree, fuse, editor, nrfg
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoSequence
 from groot.frontends.cli import cli_view_utils
@@ -61,8 +61,7 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Removes component tree(s).
     
-    :param component:   Component, or `None` for all.
-    :return: 
+    :param component:   Component, or `None` for all. 
     """
     to_do = cli_view_utils.get_component_list( component )
     count = 0
@@ -91,18 +90,64 @@ def drop_fusions() -> EChanges:
 
 
 @command()
-def drop_nrfg() -> EChanges:
+def drop_candidates() -> EChanges:
     """
-    Removes the NRFG from the model.
+    Removes data from the model.
     """
-    model = global_view.current_model()
-    
-    if model.nrfg is None:
-        MCMD.information( "The model doesn't have an NRFG. No action performed." )
-        return EChanges.NONE
-    
-    model.nrfg = None
-    
-    MCMD.information( "The NRFG has been removed from the model." )
-    
+    nrfg.s1_drop_candidates( global_view.current_model() )
     return EChanges.COMP_DATA
+
+
+@command()
+def drop_viable() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s2_drop_viable( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+
+@command()
+def drop_subsets() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s3_drop_subsets( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+
+@command()
+def drop_minigraphs() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s4_drop_minigraphs( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+
+@command()
+def drop_fused() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s5_drop_sewed( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+@command()
+def drop_cleaned() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s6_drop_cleaned( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+
+@command()
+def drop_checked() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    nrfg.s7_drop_checked( global_view.current_model() )
+    return EChanges.COMP_DATA
+
+

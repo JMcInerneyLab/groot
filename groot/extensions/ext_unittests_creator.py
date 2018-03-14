@@ -28,7 +28,7 @@ def remove_tests():
 
 
 @command( visibility = visibilities.ADVANCED )
-def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = True, run: bool = True ) -> List[str]:
+def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = False, run: bool = True ) -> List[str]:
     """
     Creates a GROOT unit test in the sample data folder.
     
@@ -39,13 +39,13 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
     :param no_blast:    Perform no BLAST 
     :param size:        Clade size
     :param types:       Type(s) of test(s) to create.
-    :param view:   View the final tree
+    :param view:        View the final tree
     :return: List of created test directories 
     """
     import faketree as ft
     MCMD.print( "START" )
     r = []
-    kwargs = { "suffix": "1", "delimiter": "_", "size": size }
+    kwargs = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
     sgargs = "-d 0.2"
     
     if not types:
@@ -61,26 +61,29 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
                 # 1 fusion point; 3 genes; 2 origins
                 
                 # Trees
-                a, b, c = ft.random_tree( ["A", "B", "C"], **kwargs )
+                outgroups = ft.random_tree( ["A", "B", "C"], **kwargs )
+                a, b, c = (x.parent for x in outgroups)
+                
                 ft.seqgen( [a, b, c], sgargs )
                 
                 # Fusion point
-                fa = ft.random_node( a )
-                fb = ft.random_node( b )
+                fa = ft.random_node( a, avoid = outgroups )
+                fb = ft.random_node( b, avoid = outgroups )
                 ft.branch( [fa, fb], c )
                 ft.mk_composite( [c] )
             elif name == "4":
                 # 2 fusion points; 4 genes; 2 origins
                 
                 # Trees
-                a, b, c, d = ft.random_tree( ["A", "B", "C", "D"], **kwargs )
+                outgroups = ft.random_tree( ["A", "B", "C", "D"], **kwargs )
+                a, b, c, d = (x.parent for x in outgroups)
                 ft.seqgen( [a, b, c, d], sgargs )
                 
                 # Fusion points
-                fa1 = ft.random_node( a )
-                fb1 = ft.random_node( b )
-                fa2 = ft.random_node( fa1 )
-                fb2 = ft.random_node( fb1 )
+                fa1 = ft.random_node( a, avoid = outgroups )
+                fb1 = ft.random_node( b, avoid = outgroups )
+                fa2 = ft.random_node( fa1, avoid = outgroups )
+                fb2 = ft.random_node( fb1, avoid = outgroups )
                 ft.branch( [fa1, fb1], c )
                 ft.branch( [fa2, fb2], d )
                 ft.mk_composite( [c, d] )
@@ -89,14 +92,15 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
                 # 2 fusion points; 5 genes; 3 origins
                 
                 # Trees
-                a, b, c, d, e = ft.random_tree( ["A", "B", "C", "D", "E"], **kwargs )
+                outgroups = ft.random_tree( ["A", "B", "C", "D", "E"], **kwargs )
+                a, b, c, d, e = (x.parent for x in outgroups)
                 ft.seqgen( [a, b, c, d, e], sgargs )
                 
                 # Fusion points
-                fa = ft.random_node( a )
-                fb = ft.random_node( b )
-                fc = ft.random_node( c )
-                fd = ft.random_node( d )
+                fa = ft.random_node( a, avoid = outgroups )
+                fb = ft.random_node( b, avoid = outgroups )
+                fc = ft.random_node( c, avoid = outgroups )
+                fd = ft.random_node( d, avoid = outgroups )
                 ft.branch( [fa, fb], c )
                 ft.branch( [fc, fd], e )
                 ft.mk_composite( [c, e] )
@@ -104,16 +108,17 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
                 # 3 fusion points; 7 genes; 4 origins
                 
                 # Trees
-                a, b, c, d, e, f, g = ft.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **kwargs )
+                outgroups = ft.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **kwargs )
+                a, b, c, d, e, f, g = (x.parent for x in outgroups)
                 ft.seqgen( [a, b, c, d, e, f, g], sgargs )
                 
                 # Fusion points
-                fa = ft.random_node( a )
-                fb = ft.random_node( b )
-                fc = ft.random_node( c )
-                fd = ft.random_node( d )
-                fe = ft.random_node( e )
-                ff = ft.random_node( f )
+                fa = ft.random_node( a, avoid = outgroups )
+                fb = ft.random_node( b, avoid = outgroups )
+                fc = ft.random_node( c, avoid = outgroups )
+                fd = ft.random_node( d, avoid = outgroups )
+                fe = ft.random_node( e, avoid = outgroups )
+                ff = ft.random_node( f, avoid = outgroups )
                 ft.branch( [fa, fb], c )
                 ft.branch( [fd, fe], f )
                 ft.branch( [fc, ff], g )
@@ -132,6 +137,7 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
             
             if not no_blast:
                 blast = []
+                # noinspection SpellCheckingInspection
                 subprocess_helper.run_subprocess( ["blastp",
                                                    "-subject", "leaves.fasta",
                                                    "-query", "leaves.fasta",
@@ -142,7 +148,8 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
                 file_helper.write_all_text( "leaves.blast", blast )
             
             guid = uuid4()
-            file_helper.write_all_text( "groot.ini", "[groot_wizard]\ntolerance=50\n[groot_test]\nguid={}\n".format( guid ) )
+            outgroups_str = ",".join( x.data.name for x in outgroups if x.parent.is_root )
+            file_helper.write_all_text( "groot.ini", "[groot_wizard]\ntolerance=50\noutgroups={}\n\n[groot_test]\nguid={}\n".format( outgroups_str, guid ) )
             
             path_ = path.abspath( "." )
             MCMD.print( "FINAL PATH: " + path_ )

@@ -50,5 +50,5 @@ class FrmFusions( FrmBase ):
                 item1.addChild( item2 )
     
     
-    def on_fusions_changed( self ):
+    def on_plugin_completed( self ):
         self.update_list()

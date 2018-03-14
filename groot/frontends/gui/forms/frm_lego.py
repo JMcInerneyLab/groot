@@ -6,7 +6,9 @@ from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QGraphicsScene, QGridLayout, QSizePolicy
 from groot.frontends.gui.forms.designer import frm_lego_designer
 
+from groot import constants
 from groot.algorithms import layout
+from groot.frontends.gui import gui_workflow
 from groot.data.lego_model import LegoUserDomain
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
@@ -48,13 +50,20 @@ class FrmLego( FrmBase ):
         
         self.model_view: LegoView_Model = None
         self.update_view()
-        self.actions.bind_to_label(self.ui.LBL_NO_DOMAINS)
-        self.actions.bind_to_select(self.ui.BTN_CHANGE_SELECTION)
+        
+        self.bind_to_label( self.ui.LBL_NO_DOMAINS )
+        self.bind_to_select( self.ui.BTN_CHANGE_SELECTION )
+        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
+                                   self.ui.BTN_WORKFLOW,
+                                   self.ui.BTN_CREATE,
+                                   self.ui.BTN_REMOVE,
+                                   self.ui.BTN_VIEW,
+                                   gui_workflow.VISUALISERS.VIEW_LEGO,
+                                   gui_workflow.STAGES.COMPONENTS_3 )
     
     
-    
-    def on_plugin_completed( self, changes: EChanges ):
-        self.update_view( changes )
+    def on_plugin_completed( self ):
+        self.update_view( self.actions.frm_main.completed_changes )
     
     
     def update_view( self, changes = EChanges.MODEL_OBJECT ):
@@ -85,14 +94,15 @@ class FrmLego( FrmBase ):
         
         select = set()
         
-        if self.ui.RAD_SEL_COMPONENT.isChecked():
+        if self.workflow == constants.STAGES.COMPONENTS_3:
+            # Component mode
             sequence = domain.sequence
             for component in model.components:
                 if sequence in component.major_sequences:
                     select.add( component )
-        elif self.ui.RAD_SEL_DOMAINS.isChecked():
+        elif self.workflow == constants.STAGES.DOMAINS_4:
             select.add( domain )
-        elif self.ui.RAD_SEL_GENES.isChecked():
+        elif self.workflow == constants.STAGES.FASTA_2:
             select.add( domain.sequence )
         
         if toggle:
@@ -139,7 +149,63 @@ class FrmLego( FrmBase ):
         """
         self.show_form( FrmViewOptions )
     
-            
+    
+    @exqtSlot()
+    def on_BTN_WORKFLOW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_CREATE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_REMOVE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_VIEW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_RAD_SEL_COMPONENT_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_COMPONENT' does not appear in the designer file.
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_RAD_SEL_GENES_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_GENES' does not appear in the designer file.
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_RAD_SEL_DOMAINS_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_DOMAINS' does not appear in the designer file.
+        """
+        Signal handler:
+        """
+        pass
+    
+    
     @exqtSlot()
     def on_BTN_REFRESH_clicked( self ) -> None:
         """

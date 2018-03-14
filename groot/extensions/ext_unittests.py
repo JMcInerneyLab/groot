@@ -3,8 +3,6 @@ from os import path
 import os
 from typing import Iterable
 
-from groot.algorithms import lego_graph
-from groot.algorithms.lego_graph import Split
 from groot.algorithms.walkthrough import Walkthrough
 from groot.constants import EFormat
 from groot.data import global_view
@@ -12,7 +10,7 @@ from groot.data.lego_model import LegoModel, LegoSequence
 from groot.extensions import ext_files, ext_viewing, ext_gimmicks
 from intermake import command
 from intermake.engine.environment import MENV, MCMD
-from mgraph import MGraph, MNode, exporting
+from mgraph import MGraph, MNode, exporting, Split, importing, analysing
 from mhelper import LogicError, ansi, array_helper, file_helper, io_helper
 
 
@@ -39,19 +37,20 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
     # Load sample file
     test_case_folder = global_view.get_sample_data_folder( name )
     results_folder = MENV.local_data.local_folder( "test_cases" )
+    test_name = file_helper.get_filename( test_case_folder )
     
     # Check the requisite files exist
     test_tree_file = path.join( test_case_folder, "tree.tsv" )
     test_ini_file = path.join( test_case_folder, "groot.ini" )
-    results_original_file = path.join( results_folder, name + "_original.tsv" )
-    results_compare_file = path.join( results_folder, name + "_results_summary.ini" )
-    results_edges_file = path.join( results_folder, name + "_results_trees.tsv" )
-    results_nrfg_file = path.join( results_folder, name + "_results_nrfg.tsv" )
-    results_saved_trees = path.join( results_folder, name + "_results_trees.nwk" )
-    results_saved_file = path.join( results_folder, name + "_results_session.groot" )
-    results_saved_alignments = path.join( results_folder, name + "_results_alignments.fasta" )
-    results_newick_file = path.join( results_folder, name + "_results_nrfg_divided.nwk" )
-    results_sentinel = path.join( results_folder, name + "_results_sentinel.ini" )
+    results_original_file = path.join( results_folder, test_name + "_original.tsv" )
+    results_compare_file = path.join( results_folder, test_name + "_results_summary.ini" )
+    results_edges_file = path.join( results_folder, test_name + "_results_trees.tsv" )
+    results_nrfg_file = path.join( results_folder, test_name + "_results_nrfg.tsv" )
+    results_saved_trees = path.join( results_folder, test_name + "_results_trees.nwk" )
+    results_saved_file = path.join( results_folder, test_name + "_results_session.groot" )
+    results_saved_alignments = path.join( results_folder, test_name + "_results_alignments.fasta" )
+    results_newick_file = path.join( results_folder, test_name + "_results_nrfg_divided.nwk" )
+    results_sentinel = path.join( results_folder, test_name + "_results_sentinel.ini" )
     
     all_files = [results_original_file,
                  results_compare_file,
@@ -79,6 +78,14 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
     
     guid = keys["groot_test"]["guid"]
     
+    wizard_params = keys["groot_wizard"]
+    
+    try:
+        wiz_tol = int( wizard_params["tolerance"] )
+        wiz_og = wizard_params["outgroups"].split( "," )
+    except KeyError as ex:
+        raise ValueError( "This is not a test case (it is missing the «{}» setting from the «wizard» section of the INI «{}»).".format( ex, test_ini_file ) )
+    
     # Remove obsolete results
     if any( path.isfile( file ) for file in all_files ):
         if path.isfile( results_sentinel ):
@@ -103,17 +110,12 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
         if not "groot_wizard" in keys:
             raise ValueError( "This is not a test case (it is missing the «wizard» section from the INI «{}»).".format( test_ini_file ) )
         
-        keys = keys["groot_wizard"]
-        
-        if not "tolerance" in keys:
-            raise ValueError( "This is not a test case (it is missing the «tolerance» setting from the «wizard» section of the INI «{}»).".format( test_ini_file ) )
-        
         # Copy the 
         shutil.copy( test_tree_file, results_original_file )
         
         # Create settings
         walkthrough = Walkthrough( new = False,
-                                   name = path.join( results_folder, name + ".groot" ),
+                                   name = path.join( results_folder, test_name + ".groot" ),
                                    imports = global_view.get_sample_contents( test_case_folder ),
                                    pause_import = False,
                                    pause_components = False,
@@ -121,9 +123,10 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
                                    pause_tree = False,
                                    pause_fusion = False,
                                    pause_nrfg = False,
-                                   tolerance = int( keys["tolerance"] ),
+                                   tolerance = wiz_tol,
+                                   outgroups = wiz_og,
                                    alignment = "",
-                                   tree = "neighbour_joining",
+                                   tree = "neighbor_joining",
                                    view = not interpret )
         
         # Execute
@@ -131,7 +134,7 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
         walkthrough.step()
         
         if not walkthrough.is_completed:
-            raise ValueError( "Expected walkthrough to complete but it did not." )
+            raise ValueError( "Expected wizard to complete but it did not." )
         
         # Save the final model
         ext_files.file_save( results_saved_file )
@@ -139,12 +142,14 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
     # Write the results
     model = global_view.current_model()
     file_helper.write_all_text( results_nrfg_file,
-                                exporting.export_edgelist( model.nrfg.graph,
+                                exporting.export_edgelist( model.nrfg.fusion_graph.graph,
                                                            fnode = lambda x: x.data.accession if isinstance( x.data, LegoSequence ) else "CL{}".format( x.get_session_id() ),
                                                            delimiter = "\t" ) )
     
     if view:
-        ext_gimmicks.view_graph( text = results_nrfg_file, title = "RECALCULATED GRAPH. GUID = {}.".format( guid ) )
+        ext_gimmicks.view_graph( text = test_tree_file, title = "ORIGINAL GRAPH. GUID = {}.".format( guid ) )
+        # ext_gimmicks.view_graph( text = results_nrfg_file, title = "RECALCULATED GRAPH. GUID = {}.".format( guid ) )
+        ext_viewing.print_trees( model.nrfg.fusion_graph.graph, format = EFormat.VISJS, file = "open" )
         
         if interpret:
             MCMD.autoquestion( "Continue to interpretation stage?" )
@@ -161,9 +166,8 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
         differences.append( "[test_data]" )
         differences.append( "test_case_folder={}".format( test_case_folder ) )
         differences.append( "original_graph={}".format( test_tree_file ) )
-        original_graph = MGraph()
-        original_graph.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" )
-        differences.append( compare_graphs( model.nrfg.graph, original_graph ) )
+        original_graph = importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" )
+        differences.append( compare_graphs( model.nrfg.fusion_graph.graph, original_graph ) )
         
         # Write results
         file_helper.write_all_text( results_newick_file, new_newicks, newline = True )
@@ -187,8 +191,10 @@ def compare_graphs( calc_graph: MGraph, orig_graph: MGraph ):
     
     res = []
     
-    calc_splits = lego_graph.get_splits( calc_graph, lambda λnode: isinstance( λnode.data, LegoSequence ), lambda λnode: λnode.data.accession )
-    orig_splits = lego_graph.get_splits( orig_graph, lambda λnode: λnode.is_leaf )
+    calc_splits = exporting.export_splits( calc_graph, 
+                                           filter = lambda λnode: isinstance( λnode.data, LegoSequence ), 
+                                           gdata = lambda λnode: λnode.data.accession )
+    orig_splits = exporting.export_splits( orig_graph )
     
     res.append( "num_calc_splits = {}".format( len( calc_splits ) ) )
     res.append( "num_orig_splits = {}".format( len( orig_splits ) ) )
@@ -259,8 +265,8 @@ def compare_graphs( calc_graph: MGraph, orig_graph: MGraph ):
         
         orig_alpha = orig_graph.nodes.by_data( calc_alpha.data.accession )
         orig_beta = orig_graph.nodes.by_data( calc_beta.data.accession )
-        calc_path = calc_graph.find_shortest_path( calc_alpha, calc_beta )
-        orig_path = orig_graph.find_shortest_path( orig_alpha, orig_beta )
+        calc_path = analysing.find_shortest_path(calc_graph, calc_alpha, calc_beta )
+        orig_path = analysing.find_shortest_path(orig_graph, orig_alpha, orig_beta )
         
         calc_pathlen = len( calc_path )
         orig_pathlen = len( orig_path )
@@ -279,11 +285,11 @@ def compare_graphs( calc_graph: MGraph, orig_graph: MGraph ):
         else:
             num_pathlen_mismatches += 1
     
-    num_pathlens = num_pathlen_matches + num_pathlen_mismatches
+    num_path_lens = num_pathlen_matches + num_pathlen_mismatches
     
-    res.append( "total_paths        = {}".format( num_pathlens ) )
-    res.append( "pathlen_matches    = {} ({:.1%})".format( num_pathlen_matches, num_pathlen_matches / num_pathlens ) )
-    res.append( "pathlen_mismatches = {} ({:.1%})".format( num_pathlen_mismatches, num_pathlen_mismatches / num_pathlens ) )
+    res.append( "total_paths        = {}".format( num_path_lens ) )
+    res.append( "pathlen_matches    = {} ({:.1%})".format( num_pathlen_matches, num_pathlen_matches / num_path_lens ) )
+    res.append( "pathlen_mismatches = {} ({:.1%})".format( num_pathlen_mismatches, num_pathlen_mismatches / num_path_lens ) )
     res.append( "" )
     res.extend( com )
     
@@ -312,7 +318,7 @@ class __NodeFilter:
             assert isinstance( d, LegoSequence )
             return ansi.FORE_GREEN + t + ansi.RESET
         
-        for rel in node.iter_relations():
+        for rel in node.relations:
             if rel.data in self.sequences:
                 return ansi.FORE_YELLOW + t + ansi.RESET
         
@@ -323,11 +329,11 @@ class __NodeFilter:
         if isinstance( node.data, LegoSequence ):
             return node.data in self.sequences
         
-        for rel in node.iter_relations():
+        for rel in node.relations:
             if rel.data in self.sequences:
                 return True
         
-        for rel in node.iter_relations():
+        for rel in node.relations:
             if isinstance( rel.data, LegoSequence ) and rel.data not in self.sequences:
                 return False
         

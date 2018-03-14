@@ -21,6 +21,6 @@ def load_from_file( file_name: str, set_current: bool = True ) -> LegoModel:
     if set_current:
         global_view.set_model( model )
         groot.data.global_view.remember_file( file_name )
-        MCMD.print( "Loaded model: {}".format( file_name ) )
+        MCMD.progress( "Loaded model: {}".format( file_name ) )
     
     return model

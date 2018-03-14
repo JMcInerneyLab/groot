@@ -1,8 +1,10 @@
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, List
 
 import groot.algorithms.external_runner
 from groot.algorithms import importation
-from groot.data.lego_model import LegoComponent, LegoModel
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, EPosition
+from mgraph import MGraph
+from mhelper import SwitchError
 
 
 DAlgorithm = Callable[[LegoModel, str], str]
@@ -55,6 +57,48 @@ def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     # Read the result
     newick = groot.algorithms.external_runner.run_in_temporary( fn, component.model, component.alignment )
     component.tree = importation.import_newick( newick, component.model )
+    reposition_tree( component.tree )
+
+
+def reposition_all( model: LegoModel, component: Optional[LegoComponent] = None ) -> List[LegoComponent]:
+    """
+    Repositions a component tree based on node.position data.
+    """
+    if model.fusion_events:
+        raise ValueError( "Cannot reposition trees because they already have assigned fusion events. Maybe you meant to drop the fusion events first?" )
+    
+    components = [component] if component is not None else model.components
+    changes = []
+    
+    for component_ in components:
+        if component_.tree is None:
+            continue
+        
+        if component_.tree is not None and reposition_tree( component_.tree ):
+            changes.append( component_ )
+    
+    return changes
+
+
+def reposition_tree( tree: MGraph ) -> bool:
+    """
+    Re-lays out a tree using `LegoSequence.position`.
+    """
+    for node in tree:
+        d = node.data
+        if isinstance( d, LegoSequence ):
+            if d.position == EPosition.OUTGROUP:
+                node.relation.make_root()
+                return True
+            elif d.position == EPosition.ROOT:
+                node.make_root()
+                return True
+            elif d.position == EPosition.NONE:
+                pass
+            else:
+                raise SwitchError( "node.data.position", d.position )
+    
+    return False
 
 
 def drop( component: LegoComponent ) -> bool:

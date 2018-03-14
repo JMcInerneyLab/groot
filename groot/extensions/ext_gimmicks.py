@@ -35,19 +35,18 @@ def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -
 @command( visibility = visibilities.ADVANCED )
 def view_graph( text: str, title: Optional[str] = None ):
     """
-    Views a graph in visjs.
+    Views a graph in Vis-Js.
+    
     :param text:    Text representing the graph, created with `MGraph.to_compact` OR a filename, created with `MGRAPH.to_csv`.
     :param title:   Title of graph (optional)
     """
-    g = MGraph()
-    
     if path.isfile( text ):
         try:
-            importing.import_edgelist( g, file_helper.read_all_text( text ), delimiter = "\t" )
+            g = importing.import_edgelist( file_helper.read_all_text( text ), delimiter = "\t" )
         except Exception as ex:
             raise ValueError( "Invalid file: " + text ) from ex
     else:
-        importing.import_compact( g, text )
+        g = importing.import_compact( text )
     
     visjs = graph_viewing.create_vis_js( graph = [("custom-graph", g)],
                                          title = title,
@@ -82,10 +81,10 @@ def __review( review, msg, fns, *, retry = True ):
     
     while True:
         if retry:
-            msg = "Please review the results.\n* continue = continue the walkthrough\n* retry = retry this step\n* pause = Pause the walkthrough to inspect your data."
+            msg = "Please review the results.\n* continue = continue the wizard\n* retry = retry this step\n* pause = Pause the wizard to inspect your data."
             opts = ["continue", "retry", "pause", "abort"]
         else:
-            msg = "Please review the results.\n* continue = continue the walkthrough\n* pause = Pause the walkthrough to inspect your data."
+            msg = "Please review the results.\n* continue = continue the wizard\n* pause = Pause the wizard to inspect your data."
             opts = ["continue", "pause", "abort"]
         
         switch = MCMD.question( msg, opts, default = "continue" )
@@ -103,30 +102,41 @@ def __review( review, msg, fns, *, retry = True ):
 
 
 @command( names = ["continue"] )
-def continue_walkthrough() -> EChanges:
+def continue_wizard() -> EChanges:
     """
-    Continues the walkthrough after it was paused.
+    Continues the wizard after it was paused.
     """
     if Walkthrough.get_active() is None:
-        raise ValueError( "There is no walkthrough active to continue." )
+        raise ValueError( "There is no active wizard to continue." )
     
     return Walkthrough.get_active().step()
 
+@command( names = ["stop"] )
+def stop_wizard() -> EChanges:
+    """
+    Stops a wizard.
+    """
+    if Walkthrough.get_active() is None:
+        raise ValueError( "There is no active wizard to stop." )
+    
+    return Walkthrough.get_active().stop()
+
 
 @command()
-def walkthrough( new: Optional[bool] = None,
-                 name: Optional[str] = None,
-                 imports: Optional[List[str]] = None,
-                 pause_import: Optional[bool] = None,
-                 pause_components: Optional[bool] = None,
-                 pause_align: Optional[bool] = None,
-                 pause_tree: Optional[bool] = None,
-                 pause_fusion: Optional[bool] = None,
-                 pause_nrfg: Optional[bool] = None,
-                 tolerance: Optional[int] = None,
-                 alignment: Optional[str] = None,
-                 tree: Optional[str] = None,
-                 view: Optional[bool] = None ) -> None:
+def wizard( new: Optional[bool] = None,
+            name: Optional[str] = None,
+            imports: Optional[List[str]] = None,
+            outgroups: Optional[List[str]] = None,
+            pause_import: Optional[bool] = None,
+            pause_components: Optional[bool] = None,
+            pause_align: Optional[bool] = None,
+            pause_tree: Optional[bool] = None,
+            pause_fusion: Optional[bool] = None,
+            pause_nrfg: Optional[bool] = None,
+            tolerance: Optional[int] = None,
+            alignment: Optional[str] = None,
+            tree: Optional[str] = None,
+            view: Optional[bool] = None ) -> None:
     """
     Sets up a workflow that you can activate in one go.
     
@@ -138,6 +148,7 @@ def walkthrough( new: Optional[bool] = None,
     
     :param new:                 Create a new model? 
     :param name:                Name the model?
+    :param outgroups:           Outgroup accessions?
     :param imports:             Import files into the model? 
     :param pause_components:    Pause after component generation? 
     :param pause_import:        Pause after data import? 
@@ -151,10 +162,10 @@ def walkthrough( new: Optional[bool] = None,
     :param view:                View the final NRFG in Vis.js?
     """
     if new is None:
-        new = (MCMD.question( "1/13. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")
+        new = (MCMD.question( "1/14. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")
     
     if name is None:
-        name = MCMD.question( "2/13. Name your model.\nYou can specify a complete path or just a name.\nIf you don't enter a name, your file won't be saved.", ["*"] )
+        name = MCMD.question( "2/14. Name your model.\nYou can specify a complete path or just a name.\nIf you don't enter a name, your file won't be saved.", ["*"] )
         
         if not name:
             MCMD.warning( "Your file will not be saved." )
@@ -163,11 +174,23 @@ def walkthrough( new: Optional[bool] = None,
         imports = []
         
         while True:
-            ex = "\nJust enter a blank line when you don't want to add any more files." if imports else ""
-            file_name = MCMD.question( "3/13. Enter the file path to import a BLAST or FASTA file." + ex, ["*"] )
+            ex = "\nEnter a blank line when you don't want to add any more files." if imports else ""
+            file_name = MCMD.question( "3/14. Enter file paths to import BLAST or FASTA files, one per line." + ex, ["*"] )
             
             if file_name:
                 imports.append( file_name )
+            else:
+                break
+    
+    if outgroups is None:
+        outgroups = []
+        
+        while True:
+            ex = "\nEnter a blank line when you don't want to add any more outgroups."
+            outgroup = MCMD.question( "4/14. Enter outgroup accessions, one per line." + ex, ["*"] )
+            
+            if outgroup:
+                outgroups.append( outgroup )
             else:
                 break
     
@@ -175,7 +198,7 @@ def walkthrough( new: Optional[bool] = None,
         success = False
         
         while not success:
-            tolerance_str = MCMD.question( "4/13. What tolerance do you want to use for the component identification?", ["*"] )
+            tolerance_str = MCMD.question( "5/14. What tolerance do you want to use for the component identification?", ["*"] )
             
             try:
                 tolerance = int( tolerance_str )
@@ -185,31 +208,31 @@ def walkthrough( new: Optional[bool] = None,
                 success = False
     
     if alignment is None:
-        alignment = MCMD.question( "5/13. Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( alignment_.algorithms ) + [""] )
+        alignment = MCMD.question( "6/14. Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( alignment_.algorithms ) + [""] )
     
     if tree is None:
-        tree = MCMD.question( "6/13. Which function do you want to use for the tree generation? Enter a blank line for the default.", list( tree_.algorithms ) + [""] )
+        tree = MCMD.question( "7/14. Which function do you want to use for the tree generation? Enter a blank line for the default.", list( tree_.algorithms ) + [""] )
     
     if pause_import is None:
-        pause_import = MCMD.question( "7/13. Do you wish the walkthrough to pause for you to review the imported data?" )
+        pause_import = MCMD.question( "8/14. Do you wish the wizard to pause for you to review the imported data?" )
     
     if pause_components is None:
-        pause_components = MCMD.question( "8/13. Do you wish the walkthrough to pause for you to review the components?" )
+        pause_components = MCMD.question( "9/14. Do you wish the wizard to pause for you to review the components?" )
     
     if pause_align is None:
-        pause_align = MCMD.question( "9/13. Do you wish the walkthrough to pause for you to review the alignments?" )
+        pause_align = MCMD.question( "10/14. Do you wish the wizard to pause for you to review the alignments?" )
     
     if pause_tree is None:
-        pause_tree = MCMD.question( "10/13. Do you wish the walkthrough to pause for you to review the trees?" )
+        pause_tree = MCMD.question( "11/14. Do you wish the wizard to pause for you to review the trees?" )
     
     if pause_fusion is None:
-        pause_fusion = MCMD.question( "11/13. Do you wish the walkthrough to pause for you to review the fusion?" )
+        pause_fusion = MCMD.question( "12/14. Do you wish the wizard to pause for you to review the fusion?" )
     
     if pause_nrfg is None:
-        pause_nrfg = MCMD.question( "12/13. Do you wish the walkthrough to pause for you to review the NRFG?" )
+        pause_nrfg = MCMD.question( "13/14. Do you wish the wizard to pause for you to review the NRFG?" )
     
     if view is None:
-        view = MCMD.question( "13/13. Do you wish the walkthrough to show you the final NRFG in Vis.js?" )
+        view = MCMD.question( "14/14. Do you wish the wizard to show you the final NRFG in Vis.js?" )
     
     walkthrough = Walkthrough( new,
                                name,
@@ -223,6 +246,7 @@ def walkthrough( new: Optional[bool] = None,
                                tolerance,
                                alignment,
                                tree,
-                               view )
+                               view,
+                               outgroups )
     
     walkthrough.make_active()

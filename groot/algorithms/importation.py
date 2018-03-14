@@ -124,7 +124,7 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
                     idle_counter *= 2
                     idle = 0
     
-    MCMD.print( "Imported Fasta from «{}».".format( file_name ) )
+    MCMD.progress( "Imported Fasta from «{}».".format( file_name ) )
 
 
 def import_blast( model: LegoModel, file_name: str, evalue: float = None, length: int = None ) -> None:
@@ -194,7 +194,7 @@ def import_blast( model: LegoModel, file_name: str, evalue: float = None, length
                         LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
                         editor.make_edge( model, query, subject, line, False )
     
-    MCMD.print( "Imported Blast from «{}».".format( file_name ) )
+    MCMD.progress( "Imported Blast from «{}».".format( file_name ) )
 
 
 def import_composites( model: LegoModel, file_name: str ) -> None:
@@ -246,14 +246,14 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
                     # assert composite_subsequence
                     # self._make_edge( composite_subsequence, subsequence )
     
-    MCMD.print( "Imported Composites from «{}».".format( file_name ) )
+    MCMD.progress( "Imported Composites from «{}».".format( file_name ) )
 
 
 def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None ) -> MGraph:
     """
     Imports a newick string as an MGraph object.
     """
-    g: MGraph = importing.import_newick( MGraph(), newick, root_ref = root_ref )
+    g: MGraph = importing.import_newick( newick, root_ref = root_ref )
     
     for node in g.nodes:
         node.data = import_sequence_reference( cast( str, node.data ), model, allow_empty = True )

@@ -253,31 +253,30 @@ Normally Groot will ask you, but you can select a default preference here.</stri
        <string>Intermake</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="3" column="1">
-        <widget class="QComboBox" name="CMB_THEME">
-         <property name="editable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_22">
+       <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="label_23">
          <property name="text">
-          <string>Intermake uses Qt. You can specify a theme and/or a stylesheet.</string>
+          <string>Click the button below to show the standard Intermake configuration screen.</string>
          </property>
          <property name="style" stdset="0">
           <string>helpbox</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="3" column="1">
         <widget class="QComboBox" name="CMB_CSS">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="editable">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="7" column="1">
         <widget class="QPushButton" name="BTN_INTERMAKE_ADVANCED">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -290,14 +289,7 @@ Normally Groot will ask you, but you can select a default preference here.</stri
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_13">
-         <property name="text">
-          <string>Advanced</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0" colspan="2">
+       <item row="5" column="0" colspan="2">
         <widget class="QLabel" name="label_21">
          <property name="text">
           <string>General</string>
@@ -307,39 +299,10 @@ Normally Groot will ask you, but you can select a default preference here.</stri
          </property>
         </widget>
        </item>
-       <item row="10" column="0" colspan="2">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLabel" name="label_20">
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_13">
          <property name="text">
-          <string>GUI</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>heading</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_12">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Theme</string>
+          <string>Advanced</string>
          </property>
         </widget>
        </item>
@@ -353,7 +316,30 @@ Normally Groot will ask you, but you can select a default preference here.</stri
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="9" column="0" colspan="2">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="label_22">
+         <property name="text">
+          <string>Intermake uses Qt. You can specify a path to a stylesheet or select one of the defaults.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
         <widget class="QLabel" name="label_15">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -366,13 +352,13 @@ Normally Groot will ask you, but you can select a default preference here.</stri
          </property>
         </widget>
        </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="QLabel" name="label_23">
+       <item row="1" column="0" colspan="2">
+        <widget class="QLabel" name="label_20">
          <property name="text">
-          <string>Click the button below to show the standard Intermake configuration screen.</string>
+          <string>GUI</string>
          </property>
          <property name="style" stdset="0">
-          <string>helpbox</string>
+          <string>heading</string>
          </property>
         </widget>
        </item>

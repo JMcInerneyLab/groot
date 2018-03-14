@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>562</width>
-    <height>311</height>
+    <width>936</width>
+    <height>603</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,12 +27,42 @@
     <number>8</number>
    </property>
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Domains</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="LBL_DATA_WARNING">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;action:show_load_model&quot;&gt;Load data&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requires sequences. &lt;a href=&quot;action:view_open_file&quot;&gt;Load data&lt;/a&gt; first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="style" stdset="0">
       <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Current domains</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_HELP">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Domains are used only for the &lt;a href=&quot;action:view_lego&quot;&gt;lego diagram&lt;/a&gt; and are not used in the analysis.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>helpbox</string>
      </property>
     </widget>
    </item>
@@ -68,6 +98,16 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Generate domains</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>heading</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -107,7 +147,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Automated domain detection</string>
+        <string>Component detection</string>
        </property>
       </widget>
      </item>
@@ -355,6 +395,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

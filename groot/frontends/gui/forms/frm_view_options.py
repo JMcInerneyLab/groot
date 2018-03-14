@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QStyleFactory, QWidget
+from PyQt5.QtWidgets import QWidget
 from groot.frontends.gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
 from groot.data import global_view
 from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions
 from groot.frontends.gui.forms.frm_base import FrmBase
-from intermake import MENV, common_commands, intermake_gui
+from intermake import MENV, common_commands
 from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
 from intermake.hosts.gui import GuiHost
 from mhelper_qt import exqtSlot, qt_gui_helper
@@ -18,12 +18,6 @@ class FrmViewOptions( FrmBase ):
         super().__init__( parent )
         self.ui = Ui_Dialog( self )
         self.setWindowTitle( "Options" )
-        
-        main = intermake_gui.default_style_sheet()
-        self.setStyleSheet( main )
-        
-        for key in QStyleFactory.keys():
-            self.ui.CMB_THEME.addItem( key )
         
         self.ui.CMB_CSS.addItem( "default" )
         self.ui.CMB_CSS.addItem( "minimal" )
@@ -67,7 +61,7 @@ class FrmViewOptions( FrmBase ):
         for ctrl in texts:
             ctrl.textEdited[str].connect( self.__on_radio_changed )
         
-        combos = (self.ui.CMB_CSS, self.ui.CMB_THEME)
+        combos = (self.ui.CMB_CSS,)
         
         for ctrl in combos:
             ctrl.currentTextChanged[str].connect( self.__on_radio_changed )
@@ -88,11 +82,6 @@ class FrmViewOptions( FrmBase ):
         # Global options
         global_options: GlobalOptions = global_view.options()
         
-        if write:
-            global_options.visjs_path = self.ui.TXT_VISJS.text()
-        else:
-            self.ui.TXT_VISJS.setText( global_options.visjs_path )
-        
         self.__map( write, global_options, "browse_mode", { EBrowseMode.ASK    : self.ui.RAD_TREE_ASK,
                                                             EBrowseMode.INBUILT: self.ui.RAD_TREE_INBUILT,
                                                             EBrowseMode.SYSTEM : self.ui.RAD_TREE_SYSTEM } )
@@ -108,10 +97,8 @@ class FrmViewOptions( FrmBase ):
         host_settings = host.gui_settings
         
         if write:
-            host_settings.gui_style = self.ui.CMB_THEME.currentText()
             host_settings.gui_css = self.ui.CMB_CSS.currentText()
         else:
-            self.ui.CMB_THEME.setCurrentText( host_settings.gui_style )
             self.ui.CMB_CSS.setCurrentText( host_settings.gui_css )
         
         # Model options

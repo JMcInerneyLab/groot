@@ -3,9 +3,12 @@ from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 from groot.frontends.gui.forms.designer import frm_alignment_designer
 
+from groot.data.lego_model import IHasFasta, FastaError
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view import LookupTable
-from mhelper import array_helper, bio_helper
+from groot.frontends.gui.gui_workflow import EWorkflow
+from groot.frontends.gui import  gui_workflow
+from mhelper import bio_helper
 from mhelper_qt import exqtSlot, qt_colour_helper
 
 
@@ -119,21 +122,34 @@ class AlignmentViewWidget( QWidget ):
     
     
     def mousePressEvent( self, e: QMouseEvent ):
+        """
+        Mouse click to display current position.
+        """
         row, col = self.get_pos( e )
         self.highlight_col = col
         self.highlight_row = row
         
         if row is None:
-            self.owner.ui.LBL_INFO.setText( "Not a valid selection." )
-        elif col is None:
-            self.owner.ui.LBL_INFO.setText( "Sequence {}: {}".format( row, self.sequences[row][0] ) )
+            self.owner.ui.LBL_SEQUENCE.setText( "" )
         else:
-            self.owner.ui.LBL_INFO.setText( "Sequence: {} {}, Site {}: {}".format( row, self.sequences[row][0], col, self.sequences[row][1][col] ) )
+            self.owner.ui.LBL_SEQUENCE.setText( "{} of {}: {}".format( row + 1, len( self.sequences ), self.sequences[row][0] ) )
+        
+        if col is None:
+            self.owner.ui.LBL_SITE.setText( "" )
+            self.owner.ui.LBL_POSITION.setText( "" )
+        else:
+            self.owner.ui.LBL_SITE.setText( "{}".format( self.sequences[row][1][col] ) )
+            self.owner.ui.LBL_POSITION.setText( "{} of {}".format( col + 1, len( self.sequences[row][1] ) ) )
         
         self.update()
     
     
     def mouseDoubleClickEvent( self, e: QMouseEvent ):
+        """
+        Double click to allow sorting by column:
+            * Presence of X for a site (cell value)
+            * Hamming distance for a c (row header)
+        """
         row, col = self.get_pos( e )
         
         if row is None:
@@ -148,7 +164,6 @@ class AlignmentViewWidget( QWidget ):
             
             
             self.sort_sequences( ___dist )
-            self.owner.ui.LBL_INFO.setText( "Sorted by presence of {} at site {}.".format( x, col ) )
         
         else:
             def ___dist( sequence ):
@@ -158,7 +173,6 @@ class AlignmentViewWidget( QWidget ):
             
             
             self.sort_sequences( ___dist )
-            self.owner.ui.LBL_INFO.setText( "Sorted by hamming distance to {}.".format( self.sequences[row][0] ) )
     
     
     def sort_sequences( self, distance_function ):
@@ -180,30 +194,66 @@ class FrmAlignment( FrmBase ):
         self.seq_view = AlignmentViewWidget( None, self )
         self.seq_view.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
         self.ui.GRID_MAIN.addWidget( self.seq_view, 0, 0 )
-        self.actions.bind_to_label(self.ui.LBL_SELECTION_WARNING)
-        self.actions.bind_to_select(self.ui.BTN_SELECTION)
+        self.ui.SCR_MAIN.valueChanged[int].connect( self.on_scroll_value_changed )
+        
+        self.ui.LBL_ERROR.setVisible( False )
+        self.bind_to_label( self.ui.LBL_SELECTION_WARNING )
+        self.bind_to_select( self.ui.BTN_SELECTION )
+        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
+                                   self.ui.BTN_WORKFLOW,
+                                   self.ui.BTN_CREATE,
+                                   self.ui.BTN_REMOVE,
+                                   self.ui.BTN_VIEW,
+                                   gui_workflow.VISUALISERS.VIEW_ALIGNMENT,
+                                   gui_workflow.STAGES.ALIGNMENTS_5 )
+        
+        self.update_view()
+        self.ui.CHK_ACCESSIONS.toggled[bool].connect( self.update_view )
+        self.ui.CHK_ALIGNED.toggled[bool].connect( self.update_view )
     
     
-    def update_view( self ):
+    def update_view( self, _ = None ):
         model = self.get_model()
         selection = self.get_selection()
+        fasta = []
         
-        win_width = (self.seq_view.rect().width() // COL_WIDTH) - NUM_RESERVED_COLS
-        self.ui.SCR_MAIN.setPageStep( win_width )
-        self.ui.SCR_MAIN.setMinimum( 0 )
-        self.ui.SCR_MAIN.setMaximum( max( 0, self.seq_view.max_len - win_width ) )
-        self.ui.SCR_MAIN.setValue( 0 )
-        self.ui.SCR_MAIN.valueChanged[int].connect( self.on_scroll_value_changed )
-        self.ui.BTN_SELECTION.setText( str( selection ) )
-        
-        component = array_helper.first_or_none( selection.components )
-        
-        if component:
+        try:
+            for entity in selection:
+                fasta.append( ";\n;{}\n".format( str( entity ) ) )
+                if isinstance( entity, IHasFasta ):
+                    fasta.append( entity.to_fasta() )
+        except FastaError as ex:
+            self.ui.LBL_ERROR.setText( str( ex ) )
+            self.ui.LBL_ERROR.setVisible( True )
             self.ui.LBL_SELECTION_WARNING.setVisible( False )
-            self.seq_view.load( LookupTable( model.site_type ), component.get_alignment_by_accession() )
-        else:
-            self.ui.LBL_SELECTION_WARNING.setVisible( True )
             self.seq_view.clear()
+            error = True
+        else:
+            if fasta:
+                self.seq_view.load( LookupTable( model.site_type ), "\n".join( fasta ) )
+                self.ui.LBL_ERROR.setVisible( False )
+                self.ui.LBL_SELECTION_WARNING.setVisible( False )
+                error = False
+            else:
+                self.ui.LBL_SELECTION_WARNING.setVisible( True )
+                self.seq_view.clear()
+                error = True
+        
+        self.ui.SCR_MAIN.setEnabled( not error )
+        self.ui.LBL_POSITION_START.setEnabled( not error )
+        self.ui.LBL_POSITION_END.setEnabled( not error )
+        self.ui.BTN_START.setEnabled( not error )
+        self.ui.BTN_END.setEnabled( not error )
+        
+        if not error:
+            win_width = (self.seq_view.rect().width() // COL_WIDTH) - NUM_RESERVED_COLS
+            self.ui.SCR_MAIN.setPageStep( win_width )
+            self.ui.SCR_MAIN.setMinimum( 0 )
+            self.ui.SCR_MAIN.setMaximum( self.seq_view.max_len - 1 )
+            self.ui.SCR_MAIN.setValue( 0 )
+            self.ui.BTN_SELECTION.setText( str( selection ) )
+            self.ui.LBL_POSITION_START.setText( str( 1 ) )
+            self.ui.LBL_POSITION_END.setText( str( self.seq_view.max_len ) )
         
         self.repaint_view()
     
@@ -214,12 +264,11 @@ class FrmAlignment( FrmBase ):
     
     def on_scroll_value_changed( self, _: int ):
         self.repaint_view()
+        self.ui.LBL_SCRPOS.setText( str( self.ui.SCR_MAIN.value() + 1 ) )
     
     
     def repaint_view( self ):
         self.seq_view.update()
-        self.ui.LBL_POSITION_START.setText( str( self.ui.SCR_MAIN.value() ) )
-        self.ui.LBL_POSITION_END.setText( str( self.ui.SCR_MAIN.value() + self.ui.SCR_MAIN.pageStep() ) )
     
     
     @exqtSlot()
@@ -236,6 +285,38 @@ class FrmAlignment( FrmBase ):
         Signal handler:
         """
         self.ui.SCR_MAIN.setValue( self.ui.SCR_MAIN.maximum() )
+    
+    
+    @exqtSlot()
+    def on_BTN_WORKFLOW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_CREATE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_REMOVE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
+    
+    
+    @exqtSlot()
+    def on_BTN_VIEW_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        pass
     
     
     @exqtSlot()

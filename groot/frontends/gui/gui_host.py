@@ -1,3 +1,4 @@
+
 from intermake.hosts.base import DMultiHostProvider
 
 
@@ -10,15 +11,17 @@ def __create_lego_gui_host():
     
     
     class LegoGuiHost( GuiHost ):
-        def run_host( self, args: RunHostArgs ):
+        def on_run_host( self, args: RunHostArgs ):
             from PyQt5.QtCore import QCoreApplication, Qt
             from PyQt5.QtWebEngineWidgets import QWebEngineView
             ignore( QWebEngineView )
             QCoreApplication.setAttribute( Qt.AA_ShareOpenGLContexts )
-            super().run_host( args )
+            from groot.frontends.gui import gui_workflow
+            gui_workflow.init()
+            super().on_run_host( args )
         
         
-        def create_window( self, args ):
+        def on_create_window( self, args ):
             from groot.frontends.gui.forms.resources import resources_rc as groot_resources_rc
             from intermake.hosts.frontends.gui_qt.designer.resource_files import resources_rc as intermake_resources_rc
             cast( None, groot_resources_rc )

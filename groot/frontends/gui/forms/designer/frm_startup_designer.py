@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def __init__(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(380, 327)
+        Dialog.resize(652, 706)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
@@ -48,15 +48,16 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         self.frame.setProperty("style", _translate("Dialog", "grootunique"))
         self.LBL_FIRST_MESSAGE.setText(_translate("Dialog", "<html><head/><body>\n"
-"<h1>Groot</h1>\n"
+"<h1>Groot</h1><img src=\":/groot/groot_logo.png\" width=128 height=85 align=\"right\" />\n"
 "<p><i>Groot version $(VERSION)</i></p>\n"
 "<p>Would you like to:</p>\n"
 "<ul>\n"
-"<li>Grootle around yourself in the <a href=\"action:show_workflow\">workflow</a>.</li>\n"
-"<li>Have a magical <a href=\"action:show_wizard\">wizard</a> do everything for you</li>\n"
+"<li>Grootle around yourself in the <a href=\"action:view_workflow\">workflow</a>.</li>\n"
+"<li>Have a magical <a href=\"action:view_wizard\">wizard</a> do everything for you</li>\n"
 "<li>Stand alone and <a href=\"action:dismiss_startup_screen\">dismiss</a> this message.</li>\n"
-"<li>View the <a href=\"action:show_help\">documentation</a> online.</li>\n"
+"<li>View the <a href=\"action:view_help\">documentation</a> online.</li>\n"
 "</ul>\n"
 "$(RECENT_FILES)\n"
 "</body></html>"))
+
 

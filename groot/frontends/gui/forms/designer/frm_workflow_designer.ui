@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>599</width>
-    <height>632</height>
+    <width>1314</width>
+    <height>775</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -17,7 +17,849 @@
    </size>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="19" column="0" colspan="2">
+   <property name="spacing">
+    <number>2</number>
+   </property>
+   <item row="5" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_DOMAINS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_DOMAINS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="6" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_ALIGNMENTS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_ALIGNMENTS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QLabel" name="LBL_FILENAME_3">
+     <property name="text">
+      <string>Workflow</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_SPLITS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SPLITS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_FUSIONS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_FUSIONS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="6" column="0">
+    <widget class="QWidget" name="LBL_WARNI_ALIGNMENTS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QWidget" name="LBL_WARNI_SEQUENCES" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="1">
+    <widget class="QLabel" name="LBL_CHECKED">
+     <property name="text">
+      <string>Checked</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="1">
+    <widget class="QLabel" name="LBL_CLEANED">
+     <property name="text">
+      <string>Cleaned</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QLabel" name="LBL_STITCHED">
+     <property name="text">
+      <string>Stitched</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLabel" name="LBL_TREES">
+     <property name="text">
+      <string>Trees</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QLabel" name="LBL_ALIGNMENTS">
+     <property name="text">
+      <string>Alignments</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QWidget" name="LBL_WARNI_SPLITS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QWidget" name="LBL_WARNI_SUBGRAPHS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QWidget" name="LBL_WARNI_SUBSETS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QWidget" name="LBL_WARNI_EDGES" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0">
+    <widget class="QWidget" name="LBL_WARNI_STITCHED" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QWidget" name="LBL_WARNI_CONSENSUS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QWidget" name="LBL_WARNI_FUSIONS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QWidget" name="LBL_WARNI_TREES" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QWidget" name="LBL_WARNI_COMPONENTS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0">
+    <widget class="QWidget" name="LBL_WARNI_CHECKED" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QWidget" name="LBL_WARNI_DOMAINS" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QWidget" name="LBL_WARNI_FILENAME" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0">
+    <widget class="QWidget" name="LBL_WARNI_CLEANED" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>4</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>4</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:silver;
+margin-top: 2px;
+margin-bottom: 2px;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QLabel" name="LBL_SUBSETS">
+     <property name="text">
+      <string>Subsets</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0" colspan="5">
+    <widget class="QFrame" name="FRA_PAUSED">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="LBL_PAUSED">
+        <property name="text">
+         <string>The wizard has paused for you to review the progress.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="BTN_CONTINUE">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>CLICK TO CONTINUE</string>
+          </property>
+          <property name="style" stdset="0">
+           <string>completed</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="LBL_NEXT">
+        <property name="text">
+         <string>Next step: &lt;a href=&quot;action:wizard_next&quot;&gt;{}&lt;/a&gt;.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="LBL_CLOSE">
+        <property name="text">
+         <string>You can always &lt;a href=&quot;action:stop_wizard&quot;&gt;stop&lt;/a&gt; using the wizard and continue manually.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="13" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_14">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_STITCHED">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_STITCHED">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="1">
+    <widget class="QLabel" name="LBL_FUSIONS">
+     <property name="text">
+      <string>Fusions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLabel" name="LBL_COMPONENTS">
+     <property name="text">
+      <string>Components</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_CONSENSUS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_CONSENSUS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLabel" name="LBL_SEQUENCES">
+     <property name="text">
+      <string>Sequences</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_17">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_CHECKED">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_CHECKED">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="LBL_FILENAME">
+     <property name="text">
+      <string>File name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_12">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_SUBSETS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SUBSETS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="12" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_13">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_SUBGRAPHS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SUBGRAPHS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_EDGES">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_EDGES">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="12" column="1">
+    <widget class="QLabel" name="LBL_SUBGRAPHS">
+     <property name="text">
+      <string>Subgraphs</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QLabel" name="LBL_SPLITS">
+     <property name="text">
+      <string>Splits</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="TXT_TREES">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_TREES">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="10" column="1">
+    <widget class="QLabel" name="LBL_CONSENSUS">
+     <property name="text">
+      <string>Consensus</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLabel" name="LBL_DOMAINS">
+     <property name="text">
+      <string>Domains</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="1" colspan="3">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -30,322 +872,102 @@
      </property>
     </spacer>
    </item>
-   <item row="16" column="0">
-    <widget class="QLabel" name="LBL_NRFG">
-     <property name="text">
-      <string>NRFG</string>
+   <item row="14" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_15">
+     <property name="spacing">
+      <number>1</number>
      </property>
-    </widget>
+     <item>
+      <widget class="QLineEdit" name="TXT_CLEANED">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_CLEANED">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
-   <item row="14" column="0">
-    <widget class="QLabel" name="LBL_FUSIONS">
-     <property name="text">
-      <string>Fusions</string>
+   <item row="2" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="spacing">
+      <number>1</number>
      </property>
-    </widget>
-   </item>
-   <item row="10" column="0">
-    <widget class="QLabel" name="LBL_ALIGNMENTS">
-     <property name="text">
-      <string>Alignments</string>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="1">
-    <widget class="QLineEdit" name="TXT_TREES">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="0">
-    <widget class="QLabel" name="LBL_TREES">
-     <property name="text">
-      <string>Trees</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="LBL_SEQUENCES">
-     <property name="text">
-      <string>Sequences</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLineEdit" name="TXT_SEQUENCES">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_SEQUENCES">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="3" column="1">
-    <widget class="QLineEdit" name="TXT_SEQUENCES">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QLineEdit" name="TXT_COMPONENTS">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="LBL_COMPONENTS">
+    <widget class="QLabel" name="LBL_EDGES">
      <property name="text">
-      <string>Components</string>
+      <string>Edges</string>
      </property>
     </widget>
    </item>
-   <item row="10" column="1">
-    <widget class="QLineEdit" name="TXT_ALIGNMENTS">
-     <property name="readOnly">
-      <bool>true</bool>
+   <item row="4" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="spacing">
+      <number>1</number>
      </property>
-    </widget>
-   </item>
-   <item row="16" column="1">
-    <widget class="QLineEdit" name="TXT_NRFG">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="1">
-    <widget class="QLineEdit" name="TXT_FUSIONS">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="LBL_DOMAINS">
-     <property name="text">
-      <string>Domains</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="LBL_FILENAME">
-     <property name="text">
-      <string>File name</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
-    <widget class="QLineEdit" name="TXT_DOMAINS">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="TXT_FILENAME">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLineEdit" name="TXT_COMPONENTS">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_COMPONENTS">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="1" column="2">
-    <widget class="QPushButton" name="BTN_FILENAME">
-     <property name="text">
-      <string>...</string>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>1</number>
      </property>
-    </widget>
-   </item>
-   <item row="3" column="2">
-    <widget class="QPushButton" name="BTN_SEQUENCES">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
-    <widget class="QPushButton" name="BTN_COMPONENTS">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="2">
-    <widget class="QPushButton" name="BTN_DOMAINS">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="2">
-    <widget class="QPushButton" name="BTN_ALIGNMENTS">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="2">
-    <widget class="QPushButton" name="BTN_TREES">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="2">
-    <widget class="QPushButton" name="BTN_FUSIONS">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="16" column="2">
-    <widget class="QPushButton" name="BTN_NRFG">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_FILENAME">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Your model is not saved. You should &lt;a href=&quot;action:show_save_model&quot;&gt;save&lt;/a&gt; your model.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_SEQUENCES">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>You need to &lt;a href=&quot;action:import_file&quot;&gt;import&lt;/a&gt; some data.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_COMPONENTS">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_text_data&quot;&gt;data&lt;/a&gt; and generate some &lt;a href=&quot;action:create_components&quot;&gt;components&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_DOMAINS">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_entities&quot;&gt;components&lt;/a&gt; and generate some &lt;a href=&quot;action:show_domains&quot;&gt;domains&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_ALIGNMENTS">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_lego&quot;&gt;domains&lt;/a&gt; and generate some &lt;a href=&quot;action:create_alignments&quot;&gt;alignments&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="13" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_TREES">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_alignments&quot;&gt;alignments&lt;/a&gt; and generate some &lt;a href=&quot;action:create_trees&quot;&gt;trees&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="15" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_FUSIONS">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_trees&quot;&gt;trees&lt;/a&gt; and genrate some &lt;a href=&quot;action:create_fusions&quot;&gt;fusions&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="17" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_NRFG">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Check your &lt;a href=&quot;action:show_fusions&quot;&gt;fusions&lt;/a&gt; and generate the &lt;a href=&quot;action:create_nrfg&quot;&gt;NRFG&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
-   </item>
-   <item row="18" column="0" colspan="3">
-    <widget class="QLabel" name="LBL_WARN_GRAPH">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>You're all done, take a look at your &lt;a href=&quot;action:show_trees&quot;&gt;graph&lt;/a&gt;.</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLineEdit" name="TXT_FILENAME">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="BTN_FILENAME">
+       <property name="text">
+        <string>▼</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
  <resources>
   <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

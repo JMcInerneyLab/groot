@@ -2,7 +2,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QTreeWidgetItem
 from typing import Optional
 
-from intermake import intermake_gui
 from mhelper import file_helper
 from mhelper_qt import exceptToGui, exqtSlot
 from groot.frontends.gui.forms.designer import frm_sample_browser_designer
@@ -18,7 +17,6 @@ class FrmSampleBrowser( QDialog ):
         super().__init__( parent )
         self.ui = frm_sample_browser_designer.Ui_Dialog( self )
         self.setWindowTitle( "Sample browser" )
-        self.setStyleSheet( intermake_gui.default_style_sheet() )
         self.update_files()
         self.ui.TVW_SAMPLES.itemSelectionChanged.connect( self.__on_item_selection_changed )
         self.ui.CMB_FILES.currentIndexChanged[int].connect( self.__on_current_index_changed )

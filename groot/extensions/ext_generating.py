@@ -14,8 +14,8 @@ from mhelper import string_helper
 __mcmd_folder_name__ = "Generating"
 
 
-@command( names = ["make_domains", "create_domains", "find_domains"] )
-def make_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
+@command()
+def create_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
     """
     Creates the domains.
     Existing domains are always replaced.
@@ -33,10 +33,13 @@ def make_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
     return EChanges.DOMAINS
 
 
-@command( names = ["make_components", "create_components", "find_components"] )
-def make_components( major_tol: int = 0, minor_tol: Optional[int] = None, debug: bool = False ) -> EChanges:
+@command()
+def create_components( major_tol: int = 0, minor_tol: Optional[int] = None, debug: bool = False ) -> EChanges:
     """
     Detects composites in the model.
+    
+    Requisites: Sequence similarity (BLAST data) must have been loaded
+    
     :param major_tol:   Tolerance on overlap, in sites.
     :param minor_tol:   Tolerance on overlap, in sites. If `None` uses the `major_tol`.
     :param debug:       Internal parameter.
@@ -62,12 +65,12 @@ def make_components( major_tol: int = 0, minor_tol: Optional[int] = None, debug:
     return EChanges.COMPONENTS
 
 
-@command( names = ["make_alignments", "create_alignments", "make_alignment", "create_alignment"] )
-def make_alignments( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ) -> EChanges:
+@command()
+def create_alignments( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Aligns the component. If no component is specified, aligns all components.
     
-    Requisites: The FASTA sequences. You must have called `load_fasta` first.
+    Requisites: `create_components` and FASTA data.
     
     :param algorithm:   Algorithm to use. See `algorithm_help`.
     :param component:   Component to align, or `None` for all.
@@ -89,12 +92,12 @@ def make_alignments( algorithm: Optional[str] = None, component: Optional[List[L
     return EChanges.COMP_DATA
 
 
-@command( names = ["make_trees", "create_trees", "make_tree", "create_tree"] )
-def make_trees( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ):
+@command()
+def create_trees( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ):
     """
     Generates component trees.
     
-    Requisites: The alignments. You must have called `make_alignments` first.
+    Requisites: `create_alignments`
     
     :param algorithm:   Algorithm to use. See `algorithm_help`.
     :param component:   Component, or `None` for all.
@@ -116,23 +119,18 @@ def make_trees( algorithm: Optional[str] = None, component: Optional[List[LegoCo
     return EChanges.COMP_DATA
 
 
-@command( names = ["make_fusions", "make_fusion", "create_fusions", "create_fusion", "find_fusions", "find_fusion"] )
-def make_fusions( overwrite: bool = False ) -> EChanges:
+@command()
+def create_fusions() -> EChanges:
     """
     Makes the fusion points.
     
-    Requisites: The trees. You must have called `make_trees` first.
-    
-    :param overwrite: Drop existing fusions first?
+    Requisites: `create_trees`
     """
     model = global_view.current_model()
     
     for x in model.components:
         if x.tree is None:
             raise ValueError( "Cannot find fusion events because there is no tree data for at least one component ({}). Did you mean to generate the trees first?".format( x ) )
-    
-    if overwrite:
-        fuse.remove_fusions( model )
     
     fuse.find_all_fusion_points( model )
     
@@ -142,20 +140,83 @@ def make_fusions( overwrite: bool = False ) -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command( names = ["make_nrfg", "create_nrfg"] )
-def make_nrfg( cutoff: float = 0.5, dirty: bool = False, no_super: bool = True ) -> EChanges:
+@command()
+def create_splits() -> EChanges:
     """
-    Creates the N-rooted fusion graph.
-    :param cutoff:      Cutoff on consensus 
-    :param dirty:       Leave graph dirty. You don't want this.
-                        Turn it off to see how the NRFG is fused together. 
-    :param no_super:    Drop supersets from trees. You want this.
-                        Turn if off to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities).
+    Creates the candidate splits.
+    
+    Requisites: `create_fusions`
     """
-    model = global_view.current_model()
+    nrfg.s1_create_splits( global_view.current_model() )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_consensus( cutoff: float = 0.5 ) -> EChanges:
+    """
+    Filters the candidate splits.
     
-    nrfg.create_nrfg( model, cutoff = cutoff, clean = not dirty, no_super = no_super )
+    Requisites: `create_splits`
     
-    MCMD.progress( "NRFG created OK." )
+    :param cutoff:      Cutoff on consensus
+    """
+    nrfg.s2_create_consensus( global_view.current_model(), cutoff )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_subsets( super: bool = False ) -> EChanges:
+    """
+    Creates leaf subsets.
     
+    Requisites: `create_consensus`
+    
+    :param super:    Keep supersets in the trees. You don't want this.
+                     Turn it on to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities!).
+    """
+    nrfg.s3_create_subsets( global_view.current_model(), not super )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_subgraphs() -> EChanges:
+    """
+    Creates the minigraphs.
+    
+    Requisites: `create_subsets`
+    """
+    nrfg.s4_create_minigraphs( global_view.current_model() )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_fused() -> EChanges:
+    """
+    Creates the NRFG (uncleaned).
+    
+    Requisites: `create_subgraphs`
+    """
+    nrfg.s5_create_sewed( global_view.current_model() )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_cleaned() -> EChanges:
+    """
+    Cleans the NRFG.
+    
+    Requisites: `create_fused`
+    """
+    nrfg.s6_create_cleaned( global_view.current_model() )
+    return EChanges.MODEL_DATA
+
+
+@command()
+def create_checked() -> EChanges:
+    """
+    Checks the NRFG.
+    
+    Requisites: `create_cleaned`
+    """
+    nrfg.s7_create_checks( global_view.current_model() )
     return EChanges.MODEL_DATA

@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>789</width>
-    <height>624</height>
+    <width>853</width>
+    <height>673</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="LBL_TITLE">
      <property name="text">
       <string>Generate tree</string>
      </property>
@@ -24,7 +24,7 @@
    <item>
     <widget class="QLabel" name="LBL_WARN_REQUIREMENTS">
      <property name="text">
-      <string>&lt;html&gt;&lt;body&gt;You need to &lt;a href=&quot;action:create_alignments&quot;&gt;create the aligmments&lt;/a&gt; before creating the trees.&lt;/body&lt;/html&gt;</string>
+      <string>text goes here</string>
      </property>
      <property name="style" stdset="0">
       <string notr="true">warning</string>
@@ -34,7 +34,7 @@
    <item>
     <widget class="QLabel" name="LBL_WARN_ALREADY">
      <property name="text">
-      <string>You already have a tree generated.</string>
+      <string>text goes here</string>
      </property>
      <property name="style" stdset="0">
       <string notr="true">warning</string>

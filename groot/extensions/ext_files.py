@@ -53,7 +53,7 @@ def file_new() -> EChanges:
     Starts a new model
     """
     global_view.new_model()
-    MCMD.print( "New model instantiated." )
+    MCMD.progress( "New model instantiated." )
     
     return EChanges.MODEL_OBJECT
 
@@ -172,7 +172,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None
         marshal.save_to_file( file_name, model )
     
     model.file_name = file_name
-    MCMD.print( "Saved model to «{}»".format( file_name ) )
+    MCMD.progress( "Saved model to «{}»".format( file_name ) )
     
     return EChanges.FILE_NAME
 

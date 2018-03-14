@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>327</height>
+    <width>652</width>
+    <height>706</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
@@ -65,14 +65,14 @@ background: transparent;
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
-&lt;h1&gt;Groot&lt;/h1&gt;
+&lt;h1&gt;Groot&lt;/h1&gt;&lt;img src=&quot;:/groot/groot_logo.png&quot; width=128 height=85 align=&quot;right&quot; /&gt;
 &lt;p&gt;&lt;i&gt;Groot version $(VERSION)&lt;/i&gt;&lt;/p&gt;
 &lt;p&gt;Would you like to:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Grootle around yourself in the &lt;a href=&quot;action:show_workflow&quot;&gt;workflow&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Have a magical &lt;a href=&quot;action:show_wizard&quot;&gt;wizard&lt;/a&gt; do everything for you&lt;/li&gt;
+&lt;li&gt;Grootle around yourself in the &lt;a href=&quot;action:view_workflow&quot;&gt;workflow&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Have a magical &lt;a href=&quot;action:view_wizard&quot;&gt;wizard&lt;/a&gt; do everything for you&lt;/li&gt;
 &lt;li&gt;Stand alone and &lt;a href=&quot;action:dismiss_startup_screen&quot;&gt;dismiss&lt;/a&gt; this message.&lt;/li&gt;
-&lt;li&gt;View the &lt;a href=&quot;action:show_help&quot;&gt;documentation&lt;/a&gt; online.&lt;/li&gt;
+&lt;li&gt;View the &lt;a href=&quot;action:view_help&quot;&gt;documentation&lt;/a&gt; online.&lt;/li&gt;
 &lt;/ul&gt;
 $(RECENT_FILES)
 &lt;/body&gt;&lt;/html&gt;</string>
@@ -87,6 +87,8 @@ $(RECENT_FILES)
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

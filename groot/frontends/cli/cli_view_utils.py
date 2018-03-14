@@ -90,6 +90,6 @@ def get_component_list( component: Optional[List[LegoComponent]] ):
         to_do = global_view.current_model().components
         
         if not to_do:
-            raise ValueError( "No components available, consider running `make_components`." )
+            raise ValueError( "No components available, consider running `create_components`." )
     
     return to_do
