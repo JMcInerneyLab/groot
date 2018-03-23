@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QWidget
+from groot.data.extendable_algorithm import AlgorithmCollection
 from groot.frontends.gui.forms.designer import frm_run_algorithm_designer
-from typing import Any
+from typing import Tuple
 
-from groot.algorithms import tree, alignment
+from groot.algorithms import tree, alignment, supertree
 from groot.frontends.gui.forms.frm_base import FrmBase
-from groot import ext_generating
+from groot import ext_generating, constants
 from intermake.engine.plugin import Plugin
 from mhelper_qt import exceptToGui, exqtSlot
 
@@ -14,9 +15,7 @@ class FrmRunAlgorithm( FrmBase ):
     def __init__( self,
                   parent: QWidget,
                   title_text: str,
-                  prerequisite_text: str,
-                  exists_text: str,
-                  algorithm_module: Any,
+                  algorithms: AlgorithmCollection,
                   plugin: Plugin ):
         """
         CONSTRUCTOR
@@ -26,29 +25,30 @@ class FrmRunAlgorithm( FrmBase ):
         self.setWindowTitle( title_text )
         self.ui.LBL_TITLE.setText( "Create " + title_text.lower() )
         self.radios = []
-        self.algorithms = algorithm_module.algorithms
+        self.algorithms = algorithms
         self.plugin: Plugin = plugin
         
-        layout = QVBoxLayout()
-        self.ui.FRA_MAIN.setLayout( layout )
+        self.__layout = QVBoxLayout()
+        self.ui.FRA_MAIN.setLayout( self.__layout )
         
-        for name, function in self.algorithms.items():
-            rad = QRadioButton()
-            rad.setText( name )
-            rad.setToolTip( name )
-            rad.toggled[bool].connect( self.on_radio_toggled )
-            self.radios.append( rad )
-            layout.addWidget( rad )
+        for name, function in self.algorithms:
+            self.add_radio( name )
         
-        layout.addItem( QSpacerItem( 0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding ) )
+        self.__layout.addItem( QSpacerItem( 0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding ) )
         
-        self.ui.LBL_WARN_ALREADY.setText( exists_text )
-        self.ui.LBL_WARN_REQUIREMENTS.setText( prerequisite_text )
-        self.bind_to_label( self.ui.LBL_WARN_ALREADY )
         self.bind_to_label( self.ui.LBL_WARN_REQUIREMENTS )
         self.ui.LBL_HELP.setVisible( False )
         self.allow_proceed = False
         self.update_labels()
+    
+    
+    def add_radio( self, name ):
+        rad = QRadioButton()
+        rad.setText( name )
+        rad.setToolTip( name )
+        rad.toggled[bool].connect( self.on_radio_toggled )
+        self.radios.append( rad )
+        self.__layout.addWidget( rad )
     
     
     def on_radio_toggled( self, _: bool ):
@@ -63,9 +63,7 @@ class FrmRunAlgorithm( FrmBase ):
     
     
     def update_labels( self ):
-        requirements_met = self.query_ready()
-        doesnt_exist = not self.query_exists()
-        ready = requirements_met and doesnt_exist
+        ready, message = self.query_ready()
         function = None
         
         for rad in self.radios:
@@ -76,24 +74,23 @@ class FrmRunAlgorithm( FrmBase ):
             
             rad.setEnabled( ready )
         
+        if function is None:
+            ready = False
+        
         self.ui.LBL_HELP.setVisible( function is not None )
         
         if function is not None:
             doc = function.__doc__ if hasattr( function, "__doc__" ) else "This algorithm has not been documented."
             self.ui.LBL_HELP.setText( doc )
         
-        self.ui.LBL_WARN_REQUIREMENTS.setVisible( not requirements_met )
-        self.ui.LBL_WARN_ALREADY.setVisible( not doesnt_exist )
-        self.ui.BTN_OK.setEnabled( (function is not None) and ready )
+        self.ui.LBL_WARN_REQUIREMENTS.setText( message )
+        self.ui.LBL_WARN_REQUIREMENTS.setVisible( bool( message ) )
+        self.ui.BTN_OK.setEnabled( ready )
         
         self.actions.adjust_window_size()
     
     
-    def query_exists( self ):
-        raise NotImplementedError( "abstract" )
-    
-    
-    def query_ready( self ):
+    def query_ready( self ) -> Tuple[bool, str]:
         raise NotImplementedError( "abstract" )
     
     
@@ -117,14 +114,19 @@ class FrmRunAlgorithm( FrmBase ):
 
 
 class FrmCreateTrees( FrmRunAlgorithm ):
-    
-    
-    def query_exists( self ):
-        return bool( self.get_model().components ) and all( x.tree for x in self.get_model().components )
-    
-    
     def query_ready( self ):
-        return bool( self.get_model().components ) and all( x.alignment for x in self.get_model().components )
+        model = self.get_model()
+        
+        if model.get_status( constants.STAGES.TREES_6 ).is_complete:
+            return False, '<html><body>Trees already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body></html>'
+        
+        if model.get_status( constants.STAGES.ALIGNMENTS_5 ).is_not_complete:
+            return False, '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body></html>'
+        
+        if model.get_status( constants.STAGES.OUTGROUPS_5b ).is_not_complete:
+            return True, '<html><body>You do not have any <a href="action:view_entities">outgroups</a> set, your trees will be unrooted!</body></html>'
+        
+        return True, ""
     
     
     @exceptToGui()
@@ -134,19 +136,21 @@ class FrmCreateTrees( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Trees",
-                          '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body></html>',
-                          '<html><body>Trees already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body></html>',
-                          tree,
+                          tree.algorithms,
                           ext_generating.create_trees )
 
 
 class FrmCreateAlignment( FrmRunAlgorithm ):
-    def query_exists( self ):
-        return bool( self.get_model().components ) and all( x.alignment for x in self.get_model().components )
-    
-    
     def query_ready( self ):
-        return bool( self.get_model().components )
+        model = self.get_model()
+        
+        if model.get_status( constants.STAGES.ALIGNMENTS_5 ).is_complete:
+            return False, '<html><body>Alignments already exist, you can <a href="action:view_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body></html>'
+        
+        if model.get_status( constants.STAGES.COMPONENTS_3 ).is_not_complete:
+            return False, '<html><body>You need to <a href="action:create_components">create the components</a> before creating the alignments.</body></html>'
+        
+        return True, ""
     
     
     @exceptToGui()
@@ -156,7 +160,28 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Alignments",
-                          '<html><body>You need to <a href="action:create_components">create the components</a> before creating the alignments.</body></html>',
-                          '<html><body>Alignments already exist, you can <a href="action:view_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body></html>',
-                          alignment,
+                          alignment.algorithms,
                           ext_generating.create_alignments )
+
+class FrmCreateSubgraphs( FrmRunAlgorithm ):
+    def query_ready( self ):
+        model = self.get_model()
+        
+        if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_complete:
+            return False, '<html><body>Subgraphs already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_subgraphs">remove them</a> or proceed to <a href="action:create_fused">creating the fused graph</a>.</body></html>'
+        
+        if model.get_status( constants.STAGES.SUBSETS_10 ).is_not_complete:
+            return False, '<html><body>You need to <a href="action:create_subsets">create the components</a> before creating the subgraphs.</body></html>'
+        
+        return True, ""
+    
+    
+    @exceptToGui()
+    def __init__( self, parent ):
+        """
+        CONSTRUCTOR
+        """
+        super().__init__( parent,
+                          "Subgraphs",
+                          supertree.algorithms,
+                          ext_generating.create_subgraphs )

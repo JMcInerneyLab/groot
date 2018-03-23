@@ -3,7 +3,7 @@ from typing import Optional, List
 from intermake import Theme
 from mhelper import ansi, bio_helper
 from groot.data import global_view
-from groot.data.lego_model import ESiteType, LegoComponent, LegoModel
+from groot.data.lego_model import ESiteType, LegoComponent, LegoModel, LegoSequence
 
 
 PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.FORE_WHITE, "L": ansi.FORE_WHITE, "I": ansi.FORE_WHITE,
@@ -46,8 +46,8 @@ def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model:
             result.append( "\n" )
         
         if model is not None:
-            if name.startswith( "S" ) and all( x.isdigit() for x in name[1:] ):
-                name = model.find_sequence_by_id( int( name[1:] ) ).accession
+            if LegoSequence.is_legacy_accession( name ):
+                name = model.find_sequence_by_legacy_accession( name ).accession
         
         result.append( ansi.BACK_BRIGHT_BLACK + name.ljust( 20 ) + ansi.BACK_RESET + "\n" )
         

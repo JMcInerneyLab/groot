@@ -1,7 +1,6 @@
-import re
-
 from typing import List, Optional
 
+from groot import constants
 from groot.algorithms import editor, importation, tree
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoEdge, LegoSubsequence, LegoSequence, EPosition
@@ -45,7 +44,7 @@ def set_outgroups( accessions: List[str] ) -> EChanges:
 
 
 @command()
-def position( gene: Optional[LegoSequence] = None, position: Optional[EPosition] = None ) -> EChanges:
+def set_position( gene: Optional[LegoSequence] = None, position: Optional[EPosition] = None ) -> EChanges:
     """
     Defines or displays the position of a gene in the graph.
     If trees have been generated already they will be re-rooted.
@@ -58,13 +57,15 @@ def position( gene: Optional[LegoSequence] = None, position: Optional[EPosition]
         for gene in global_view.current_model().sequences:
             if (position is None and gene.position != EPosition.NONE) or (position is not None and gene.position == position):
                 MCMD.information( "{} : {}".format( gene, gene.position ) )
-                
+        
         return EChanges.NONE
     
     if position is not None:
+        if gene.model.get_status( constants.STAGES.TREES_6 ).is_partial:
+            raise ValueError( "Cannot reposition genes because the trees have already been created." )
+        
         gene.position = position
-        if tree.reposition_all( global_view.current_model() ):
-            return EChanges.COMP_DATA
+        return EChanges.NONE
     else:
         MCMD.information( "{} : {}".format( gene, gene.position ) )
     
@@ -84,7 +85,9 @@ def set_tree( component: LegoComponent, newick: str ) -> EChanges:
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
     
-    component.tree = importation.import_newick( newick, component.model )
+    component.tree_unrooted = importation.import_newick( newick, component.model )
+    component.tree = component.tree_unrooted.copy()
+    component.tree_newick = newick 
     tree.reposition_all( global_view.current_model(), component )
     
     return EChanges.COMP_DATA
@@ -154,37 +157,6 @@ def new_component( index: int, sequences: List[LegoSequence], minor_sequences: O
     MCMD.progress( "Added: {}".format( component ) )
     
     return EChanges.MODEL_ENTITIES
-
-
-@command()
-def find_sequences( find: str ) -> EChanges:
-    """
-    Lists the sequences whose accession matches the specified regular expression.
-    
-    :param find:    Regular expression
-    """
-    __find_sequences( find )
-    return EChanges.NONE
-
-
-def __find_sequences( find ):
-    model = global_view.current_model()
-    
-    sequences = []
-    rx = re.compile( find, re.IGNORECASE )
-    for s in model.sequences:
-        if rx.search( s.accession ):
-            sequences.append( s )
-    
-    if not sequences:
-        MCMD.print( "No matching sequences." )
-    else:
-        for sequence in sequences:
-            MCMD.print( sequence )
-        
-        MCMD.print( "Found {} sequences.".format( len( sequences ) ) )
-    
-    return sequences
 
 
 def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ) -> EChanges:

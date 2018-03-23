@@ -468,6 +468,20 @@ Legacy terms and aliases are listed on the right because some of these are still
 | Subsets      | The predecessors to the subgraphs - a set of genes free of fusion events                      | Gene subsets
 | Split        | An edge of a tree represented as the left and right leaf-sets                                 | Edge (of a tree)
 
+Data formats
+------------
+
+Groot endeavours to use one, simple, popular, standard format for each data type.
+The following formats are supported:
+
+* Sequences: FASTA
+* Similarities: BLAST format 6 TSV
+* Trees: Newick
+* Networks: CSV
+* Scripts: Python
+* Internal data: Pickle
+
+
 Meta-data
 ---------
 

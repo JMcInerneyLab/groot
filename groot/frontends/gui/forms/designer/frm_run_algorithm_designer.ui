@@ -32,16 +32,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="LBL_WARN_ALREADY">
-     <property name="text">
-      <string>text goes here</string>
-     </property>
-     <property name="style" stdset="0">
-      <string notr="true">warning</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Algorithm</string>

@@ -1,6 +1,8 @@
 from typing import Iterator, Sequence
-from PyQt5.QtGui import QResizeEvent
-from PyQt5.QtWidgets import QAction, QApplication, QLabel, QMainWindow, QMenu, QMenuBar, QSizePolicy, QWidgetAction
+
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QResizeEvent, QKeySequence
+from PyQt5.QtWidgets import QAction, QApplication, QLabel, QMainWindow, QMenu, QMenuBar, QSizePolicy, QWidgetAction, QGroupBox, QHBoxLayout, QFrame, QToolButton, QAbstractButton
 
 from groot import constants
 from mhelper import file_helper, ResourceIcon
@@ -23,23 +25,37 @@ class VisWrap:
         self.owner.launch( self.visualiser, *self.args )
 
 
+class StageWrap:
+    def __init__( self, owner: GuiActions, stage: LegoStage ):
+        self.owner = owner
+        self.stage = stage
+    
+    
+    def execute( self, _: bool ) -> None:
+        self.owner.menu( self.stage )
+
+
 class GuiMenu:
     def __init__( self, frm_main: QMainWindow ):
         from groot.frontends.gui.forms.frm_main import FrmMain
+        assert isinstance( frm_main, FrmMain )
+        ui = frm_main.ui
+        
         self.frm_main: FrmMain = frm_main
         self.menu_bar: QMenuBar = self.frm_main.menuBar()
         self.menus = { }
         self.keep_alive = []
         self.headlines = []
         self.stages = { }
+        self.workflow_buttons = []
         self.gui_actions: GuiActions = GuiActions( self.frm_main, self.frm_main )
         
         self.mnu_file = self.add_menu( ["File"], headline = lambda m: constants.STAGES.FILE_0.headline( m ) )
-        self.add_action( ["File", "New"], visualiser = gui_workflow.VISUALISERS.ACT_FILE_NEW )
-        self.add_action( ["File", "Open..."], visualiser = gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
+        self.add_action( ["File", "New"], visualiser = gui_workflow.VISUALISERS.ACT_FILE_NEW, toolbar = ui.FRA_FILE )
+        self.add_action( ["File", "Open..."], visualiser = gui_workflow.VISUALISERS.VIEW_OPEN_FILE, toolbar = ui.FRA_FILE )
         self.add_action( ["File", "Recent", "r"] )
         self.add_action( ["File", "-"] )
-        self.add_action( ["File", "Save"], visualiser = gui_workflow.VISUALISERS.ACT_FILE_SAVE )
+        self.add_action( ["File", "Save"], visualiser = gui_workflow.VISUALISERS.ACT_FILE_SAVE, toolbar = ui.FRA_FILE )
         self.add_action( ["File", "Save &as..."], visualiser = gui_workflow.VISUALISERS.VIEW_SAVE_FILE )
         self.add_action( ["File", "-"] )
         self.add_action( ["File", "E&xit"], visualiser = gui_workflow.VISUALISERS.ACT_EXIT )
@@ -60,17 +76,17 @@ class GuiMenu:
         self.add_workflow( gui_workflow.STAGES.CHECKED_14 )
         
         self.mnu_windows = self.add_menu( ["Windows"] )
-        self.add_action( ["Windows", "&Workflow..."], visualiser = gui_workflow.VISUALISERS.VIEW_WORKFLOW )
-        self.add_action( ["Windows", "&Wizard..."], visualiser = gui_workflow.VISUALISERS.VIEW_WIZARD )
-        self.add_action( ["Windows", "&Preferences..."], visualiser = gui_workflow.VISUALISERS.VIEW_PREFERENCES )
-        self.add_action( ["Windows", "-"] )
-        self.add_action( ["Windows", "Visualisers", "Text..."], visualiser = gui_workflow.VISUALISERS.VIEW_TEXT )
-        self.add_action( ["Windows", "Visualisers", "Entities..."], visualiser = gui_workflow.VISUALISERS.VIEW_ENTITIES )
-        self.add_action( ["Windows", "Visualisers", "Lego..."], visualiser = gui_workflow.VISUALISERS.VIEW_LEGO )
-        self.add_action( ["Windows", "Visualisers", "Alignment..."], visualiser = gui_workflow.VISUALISERS.VIEW_ALIGNMENT )
-        self.add_action( ["Windows", "Visualisers", "Fusion..."], visualiser = gui_workflow.VISUALISERS.VIEW_FUSIONS )
-        self.add_action( ["Windows", "Visualisers", "Trees..."], visualiser = gui_workflow.VISUALISERS.VIEW_TREE )
-        self.add_action( ["Windows", "Visualisers", "Entities..."], visualiser = gui_workflow.VISUALISERS.VIEW_ENTITIES )
+        self.add_action( ["Windows", "&Workflow..."], visualiser = gui_workflow.VISUALISERS.VIEW_WORKFLOW, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "&Wizard..."], visualiser = gui_workflow.VISUALISERS.VIEW_WIZARD, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "&Preferences..."], visualiser = gui_workflow.VISUALISERS.VIEW_PREFERENCES, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "-"], toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Text..."], visualiser = gui_workflow.VISUALISERS.VIEW_TEXT, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Entities..."], visualiser = gui_workflow.VISUALISERS.VIEW_ENTITIES, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Lego..."], visualiser = gui_workflow.VISUALISERS.VIEW_LEGO, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Alignment..."], visualiser = gui_workflow.VISUALISERS.VIEW_ALIGNMENT, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Fusion..."], visualiser = gui_workflow.VISUALISERS.VIEW_FUSIONS, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Trees..."], visualiser = gui_workflow.VISUALISERS.VIEW_TREE, toolbar = ui.FRA_VISUALISERS )
+        self.add_action( ["Windows", "Visualisers", "Splits..."], visualiser = gui_workflow.VISUALISERS.VIEW_SPLITS, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Editors", "Trees..."], visualiser = gui_workflow.VISUALISERS.CREATE_TREES )
         self.add_action( ["Windows", "Editors", "Alignment..."], visualiser = gui_workflow.VISUALISERS.CREATE_ALIGNMENTS )
         self.add_action( ["Windows", "Editors", "Domains..."], visualiser = gui_workflow.VISUALISERS.VIEW_DOMAINS )
@@ -79,6 +95,7 @@ class GuiMenu:
         self.add_action( ["Windows", "Others", "Startup..."], visualiser = gui_workflow.VISUALISERS.VIEW_STARTUP )
         self.add_action( ["Windows", "Others", "Debug..."], visualiser = gui_workflow.VISUALISERS.VIEW_DEBUG )
         self.add_action( ["Windows", "Others", "Version..."], visualiser = gui_workflow.VISUALISERS.VIEW_ABOUT )
+        self.add_action( ["Windows", "Others", "Intermake..."], visualiser = gui_workflow.VISUALISERS.VIEW_INTERMAKE, shortcut = Qt.Key_F12 )
         
         self.mnu_help = self.add_menu( ["Help"] )
         self.add_action( ["Help", "&Show readme..."], visualiser = gui_workflow.VISUALISERS.VIEW_HELP )
@@ -94,6 +111,32 @@ class GuiMenu:
         self.add_workflow_menu( path + ["View"], stage, stage.visualisers( EIntent.VIEW ), icon = resources.view )
         
         self.stages[stage] = mnu
+        
+        exe = StageWrap( self.gui_actions, stage )
+        self.keep_alive.append( exe )
+        
+        lay: QHBoxLayout = self.frm_main.ui.FRA_WORKFLOW.layout()
+        btn = self.__make_button()
+        btn.setText( stage.name )
+        btn.setIcon( stage.icon.icon() )
+        btn.clicked[bool].connect( exe.execute )
+        self.workflow_buttons.append( (stage, btn, stage.icon.path) )
+        lay.addWidget( btn )
+    
+    
+    def update_buttons( self ):
+        model = self.gui_actions.get_model()
+        
+        for stage, button, path in self.workflow_buttons:
+            assert isinstance( stage, LegoStage )
+            assert isinstance( button, QAbstractButton )
+            
+            if model.get_status( stage ).is_complete:
+                button.setIcon( ResourceIcon( path.replace( "black", "green" ) ).icon() )
+            elif model.get_status( stage ).requisite_complete:
+                button.setIcon( ResourceIcon( path.replace( "black", "red" ) ).icon() )
+            else:
+                button.setIcon( ResourceIcon( path ).icon() )
     
     
     def add_workflow_menu( self, path, stage: LegoStage, visualisers: Iterator[LegoVisualiser], icon: ResourceIcon ):
@@ -109,12 +152,20 @@ class GuiMenu:
                 self.add_action( path + [visualiser.name], visualiser = visualiser, stage = stage )
     
     
-    def add_action( self, texts: Sequence[str], visualiser = None, stage: LegoStage = None, icon: ResourceIcon = None ):
+    def add_action( self, texts: Sequence[str], visualiser = None, stage: LegoStage = None, icon: ResourceIcon = None, shortcut: int = None, toolbar: QGroupBox = None ):
         menu = self.add_menu( texts[:-1] )
         final = texts[-1]
         
         if final == "-":
             menu.addSeparator()
+            
+            if toolbar:
+                lay: QHBoxLayout = toolbar.layout()
+                fra = QFrame()
+                fra.setMinimumWidth( 16 )
+                fra.setFrameShape( QFrame.VLine )
+                fra.setFrameShadow( QFrame.Sunken )
+                lay.addWidget( fra )
             return
         elif final == "r":
             self.add_recent( menu )
@@ -138,8 +189,27 @@ class GuiMenu:
         if icon is not None:
             action.setIcon( icon.icon() )
         
+        if shortcut is not None:
+            action.setShortcut( QKeySequence( shortcut ) )
+            self.frm_main.addAction( action )
+        
         self.keep_alive.append( action )
         menu.addAction( action )
+        
+        if toolbar:
+            lay: QHBoxLayout = toolbar.layout()
+            btn = self.__make_button()
+            btn.setDefaultAction( action )
+            lay.addWidget( btn )
+    
+    
+    def __make_button( self ):
+        btn = QToolButton()
+        btn.setToolButtonStyle( Qt.ToolButtonTextUnderIcon )
+        btn.setIconSize( QSize( 32, 32 ) )
+        btn.setMinimumSize( QSize( 64, 64 ) )
+        btn.setMaximumSize( QSize( 64, 64 ) )
+        return btn
     
     
     def add_recent( self, menu: QMenu ):

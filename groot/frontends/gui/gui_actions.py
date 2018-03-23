@@ -1,20 +1,22 @@
-from typing import Iterator, Optional, Sequence
+from typing import Optional
 
-from PyQt5.QtGui import QCursor, QResizeEvent
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QLabel, QMainWindow, QMenu, QMenuBar, QSizePolicy, QToolTip, QWidgetAction, QMessageBox
+import groot.extensions.ext_importation
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QAction, QFileDialog, QMenu, QToolTip, QMessageBox
 
 from groot import constants, extensions
 from groot.data import global_view
-from groot.data.global_view import RecentFile
 from groot.extensions import ext_gimmicks, ext_files
 from groot.frontends.gui import gui_view_utils
 from groot.frontends.gui.gui_view_utils import LegoSelection
 from groot.frontends.gui.gui_workflow import EIntent, LegoStage, LegoVisualiser
 from groot.frontends.gui import gui_workflow
+from intermake.engine.environment import MENV
 from intermake.engine.plugin import Plugin
 from intermake.engine.plugin_arguments import ArgsKwargs
-from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
-from mhelper import SwitchError, file_helper
+from intermake.visualisables.visualisable import VisualisablePath
+from intermake_qt.forms.frm_arguments import FrmArguments
+from mhelper import SwitchError
 from mhelper_qt import qt_gui_helper, menu_helper
 
 
@@ -119,11 +121,10 @@ class GuiActions:
     
     
     def get_selection( self ):
-        return global_view.current_selection()
+        return self.window.get_selection()
     
     
     def show_status_message( self, text: str ):
-        self.frm_main.statusBar().showMessage( text )
         QToolTip.showText( QCursor.pos(), text )
     
     
@@ -167,12 +168,21 @@ class GuiActions:
                 raise SwitchError( "link", link )
     
     
+    def show_intermake( self ):
+        from intermake_qt import FrmTreeView
+        FrmTreeView.request( self.window, root = VisualisablePath.get_root(), flat = True )
+    
+    
     def show_selection( self ):
         form = self.window
         
         from groot.frontends.gui.forms.frm_base import FrmBase
         assert isinstance( form, FrmBase )
         gui_view_utils.show_selection_menu( form.select_button, self, form.workflow )
+    
+    
+    def clear_selection( self ):
+        self.set_selection( LegoSelection() )
     
     
     def browse_open( self ):
@@ -183,7 +193,7 @@ class GuiActions:
     
     
     def set_selection( self, value: LegoSelection ):
-        global_view.set_selection( value )
+        self.window.set_selection( value )
     
     
     def enable_inbuilt_browser( self ):
@@ -239,13 +249,13 @@ class GuiActions:
         filter_index = filters.index( filter )
         
         if filter_index == 0:
-            extensions.ext_files.import_file( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_file( self.get_model(), file_name )
         elif filter_index == 0:
-            extensions.ext_files.import_fasta( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_fasta( self.get_model(), file_name )
         elif filter_index == 1:
-            extensions.ext_files.import_blast( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_blast( self.get_model(), file_name )
         elif filter_index == 2:
-            extensions.ext_files.import_composites( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_composites( self.get_model(), file_name )
         else:
             raise SwitchError( "filter_index", filter_index )
     

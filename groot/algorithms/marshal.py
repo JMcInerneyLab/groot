@@ -15,7 +15,7 @@ def save_to_file( file_name: str, model: LegoModel = None ) -> None:
 
 
 def load_from_file( file_name: str, set_current: bool = True ) -> LegoModel:
-    model: LegoModel = io_helper.load_binary( file_name )
+    model: LegoModel = io_helper.load_binary( file_name, type_ = LegoModel )
     model.file_name = file_name
     
     if set_current:

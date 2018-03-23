@@ -6,14 +6,14 @@ See class `LegoModel`.
 
 import re
 from typing import Dict, FrozenSet, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
-
-from groot.constants import EWorkflow, LegoStage
-from groot.frontends.gui.gui_view_support import EMode
-from groot.frontends.gui.forms.resources import resources as groot_resources
-from intermake import EColour, IVisualisable, UiInfo, resources as intermake_resources
-from intermake.engine.environment import MENV
+from intermake import EColour, IVisualisable, UiInfo, MENV
+from intermake_qt import resources as intermake_resources
 from mgraph import MGraph, Split
 from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, utf_helper
+
+from groot.constants import LegoStage
+from groot.frontends.gui.gui_view_support import EMode
+from groot.frontends.gui.forms.resources import resources as groot_resources
 
 
 TEXT_EDGE_FORMAT = "{}[{}:{}]--{}[{}:{}]"
@@ -36,10 +36,10 @@ class EPosition( MEnum ):
     OUTGROUP = 2
 
 
-class ILeaf:
+class ILegoNode:
     """
-    Things that can be leaves in trees.
-    Genes (`LegoSequence`) and fusions (`FusionPoint`). 
+    Things that can be data on graph nodes.
+    Genes (`LegoSequence`) and fusions (`FusionPoint`).
     """
     pass
 
@@ -81,9 +81,9 @@ class ESiteType( MEnum ):
     Type of sites.
     
     :data UNKNOWN:  Unknown site type. Placeholder only until the correct value is identified. Not usually a valid option. 
-    :data PROTEIN:  Protein sites:  IVLFCMAGTSWYPHEQDNKR
-    :data DNA:      DNA sites:      ATCG
-    :data RNA:      RNA sites:      AUCG
+    :data PROTEIN:  For peptide sequences "IVLFCMAGTSWYPHEQDNKR"
+    :data DNA:      For DNA nucleotide sequences "ATCG"
+    :data RNA:      For RNA nucleotide sequences "AUCG". For completeness only. Custom/extension algorithms are not expected to support this. Please convert to DNA first!
     """
     UNKNOWN = 0
     PROTEIN = 1
@@ -126,7 +126,6 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable, IHasFasta ):
     
     
     def to_fasta( self ) -> str:
-        request.enforce_aligned( False )
         fasta = []
         fasta.append( ">{} [ {} : {} ]".format( self.left.sequence.accession, self.left.start, self.left.end ) )
         fasta.append( self.left.site_array or ";MISSING" )
@@ -462,7 +461,7 @@ class LegoUserDomain( LegoSubsequence, ILegoSelectable ):
     pass
 
 
-class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable, IHasFasta ):
+class LegoSequence( ILegoVisualisable, ILegoNode, ILegoSelectable, IHasFasta ):
     """
     Protein (or DNA) sequence
     
@@ -474,8 +473,9 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable, IHasFasta ):
     :attr length:       Length of the sequence. This must match `site_array`, it that is set.
     """
     
-    _ID_FORMAT = re.compile( "^S[0-9]+$" )
-    """Used to identify legacy format accessions."""
+    # Formats for finding and creating legacy accessions
+    _LEGACY_IDENTIFIER = re.compile( "^GrtS([0-9]+)$" )
+    _LEGACY_FORMAT = "GrtS{}"
     
     
     def __init__( self, model: "LegoModel", accession: str, id: int ) -> None:
@@ -495,6 +495,11 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable, IHasFasta ):
         self.position = EPosition.NONE
     
     
+    @property
+    def is_positioned( self ):
+        return self.position != EPosition.NONE
+    
+    
     def to_fasta( self ):
         fasta = []
         
@@ -509,11 +514,16 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable, IHasFasta ):
     
     
     @staticmethod
+    def read_legacy_accession( name: str ) -> int:
+        return int( LegoSequence._LEGACY_IDENTIFIER.match( name ).groups()[0] )
+    
+    
+    @staticmethod
     def is_legacy_accession( name: str ):
         """
         Determines if an accession was created via the `legacy_accession` function.
         """
-        return bool( LegoSequence._ID_FORMAT.match( name ) )
+        return bool( LegoSequence._LEGACY_IDENTIFIER.match( name ) )
     
     
     @property
@@ -522,7 +532,7 @@ class LegoSequence( ILegoVisualisable, ILeaf, ILegoSelectable, IHasFasta ):
         We make an accession for compatibility with programs that still use Phylip format.
         We can't just use a number because some programs mistake this for a line count.
         """
-        return "S{}".format( self.id )
+        return self._LEGACY_FORMAT.format( self.id )
     
     
     def get_totality( self ) -> LegoSubsequence:
@@ -684,8 +694,10 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
         self.major_sequences: List[LegoSequence] = major_sequences
         self.minor_subsequences: List[LegoSubsequence] = None
         self.splits: FrozenSet[LegoSplit] = None
-        self.leaves: FrozenSet[ILeaf] = None
+        self.leaves: FrozenSet[ILegoNode] = None
         self.tree: MGraph = None
+        self.tree_unrooted: MGraph = None
+        self.tree_newick: str = None
     
     
     def to_details( self ):
@@ -702,8 +714,7 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
         r = []
         
         for name, value in bio_helper.parse_fasta( text = self.alignment ):
-            assert name.startswith( "S" ), name
-            r.append( ">" + self.model.find_sequence_by_id( int( name[1:] ) ).accession )
+            r.append( ">" + self.model.find_sequence_by_legacy_accession( name ).accession )
             r.append( value )
         
         return "\n".join( r )
@@ -757,14 +768,15 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
                        value = "{} sequences".format( array_helper.count( self.major_sequences ) ),
                        colour = EColour.RED,
                        icon = intermake_resources.folder,
-                       extra = { "index"    : self.index,
-                                 "major"    : self.major_sequences,
-                                 "minor_s"  : self.minor_sequences,
-                                 "minor_ss" : self.minor_subsequences,
-                                 "alignment": self.alignment,
-                                 "tree"     : self.tree,
-                                 "incoming" : self.incoming_components(),
-                                 "outgoing" : self.outgoing_components() } )
+                       extra = { "index"      : self.index,
+                                 "major"      : self.major_sequences,
+                                 "minor_s"    : self.minor_sequences,
+                                 "minor_ss"   : self.minor_subsequences,
+                                 "alignment"  : self.alignment,
+                                 "tree"       : self.tree,
+                                 "tree_newick": self.tree_newick,
+                                 "incoming"   : self.incoming_components(),
+                                 "outgoing"   : self.outgoing_components() } )
     
     
     def __str__( self ) -> str:
@@ -838,15 +850,19 @@ class ComponentAsAlignment( ILegoVisualisable, IHasFasta ):
 
 class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
     def on_get_graph( self ) -> Optional[MGraph]:
-        return self.component.graph
+        if self.unrooted:
+            return self.component.tree_unrooted
+        else:
+            return self.component.tree
     
     
     def on_get_name( self ) -> str:
         return self.component.name
     
     
-    def __init__( self, component: "LegoComponent" ):
+    def __init__( self, component: "LegoComponent", unrooted = False ):
         self.component = component
+        self.unrooted = unrooted
     
     
     def visualisable_info( self ):
@@ -858,7 +874,7 @@ class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
     
     
     def __str__( self ):
-        return "{}::graph".format( self.component )
+        return "{}::{}".format( self.component, "unrooted" if self.unrooted else "tree" )
 
 
 class LegoEdgeCollection:
@@ -1151,7 +1167,7 @@ class LegoSplit( ILegoSelectable, ILegoVisualisable ):
                        type_name = "Split",
                        value = self.split.to_string(),
                        colour = EColour.CYAN,
-                       icon = groot_resources.split,
+                       icon = groot_resources.black_split,
                        extra = { "inside"          : self.split.inside,
                                  "outside"         : self.split.outside,
                                  "components"      : self.components,
@@ -1206,11 +1222,17 @@ class NrfgReport( ILegoSelectable, ILegoVisualisable ):
                        type_name = "Report",
                        value = "Pass",
                        colour = EColour.GREEN,
-                       icon = groot_resources.check )
+                       icon = groot_resources.black_check )
 
 
 class LegoSubset( ILegoVisualisable, ILegoSelectable ):
-    def __init__( self, index: int, contents: FrozenSet[ILeaf] ):
+    """
+    Represents a subset of leaf nodes (see `ILeaf`).
+    """
+    
+    
+    def __init__( self, model: "LegoModel", index: int, contents: FrozenSet[ILegoNode] ):
+        self.model = model
         self.index = index
         self.contents = contents
     
@@ -1229,11 +1251,11 @@ class LegoSubset( ILegoVisualisable, ILegoSelectable ):
                        type_name = "Subset",
                        value = self.get_details(),
                        colour = EColour.CYAN,
-                       icon = groot_resources.subset,
+                       icon = groot_resources.black_subset,
                        extra_indexed = self.contents )
 
 
-class LegoNrfg( ILegoSelectable ):
+class LegoNrfg( ILegoSelectable, IVisualisable ):
     """
     Holds both the NRFG and the information required to create it.
     """
@@ -1253,6 +1275,21 @@ class LegoNrfg( ILegoSelectable ):
     
     def __str__( self ):
         return "NRFG"
+    
+    
+    def visualisable_info( self ):
+        return UiInfo( name = "nrfg",
+                       value = "",
+                       comment = "",
+                       extra = { "splits"               : self.splits,
+                                 "consensus"            : self.consensus,
+                                 "fusion_graph_clean"   : self.fusion_graph_clean,
+                                 "fusion_graph_unclean" : self.fusion_graph_unclean,
+                                 "report"               : self.report,
+                                 "subsets"              : self.subsets,
+                                 "subgraphs"            : self.minigraphs,
+                                 "subgraph_sources"     : self.minigraphs_sources,
+                                 "subgraph_destinations": self.minigraphs_destinations } )
 
 
 class ModelStatus:
@@ -1318,7 +1355,7 @@ class ModelStatus:
         return has_any
 
 
-class FusionEvent( ILegoVisualisable, ILegoSelectable ):
+class LegoFusion( ILegoVisualisable, ILegoSelectable ):
     """
     Describes a fusion event
     
@@ -1337,7 +1374,7 @@ class FusionEvent( ILegoVisualisable, ILegoSelectable ):
                        type_name = "Fusion",
                        value = self.long_name,
                        colour = EColour.RED,
-                       icon = groot_resources.fuse,
+                       icon = groot_resources.black_fusion,
                        extra = { "index"          : self.index,
                                  "component_a"    : self.component_a,
                                  "component_b"    : self.component_b,
@@ -1358,7 +1395,7 @@ class FusionEvent( ILegoVisualisable, ILegoSelectable ):
         self.component_b: LegoComponent = component_b
         self.products: Set[LegoComponent] = intersections
         self.future_products: Set[LegoComponent] = set( intersections )
-        self.points: List[FusionPoint] = None
+        self.points: List[LegoPoint] = None
     
     
     @property
@@ -1377,10 +1414,10 @@ class FusionEvent( ILegoVisualisable, ILegoSelectable ):
     
     
     def __str__( self ) -> str:
-        return self.short_name
+        return "F" + str( self.index )
 
 
-class FusionPoint( ILeaf, ILegoSelectable, ILegoVisualisable ):
+class LegoPoint( ILegoNode, ILegoSelectable, ILegoVisualisable ):
     """
     Point of fusion.
     
@@ -1390,22 +1427,46 @@ class FusionPoint( ILeaf, ILegoSelectable, ILegoVisualisable ):
     :attr outer_sequences:  A subset of genes from which this fusion point _originates_
     """
     
+    # Formats for finding and creating legacy accessions
+    _LEGACY_IDENTIFIER = re.compile( "^GrtF([0-9]+)P([0-9]+)$" )
+    _LEGACY_FORMAT = "GrtF{}P{}"
     
-    def __init__( self, event: FusionEvent, component: LegoComponent, sequences: Set[ILeaf], outer_sequences: Set[ILeaf] ):
+    
+    def __init__( self, event: LegoFusion, component: LegoComponent, sequences: Set[ILegoNode], outer_sequences: Set[ILegoNode], index: int ):
         self.event = event
         self.component = component
         self.sequences = sequences
         self.outer_sequences = outer_sequences
         self.pertinent_inner = frozenset( self.sequences.intersection( self.event.component_c.major_sequences ) )
         self.pertinent_outer = frozenset( self.outer_sequences.intersection( set( self.event.component_a.major_sequences ).union( set( self.event.component_b.major_sequences ) ) ) )
+        self.index = index
+    
+    
+    @property
+    def legacy_accession( self ):
+        return self._LEGACY_FORMAT.format( self.event.index, self.index )
+    
+    
+    @staticmethod
+    def read_legacy_accession( name: str ) -> Tuple[int, int]:
+        g = LegoPoint._LEGACY_IDENTIFIER.match( name ).groups()
+        return int( g[0] ), int( g[1] )
+    
+    
+    @staticmethod
+    def is_legacy_accession( name: str ):
+        """
+        Determines if an accession was created via the `legacy_accession` property.
+        """
+        return bool( LegoPoint._LEGACY_IDENTIFIER.match( name ) )
     
     
     def visualisable_info( self ):
-        return UiInfo( name = self.str_short(),
+        return UiInfo( name = str( self ),
                        comment = "",
                        value = "{} sequences".format( len( self.sequences ) ),
                        colour = EColour.MAGENTA,
-                       icon = groot_resources.fuse,
+                       icon = groot_resources.black_fusion,
                        type_name = "Point",
                        extra = {
                            "component"      : self.component,
@@ -1421,11 +1482,11 @@ class FusionPoint( ILeaf, ILegoSelectable, ILegoVisualisable ):
     
     
     def __repr__( self ):
-        return self.str_long()
+        return "{}.{}".format( self.event, self.index )
     
     
     def __eq__( self, other ):
-        if not isinstance( other, FusionPoint ):
+        if not isinstance( other, LegoPoint ):
             return False
         
         return other.event == self.event and other.pertinent_inner == other.pertinent_inner
@@ -1452,7 +1513,7 @@ class FusionPoint( ILeaf, ILegoSelectable, ILegoVisualisable ):
         for x in y:
             if isinstance( x, LegoSequence ):
                 r.append( x.__str__() )
-            elif isinstance( x, FusionPoint ):
+            elif isinstance( x, LegoPoint ):
                 r.append( x.str_id() )
         
         return string_helper.format_array( r, join = ",", sort = True, autorange = True )
@@ -1474,10 +1535,10 @@ class FusionPoint( ILeaf, ILegoSelectable, ILegoVisualisable ):
 
 class LegoFusionEventCollection:
     def __init__( self ):
-        self.events: List[FusionEvent] = []
+        self.events: List[LegoFusion] = []
     
     
-    def add( self, item: FusionEvent ):
+    def add( self, item: LegoFusion ):
         self.events.append( item )
     
     
@@ -1505,23 +1566,6 @@ class LegoFusionEventCollection:
 class LegoModel( ILegoVisualisable ):
     """
     The model used by Groot.
-    
-    At its apex, the model comprises:
-    
-        1. The set of sequences
-            i. Their FASTA (or "site") data
-        
-        2. The the set of edges (or "similarity network")
-        
-        3. The subsequences as defined by the edge-sequence relations
-            
-        4. The set of connected components
-              i.   Their major sequences
-              ii.  Their minor subsequences
-              iii. Their FASTA alignment
-              iv.  Their trees
-                
-        5. The NRFG
     """
     
     
@@ -1544,6 +1588,12 @@ class LegoModel( ILegoVisualisable ):
         self.user_domains = LegoUserDomainCollection( self )
     
     
+    @property
+    def fusion_points( self ) -> Iterator[LegoPoint]:
+        for event in self.fusion_events:
+            yield from event.points
+    
+    
     def get_status( self, stage: LegoStage ) -> ModelStatus:
         return ModelStatus( self, stage )
     
@@ -1554,18 +1604,21 @@ class LegoModel( ILegoVisualisable ):
     
     def visualisable_info( self ) -> UiInfo:
         return UiInfo( name = self.name,
-                       comment = "\n".join( self.comments ),
+                       comment = self.__doc__,
                        type_name = "Model",
                        value = "{} sequences".format( len( self.sequences ) ),
                        colour = EColour.YELLOW,
                        icon = intermake_resources.folder,
-                       extra = { "file_name"    : self.file_name,
+                       extra = { "comments"     : "\n".join( self.comments ),
+                                 "file_name"    : self.file_name,
                                  "documentation": self.__doc__,
                                  "site_type"    : self.site_type,
                                  "sequences"    : self.sequences,
                                  "edges"        : self.edges,
+                                 "fusion_events": self.fusion_events,
                                  "components"   : self.components,
-                                 "nrfg"         : self.nrfg } )
+                                 "nrfg"         : self.nrfg,
+                                 "plugins"      : MENV.plugins.plugins() } )
     
     
     def __str__( self ):
@@ -1635,9 +1688,28 @@ class LegoModel( ILegoVisualisable ):
         raise LookupError( "There is no sequence with the accession «{}».".format( name ) )
     
     
-    def find_sequence_by_id( self, id: int ) -> "LegoSequence":
+    def find_sequence_by_legacy_accession( self, name: str ) -> "LegoSequence":
+        id = LegoSequence.read_legacy_accession( name )
+        
         for x in self.sequences:
             if x.id == id:
                 return x
         
         raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
+    
+    
+    def find_fusion_point_by_legacy_accession( self, name: str ) -> "LegoSequence":
+        event, point = LegoPoint.read_legacy_accession( name )
+        
+        for x in self.fusion_events:
+            if x.index == event:
+                for y in x.points:
+                    if y.index == point:
+                        return y
+        
+        raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
+
+
+# Obsolete names, do not use
+FusionEvent = LegoFusion
+FusionPoint = LegoPoint

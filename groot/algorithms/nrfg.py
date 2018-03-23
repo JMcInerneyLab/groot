@@ -6,10 +6,10 @@ from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set, Tuple
 
 from groot import constants
-from groot.algorithms import lego_graph
+from groot.algorithms import lego_graph, supertree
 from groot.data.exceptions import AlreadyError, InUseError, NotReadyError
-from groot.data.lego_model import EPosition, FusionPoint, ILeaf, LegoComponent, LegoModel, LegoSequence, LegoSplit, NamedGraph, LegoSubset, NrfgReport
-from mgraph import MGraph, MNode, Split, analysing, exporting, importing
+from groot.data.lego_model import EPosition, LegoPoint, ILegoNode, LegoComponent, LegoModel, LegoSequence, LegoSplit, NamedGraph, LegoSubset, NrfgReport
+from mgraph import MGraph, MNode, Split, analysing, exporting
 from mhelper import Logger, LogicError, NotFoundError, SwitchError, ansi_helper, array_helper, string_helper
 
 
@@ -91,7 +91,7 @@ def s1_create_splits( model: LegoModel ):
         
         # Split the tree, `ILeaf` is a strange definition of a "leaf", since we'll pull out clades too (`FusionPoint`s).
         # We fix this when we reconstruct the NRFG.
-        component_splits = exporting.export_splits( tree, filter = lambda x: isinstance( x.data, ILeaf ) )
+        component_splits = exporting.export_splits( tree, filter = lambda x: isinstance( x.data, ILegoNode ) )
         component_splits_r = []
         
         for split in component_splits:
@@ -215,7 +215,7 @@ def s3_drop_subsets( model: LegoModel ):
         raise NotReadyError( s3_drop_subsets.__name__, s3_create_subsets.__name__ )
     
     if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_partial:
-        raise InUseError( s3_drop_subsets.__name__, s4_create_minigraphs.__name__ )
+        raise InUseError( s3_drop_subsets.__name__, s4_create_subgraphs.__name__ )
     
     model.nrfg.subsets = frozenset()
 
@@ -252,8 +252,8 @@ def s3_create_subsets( model: LegoModel, no_super: bool ):
     __LOG_FIND.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FIND POINTS WITH SAME GENES ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
     # Define our output variables
-    all_gene_sets: Set[FrozenSet[ILeaf]] = set()
-    gene_set_to_fusion: Dict[FrozenSet[ILeaf], List[FusionPoint]] = defaultdict( list )
+    all_gene_sets: Set[FrozenSet[ILegoNode]] = set()
+    gene_set_to_fusion: Dict[FrozenSet[ILegoNode], List[LegoPoint]] = defaultdict( list )
     
     # Iterate over the fusion points 
     for fusion_event in model.fusion_events:
@@ -305,19 +305,19 @@ def s3_create_subsets( model: LegoModel, no_super: bool ):
     
     # Finally, complement our gene sets with the fusion points they are adjacent to
     # We'll need these to know where our graph fits into the big picture
-    results: Set[FrozenSet[ILeaf]] = set()
+    results: Set[FrozenSet[ILegoNode]] = set()
     
     for gene_set in all_gene_sets:
         new_set = set( gene_set )
         new_set.update( gene_set_to_fusion[gene_set] )
         results.add( frozenset( new_set ) )
     
-    model.nrfg.subsets = frozenset( LegoSubset( i, x ) for i, x in enumerate( results ) )
+    model.nrfg.subsets = frozenset( LegoSubset( model, i, x ) for i, x in enumerate( results ) )
 
 
 def s4_drop_minigraphs( model: LegoModel ):
     if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_not_complete:
-        raise NotReadyError( s4_drop_minigraphs.__name__, s4_create_minigraphs.__name__ )
+        raise NotReadyError( s4_drop_minigraphs.__name__, s4_create_subgraphs.__name__ )
     
     if model.get_status( constants.STAGES.FUSED_12 ).is_partial:
         raise InUseError( s4_drop_minigraphs.__name__, s5_create_sewed.__name__ )
@@ -327,65 +327,23 @@ def s4_drop_minigraphs( model: LegoModel ):
     model.nrfg.minigraphs_sources = tuple()
 
 
-def s4_create_minigraphs( model: LegoModel ) -> None:
-    """
-    NRFG PHASE IV.
-    
-    Creates graphs from the gene sets.
-    
-    :return:                        Tuple of:
-                                        1. Destinations (node UIDs)
-                                        2. Minigraph
-                                        3. Sources (node UIDs)
-    """
+def s4_create_subgraphs( algorithm: str, model: LegoModel ) -> None:
     if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_partial:
-        raise AlreadyError( s4_create_minigraphs.__name__ )
+        raise AlreadyError( s4_create_subgraphs.__name__ )
     
     if model.get_status( constants.STAGES.SUBSETS_10 ).is_not_complete:
-        raise NotReadyError( s4_create_minigraphs.__name__, s3_create_subsets.__name__ )
+        raise NotReadyError( s4_create_subgraphs.__name__, s3_create_subsets.__name__ )
     
-    __LOG_CREATE.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CREATE GRAPHS FOR POINTS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
-    minigraphs = []
+    subgraphs = []
+    
+    for subset in model.nrfg.subsets:
+        subgraph = supertree.create_supertree( algorithm, subset )
+        
+        subgraphs.append( subgraph )
+    
     destinations = set()
     sources = set()
-    for leaf_set_ in model.nrfg.subsets:
-        assert isinstance( leaf_set_, LegoSubset )
-        leaf_set = leaf_set_.contents
-        __LOG_CREATE.pause( "***** LEAF SET {} *****", leaf_set )
-        
-        relevant_splits = set()
-        
-        __LOG_CREATE.pause( "LEAF SET {}", leaf_set )
-        
-        for split in model.nrfg.consensus:
-            leaf_set_sequences = frozenset( x for x in leaf_set if isinstance( x, LegoSequence ) )
-            
-            if split.split.all.issuperset( leaf_set_sequences ):  # S c G
-                intersection = split.split.intersection( leaf_set )
-                if intersection.is_redundant():
-                    __LOG_CREATE( "  BAD: {} “{}”", split, intersection )
-                elif intersection not in relevant_splits:
-                    __LOG_CREATE( "  OK : {} “{}”", split, intersection )
-                    relevant_splits.add( intersection )
-                else:
-                    __LOG_CREATE( "  REP: {} “{}”", split, intersection )
-            else:
-                missing = leaf_set - split.split.all
-                if not missing:
-                    __LOG_CREATE( "ERROR" )
-                
-                __LOG_CREATE( "  NSU: {}", split )
-                __LOG_CREATE( "    -: {}", missing )
-        
-        if not relevant_splits:
-            msg = "I cannot reconstruct this graph because all splits for the gene set «{}» were rejected. " \
-                  "The reasons for rejections have not been retained in memory. " \
-                  "Please turn on logging and investigate history to see details."
-            raise LogicError( msg.format( leaf_set ) )
-        
-        minigraph = importing.import_splits( relevant_splits )
-        minigraphs.append( NamedGraph( minigraph, constants.MINIGRAPH_PREFIX + str( len( minigraphs ) ) ) )
-        
+    for minigraph in subgraphs:
         sequences = lego_graph.get_sequence_data( minigraph )
         
         for node in lego_graph.get_fusion_nodes( minigraph ):
@@ -396,13 +354,10 @@ def s4_create_minigraphs( model: LegoModel ) -> None:
                 destinations.add( node.uid )
             else:
                 sources.add( node.uid )
-        
-        __LOG_CREATE( minigraph.to_ascii() )
-        __LOG_CREATE( "END OF GENE SET {}", leaf_set, key = "nrfg.289" )
-    
-    model.nrfg.minigraphs = tuple( minigraphs )
+                
     model.nrfg.minigraphs_destinations = tuple( destinations )
     model.nrfg.minigraphs_sources = tuple( sources )
+    model.nrfg.minigraphs = tuple( NamedGraph( x, algorithm + "_{}".format( i ) ) for i, x in enumerate( subgraphs ) )
 
 
 def s5_drop_sewed( model: LegoModel ):
@@ -422,7 +377,7 @@ def s5_create_sewed( model: LegoModel ):
     __LOG_SEW.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ SEW ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
     if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_not_complete:
-        raise NotReadyError( s5_create_sewed.__name__, s4_create_minigraphs.__name__ )
+        raise NotReadyError( s5_create_sewed.__name__, s4_create_subgraphs.__name__ )
     
     if model.get_status( constants.STAGES.FUSED_12 ).is_partial:
         raise AlreadyError( s5_create_sewed.__name__ )
@@ -431,7 +386,7 @@ def s5_create_sewed( model: LegoModel ):
     nrfg: MGraph = MGraph()
     
     for minigraph in model.nrfg.minigraphs:
-        minigraph.graph.copy( target = nrfg )
+        minigraph.graph.copy( target = nrfg, merge = True )
     
     # Debug
     __LOG_SEW( "FINAL UN-SEWED NRFG:" )
@@ -448,8 +403,8 @@ def s5_create_sewed( model: LegoModel ):
         a_is_source = an.uid in model.nrfg.minigraphs_sources
         b_is_source = bn.uid in model.nrfg.minigraphs_sources
         
-        assert isinstance( a, FusionPoint )
-        assert isinstance( b, FusionPoint )
+        assert isinstance( a, LegoPoint )
+        assert isinstance( b, LegoPoint )
         
         __LOG_SEW( "-----------------------------------" )
         __LOG_SEW( "COMPARING THE NEXT TWO FUSION NODES" )
@@ -529,7 +484,7 @@ def s6_create_cleaned( model: LegoModel ):
         # Make sure our fusion nodes act as roots to their creations
         # and as ancestors to their creators
         if lego_graph.is_fusion( node ):
-            fusion: FusionPoint = node.data
+            fusion: LegoPoint = node.data
             
             for edge in list( node.edges ):
                 oppo: MNode = edge.opposite( node )
@@ -544,7 +499,7 @@ def s6_create_cleaned( model: LegoModel ):
                 
                 if path[-1].data in fusion.sequences:
                     edge.ensure( node, oppo )
-                    oppo.make_root( node_filter = lambda x: not isinstance( x.data, FusionPoint ),
+                    oppo.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ),
                                     edge_filter = lambda x: x is not edge )
                 else:
                     edge.ensure( oppo, node )
@@ -553,9 +508,9 @@ def s6_create_cleaned( model: LegoModel ):
         # Nodes explicitly flagged as roots or outgroups should be made so
         if isinstance( node.data, LegoSequence ) and node.data.position != EPosition.NONE:
             if node.data.position == EPosition.OUTGROUP:
-                node.relation.make_root( node_filter = lambda x: not isinstance( x.data, FusionPoint ) )
+                node.relation.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ) )
             elif node.data.position == EPosition.ROOT:
-                node.make_root( node_filter = lambda x: not isinstance( x.data, FusionPoint ) )
+                node.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ) )
             else:
                 raise SwitchError( "node.data.position", node.data.position )
     

@@ -1,5 +1,6 @@
 from typing import List, cast
 
+import groot.extensions.ext_importation
 from groot.constants import EFormat
 from groot.data import global_view
 from groot.extensions import ext_files, ext_generating, ext_gimmicks, ext_viewing, ext_modifications
@@ -73,6 +74,9 @@ class Walkthrough:
         self.__result = EChanges.NONE
         self.pause_reason = "start"
         self.outgroups = outgroups
+        
+        if self.save and not self.name:
+            raise ValueError( "Wizard parameter `save` specified but `name` is not set." )
     
     
     def __str__( self ):
@@ -102,6 +106,7 @@ class Walkthrough:
         r.append( "last.result       = {}".format( self.__result ) )
         r.append( "pause_reason      = {}".format( self.pause_reason ) )
         r.append( "outgroups         = {}".format( self.outgroups ) )
+        r.append( "save              = {}".format( self.save ) )
         
         return "\n".join( r )
     
@@ -147,6 +152,7 @@ class Walkthrough:
         while not self.is_paused and self.__stage < len( self.__stages ):
             self.__stages[self.__stage]( self )
             self.__stage += 1
+            self.__save_model()
         
         if self.__stage == len( self.__stages ):
             MCMD.progress( "The wizard is complete." )
@@ -213,7 +219,7 @@ class Walkthrough:
     
     def __fn15_view_nrfg( self ):
         if self.view:
-            self.__result |= ext_viewing.print_trees( graph = global_view.current_model().nrfg.fusion_graph.graph,
+            self.__result |= ext_viewing.print_trees( graph = global_view.current_model().nrfg.fusion_graph_clean.graph,
                                                       format = EFormat.VISJS,
                                                       file = "open" )
     
@@ -257,18 +263,16 @@ class Walkthrough:
     def __fn3_import_data( self ):
         self.__line( "Import" )
         for import_ in self.imports:
-            self.__result |= ext_files.import_file( import_ )
+            self.__result |= groot.extensions.ext_importation.import_file( import_ )
         
         if self.pause_import:
             self.__pause( "data imported", (ext_viewing.print_genes,) )
     
     
-    def __fn2_save_model( self ):
-        self.__line( "Save" )
-        if not global_view.current_model().file_name:
+    def __save_model( self ):
+        if self.save:
+            self.__line( "Save" )
             self.__result |= ext_files.file_save( self.name )
-        elif self.name is not None:
-            raise ValueError( "`name` parameter specified but the model is already named." )
     
     
     def __fn1_new_model( self ):
@@ -290,7 +294,6 @@ class Walkthrough:
     
     
     __stages = [__fn1_new_model,
-                __fn2_save_model,
                 __fn3_import_data,
                 __fn4_make_components,
                 __fn5_make_alignments,

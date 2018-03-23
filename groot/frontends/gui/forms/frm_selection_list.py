@@ -1,14 +1,16 @@
-from typing import Any
+from typing import Any, Dict
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.QtWidgets import QTreeWidgetItem, QMessageBox
 from groot.frontends.gui.forms.designer import frm_selection_list_designer
 
 from groot import constants
+from groot.data.lego_model import LegoSequence, EPosition
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import LegoSelection
 from groot.frontends.gui import gui_workflow
-from mhelper import ignore
+from intermake.visualisables.visualisable import IVisualisable, VisualisablePath
+from mhelper import ignore, array_helper, string_helper
 from mhelper_qt import exceptToGui, exqtSlot
 
 
@@ -35,8 +37,13 @@ class FrmSelectionList( FrmBase ):
         
         self.ui.LST_ALL.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
         self.ui.LST_SELECTED.itemChanged[QTreeWidgetItem, int].connect( self.__on_item_changed )
+        
+        self.ui.LST_ALL.setHeaderHidden( False )
+        self.ui.LST_SELECTED.setHeaderHidden( False )
+        self.on_BTN_MAXIMISE_clicked()
     
     
+    @exceptToGui()
     def __on_item_changed( self, list_item: Any, column: int ):
         ignore( column )
         item = list_item.tag
@@ -44,16 +51,41 @@ class FrmSelectionList( FrmBase ):
         self.set_selected( item, checked )
     
     
-    def __add( self, item, list = None ):
+    def __add( self, item: IVisualisable, list = None ):
         if list is None:
             list = self.ui.LST_ALL
         
         selected = item in self.get_selection()
-        item1 = QTreeWidgetItem()
-        item1.setCheckState( 0, Qt.Checked if selected else Qt.Unchecked )
-        item1.setText( 0, str( item ) )
-        item1.tag = item
-        list.addTopLevelItem( item1 )
+        
+        list_item = QTreeWidgetItem()
+        list_item.setCheckState( 0, Qt.Checked if selected else Qt.Unchecked )
+        list_item.tag = item
+        
+        i = VisualisablePath.from_visualisable_temporary( item ).info()
+        
+        cols: Dict[str, int] = list.tag
+        
+        for x in i.iter_children():
+            assert isinstance( x, VisualisablePath )
+            v = x.get_raw_value()
+            if array_helper.is_simple_iterable( v ):
+                text = string_helper.format_array( v )
+            else:
+                text = str( v )
+            
+            if not text or len( text ) > 100:
+                continue
+            
+            col_index = cols.get( x.key )
+            
+            if col_index is None:
+                col_index = len( cols )
+                cols[x.key] = col_index
+                list.headerItem().setText( col_index, x.key )
+            
+            list_item.setText( col_index, text )
+        
+        list.addTopLevelItem( list_item )
     
     
     def __refresh_lists( self ):
@@ -63,6 +95,12 @@ class FrmSelectionList( FrmBase ):
         
         self.ui.LST_SELECTED.clear()
         self.ui.LST_ALL.clear()
+        
+        self.ui.LST_SELECTED.tag = { }
+        self.ui.LST_ALL.tag = { }
+        
+        self.ui.LST_SELECTED.setHeaderItem( QTreeWidgetItem() )
+        self.ui.LST_ALL.setHeaderItem( QTreeWidgetItem() )
         
         for item in self.get_selection():
             self.__add( item, self.ui.LST_SELECTED )
@@ -205,3 +243,51 @@ class FrmSelectionList( FrmBase ):
         Signal handler:
         """
         self.actions.set_selection( LegoSelection() )
+    
+    
+    @exqtSlot()
+    def on_BTN_MAXIMISE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        v = not self.ui.LST_SELECTED.isVisible()
+        self.ui.LST_SELECTED.setVisible( v )
+        self.ui.LBL_SELECTED.setVisible( v )
+        self.ui.BTN_SELECT.setVisible( v )
+        self.ui.BTN_DESELECT.setVisible( v )
+        self.ui.BTN_CLEAR.setVisible( v )
+    
+    
+    @exqtSlot()
+    def on_BTN_OUTGROUP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        message = []
+        
+        # TODO: We modify the model here, this breaks MVC architecture!
+        
+        if self.get_model().get_status( constants.STAGES.FUSIONS_7 ):
+            QMessageBox.information( self, self.windowTitle(), "Cannot set outgroups once the trees are in use." )
+            return
+        
+        for x in self.actions.get_selection():
+            if isinstance( x, LegoSequence ):
+                if x.position == EPosition.NONE:
+                    message.append( "{} --> Outgroup".format( x ) )
+                    x.position = EPosition.OUTGROUP
+                else:
+                    message.append( "{} --> Normal".format( x ) )
+                    x.position = EPosition.NONE
+        
+        if not message:
+            QMessageBox.information( self, self.windowTitle(), "Please select at least one gene to set outgroups." )
+            return
+        
+        msg = QMessageBox()
+        msg.setText( "Modified {} genes.".format( len( message ) ) )
+        msg.setDetailedText( "\n".join( message ) )
+        msg.setIcon( QMessageBox.Information )
+        msg.exec_()
+        
+        self.__refresh_lists()

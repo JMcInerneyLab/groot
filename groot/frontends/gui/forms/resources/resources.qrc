@@ -3,22 +3,48 @@
         <file>accept.svg</file>
         <file>align.svg</file>
         <file>align_adjacent.svg</file>
-        <file>align_component.svg</file>
         <file>align_left.svg</file>
         <file>bbsrc_logo.png</file>
+        <file>black_alignment.svg</file>
+        <file>black_check.svg</file>
+        <file>black_clean.svg</file>
+        <file>black_component.svg</file>
+        <file>black_consensus.svg</file>
+        <file>black_domain.svg</file>
+        <file>black_edge.svg</file>
+        <file>black_file.svg</file>
+        <file>black_fusion.svg</file>
+        <file>black_gene.svg</file>
+        <file>black_nrfg.svg</file>
+        <file>black_outgroup.svg</file>
+        <file>black_split.svg</file>
+        <file>black_subgraph.svg</file>
+        <file>black_subset.svg</file>
         <file>black_tree.svg</file>
-        <file>check.svg</file>
-        <file>clean.svg</file>
-        <file>compartmentalise.svg</file>
-        <file>consensus.svg</file>
         <file>create.svg</file>
         <file>database.svg</file>
         <file>database_monochrome.svg</file>
         <file>dismiss.svg</file>
         <file>domain.svg</file>
-        <file>edge.svg</file>
+        <file>empty.svg</file>
         <file>external.svg</file>
-        <file>fuse.svg</file>
+        <file>fusion.svg</file>
+        <file>green_alignment.svg</file>
+        <file>green_check.svg</file>
+        <file>green_clean.svg</file>
+        <file>green_component.svg</file>
+        <file>green_consensus.svg</file>
+        <file>green_domain.svg</file>
+        <file>green_edge.svg</file>
+        <file>green_file.svg</file>
+        <file>green_fusion.svg</file>
+        <file>green_gene.svg</file>
+        <file>green_nrfg.svg</file>
+        <file>green_outgroup.svg</file>
+        <file>green_split.svg</file>
+        <file>green_subgraph.svg</file>
+        <file>green_subset.svg</file>
+        <file>green_tree.svg</file>
         <file>groot-file.svg</file>
         <file>groot_logo.png</file>
         <file>help-cursor.svg</file>
@@ -27,27 +53,38 @@
         <file>internal.svg</file>
         <file>lego.svg</file>
         <file>manchester_logo.png</file>
-        <file>minigraph.svg</file>
+        <file>maximize.svg</file>
         <file>move.svg</file>
         <file>new-file.svg</file>
         <file>new.svg</file>
         <file>no-entry.svg</file>
         <file>open-file.svg</file>
         <file>open.svg</file>
-        <file>quantise.svg</file>
+        <file>outgroup.svg</file>
+        <file>red_alignment.svg</file>
+        <file>red_check.svg</file>
+        <file>red_clean.svg</file>
+        <file>red_component.svg</file>
+        <file>red_consensus.svg</file>
+        <file>red_domain.svg</file>
+        <file>red_edge.svg</file>
+        <file>red_file.svg</file>
+        <file>red_fusion.svg</file>
+        <file>red_gene.svg</file>
+        <file>red_nrfg.svg</file>
+        <file>red_outgroup.svg</file>
+        <file>red_split.svg</file>
+        <file>red_subgraph.svg</file>
+        <file>red_subset.svg</file>
+        <file>red_tree.svg</file>
         <file>refresh.svg</file>
         <file>remove.svg</file>
         <file>samples-file.svg</file>
-        <file>save-file.svg</file>
         <file>save.svg</file>
         <file>save_as.svg</file>
         <file>select.svg</file>
-        <file>sequence.svg</file>
         <file>settings.svg</file>
         <file>split.svg</file>
-        <file>stitch.svg</file>
-        <file>subsequence.svg</file>
-        <file>subset.svg</file>
         <file>text.svg</file>
         <file>tree.svg</file>
         <file>view.svg</file>

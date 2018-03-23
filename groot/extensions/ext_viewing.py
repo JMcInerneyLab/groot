@@ -1,15 +1,20 @@
+import re
 from typing import List, Optional, TypeVar
 
+import groot.extensions.ext_importation
 from groot import constants
-from groot.algorithms import alignment, components, graph_viewing, tree, userdomains
+from groot.algorithms import components, graph_viewing, userdomains
 from groot.constants import EFormat, LegoStage
 from groot.data import global_view
-from groot.data.lego_model import ILegoVisualisable, LegoComponent, IHasFasta
+from groot.data.extendable_algorithm import AlgorithmCollection
+from groot.data.lego_model import IHasFasta, ILegoVisualisable, LegoComponent
 from groot.extensions import ext_files, ext_generating
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD, MENV, Table, Theme, cli_helper, command, help_command, visibilities
+from intermake import MENV, Table, Theme, cli_helper, help_command, visibilities
+from intermake.engine.environment import MCMD
+from intermake.plugins.command_plugin import command
 from mgraph import MGraph
 from mhelper import ByRef, Filename, MOptional, ansi, io_helper, string_helper
 
@@ -25,11 +30,11 @@ def algorithm_help():
     Prints available algorithms.
     """
     r = []
-    for module in (tree, alignment):
+    for collection in AlgorithmCollection.ALL:
         r.append( "" )
-        r.append( Theme.TITLE + "========== " + module.__name__ + " ==========" + Theme.RESET )
+        r.append( Theme.TITLE + "========== " + collection.name + " ==========" + Theme.RESET )
         
-        for name, function in module.algorithms.items():
+        for name, function in collection:
             if name != "default":
                 r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
                 r.append( "    " + (function.__doc__ or "").strip() )
@@ -70,8 +75,8 @@ def print_status() -> EChanges:
     p.value = False
     r.append( "" )
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
-    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_1, ext_files.import_blast ) ) )
-    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_2, ext_files.import_fasta ) ) )
+    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_1, groot.extensions.ext_importation.import_blast ) ) )
+    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_2, groot.extensions.ext_importation.import_fasta ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "Components" + Theme.RESET )
     r.append( "Components:    {}".format( __get_status( p, constants.STAGES.COMPONENTS_3, ext_generating.create_components ) ) )
@@ -533,3 +538,34 @@ def groot():
     Displays the application version.
     """
     MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )
+
+
+@command()
+def print_sequences( find: str ) -> EChanges:
+    """
+    Lists the sequences whose accession matches the specified regular expression.
+    
+    :param find:    Regular expression
+    """
+    __find_sequences( find )
+    return EChanges.NONE
+
+
+def __find_sequences( find ):
+    model = global_view.current_model()
+    
+    sequences = []
+    rx = re.compile( find, re.IGNORECASE )
+    for s in model.sequences:
+        if rx.search( s.accession ):
+            sequences.append( s )
+    
+    if not sequences:
+        MCMD.print( "No matching sequences." )
+    else:
+        for sequence in sequences:
+            MCMD.print( sequence )
+        
+        MCMD.print( "Found {} sequences.".format( len( sequences ) ) )
+    
+    return sequences

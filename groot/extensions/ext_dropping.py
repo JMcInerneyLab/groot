@@ -9,7 +9,7 @@ from intermake import command
 from intermake.engine.environment import MCMD
 
 
-__mcmd_folder_name__ = "Generating"
+__mcmd_folder_name__ = "Removing"
 
 
 @command()
@@ -33,7 +33,7 @@ def drop_components() -> EChanges:
     model = global_view.current_model()
     count = components.drop( model )
     
-    MCMD.information( "Dropped all {} components from the model.".format( count ) )
+    MCMD.progress( "Dropped all {} components from the model.".format( count ) )
     
     return EChanges.COMPONENTS
 
@@ -51,7 +51,7 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
         if alignment.drop( component_ ):
             count += 1
     
-    MCMD.print( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
+    MCMD.progress( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
     
     return EChanges.COMP_DATA
 
@@ -67,10 +67,10 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     count = 0
     
     for component_ in to_do:
-        if tree.drop( component_ ):
+        if tree.drop_tree( component_ ):
             count += 1
     
-    MCMD.print( "{} trees removed across {} components.".format( count, len( to_do ) ) )
+    MCMD.progress( "{} trees removed across {} components.".format( count, len( to_do ) ) )
     
     return EChanges.COMP_DATA
 
@@ -84,7 +84,7 @@ def drop_fusions() -> EChanges:
     previous = len( model.fusion_events )
     removed = fuse.remove_fusions( model )
     
-    MCMD.information( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
+    MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
     return EChanges.COMP_DATA
 
@@ -117,7 +117,7 @@ def drop_subsets() -> EChanges:
 
 
 @command()
-def drop_minigraphs() -> EChanges:
+def drop_subgraphs() -> EChanges:
     """
     Removes data from the model.
     """

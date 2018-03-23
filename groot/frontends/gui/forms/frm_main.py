@@ -2,8 +2,8 @@ import warnings
 from typing import Dict, Type
 
 from PyQt5.QtCore import QCoreApplication, Qt
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton, QMdiArea
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton
 from groot.frontends.gui.forms.designer import frm_main_designer
 
 from groot.data import global_view
@@ -11,8 +11,9 @@ from groot.data.global_view import EStartupMode
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot.frontends.gui import gui_workflow
-from intermake import AsyncResult, IGuiPluginHostWindow, intermake_gui
-from intermake.engine.environment import MENV
+from intermake import Result
+from intermake_qt import IGuiPluginHostWindow, intermake_gui, resources
+from intermake.engine.environment import MENV, MCMD
 from mhelper import SwitchError
 from mhelper_qt import exceptToGui, exqtSlot, menu_helper, qt_gui_helper
 
@@ -46,10 +47,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         self.showMaximized()
         
-        self.mdi_mode = False
-        # self.ui.MDI_AREA.setViewMode( QMdiArea.TabbedView )
-        
-        global_view.subscribe_to_selection_changed( self.on_selection_changed )
+        self.mdi_mode = True
         
         from groot.frontends.gui.gui_menu import GuiMenu
         self.menu_handler = GuiMenu( self )
@@ -71,14 +69,11 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         self.completed_changes = None
         self.completed_plugin = None
         self.update_title()
+        self.menu_handler.update_buttons()
     
     
     def update_title( self ):
         self.setWindowTitle( MENV.name + " - " + MENV.root.visualisable_info().name )
-    
-    
-    def closeEvent( self, e: QCloseEvent ):
-        global_view.unsubscribe_from_selection_changed( self.on_selection_changed )
     
     
     def on_selection_changed( self ):
@@ -86,15 +81,18 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
             form.selection_changed()
     
     
-    def plugin_completed( self, result: AsyncResult ) -> None:
+    def plugin_completed( self, result: Result ) -> None:
         self.update_title()
         self.menu_handler.gui_actions.dismiss_startup_screen()
+        self.menu_handler.update_buttons()
         
         if result.is_error:
-            self.statusBar().showMessage( "OPERATION FAILED TO COMPLETE: " + result.title )
+            self.ui.LBL_STATUS.setText( "OPERATION FAILED TO COMPLETE: " + result.title )
+            self.ui.BTN_STATUS.setIcon( resources.failure.icon() )
             qt_gui_helper.show_exception( self, "The operation did not complete.", result.exception )
         elif result.is_success and isinstance( result.result, EChanges ):
-            self.statusBar().showMessage( "GROOT OPERATION COMPLETED: " + result.title )
+            self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.title )
+            self.ui.BTN_STATUS.setIcon( resources.success.icon() )
             self.completed_changes = result.result
             self.completed_plugin = result.plugin
             for form in self.iter_forms():
@@ -103,7 +101,8 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
             self.completed_changes = None
             self.completed_plugin = None
         else:
-            self.statusBar().showMessage( "EXTERNAL OPERATION COMPLETED: " + str( result ) )
+            self.ui.LBL_STATUS.setText( "EXTERNAL OPERATION COMPLETED: " + str( result ) )
+            self.ui.BTN_STATUS.setIcon( resources.success.icon() )
     
     
     def iter_forms( self ):
@@ -166,203 +165,16 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     @exqtSlot()
-    def on_BTN_NEW_clicked( self ) -> None:
+    def on_BTN_STATUS_clicked( self ) -> None:
         """
         Signal handler:
         """
-        self.actions.launch( gui_workflow.VISUALISERS.ACT_FILE_NEW )
-    
-    
-    @exqtSlot()
-    def on_BTN_OPEN_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
-    
-    
-    @exqtSlot()
-    def on_BTN_SAVE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.ACT_FILE_SAVE )
-    
-    
-    @exqtSlot()
-    def on_BTN_WORKFLOW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_WORKFLOW )
-    
-    
-    @exqtSlot()
-    def on_BTN_WIZARD_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_WIZARD )
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_TEXT_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_TEXT )
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_LEGO_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_LEGO )
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_ALIGNMENT_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_ALIGNMENT )
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_TREES_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_TREE )
-    
-    
-    @exqtSlot()
-    def on_BTN_BLAST_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.BLAST_1 )
-    
-    
-    @exqtSlot()
-    def on_BTN_FASTA_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FASTA_2 )
-    
-    
-    @exqtSlot()
-    def on_BTN_COMPONENTS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.COMPONENTS_3 )
-    
-    
-    @exqtSlot()
-    def on_BTN_DOMAINS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.DOMAINS_4 )
-    
-    
-    @exqtSlot()
-    def on_BTN_ALIGNMENT_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.ALIGNMENTS_5 )
-    
-    
-    @exqtSlot()
-    def on_BTN_TREES_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.TREES_6 )
-    
-    
-    @exqtSlot()
-    def on_BTN_FUSIONS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FUSIONS_7 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SPLITS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SPLITS_8 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CONSENSUS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CONSENSUS_9 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SUBSETS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SUBSETS_10 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SUBGRAPHS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SUBGRAPHS_11 )
-    
-    
-    @exqtSlot()
-    def on_BTN_NRFG_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FUSED_12 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CLEAN_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CLEANED_13 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CHECK_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CHECKED_14 )
-    
-    
-    @exqtSlot()
-    def on_BTN_DATABASE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_ENTITIES )
-    
-    
-    @exqtSlot()
-    def on_BTN_SETTINGS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_PREFERENCES )
+        from intermake_qt import FrmTreeView
+        
+        FrmTreeView.request( parent = self,
+                             root = MCMD.host.last_results,
+                             message = "Results",
+                             flat = True )
     
     
     def __show_menu( self, menu: QMenu ):

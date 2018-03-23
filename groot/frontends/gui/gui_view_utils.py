@@ -9,7 +9,7 @@ from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QToolButton
 
 from groot.data import global_view
-from groot.data.lego_model import ComponentAsAlignment, ComponentAsGraph, ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain
+from groot.data.lego_model import ComponentAsAlignment, ComponentAsGraph, ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain, LegoFusion, LegoSplit
 from groot.frontends.gui.gui_workflow import LegoStage
 from groot.frontends.gui import gui_workflow
 from mhelper import MFlags, array_helper, string_helper
@@ -34,6 +34,8 @@ class LegoSelection:
         self.user_domains = frozenset( x for x in self.items if isinstance( x, LegoUserDomain ) )
         self.components = frozenset( x for x in self.items if isinstance( x, LegoComponent ) )
         self.edges = frozenset( x for x in self.items if isinstance( x, LegoEdge ) )
+        self.fusions = frozenset( x for x in self.items if isinstance( x, LegoFusion ) )
+        self.splits = frozenset( x for x in self.items if isinstance( x, LegoSplit ) )
     
     
     def is_empty( self ):
@@ -191,8 +193,11 @@ class SelectionManipulator:
 
 
 def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = None ):
+    from groot.frontends.gui.gui_menu import GuiActions
+    assert isinstance( actions, GuiActions )
+    
     model = global_view.current_model()
-    selection = global_view.current_selection()
+    selection = actions.get_selection()
     alive = []
     roots = []
     
@@ -255,6 +260,10 @@ def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = No
     # Components - trees
     if workflow in (None, gui_workflow.STAGES.TREES_6):
         _add_submenu( alive, [ComponentAsGraph( x ) for x in model.components], root, roots, selection, "Trees" )
+        
+    # Components - trees (unrooted)
+    if workflow in (None, gui_workflow.STAGES.TREES_6):
+        _add_submenu( alive, [ComponentAsGraph( x, unrooted = True ) for x in model.components], root, roots, selection, "Trees (unrooted)" )
     
     # Fusions
     if workflow in (None, gui_workflow.STAGES.FUSIONS_7):
@@ -286,7 +295,7 @@ def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = No
     if workflow in (None, gui_workflow.STAGES.CONSENSUS_9):
         _add_submenu( alive, model.nrfg.consensus, root, roots, selection, "Splits (consensus)" )
         
-    # Subgraphs
+    # Subsets
     if workflow in (None, gui_workflow.STAGES.SUBSETS_10):
         _add_submenu( alive, model.nrfg.subsets, root, roots, selection, "Subsets" )
     
@@ -343,8 +352,7 @@ def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = No
     
     tag = selected.tag
     
-    from groot.frontends.gui.gui_menu import GuiActions
-    assert isinstance( actions, GuiActions )
+    
     
     if tag is not None:
         actions.set_selection( LegoSelection( frozenset( { tag } ) ) )

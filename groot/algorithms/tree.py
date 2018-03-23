@@ -1,8 +1,10 @@
-from typing import Optional, Callable, Dict, List
+from typing import Optional, Callable, List
 
 import groot.algorithms.external_runner
+from groot import constants
 from groot.algorithms import importation
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, EPosition
+from groot.data.extendable_algorithm import AlgorithmCollection
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, EPosition, ESiteType
 from mgraph import MGraph
 from mhelper import SwitchError
 
@@ -10,53 +12,30 @@ from mhelper import SwitchError
 DAlgorithm = Callable[[LegoModel, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
 
-algorithms: Dict[str, DAlgorithm] = { }
-default_algorithm = None
+algorithms = AlgorithmCollection[DAlgorithm]("Tree")
 
 
-def register_algorithm( fn: DAlgorithm ) -> DAlgorithm:
-    """
-    Registers a tree algorithm.
-    Can be used as a decorator.
-    
-    :param fn:  Function matching the `DAlgorithm` delegate.
-    :return:    `fn` 
-    """
-    global default_algorithm
-    
-    name: str = fn.__name__
-    
-    if name.startswith( "tree_" ):
-        name = name[5:]
-    
-    if default_algorithm is None:
-        default_algorithm = name
-    
-    algorithms[name] = fn
-    
-    return fn
-
-
-def generate_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
+def create_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
     """
     Creates a tree from the component.
     
-    The tree is set as the component's `tree` field. 
+    :returns: Nothing, the tree is set as the component's `tree` field. 
     """
     if component.alignment is None:
         raise ValueError( "Cannot generate the tree because the alignment has not yet been specified." )
     
-    if not algorithm:
-        algorithm = default_algorithm
-    
-    if not algorithm in algorithms:
-        raise ValueError( "No such tree algorithm as «{}».".format( algorithm ) )
-    
-    fn = algorithms[algorithm]
+    if component.model.site_type == ESiteType.DNA:
+        site_type = "n"
+    elif component.model.site_type == ESiteType.PROTEIN:
+        site_type = "p"
+    else:
+        raise SwitchError( "component.model.site_type", component.model.site_type )
     
     # Read the result
-    newick = groot.algorithms.external_runner.run_in_temporary( fn, component.model, component.alignment )
-    component.tree = importation.import_newick( newick, component.model )
+    newick = groot.algorithms.external_runner.run_in_temporary( algorithms[algorithm], site_type, component.alignment )
+    component.tree_unrooted = importation.import_newick( newick, component.model )
+    component.tree = component.tree_unrooted.copy()
+    component.tree_newick = newick
     reposition_tree( component.tree )
 
 
@@ -101,15 +80,14 @@ def reposition_tree( tree: MGraph ) -> bool:
     return False
 
 
-def drop( component: LegoComponent ) -> bool:
-    if component.model.fusion_events:
-        raise ValueError( "Refusing to drop the tree because there are fusion events which may be using it. Did you mean to drop the fusion events first?" )
-    
-    if component.model.nrfg:
-        raise ValueError( "Refusing to drop the tree because there is an NRFG which may be using it. Did you mean to drop the NRFG first?" )
+def drop_tree( component: LegoComponent ) -> bool:
+    if component.model.get_status( constants.STAGES.FUSIONS_7 ):
+        raise ValueError( "Refusing to drop the tree because fusions have already been recorded. Did you mean to drop the fusions first?" )
     
     if component.tree is not None:
         component.tree = None
+        component.tree_unrooted = None
+        component.tree_newick = None
         return True
     
     return False

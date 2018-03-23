@@ -111,7 +111,7 @@ def create_trees( algorithm: Optional[str] = None, component: Optional[List[Lego
     before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
-        tree.generate_tree( algorithm, component_ )
+        tree.create_tree( algorithm, component_ )
     
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -179,13 +179,15 @@ def create_subsets( super: bool = False ) -> EChanges:
 
 
 @command()
-def create_subgraphs() -> EChanges:
+def create_subgraphs(algorithm: str = "") -> EChanges:
     """
     Creates the minigraphs.
     
     Requisites: `create_subsets`
+    
+    :param algorithm: Algorithm to use, see `algorithm_help`.
     """
-    nrfg.s4_create_minigraphs( global_view.current_model() )
+    nrfg.s4_create_subgraphs( algorithm, global_view.current_model() )
     return EChanges.MODEL_DATA
 
 

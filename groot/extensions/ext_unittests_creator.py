@@ -13,7 +13,7 @@ from groot.extensions import ext_gimmicks, ext_unittests
 
 
 @command( visibility = visibilities.ADVANCED )
-def remove_tests():
+def drop_tests():
     """
     Deletes all test cases from the sample data folder.
     """
@@ -28,7 +28,7 @@ def remove_tests():
 
 
 @command( visibility = visibilities.ADVANCED )
-def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = False, run: bool = True ) -> List[str]:
+def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view: bool = False, run: bool = True ) -> List[str]:
     """
     Creates a GROOT unit test in the sample data folder.
     
@@ -42,11 +42,12 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
     :param view:        View the final tree
     :return: List of created test directories 
     """
-    import faketree as ft
+    # noinspection PyPackageRequirements
+    import faketree as Ж
     MCMD.print( "START" )
     r = []
-    kwargs = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
-    sgargs = "-d 0.2"
+    args_random_tree = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
+    args_seqgen = "-d 0.2"
     
     if not types:
         raise ValueError( "Missing :param:`types`." )
@@ -55,85 +56,87 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
     
     for name in types:
         try:
-            ft.new()
+            Ж.new()
             
             if name == "1":
                 # 1 fusion point; 3 genes; 2 origins
                 
                 # Trees
-                outgroups = ft.random_tree( ["A", "B", "C"], **kwargs )
+                outgroups = Ж.random_tree( ["A", "B", "C"], **args_random_tree )
                 a, b, c = (x.parent for x in outgroups)
                 
-                ft.seqgen( [a, b, c], sgargs )
+                Ж.seqgen( [a, b, c], args_seqgen )
                 
                 # Fusion point
-                fa = ft.random_node( a, avoid = outgroups )
-                fb = ft.random_node( b, avoid = outgroups )
-                ft.branch( [fa, fb], c )
-                ft.mk_composite( [c] )
+                fa = Ж.random_node( a, avoid = outgroups )
+                fb = Ж.random_node( b, avoid = outgroups )
+                Ж.branch( [fa, fb], c )
+                Ж.mk_composite( [c] )
             elif name == "4":
                 # 2 fusion points; 4 genes; 2 origins
                 
                 # Trees
-                outgroups = ft.random_tree( ["A", "B", "C", "D"], **kwargs )
+                outgroups = Ж.random_tree( ["A", "B", "C", "D"], **args_random_tree )
                 a, b, c, d = (x.parent for x in outgroups)
-                ft.seqgen( [a, b, c, d], sgargs )
+                Ж.seqgen( [a, b, c, d], args_seqgen )
                 
                 # Fusion points
-                fa1 = ft.random_node( a, avoid = outgroups )
-                fb1 = ft.random_node( b, avoid = outgroups )
-                fa2 = ft.random_node( fa1, avoid = outgroups )
-                fb2 = ft.random_node( fb1, avoid = outgroups )
-                ft.branch( [fa1, fb1], c )
-                ft.branch( [fa2, fb2], d )
-                ft.mk_composite( [c, d] )
+                fa1 = Ж.random_node( a, avoid = outgroups )
+                fb1 = Ж.random_node( b, avoid = outgroups )
+                fa2 = Ж.random_node( fa1, avoid = outgroups )
+                fb2 = Ж.random_node( fb1, avoid = outgroups )
+                Ж.branch( [fa1, fb1], c )
+                Ж.branch( [fa2, fb2], d )
+                Ж.mk_composite( [c, d] )
             
             elif name == "5":
                 # 2 fusion points; 5 genes; 3 origins
                 
                 # Trees
-                outgroups = ft.random_tree( ["A", "B", "C", "D", "E"], **kwargs )
+                outgroups = Ж.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
                 a, b, c, d, e = (x.parent for x in outgroups)
-                ft.seqgen( [a, b, c, d, e], sgargs )
+                Ж.seqgen( [a, b, c, d, e], args_seqgen )
                 
                 # Fusion points
-                fa = ft.random_node( a, avoid = outgroups )
-                fb = ft.random_node( b, avoid = outgroups )
-                fc = ft.random_node( c, avoid = outgroups )
-                fd = ft.random_node( d, avoid = outgroups )
-                ft.branch( [fa, fb], c )
-                ft.branch( [fc, fd], e )
-                ft.mk_composite( [c, e] )
+                fa = Ж.random_node( a, avoid = outgroups )
+                fb = Ж.random_node( b, avoid = outgroups )
+                fc = Ж.random_node( c, avoid = outgroups )
+                fd = Ж.random_node( d, avoid = outgroups )
+                Ж.branch( [fa, fb], c )
+                Ж.branch( [fc, fd], e )
+                Ж.mk_composite( [c, e] )
             elif name == "7":
                 # 3 fusion points; 7 genes; 4 origins
                 
                 # Trees
-                outgroups = ft.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **kwargs )
+                outgroups = Ж.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
                 a, b, c, d, e, f, g = (x.parent for x in outgroups)
-                ft.seqgen( [a, b, c, d, e, f, g], sgargs )
+                Ж.seqgen( [a, b, c, d, e, f, g], args_seqgen )
                 
                 # Fusion points
-                fa = ft.random_node( a, avoid = outgroups )
-                fb = ft.random_node( b, avoid = outgroups )
-                fc = ft.random_node( c, avoid = outgroups )
-                fd = ft.random_node( d, avoid = outgroups )
-                fe = ft.random_node( e, avoid = outgroups )
-                ff = ft.random_node( f, avoid = outgroups )
-                ft.branch( [fa, fb], c )
-                ft.branch( [fd, fe], f )
-                ft.branch( [fc, ff], g )
-                ft.mk_composite( [c, f, g] )
+                fa = Ж.random_node( a, avoid = outgroups )
+                fb = Ж.random_node( b, avoid = outgroups )
+                fc = Ж.random_node( c, avoid = outgroups )
+                fd = Ж.random_node( d, avoid = outgroups )
+                fe = Ж.random_node( e, avoid = outgroups )
+                ff = Ж.random_node( f, avoid = outgroups )
+                Ж.branch( [fa, fb], c )
+                Ж.branch( [fd, fe], f )
+                Ж.branch( [fc, ff], g )
+                Ж.mk_composite( [c, f, g] )
             else:
                 raise SwitchError( "name", name )
             
-            ft.apply()
-            dir = file_helper.sequential_file_name( file_helper.join( folder, name + "_*" ) )
-            file_helper.create_directory( dir )
-            os.chdir( dir )
-            ft.show( format = ft.EGraphFormat.ASCII, file = "tree.txt" )
-            ft.show( format = ft.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
-            ft.fasta( which = ft.ESubset.ALL, file = "all.fasta.hidden" )
-            ft.fasta( which = ft.ESubset.LEAVES, file = "leaves.fasta" )
+            Ж.apply()
+            
+            out_folder = file_helper.sequential_file_name( file_helper.join( folder, name + "_*" ) )
+            file_helper.create_directory( out_folder )
+            os.chdir( out_folder )
+            
+            Ж.show( format = Ж.EGraphFormat.ASCII, file = "tree.txt" )
+            Ж.show( format = Ж.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
+            Ж.fasta( which = Ж.ESubset.ALL, file = "all.fasta.hidden" )
+            Ж.fasta( which = Ж.ESubset.LEAVES, file = "leaves.fasta" )
             
             if not no_blast:
                 blast = []
@@ -161,7 +164,7 @@ def make_test( types: str, no_blast: bool = False, size: int = 25, view: bool = 
             if run:
                 ext_unittests.run_test( path_, refresh = True )
         
-        except ft.RandomChoiceError as ex:
+        except Ж.RandomChoiceError as ex:
             MCMD.print( "FAILURE {}".format( ex ) )
     
     return r

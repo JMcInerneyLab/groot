@@ -78,7 +78,7 @@ def setup():
             except LookupError:
                 try:
                     id = int( info.source )
-                    sequence = model.find_sequence_by_id( id )
+                    sequence = model.find_sequence_by_legacy_accession( id )
                 except ValueError:
                     sequence = None
                 except LookupError:

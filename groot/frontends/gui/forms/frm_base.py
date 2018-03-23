@@ -1,6 +1,6 @@
 import re
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QDialog, QMessageBox, QWidget, QPushButton, QLabel, QToolButton, QGroupBox, QMenu, QAction
+from PyQt5.QtWidgets import QDialog, QMessageBox, QWidget, QLabel, QToolButton, QGroupBox, QMenu, QAction, QAbstractButton
 from typing import Tuple
 
 from groot.frontends.gui.gui_menu import GuiActions
@@ -23,7 +23,8 @@ class FrmBase( QDialog ):
         super().__init__( parent )
         
         self.actions: GuiActions = GuiActions( self.frm_main, self )
-        self.__select_button: QPushButton = None
+        self.__select_button: QAbstractButton = None
+        self.__clear_button: QAbstractButton = None
         self.__workflow_frame: QGroupBox = None
         self.__workflow_workflow: QToolButton = None
         self.__workflow_create: QToolButton = None
@@ -31,6 +32,7 @@ class FrmBase( QDialog ):
         self.__workflow_view: QToolButton = None
         self.__workflow_options: Tuple[EWorkflow, ...] = None
         self.__workflow_selected: LegoStage = None
+        self.__selection: LegoSelection = LegoSelection()
     
     
     @property
@@ -173,12 +175,16 @@ class FrmBase( QDialog ):
                 raise ValueError( "«{}» in the text «{}» in the label «{}».«{}» is not a valid Groot URL.".format( x, label.text(), type( label.window() ), label.objectName() ) )
     
     
-    def bind_to_select( self, button: QPushButton ):
+    def bind_to_select( self, button: QAbstractButton, clear: QAbstractButton = None ):
         self.__select_button = button
+        self.__clear_button = clear
         button.setText( str( self.actions.get_selection() ) )
         button.clicked.connect( self.actions.show_selection )
         button.setProperty( "style", "combo" )
         self.actions.select_button = button
+        
+        if clear:
+            clear.clicked.connect( self.actions.clear_selection )
     
     
     def alert( self, message: str ):
@@ -205,8 +211,13 @@ class FrmBase( QDialog ):
             self.actions.set_selection( LegoSelection( selection.items - { item } ) )
     
     
+    def set_selection( self, selection: LegoSelection ):
+        self.__selection = selection
+        self.selection_changed()
+    
+    
     def get_selection( self ) -> LegoSelection:
-        return global_view.current_selection()
+        return self.__selection
     
     
     def get_model( self ):

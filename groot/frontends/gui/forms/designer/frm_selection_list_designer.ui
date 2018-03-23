@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QFrame" name="frame">
+    <widget class="QFrame" name="FRA_TOOLBAR">
      <property name="frameShape">
       <enum>QFrame::Panel</enum>
      </property>
@@ -62,7 +62,7 @@
             <string>Workflow</string>
            </property>
            <property name="icon">
-            <iconset resource="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc">
+            <iconset resource="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc">
              <normaloff>:/intermake/dropdown.svg</normaloff>:/intermake/dropdown.svg</iconset>
            </property>
            <property name="iconSize">
@@ -213,7 +213,7 @@
            </property>
            <property name="icon">
             <iconset resource="../resources/resources.qrc">
-             <normaloff>:/groot/check.svg</normaloff>:/groot/check.svg</iconset>
+             <normaloff>:/groot/groot_logo.png</normaloff>:/groot/groot_logo.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -271,6 +271,90 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QToolButton" name="BTN_MAXIMISE">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="statusTip">
+            <string>Remove edge</string>
+           </property>
+           <property name="text">
+            <string>Expand</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/maximize.svg</normaloff>:/groot/maximize.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="BTN_OUTGROUP">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="statusTip">
+            <string>Remove edge</string>
+           </property>
+           <property name="text">
+            <string>Toggle
+outgroup</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resources/resources.qrc">
+             <normaloff>:/groot/outgroup.svg</normaloff>:/groot/outgroup.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -292,13 +376,6 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="LBL_ALL">
-       <property name="text">
-        <string>Available</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QTreeWidget" name="LST_ALL">
        <attribute name="headerVisible">
@@ -421,6 +498,19 @@
        <property name="text">
         <string>Selected</string>
        </property>
+       <property name="style" stdset="0">
+        <string>title</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="LBL_ALL">
+       <property name="text">
+        <string>Available</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>title</string>
+       </property>
       </widget>
      </item>
     </layout>
@@ -438,7 +528,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
   <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>

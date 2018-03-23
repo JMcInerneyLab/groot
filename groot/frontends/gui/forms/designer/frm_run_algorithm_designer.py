@@ -22,10 +22,6 @@ class Ui_Dialog(object):
         self.LBL_WARN_REQUIREMENTS.setProperty("style", "warning")
         self.LBL_WARN_REQUIREMENTS.setObjectName("LBL_WARN_REQUIREMENTS")
         self.verticalLayout.addWidget(self.LBL_WARN_REQUIREMENTS)
-        self.LBL_WARN_ALREADY = QtWidgets.QLabel(Dialog)
-        self.LBL_WARN_ALREADY.setProperty("style", "warning")
-        self.LBL_WARN_ALREADY.setObjectName("LBL_WARN_ALREADY")
-        self.verticalLayout.addWidget(self.LBL_WARN_ALREADY)
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setProperty("style", "heading")
         self.label_2.setObjectName("label_2")
@@ -60,7 +56,6 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         self.LBL_TITLE.setText(_translate("Dialog", "Generate tree"))
         self.LBL_WARN_REQUIREMENTS.setText(_translate("Dialog", "text goes here"))
-        self.LBL_WARN_ALREADY.setText(_translate("Dialog", "text goes here"))
         self.label_2.setText(_translate("Dialog", "Algorithm"))
         self.LBL_HELP.setText(_translate("Dialog", "Select the algorithm you\'d like to use. Remember, you can add your own algorithms to Groot as well!"))
         self.BTN_OK.setText(_translate("Dialog", "OK"))

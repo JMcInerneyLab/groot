@@ -1,13 +1,16 @@
 from intermake import subprocess_helper
-from mhelper import bio_helper, file_helper
-from groot.data.lego_model import LegoModel, ESiteType
-from groot.algorithms.tree import register_algorithm
+from mhelper import bio_helper, file_helper, SwitchError
+from groot.algorithms import tree
 
 
-@register_algorithm
-def tree_neighbor_joining( model: LegoModel, alignment: str ) -> str:
+@tree.algorithms.register("neighbor_joining")
+def tree_neighbor_joining( model: str, alignment: str ) -> str:
     """
     Uses PAUP to generate the tree using neighbour-joining.
+    
+    :param model:       Format, a string `n` or `p` denoting the site type.
+    :param alignment:   Alignment in FASTA format.
+    :return:            The tree in Newick format.
     """
     file_helper.write_all_text( "in_file.fasta", alignment )
     
@@ -18,10 +21,12 @@ def tree_neighbor_joining( model: LegoModel, alignment: str ) -> str:
     SaveTrees file=out_file.nwk format=Newick root=Yes brLens=Yes replace=yes;
     quit;"""
     
-    if model.site_type in (ESiteType.DNA, ESiteType.RNA):
+    if model == "n":
         site_type = "nucleotide"
-    else:
+    elif model == "p":
         site_type = "protein"
+    else:
+        raise SwitchError( "model", model )
     
     script = script.format( site_type )
     file_helper.write_all_text( "in_file.paup", script )
@@ -31,8 +36,8 @@ def tree_neighbor_joining( model: LegoModel, alignment: str ) -> str:
     return file_helper.read_all_text( "out_file.nwk" )
 
 
-@register_algorithm
-def tree_maximum_likelihood( model: LegoModel, alignment: str ) -> str:
+@tree.algorithms.register("maximum_likelihood")
+def tree_maximum_likelihood( model: str, alignment: str ) -> str:
     """
     Uses Raxml to generate the tree using maximum likelihood.
     The model used is GTRCAT for RNA sequences, and PROTGAMMAWAG for protein sequences.
@@ -40,10 +45,12 @@ def tree_maximum_likelihood( model: LegoModel, alignment: str ) -> str:
     file_helper.write_all_text( "in_file.fasta", alignment )
     bio_helper.convert_file( "in_file.fasta", "in_file.phy", "fasta", "phylip" )
     
-    if model.site_type in (ESiteType.DNA, ESiteType.RNA):
+    if model == "n":
         method = "GTRCAT"
-    else:
+    elif model == "p":
         method = "PROTGAMMAWAG"
+    else:
+        raise SwitchError( "model", model )
     
     subprocess_helper.run_subprocess( "raxml -T 4 -m {} -p 1 -s in_file.phy -# 20 -n t".format( method ).split( " " ) )
     

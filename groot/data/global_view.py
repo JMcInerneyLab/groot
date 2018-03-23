@@ -6,23 +6,14 @@ from typing import List
 from groot import constants
 from groot.data.lego_model import LegoModel
 from groot.frontends.gui.gui_view_utils import LegoSelection
-from intermake import PathToVisualisable
 from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
-from mhelper import MEnum, array_helper, file_helper
+from intermake.visualisables.visualisable import VisualisablePath
+from mhelper import MEnum, array_helper, file_helper, exception_helper
 
 
 __model: LegoModel = None
-__selection: LegoSelection = LegoSelection()
-__selection_changed = set()
 
-
-def subscribe_to_selection_changed( fn ):
-    __selection_changed.add( fn )
-
-
-def unsubscribe_from_selection_changed( fn ):
-    __selection_changed.remove( fn )
 
 def current_model() -> LegoModel:
     if __model is None:
@@ -31,26 +22,15 @@ def current_model() -> LegoModel:
     return __model
 
 
-def current_selection() -> LegoSelection:
-    return __selection
-
-
-def set_selection( value: LegoSelection ):
-    global __selection
-    __selection = value
-    
-    for fn in __selection_changed:
-        fn()
-
-
-def set_model( model ):
+def set_model( model: LegoModel ):
+    exception_helper.assert_type( "model", model, LegoModel )
     global __model
     __model = model
     MENV.configure( using = constants.APP_NAME,
                     root = model )
     
     if isinstance( MENV.host, ConsoleHost ):
-        MENV.host.browser_path = PathToVisualisable.root_path( MENV.root )
+        MENV.host.browser_path = VisualisablePath.get_root()
     
     return __model
 
@@ -175,3 +155,6 @@ def remember_file( file_name: str ) -> None:
 
 def save_global_options():
     MENV.local_data.store.commit( "lego-options" )
+
+
+new_model()

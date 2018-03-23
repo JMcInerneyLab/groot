@@ -2,11 +2,13 @@
 Model for finding fusion events.
 """
 from typing import List, Set
+
+from groot import constants
 from mgraph import MGraph, MNode, MEdge
 from mhelper import Logger, array_helper
 
 from groot.algorithms import lego_graph
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, FusionPoint, FusionEvent
+from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, LegoPoint, LegoFusion
 
 
 __LOG = Logger( "fusion", False )
@@ -17,8 +19,11 @@ def remove_fusions( model: LegoModel ) -> int:
     """
     Removes all fusion points from the specified component.
     """
-    if model.nrfg:
-        raise ValueError( "Refusing to drop fusions because they are in use by the NRFG. Did you mean to drop the NRFG first?" )
+    if model.get_status( constants.STAGES.FUSIONS_7 ).is_none:
+        raise ValueError( "Refusing to drop fusions because no fusions have been generated." )
+    
+    if model.get_status( constants.STAGES.SPLITS_8 ).is_partial:
+        raise ValueError( "Refusing to drop fusions because they are in use by the splits. Did you mean to drop the splits first?" )
     
     removed_count = 0
     
@@ -29,7 +34,7 @@ def remove_fusions( model: LegoModel ) -> int:
         to_delete: List[MNode] = []
         
         for node in graph.get_nodes():
-            if isinstance( node.data, FusionPoint ):
+            if isinstance( node.data, LegoPoint ):
                 if len( node.edges ) == 1:
                     to_delete.append( node )
                     continue
@@ -47,37 +52,37 @@ def remove_fusions( model: LegoModel ) -> int:
     
     return removed_count
 
+
 def find_all_fusion_points( model: LegoModel ) -> None:
     """
     Finds the fusion points in the model.
     i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
     """
-    r: List[FusionEvent] = []
+    r: List[LegoFusion] = []
     
     if __fusions_exist( model ):
         raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
-        
+    
     for event in __find_fusion_events( model ):
         __LOG( "Processing fusion event: {}", event )
         event.points = []
         
         for component in model.components:
-            for point in __find_fusion_points( event, component ):
-                event.points.append( point )
+            __find_fusion_points( event, component )
         
         r.append( event )
     
     for x in r:
-        model.fusion_events.add(x)
+        model.fusion_events.add( x )
 
-def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
+
+def __find_fusion_events( model: LegoModel ) -> List[LegoFusion]:
     """
     Finds the fusion events in the model.
     
     i.e. Which components fuse together to generate which other components.
     """
-    results = []  # type: List[FusionEvent]
-    index = 0
+    results = []  # type: List[LegoFusion]
     
     #
     # Our EVENTS are two components that produce the same set of components
@@ -96,8 +101,7 @@ def __find_fusion_events( model: LegoModel ) -> List[FusionEvent]:
             __LOG( "FUSION FOUND" )
             __LOG( "{} AND {}", component_a, component_b )
             __LOG( "FORMING {}", ab_ints )
-            results.append( FusionEvent( index, component_a, component_b, ab_ints ) )
-            index += 1
+            results.append( LegoFusion( len( results ), component_a, component_b, ab_ints ) )
         else:
             __LOG( "NOT A FUSION:" )
             __LOG( "{} AND {}", component_a, component_b )
@@ -133,17 +137,14 @@ def __fusions_exist( model: LegoModel ):
     
     for component in model.components:
         for node in component.tree:
-            if isinstance( node.data, FusionPoint ):
+            if isinstance( node.data, LegoPoint ):
                 return True
     
     return False
 
 
-
-
-
-def __find_fusion_points( fusion_event: FusionEvent,
-                          component: LegoComponent ) -> List[FusionPoint]:
+def __find_fusion_points( fusion_event: LegoFusion,
+                          component: LegoComponent ) -> None:
     """
     In the tree of `component` we look for the node separating the event's intersections from everything else.
     
@@ -177,9 +178,10 @@ def __find_fusion_points( fusion_event: FusionEvent,
         root.make_root()
         assert isinstance( component, LegoComponent )
         sequences = lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_sequences ) )
-        result = FusionPoint( fusion_event, component, sequences, set() )
+        result = LegoPoint( fusion_event, component, sequences, set(), len( fusion_event.points ) )
         root.data = result
-        return [result]
+        fusion_event.points.append( result )
+        return
     
     # The `intersection_aliases` correspond to βγδ in the above diagram
     
@@ -196,7 +198,7 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     if not inside_a and not inside_b:
         __LOG( "THESE AREN'T THE COMPONENTS WE'RE LOOKING FOR" )
-        return []
+        return
     
     if inside_a and inside_b:
         raise ValueError( "What is happening?" )
@@ -218,8 +220,6 @@ def __find_fusion_points( fusion_event: FusionEvent,
     
     __LOG( "----There are {} isolation points on {} ¦ {}", len( isolation_points ), inside, outside )
     
-    results = []
-    
     # Add the fusions to the graph
     
     # Replace the edge :              #
@@ -240,13 +240,9 @@ def __find_fusion_points( fusion_event: FusionEvent,
         
         sequences = lego_graph.get_ileaf_data( isolation_point.outside_nodes )
         outer_sequences = lego_graph.get_ileaf_data( isolation_point.inside_nodes )
-        fusion_point = FusionPoint( fusion_event, component, sequences, outer_sequences )
+        fusion_point = LegoPoint( fusion_event, component, sequences, outer_sequences, len( fusion_event.points ) )
+        fusion_event.points.append( fusion_point )
         fusion_node.data = fusion_point
-        results.append( fusion_point )
-    
-    __LOG( "----{} results", len( results ) )
-    
-    return results
 
 
 class EdgeInfo:
@@ -317,6 +313,6 @@ def isolate( graph: MGraph,
     
     if best.outside_incorrect:
         __LOG_ISOLATION( "REMAINING" )
-        yield from isolate( graph, inside_request, set(best.outside_incorrect) )
+        yield from isolate( graph, inside_request, set( best.outside_incorrect ) )
     
     __LOG_ISOLATION.indent = 0

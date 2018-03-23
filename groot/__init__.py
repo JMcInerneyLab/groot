@@ -8,7 +8,7 @@ Groot entry point.
 
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.37"
+__version__ = "0.0.0.40"
 
 
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -25,15 +25,23 @@ def __setup():
                        host_provider = gui_host.setup() ):
         from groot.extensions import string_coercion
         string_coercion.setup()
+    
+    # Register extensions and model (_after_ setting up Intermake!)
+    from groot.data import global_view 
+    from groot.algorithms.extendable import align, tree, supertree
+
 
 __setup()
 
-from groot import extensions
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ MAIN EXPORTS       ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 # ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator
-from groot.algorithms.extendable import align, tree
+from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator  # export; to register
+# noinspection PyUnresolvedReferences
+from groot import extensions  # export (has own __init__)
+# noinspection PyUnresolvedReferences
+from groot import algorithms  # export
+
 from intermake import run_jupyter
 
 

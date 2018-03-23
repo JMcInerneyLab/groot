@@ -1,9 +1,9 @@
 from typing import Optional, cast
 
-from groot.algorithms import editor, marshal
-from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence
+from groot.algorithms import editor, marshal, graph_viewing
+from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence, FusionPoint, LegoPoint, ILegoNode
 from intermake import MCMD, common_commands
-from mgraph import MGraph, MNode, importing
+from mgraph import MGraph, MNode, importing, exporting, analysing
 from mhelper import file_helper, bio_helper, ByRef, Logger, MFlags
 
 
@@ -249,19 +249,55 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
     MCMD.progress( "Imported Composites from «{}».".format( file_name ) )
 
 
+def export_newick( graph: MGraph ):
+    """
+    Exports Newick into a format suitable for use with other programs.
+    
+    * We use legacy accessions to cope with programs still relying on the old PHYLIP format, which limits gene names
+    * We pull fusion clades into leaves to cope with programs that don't account for named clades
+    * We don't label the other clades
+    """
+    # Declade fusion nodes
+    nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+    
+    for node in nodes:
+        node.add_child( node.data )
+        node.data = None
+    
+    # Write newick
+    return exporting.export_newick( graph,
+                                    fnode = graph_viewing.FORMATTER.prefixed_sequence_internal_id,
+                                    internal = False )
+
+
 def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None ) -> MGraph:
     """
     Imports a newick string as an MGraph object.
+    
+    The format is expected to be the same as that produced by `export_newick`, but we make accommodations
+    for additional information programs might have added, such as clade names and branch lengths.
     """
-    g: MGraph = importing.import_newick( newick, root_ref = root_ref )
+    # Read newick
+    graph: MGraph = importing.import_newick( newick,
+                                             root_ref = root_ref )
     
-    for node in g.nodes:
-        node.data = import_sequence_reference( cast( str, node.data ), model, allow_empty = True )
+    # Convert node names back to references
+    for node in graph.nodes:
+        node.data = import_leaf_reference( cast( str, node.data ),
+                                           model,
+                                           allow_empty = True )
     
-    return g
+    # Enclade fusion nodes
+    fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+    
+    for node in fusion_nodes:
+        node.parent.data = node.data
+        node.remove_node()
+    
+    return graph
 
 
-def import_sequence_reference( name: str, model: LegoModel, *, allow_empty: bool = False ) -> Optional[LegoSequence]:
+def import_leaf_reference( name: str, model: LegoModel, *, allow_empty: bool = False ) -> Optional[ILegoNode]:
     """
     Converts a sequence name to a sequence reference.
     
@@ -280,6 +316,8 @@ def import_sequence_reference( name: str, model: LegoModel, *, allow_empty: bool
     if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
         return None
     elif LegoSequence.is_legacy_accession( name ):
-        return model.find_sequence_by_id( int( name[1:] ) )
+        return model.find_sequence_by_legacy_accession( name )
+    elif LegoPoint.is_legacy_accession( name ):
+        return model.find_fusion_point_by_legacy_accession( name )
     else:
         return model.find_sequence_by_accession( name )

@@ -1,6 +1,7 @@
 from enum import auto
 from typing import Callable, Optional, Iterable, Iterator
 import itertools
+
 from mhelper import MEnum, SwitchError, string_helper, ResourceIcon
 
 
@@ -62,48 +63,55 @@ class LegoStage:
 class LegoStageCollection:
     def __init__( self ):
         from groot.frontends.gui.forms.resources import resources
+
         self.FILE_0 = LegoStage( "File",
                                  EWorkflow.NONE,
                                  status = lambda m: m.file_name,
                                  headline = lambda m: m.file_name,
-                                 icon = resources.save_file,
+                                 icon = resources.black_file,
                                  requires = None )
         self.DATA_0 = LegoStage( "Data",
                                  EWorkflow.NONE,
-                                 icon = resources.sequence,
+                                 icon = resources.black_gene,
                                  status = lambda m: itertools.chain( (bool( m.edges ),), (bool( x.site_array ) for x in m.sequences) ),
                                  headline = lambda m: "{} of {} sequences with site data. {} edges".format( m.sequences.num_fasta, m.sequences.__len__(), m.edges.__len__() ),
                                  requires = None )
         self.BLAST_1 = LegoStage( "Blast",
                                   EWorkflow.BLAST_1,
-                                  icon = resources.edge,
+                                  icon = resources.black_edge,
                                   status = lambda m: (bool( m.edges ),),
                                   headline = lambda m: "{} edges".format( m.edges.__len__() ),
                                   requires = None )
         self.FASTA_2 = LegoStage( "Fasta",
                                   EWorkflow.FASTA_2,
-                                  icon = resources.sequence,
+                                  icon = resources.black_gene,
                                   headline = lambda m: "{} of {} sequences with site data".format( m.sequences.num_fasta, m.sequences.__len__() ),
                                   requires = None,
                                   status = lambda m: [bool( x.site_array ) for x in m.sequences] )
         self.COMPONENTS_3 = LegoStage( "Components",
                                        EWorkflow.COMPONENTS_3,
-                                       icon = resources.compartmentalise,
+                                       icon = resources.black_component,
                                        status = lambda m: (bool( m.components ),),
                                        headline = lambda m: "{} components".format( m.components.count ),
                                        requires = self.FASTA_2 )
         self.DOMAINS_4 = LegoStage( "Domains",
                                     EWorkflow.DOMAINS_4,
-                                    icon = resources.domain,
+                                    icon = resources.black_domain,
                                     status = lambda m: (bool( m.user_domains ),),
                                     headline = lambda m: "{} domains".format( len( m.user_domains ) ),
                                     requires = self.FASTA_2 )
         self.ALIGNMENTS_5 = LegoStage( "Alignments",
                                        EWorkflow.ALIGNMENTS_5,
-                                       icon = resources.align_left,
+                                       icon = resources.black_alignment,
                                        status = lambda m: (bool( x.alignment ) for x in m.components),
                                        headline = lambda m: "{} of {} components aligned".format( m.components.num_aligned, m.components.count ),
                                        requires = self.COMPONENTS_3 )
+        self.OUTGROUPS_5b = LegoStage( "Outgroups",
+                                       EWorkflow.NONE,
+                                       icon = resources.black_outgroup,
+                                       status = lambda m: (any(x.is_positioned for x in m.sequences),),
+                                       headline = lambda m: "{} outgroups".format( sum(x.is_positioned for x in m.sequences) ),
+                                       requires = self.DATA_0 )
         self.TREES_6 = LegoStage( "Trees",
                                   EWorkflow.TREES_6,
                                   icon = resources.black_tree,
@@ -112,56 +120,56 @@ class LegoStageCollection:
                                   requires = self.ALIGNMENTS_5 )
         self.FUSIONS_7 = LegoStage( "Fusions",
                                     EWorkflow.FUSIONS_7,
-                                    icon = resources.fuse,
+                                    icon = resources.black_fusion,
                                     status = lambda m: (bool( m.fusion_events ),),
                                     headline = lambda m: "{} fusion events and {} fusion points".format( m.fusion_events.__len__(), m.fusion_events.num_points ) if m.fusion_events else "(None)",
                                     requires = self.TREES_6 )
         
         self.POINTS_7b = LegoStage( "Points",
                                     EWorkflow.NONE,
-                                    icon = resources.fuse,
+                                    icon = resources.black_fusion,
                                     status = lambda m: (bool( m.fusion_events ),),
                                     headline = lambda m: "",
                                     requires = self.TREES_6 )
         self.SPLITS_8 = LegoStage( "Splits",
                                    EWorkflow.SPLITS_8,
                                    status = lambda m: (bool( m.nrfg.splits ),),
-                                   icon = resources.split,
+                                   icon = resources.black_split,
                                    headline = lambda m: "{} splits".format( m.nrfg.splits.__len__() ) if m.nrfg.splits else "(None)",
                                    requires = self.FUSIONS_7 )
         self.CONSENSUS_9 = LegoStage( "Consensus",
                                       EWorkflow.CONSENSUS_9,
-                                      icon = resources.consensus,
+                                      icon = resources.black_consensus,
                                       status = lambda m: (bool( m.nrfg.consensus ),),
                                       headline = lambda m: "{} of {} splits are viable".format( m.nrfg.consensus.__len__(), m.nrfg.splits.__len__() ) if m.nrfg.consensus else "(None)",
                                       requires = self.SPLITS_8 )
         self.SUBSETS_10 = LegoStage( "Subsets",
                                      EWorkflow.SUBSETS_10,
                                      status = lambda m: (bool( m.nrfg.subsets ),),
-                                     icon = resources.subset,
+                                     icon = resources.black_subset,
                                      headline = lambda m: "{} subsets".format( m.nrfg.subsets.__len__() ) if m.nrfg.subsets else "(None)",
                                      requires = self.CONSENSUS_9 )
         self.SUBGRAPHS_11 = LegoStage( "Subgraphs",
                                        EWorkflow.SUBGRAPHS_11,
                                        status = lambda m: (bool( m.nrfg.minigraphs ),),
-                                       icon = resources.minigraph,
+                                       icon = resources.black_subgraph,
                                        headline = lambda m: "{} of {} subsets have a graph".format( m.nrfg.minigraphs.__len__(), m.nrfg.subsets.__len__() ) if m.nrfg.minigraphs else "(None)",
                                        requires = self.SUBSETS_10 )
         self.FUSED_12 = LegoStage( "Fused",
                                    EWorkflow.FUSED_12,
                                    status = lambda m: (bool( m.nrfg.fusion_graph_unclean ),),
-                                   icon = resources.stitch,
+                                   icon = resources.black_nrfg,
                                    headline = lambda m: "Subgraphs fused" if m.nrfg.fusion_graph_unclean else "(None)",
                                    requires = self.SUBGRAPHS_11 )
         self.CLEANED_13 = LegoStage( "Cleaned",
                                      EWorkflow.CLEANED_13,
-                                     icon = resources.clean,
+                                     icon = resources.black_clean,
                                      status = lambda m: (bool( m.nrfg.fusion_graph_clean ),),
                                      headline = lambda m: "NRFG clean" if m.nrfg.fusion_graph_clean else "(None)",
                                      requires = self.FUSED_12 )
         self.CHECKED_14 = LegoStage( "Checked",
                                      EWorkflow.CHECKED_14,
-                                     icon = resources.check,
+                                     icon = resources.black_check,
                                      status = lambda m: (bool( m.nrfg.report ),),
                                      headline = lambda m: "NRFG checked" if m.nrfg.report else "(None)",
                                      requires = self.CLEANED_13 )
@@ -228,3 +236,6 @@ DIALOGUE_FILTER_NEWICK = "Newick tree (*.newick)"
 APP_NAME = "GROOT"
 MINIGRAPH_PREFIX = "m:"
 COMPONENT_PREFIX = "c:"
+EXT_GROOT = ".groot"
+EXT_FASTA = ".fasta"
+EXT_BLAST = ".blast"

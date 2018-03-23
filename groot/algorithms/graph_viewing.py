@@ -7,7 +7,7 @@ from mhelper import SwitchError, ansi
 
 from groot.constants import EFormat
 from groot.data import global_view
-from groot.data.lego_model import ILeaf, LegoComponent, LegoModel, LegoSequence, FusionPoint
+from groot.data.lego_model import ILegoNode, LegoComponent, LegoModel, LegoSequence, LegoPoint
 from groot.frontends import ete_providers
 from groot.frontends.cli import cli_view_utils
 
@@ -50,7 +50,7 @@ class __Formatter:
         """
         if isinstance( node.data, LegoSequence ):
             return "seq:{}".format( node.data.accession )
-        elif isinstance( node.data, FusionPoint ):
+        elif isinstance( node.data, LegoPoint ):
             return "fus:{}:{}".format( node.data.opposite_component, node.data.count )
         else:
             return "cla:{}".format( node.uid )
@@ -70,7 +70,7 @@ class __Formatter:
         """
         if isinstance( node.data, LegoSequence ):
             return "⊕ {}".format( node.data.accession )
-        elif isinstance( node.data, FusionPoint ):
+        elif isinstance( node.data, LegoPoint ):
             return "⊛ {}".format( str( node.data ) )
         else:
             return "⊙"
@@ -84,7 +84,7 @@ class __Formatter:
         
         if isinstance( d, LegoSequence ):
             return "⊕ " + ansi.FORE_BLACK + cli_view_utils.component_to_ansi_back( d.model.components.find_component_for_major_sequence( d ) ) + str( d ) + ansi.FORE_RESET + ansi.BACK_RESET
-        elif isinstance( d, FusionPoint ):
+        elif isinstance( d, LegoPoint ):
             return "⊛ " + ansi.BOLD + ansi.BACK_BRIGHT_WHITE + ansi.FORE_BLACK + str( d ) + ansi.RESET
         else:
             return "⊙ " + ansi.ITALIC + ansi.FORE_YELLOW + str( node ) + ansi.RESET
@@ -94,7 +94,7 @@ class __Formatter:
         """
         Name of the fusion, or empty if not a fusion.
         """
-        if isinstance( node.data, FusionPoint ):
+        if isinstance( node.data, LegoPoint ):
             return Theme.BOLD + str( node.data ) + Theme.RESET
     
     
@@ -148,6 +148,10 @@ class __Formatter:
         """
         if isinstance( node.data, LegoSequence ):
             return node.data.legacy_accession
+        elif isinstance( node.data, LegoPoint ):
+            return node.data.legacy_accession
+        else:
+            raise ValueError( "Attempt to get a legacy accession for a non-leaf node «{}».".format( node ) )
     
     
     def is_sequence( self, node: MNode ) -> bool:
@@ -168,28 +172,28 @@ class __Formatter:
         """
         Skips the text until the next `|` if this node is a fusion.
         """
-        return isinstance( node.data, FusionPoint )
+        return isinstance( node.data, LegoPoint )
     
     
     def is_not_fusion( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is not a fusion.
         """
-        return not isinstance( node.data, FusionPoint )
+        return not isinstance( node.data, LegoPoint )
     
     
     def is_clade( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is a clade.
         """
-        return not isinstance( node.data, ILeaf )
+        return not isinstance( node.data, ILegoNode )
     
     
     def is_not_clade( self, node: MNode ) -> bool:
         """
         Skips the text until the next `|` if this node is not a clade.
         """
-        return isinstance( node.data, ILeaf )
+        return isinstance( node.data, ILegoNode )
 
 
 FORMATTER = __Formatter()
@@ -347,5 +351,3 @@ def print_header( x ):
         x = "COMPONENT {}".format( x )
     
     return "\n" + Theme.TITLE + "---------- {} ----------".format( x ) + Theme.RESET
-
-

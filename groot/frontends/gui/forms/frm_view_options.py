@@ -5,8 +5,8 @@ from groot.data import global_view
 from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions
 from groot.frontends.gui.forms.frm_base import FrmBase
 from intermake import MENV, common_commands
-from intermake.hosts.frontends.gui_qt.frm_arguments import FrmArguments
-from intermake.hosts.gui import GuiHost
+from intermake_qt.forms.frm_arguments import FrmArguments
+from intermake_qt.host.gui import GuiHost
 from mhelper_qt import exqtSlot, qt_gui_helper
 
 

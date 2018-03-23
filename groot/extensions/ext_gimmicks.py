@@ -1,18 +1,16 @@
-from typing import Optional, List
-
 from os import path
+from typing import List, Optional
 
-from groot.constants import EFormat
+from groot.algorithms import alignment as alignment_, graph_viewing, tree as tree_
+from groot.algorithms.walkthrough import Walkthrough
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
+from groot.extensions import ext_files
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD, command, visibilities, common_commands
-from mgraph import MGraph, importing
+from intermake import MCMD, command, common_commands, visibilities
+from mgraph import importing
 from mhelper import EFileMode, Filename, file_helper, io_helper
-from groot.extensions import ext_files
-from groot.algorithms import alignment as alignment_, tree as tree_, graph_viewing
-from groot.algorithms.walkthrough import Walkthrough
 
 
 __mcmd_folder_name__ = "Gimmicks"
@@ -111,6 +109,7 @@ def continue_wizard() -> EChanges:
     
     return Walkthrough.get_active().step()
 
+
 @command( names = ["stop"] )
 def stop_wizard() -> EChanges:
     """
@@ -127,16 +126,23 @@ def wizard( new: Optional[bool] = None,
             name: Optional[str] = None,
             imports: Optional[List[str]] = None,
             outgroups: Optional[List[str]] = None,
+            tolerance: Optional[int] = None,
+            alignment: Optional[str] = None,
+            tree: Optional[str] = None,
+            view: Optional[bool] = None,
+            save: Optional[bool] = None,
             pause_import: Optional[bool] = None,
             pause_components: Optional[bool] = None,
             pause_align: Optional[bool] = None,
             pause_tree: Optional[bool] = None,
             pause_fusion: Optional[bool] = None,
-            pause_nrfg: Optional[bool] = None,
-            tolerance: Optional[int] = None,
-            alignment: Optional[str] = None,
-            tree: Optional[str] = None,
-            view: Optional[bool] = None ) -> None:
+            pause_splits: Optional[bool] = None,
+            pause_consensus: Optional[bool] = None,
+            pause_subset: Optional[bool] = None,
+            pause_minigraph: Optional[bool] = None,
+            pause_sew: Optional[bool] = None,
+            pause_clean: Optional[bool] = None,
+            pause_check: Optional[bool] = None ) -> None:
     """
     Sets up a workflow that you can activate in one go.
     
@@ -150,32 +156,39 @@ def wizard( new: Optional[bool] = None,
     :param name:                Name the model?
     :param outgroups:           Outgroup accessions?
     :param imports:             Import files into the model? 
-    :param pause_components:    Pause after component generation? 
-    :param pause_import:        Pause after data import? 
-    :param pause_align:         Pause after sequence alignment? 
-    :param pause_tree:          Pause after tree generation? 
-    :param pause_fusion:        Pause after fusion finding? 
-    :param pause_nrfg:          Pause after NRFG generation? 
     :param tolerance:           Component identification tolerance? 
     :param alignment:           Alignment method? 
     :param tree:                Tree generation method?
     :param view:                View the final NRFG in Vis.js?
+    :param save:                Save file to disk? (requires `name`)
+    :param pause_components:    Pause after stage. 
+    :param pause_import:        Pause after stage. 
+    :param pause_align:         Pause after stage. 
+    :param pause_tree:          Pause after stage. 
+    :param pause_fusion:        Pause after stage. 
+    :param pause_splits:        Pause after stage.
+    :param pause_consensus:     Pause after stage.
+    :param pause_subset:        Pause after stage.
+    :param pause_minigraph:     Pause after stage.
+    :param pause_sew:           Pause after stage.
+    :param pause_clean:         Pause after stage.
+    :param pause_check:         Pause after stage.
     """
     if new is None:
         new = (MCMD.question( "1/14. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")
     
     if name is None:
-        name = MCMD.question( "2/14. Name your model.\nYou can specify a complete path or just a name.\nIf you don't enter a name, your file won't be saved.", ["*"] )
+        name = MCMD.question( "Name your model.\nYou can specify a complete path or just a name.\nIf you don't enter a name, your won't have the option to save your file using the wizard, though you can still do so manually.", ["*"] )
         
         if not name:
-            MCMD.warning( "Your file will not be saved." )
+            MCMD.warning( "Your file will not be saved by the wizard." )
     
     if imports is None:
         imports = []
         
         while True:
             ex = "\nEnter a blank line when you don't want to add any more files." if imports else ""
-            file_name = MCMD.question( "3/14. Enter file paths to import BLAST or FASTA files, one per line." + ex, ["*"] )
+            file_name = MCMD.question( "Enter file paths to import BLAST or FASTA files, one per line." + ex, ["*"] )
             
             if file_name:
                 imports.append( file_name )
@@ -187,7 +200,7 @@ def wizard( new: Optional[bool] = None,
         
         while True:
             ex = "\nEnter a blank line when you don't want to add any more outgroups."
-            outgroup = MCMD.question( "4/14. Enter outgroup accessions, one per line." + ex, ["*"] )
+            outgroup = MCMD.question( "Enter outgroup accessions, one per line." + ex, ["*"] )
             
             if outgroup:
                 outgroups.append( outgroup )
@@ -198,7 +211,7 @@ def wizard( new: Optional[bool] = None,
         success = False
         
         while not success:
-            tolerance_str = MCMD.question( "5/14. What tolerance do you want to use for the component identification?", ["*"] )
+            tolerance_str = MCMD.question( "What tolerance do you want to use for the component identification?", ["*"] )
             
             try:
                 tolerance = int( tolerance_str )
@@ -208,45 +221,80 @@ def wizard( new: Optional[bool] = None,
                 success = False
     
     if alignment is None:
-        alignment = MCMD.question( "6/14. Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( alignment_.algorithms ) + [""] )
+        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( alignment_.algorithms ) + [""] )
     
     if tree is None:
-        tree = MCMD.question( "7/14. Which function do you want to use for the tree generation? Enter a blank line for the default.", list( tree_.algorithms ) + [""] )
+        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( tree_.algorithms ) + [""] )
     
     if pause_import is None:
-        pause_import = MCMD.question( "8/14. Do you wish the wizard to pause for you to review the imported data?" )
+        pause_import = question( "Do you wish the wizard to pause for you to review the imported data?" )
     
     if pause_components is None:
-        pause_components = MCMD.question( "9/14. Do you wish the wizard to pause for you to review the components?" )
+        pause_components = question( "Do you wish the wizard to pause for you to review the components?" )
     
     if pause_align is None:
-        pause_align = MCMD.question( "10/14. Do you wish the wizard to pause for you to review the alignments?" )
+        pause_align = question( "Do you wish the wizard to pause for you to review the alignments?" )
     
     if pause_tree is None:
-        pause_tree = MCMD.question( "11/14. Do you wish the wizard to pause for you to review the trees?" )
+        pause_tree = question( "Do you wish the wizard to pause for you to review the trees?" )
     
     if pause_fusion is None:
-        pause_fusion = MCMD.question( "12/14. Do you wish the wizard to pause for you to review the fusion?" )
+        pause_fusion = question( "Do you wish the wizard to pause for you to review the fusions?" )
     
-    if pause_nrfg is None:
-        pause_nrfg = MCMD.question( "13/14. Do you wish the wizard to pause for you to review the NRFG?" )
+    if pause_splits is None:
+        pause_splits = question( "Do you wish the wizard to pause for you to review the candidate splits?" )
+    
+    if pause_consensus is None:
+        pause_consensus = question( "Do you wish the wizard to pause for you to review the consensus splits?" )
+    
+    if pause_subset is None:
+        pause_subset = question( "Do you wish the wizard to pause for you to review the subsets?" )
+    
+    if pause_minigraph is None:
+        pause_minigraph = question( "Do you wish the wizard to pause for you to review the subgraphs?" )
+    
+    if pause_sew is None:
+        pause_sew = question( "Do you wish the wizard to pause for you to review the uncleaned NRFG?" )
+    
+    if pause_clean is None:
+        pause_clean = question( "Do you wish the wizard to pause for you to review the cleaned NRFG?" )
+    
+    if pause_check is None:
+        pause_check = question( "Do you wish the wizard to pause for you to review the checks?" )
     
     if view is None:
-        view = MCMD.question( "14/14. Do you wish the wizard to show you the final NRFG in Vis.js?" )
+        view = question( "Do you wish the wizard to show you the final NRFG in Vis.js?" )
     
-    walkthrough = Walkthrough( new,
-                               name,
-                               imports,
-                               pause_import,
-                               pause_components,
-                               pause_align,
-                               pause_tree,
-                               pause_fusion,
-                               pause_nrfg,
-                               tolerance,
-                               alignment,
-                               tree,
-                               view,
-                               outgroups )
+    if save is None:
+        if not name:
+            save = False
+        else:
+            save = question( "Save your model after each stage completes?" )
+    
+    walkthrough = Walkthrough( new = new,
+                               name = name,
+                               imports = imports,
+                               pause_import = pause_import,
+                               pause_components = pause_components,
+                               pause_align = pause_align,
+                               pause_tree = pause_tree,
+                               pause_fusion = pause_fusion,
+                               pause_splits = pause_splits,
+                               pause_consensus = pause_consensus,
+                               pause_subset = pause_subset,
+                               pause_minigraph = pause_minigraph,
+                               pause_sew = pause_sew,
+                               pause_clean = pause_clean,
+                               pause_check = pause_check,
+                               tolerance = tolerance,
+                               alignment = alignment,
+                               tree = tree,
+                               view = view,
+                               save = save,
+                               outgroups = outgroups )
     
     walkthrough.make_active()
+
+
+def question( *args ):
+    return MCMD.question( *args )

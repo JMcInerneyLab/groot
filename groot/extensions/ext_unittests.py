@@ -8,13 +8,12 @@ from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.lego_model import LegoModel, LegoSequence
 from groot.extensions import ext_files, ext_viewing, ext_gimmicks
-from intermake import command
-from intermake.engine.environment import MENV, MCMD
+from intermake import command, visibilities, MENV, MCMD
 from mgraph import MGraph, MNode, exporting, Split, importing, analysing
 from mhelper import LogicError, ansi, array_helper, file_helper, io_helper
 
 
-@command
+@command( visibility = visibilities.TEST )
 def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bool = True ):
     """
     Runs a test case and saves the results to the global results folder. 
@@ -122,12 +121,19 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
                                    pause_align = False,
                                    pause_tree = False,
                                    pause_fusion = False,
-                                   pause_nrfg = False,
+                                   pause_splits = False,
+                                   pause_consensus = False,
+                                   pause_subset = False,
+                                   pause_minigraph = False,
+                                   pause_sew = False,
+                                   pause_clean = False,
+                                   pause_check = False,
                                    tolerance = wiz_tol,
                                    outgroups = wiz_og,
                                    alignment = "",
                                    tree = "neighbor_joining",
-                                   view = not interpret )
+                                   view = not interpret,
+                                   save = False)
         
         # Execute
         walkthrough.make_active()
@@ -142,14 +148,14 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
     # Write the results
     model = global_view.current_model()
     file_helper.write_all_text( results_nrfg_file,
-                                exporting.export_edgelist( model.nrfg.fusion_graph.graph,
+                                exporting.export_edgelist( model.nrfg.fusion_graph_clean.graph,
                                                            fnode = lambda x: x.data.accession if isinstance( x.data, LegoSequence ) else "CL{}".format( x.get_session_id() ),
                                                            delimiter = "\t" ) )
     
     if view:
         ext_gimmicks.view_graph( text = test_tree_file, title = "ORIGINAL GRAPH. GUID = {}.".format( guid ) )
         # ext_gimmicks.view_graph( text = results_nrfg_file, title = "RECALCULATED GRAPH. GUID = {}.".format( guid ) )
-        ext_viewing.print_trees( model.nrfg.fusion_graph.graph, format = EFormat.VISJS, file = "open" )
+        ext_viewing.print_trees( model.nrfg.fusion_graph_clean.graph, format = EFormat.VISJS, file = "open" )
         
         if interpret:
             MCMD.autoquestion( "Continue to interpretation stage?" )
@@ -167,7 +173,7 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
         differences.append( "test_case_folder={}".format( test_case_folder ) )
         differences.append( "original_graph={}".format( test_tree_file ) )
         original_graph = importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" )
-        differences.append( compare_graphs( model.nrfg.fusion_graph.graph, original_graph ) )
+        differences.append( compare_graphs( model.nrfg.fusion_graph_clean.graph, original_graph ) )
         
         # Write results
         file_helper.write_all_text( results_newick_file, new_newicks, newline = True )
@@ -191,8 +197,8 @@ def compare_graphs( calc_graph: MGraph, orig_graph: MGraph ):
     
     res = []
     
-    calc_splits = exporting.export_splits( calc_graph, 
-                                           filter = lambda λnode: isinstance( λnode.data, LegoSequence ), 
+    calc_splits = exporting.export_splits( calc_graph,
+                                           filter = lambda λnode: isinstance( λnode.data, LegoSequence ),
                                            gdata = lambda λnode: λnode.data.accession )
     orig_splits = exporting.export_splits( orig_graph )
     
@@ -265,8 +271,8 @@ def compare_graphs( calc_graph: MGraph, orig_graph: MGraph ):
         
         orig_alpha = orig_graph.nodes.by_data( calc_alpha.data.accession )
         orig_beta = orig_graph.nodes.by_data( calc_beta.data.accession )
-        calc_path = analysing.find_shortest_path(calc_graph, calc_alpha, calc_beta )
-        orig_path = analysing.find_shortest_path(orig_graph, orig_alpha, orig_beta )
+        calc_path = analysing.find_shortest_path( calc_graph, calc_alpha, calc_beta )
+        orig_path = analysing.find_shortest_path( orig_graph, orig_alpha, orig_beta )
         
         calc_pathlen = len( calc_path )
         orig_pathlen = len( orig_path )
