@@ -8,6 +8,12 @@ T = TypeVar( "T" )
 
 
 class AlgorithmCollection( Generic[T] ):
+    """
+    Holds a collection of algorithms.
+    
+    :generic T: Type of argument (delegate)
+    :data ALL:  All algorithm collections
+    """
     ALL = []
     
     
@@ -18,26 +24,36 @@ class AlgorithmCollection( Generic[T] ):
         self.ALL.append( self )
     
     
-    def register( self, name: str = "" ):
+    def register( self, name: str = "", default: bool = False ):
         """
         Used to register an algorithm
         
+        :param default: Sets the function as the default. An algorithm will also be the default if there is no alternative. 
         :param name:    Name. If missing the function's `__name__` is used. 
         :return:        A decorator that registers the algorithm with the specified name. 
         """
-        assert isinstance(name, str)
+        assert isinstance( name, str )
+        
+        name = name.lower().replace( " ", "_" ).replace( ".", "_" )
+        
         
         def decorator( fn: T ) -> T:
             fn_name: str = name or fn.__name__
             
-            if self.default is None:
+            if default or self.default is None:
                 self.default = fn_name
             
             self.algorithms[fn_name] = fn
             
             return fn
         
+        
         return decorator
+    
+    
+    @property
+    def keys( self ):
+        return self.algorithms.keys()
     
     
     def __getitem__( self, item ):

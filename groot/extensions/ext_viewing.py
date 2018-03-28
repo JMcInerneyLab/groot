@@ -2,15 +2,14 @@ import re
 from typing import List, Optional, TypeVar
 
 import groot.extensions.ext_importation
-from groot import constants
-from groot.algorithms import components, graph_viewing, userdomains
+from groot import constants, algorithms
+from groot.utilities import graph_viewing
 from groot.constants import EFormat, LegoStage
 from groot.data import global_view
 from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import IHasFasta, ILegoVisualisable, LegoComponent
+from groot.data.lego_model import IHasFasta, ILegoVisualisable, LegoComponent, LegoSubset
 from groot.extensions import ext_files, ext_generating
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MENV, Table, Theme, cli_helper, help_command, visibilities
 from intermake.engine.environment import MCMD
@@ -260,7 +259,7 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     else:
         message.add_title( "all components" )
     
-    average_lengths = components.get_average_component_lengths( model )
+    average_lengths = algorithms.s3_components.get_average_component_lengths( model )
     
     message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
     message.add_hline()
@@ -319,12 +318,12 @@ def print_edges() -> EChanges:
 
 
 @command( names = ["print_genes", "genes"] )
-def print_genes( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter: int = 0 ) -> EChanges:
+def print_genes( domain: str = "", parameter: int = 0 ) -> EChanges:
     """
     Prints the genes (highlighting components).
     Note: Use :func:`print_fasta` or :func:`print_alignments` to show the actual sites.
     
-    :param domain:      How to break up the sequences.
+    :param domain:      How to break up the sequences. See `algorithm_help`.
     :param parameter:   Parameter on `domain`. 
     """
     
@@ -349,7 +348,7 @@ def print_genes( domain: EDomainFunction = EDomainFunction.COMPONENT, parameter:
             else:
                 r.append( "Ø " )
             
-            subsequences = userdomains.sequence_by_enum( sequence, domain, parameter )
+            subsequences = algorithms.s4_userdomains.list_userdomains( sequence, domain, parameter )
             
             for subsequence in subsequences:
                 components = model.components.find_components_for_minor_subsequence( subsequence )
@@ -514,7 +513,8 @@ def print_subsets() -> EChanges:
     model = global_view.current_model()
     
     for x in model.nrfg.subsets:
-        MCMD.information( string_helper.format_array( x, sort = True, autorange = True ) )
+        assert isinstance(x, LegoSubset)
+        MCMD.information( string_helper.format_array( x.contents, sort = True, autorange = True ) )
     
     return EChanges.INFORMATION
 

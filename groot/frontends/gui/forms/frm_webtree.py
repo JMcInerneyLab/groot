@@ -8,7 +8,7 @@ from groot.frontends.gui.forms.designer import frm_webtree_designer
 
 import intermake
 from groot import constants
-from groot.algorithms import graph_viewing
+from groot.utilities import graph_viewing
 from groot.frontends.gui import gui_workflow
 from groot.data import global_view
 from groot.data.global_view import EBrowseMode

@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QLineEdit, QMenu, QToolButton, QWidget
 from groot.frontends.gui.forms.designer import frm_workflow_designer
 
 from groot import constants
-from groot.algorithms.walkthrough import Walkthrough
+from groot.algorithms.wizard import Wizard
 from groot.constants import LegoStage
 from groot.data import global_view
 from groot.frontends.gui.forms.frm_base import FrmBase
@@ -48,7 +48,7 @@ class FrmWorkflow( FrmBase ):
     
     
     def _refresh_labels( self ):
-        wt = Walkthrough.get_active()
+        wt = Wizard.get_active()
         
         if wt is not None and wt.is_paused:
             self.ui.FRA_PAUSED.setVisible( True )

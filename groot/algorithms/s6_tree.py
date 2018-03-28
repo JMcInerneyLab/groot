@@ -1,8 +1,8 @@
 from typing import Optional, Callable, List
 
-import groot.algorithms.external_runner
+import groot.utilities.external_runner
 from groot import constants
-from groot.algorithms import importation
+from groot import algorithms
 from groot.data.extendable_algorithm import AlgorithmCollection
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, EPosition, ESiteType
 from mgraph import MGraph
@@ -12,7 +12,19 @@ from mhelper import SwitchError
 DAlgorithm = Callable[[LegoModel, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
 
-algorithms = AlgorithmCollection[DAlgorithm]("Tree")
+tree_algorithms = AlgorithmCollection[DAlgorithm]( "Tree" )
+
+def drop_tree( component: LegoComponent ) -> bool:
+    if component.model.get_status( constants.STAGES.FUSIONS_7 ):
+        raise ValueError( "Refusing to drop the tree because fusions have already been recorded. Did you mean to drop the fusions first?" )
+    
+    if component.tree is not None:
+        component.tree = None
+        component.tree_unrooted = None
+        component.tree_newick = None
+        return True
+    
+    return False
 
 
 def create_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
@@ -32,8 +44,8 @@ def create_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
         raise SwitchError( "component.model.site_type", component.model.site_type )
     
     # Read the result
-    newick = groot.algorithms.external_runner.run_in_temporary( algorithms[algorithm], site_type, component.alignment )
-    component.tree_unrooted = importation.import_newick( newick, component.model )
+    newick = groot.utilities.external_runner.run_in_temporary( tree_algorithms[algorithm], site_type, component.alignment )
+    component.tree_unrooted = algorithms.s1_importation.import_newick( newick, component.model )
     component.tree = component.tree_unrooted.copy()
     component.tree_newick = newick
     reposition_tree( component.tree )
@@ -80,14 +92,3 @@ def reposition_tree( tree: MGraph ) -> bool:
     return False
 
 
-def drop_tree( component: LegoComponent ) -> bool:
-    if component.model.get_status( constants.STAGES.FUSIONS_7 ):
-        raise ValueError( "Refusing to drop the tree because fusions have already been recorded. Did you mean to drop the fusions first?" )
-    
-    if component.tree is not None:
-        component.tree = None
-        component.tree_unrooted = None
-        component.tree_newick = None
-        return True
-    
-    return False

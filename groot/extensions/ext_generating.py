@@ -1,10 +1,9 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, tree, nrfg, fuse, userdomains
+from groot import algorithms
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent
 from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_support import EDomainFunction
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
 from intermake.engine.environment import MCMD
@@ -15,18 +14,18 @@ __mcmd_folder_name__ = "Generating"
 
 
 @command()
-def create_domains( mode: EDomainFunction, param: int = 0 ) -> EChanges:
+def create_domains( algorithm: str, param: int = 0 ) -> EChanges:
     """
     Creates the domains.
     Existing domains are always replaced.
     Domains are only used for viewing and have no bearing on the actual calculations.
     
-    :param mode:        Mode of domain generation 
+    :param algorithm:   Mode of domain generation. See `algorithm_help`.
     :param param:       Parameter for mode. 
     """
     model = global_view.current_model()
     
-    userdomains.create_userdomains( model, mode, param )
+    algorithms.s4_userdomains.create_userdomains( model, algorithm, param )
     
     MCMD.progress( "Domains created, there are now {} domains.".format( len( model.user_domains ) ) )
     
@@ -53,7 +52,7 @@ def create_components( major_tol: int = 0, minor_tol: Optional[int] = None, debu
         raise ValueError( "Refusing to make components because there is no edge data. Did you mean to load the edge data (BLAST) first?" )
     
     with MCMD.action( "Component detection" ):
-        components.detect( model, major_tol, minor_tol, debug )
+        algorithms.s3_components.detect( model, major_tol, minor_tol, debug )
     
     for component in model.components:
         if len( component.major_sequences ) == 1:
@@ -84,7 +83,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     before = sum( x.alignment is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
-        alignment.align( algorithm, component_ )
+        algorithms.s5_alignment.create_alignments( algorithm, component_ )
     
     after = sum( x.alignment is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -111,7 +110,7 @@ def create_trees( algorithm: Optional[str] = None, component: Optional[List[Lego
     before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
-        tree.create_tree( algorithm, component_ )
+        algorithms.s6_tree.create_tree( algorithm, component_ )
     
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -132,7 +131,7 @@ def create_fusions() -> EChanges:
         if x.tree is None:
             raise ValueError( "Cannot find fusion events because there is no tree data for at least one component ({}). Did you mean to generate the trees first?".format( x ) )
     
-    fuse.find_all_fusion_points( model )
+    algorithms.s6_fusion_events.create_fusions( model )
     
     n = len( model.fusion_events )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
@@ -147,7 +146,7 @@ def create_splits() -> EChanges:
     
     Requisites: `create_fusions`
     """
-    nrfg.s1_create_splits( global_view.current_model() )
+    algorithms.s8_splits.create_splits( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -160,7 +159,7 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     
     :param cutoff:      Cutoff on consensus
     """
-    nrfg.s2_create_consensus( global_view.current_model(), cutoff )
+    algorithms.s9_consensus.create_consensus( global_view.current_model(), cutoff )
     return EChanges.MODEL_DATA
 
 
@@ -174,12 +173,12 @@ def create_subsets( super: bool = False ) -> EChanges:
     :param super:    Keep supersets in the trees. You don't want this.
                      Turn it on to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities!).
     """
-    nrfg.s3_create_subsets( global_view.current_model(), not super )
+    algorithms.s10_subsets.create_subsets( global_view.current_model(), not super )
     return EChanges.MODEL_DATA
 
 
 @command()
-def create_subgraphs(algorithm: str = "") -> EChanges:
+def create_subgraphs( algorithm: str = "" ) -> EChanges:
     """
     Creates the minigraphs.
     
@@ -187,7 +186,7 @@ def create_subgraphs(algorithm: str = "") -> EChanges:
     
     :param algorithm: Algorithm to use, see `algorithm_help`.
     """
-    nrfg.s4_create_subgraphs( algorithm, global_view.current_model() )
+    algorithms.s11_supertrees.create_supertrees( algorithm, global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -198,7 +197,7 @@ def create_fused() -> EChanges:
     
     Requisites: `create_subgraphs`
     """
-    nrfg.s5_create_sewed( global_view.current_model() )
+    algorithms.s12_unclean.create_fused( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -209,7 +208,7 @@ def create_cleaned() -> EChanges:
     
     Requisites: `create_fused`
     """
-    nrfg.s6_create_cleaned( global_view.current_model() )
+    algorithms.s13_clean.create_cleaned( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -220,5 +219,5 @@ def create_checked() -> EChanges:
     
     Requisites: `create_cleaned`
     """
-    nrfg.s7_create_checks( global_view.current_model() )
+    algorithms.s14_checked.create_checked( global_view.current_model() )
     return EChanges.MODEL_DATA

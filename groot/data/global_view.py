@@ -5,7 +5,6 @@ from typing import List
 
 from groot import constants
 from groot.data.lego_model import LegoModel
-from groot.frontends.gui.gui_view_utils import LegoSelection
 from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
 from intermake.visualisables.visualisable import VisualisablePath
@@ -98,6 +97,11 @@ class EStartupMode( MEnum ):
     WORKFLOW = 1
     SAMPLES = 2
     NOTHING = 3
+    
+class EWindowMode( MEnum ):
+    BASIC = 0
+    MDI = 1
+    TDI = 2
 
 
 class RecentFile:
@@ -117,6 +121,10 @@ class GlobalOptions:
         self.browse_mode = EBrowseMode.ASK
         self.startup_mode = EStartupMode.STARTUP
         self.visjs_component_view = False
+        self.window_mode = EWindowMode.BASIC
+        self.tool_file = True
+        self.tool_visualisers = True
+        self.tool_workflow = True
 
 
 __global_options = None

@@ -142,10 +142,6 @@ class Ui_Dialog(object):
         self.LST_MAIN.setObjectName("LST_MAIN")
         self.LST_MAIN.headerItem().setText(0, "1")
         self.verticalLayout_2.addWidget(self.LST_MAIN)
-        self.label = QtWidgets.QLabel(Dialog)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setObjectName("label")
-        self.verticalLayout_2.addWidget(self.label)
         self.LBL_SELECTION_INFO = QtWidgets.QLabel(Dialog)
         self.LBL_SELECTION_INFO.setFrameShape(QtWidgets.QFrame.Box)
         self.LBL_SELECTION_INFO.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -177,7 +173,7 @@ class Ui_Dialog(object):
         self.BTN_REFRESH.setText(_translate("Dialog", "Refresh"))
         self.LBL_TITLE.setText(_translate("Dialog", "Text goes here"))
         self.LBL_TITLE.setProperty("style", _translate("Dialog", "title"))
-        self.label.setText(_translate("Dialog", "Baum-Ragan representation"))
+        self.LBL_SELECTION_INFO.setToolTip(_translate("Dialog", "Baum-Ragan representation"))
         self.LBL_SELECTION_INFO.setText(_translate("Dialog", "Text goes here"))
 
 

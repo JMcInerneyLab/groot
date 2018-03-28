@@ -2,47 +2,21 @@
 Groot entry point.
 """
 
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ META DATA          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.40"
+__version__ = "0.0.0.41"
 
-
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ENVIRONMENT SETUP  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-def __setup():
-    from intermake import MENV
-    from groot import constants
-    from groot.frontends.gui import gui_host
-    
-    if MENV.configure( name = constants.APP_NAME,
-                       abv_name = "groot",
-                       version = __version__,
-                       host_provider = gui_host.setup() ):
-        from groot.extensions import string_coercion
-        string_coercion.setup()
-    
-    # Register extensions and model (_after_ setting up Intermake!)
-    from groot.data import global_view 
-    from groot.algorithms.extendable import align, tree, supertree
-
-
-__setup()
-
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ MAIN EXPORTS       ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-# ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+import groot.init
 from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator  # export; to register
-# noinspection PyUnresolvedReferences
-from groot import extensions  # export (has own __init__)
-# noinspection PyUnresolvedReferences
-from groot import algorithms  # export
+from groot import extensions
+from groot import algorithms
+from groot.algorithms.s5_alignment import alignment_algorithms
+from groot.algorithms.s11_supertrees import supertree_algorithms
+from groot.algorithms.s6_tree import tree_algorithms
+from groot.algorithms.s4_userdomains import domain_algorithms
+from groot.data.lego_model import LegoModel, LegoNrfg, LegoPoint, LegoSubset, LegoSequence, LegoStage, LegoSplit, LegoComponent, LegoSubsequence, LegoEdge, LegoUserDomain, LegoComponentCollection, LegoEdgeCollection, LegoFusion, LegoFusionEventCollection, LegoSequenceCollection, LegoUserDomainCollection, LegoViewOptions, ILegoNode, ILegoVisualisable, ILegoSelectable
 
 from intermake import run_jupyter
-
-
 run_jupyter = run_jupyter
+
+import groot_ex

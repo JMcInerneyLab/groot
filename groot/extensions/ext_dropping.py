@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from groot.algorithms import alignment, components, tree, fuse, editor, nrfg
+from groot import algorithms
 from groot.data import global_view
 from groot.data.lego_model import LegoComponent, LegoSequence
 from groot.frontends.cli import cli_view_utils
@@ -22,7 +22,7 @@ def drop_sequences( sequences: List[LegoSequence] ):
     
     :param sequences:    One or more sequences to drop.
     """
-    editor.remove_sequences( sequences, False )
+    algorithms.s0_editor.remove_sequences( sequences, False )
 
 
 @command()
@@ -31,7 +31,7 @@ def drop_components() -> EChanges:
     Removes all the components from the model.
     """
     model = global_view.current_model()
-    count = components.drop( model )
+    count = algorithms.s3_components.drop( model )
     
     MCMD.progress( "Dropped all {} components from the model.".format( count ) )
     
@@ -48,7 +48,7 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
     count = 0
     
     for component_ in to_do:
-        if alignment.drop( component_ ):
+        if algorithms.s5_alignment.drop_alignments( component_ ):
             count += 1
     
     MCMD.progress( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
@@ -67,7 +67,7 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     count = 0
     
     for component_ in to_do:
-        if tree.drop_tree( component_ ):
+        if algorithms.s6_tree.drop_tree( component_ ):
             count += 1
     
     MCMD.progress( "{} trees removed across {} components.".format( count, len( to_do ) ) )
@@ -82,7 +82,7 @@ def drop_fusions() -> EChanges:
     """
     model = global_view.current_model()
     previous = len( model.fusion_events )
-    removed = fuse.remove_fusions( model )
+    removed = algorithms.s6_fusion_events.drop_fusions( model )
     
     MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
@@ -94,7 +94,7 @@ def drop_candidates() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s1_drop_candidates( global_view.current_model() )
+    algorithms.s8_splits.drop_splits( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -103,7 +103,7 @@ def drop_viable() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s2_drop_viable( global_view.current_model() )
+    algorithms.s9_consensus.drop_consensus( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -112,7 +112,7 @@ def drop_subsets() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s3_drop_subsets( global_view.current_model() )
+    algorithms.s10_subsets.drop_subsets( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -121,7 +121,7 @@ def drop_subgraphs() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s4_drop_minigraphs( global_view.current_model() )
+    algorithms.s11_supertrees.drop_supertrees( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -130,7 +130,7 @@ def drop_fused() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s5_drop_sewed( global_view.current_model() )
+    algorithms.s12_unclean.drop_fused( global_view.current_model() )
     return EChanges.COMP_DATA
 
 @command()
@@ -138,7 +138,7 @@ def drop_cleaned() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s6_drop_cleaned( global_view.current_model() )
+    algorithms.s13_clean.drop_cleaned( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -147,7 +147,7 @@ def drop_checked() -> EChanges:
     """
     Removes data from the model.
     """
-    nrfg.s7_drop_checked( global_view.current_model() )
+    algorithms.s14_checked.drop_checked( global_view.current_model() )
     return EChanges.COMP_DATA
 
 

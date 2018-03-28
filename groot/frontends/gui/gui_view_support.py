@@ -3,7 +3,7 @@ from enum import Enum
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor, QPen
 
-from mhelper import array_helper, MEnum
+from mhelper import array_helper
 from mhelper_qt import Colours, Pens, qt_colour_helper
 
 
@@ -94,7 +94,7 @@ class DRAWING:
                          QColor( 128, 0, 255 )]  # Mb
     
     # Sizes
-    SIZE_MULTIPLIER = 2
+    SIZE_MULTIPLIER = 1
     PROTEIN_SIZE = SIZE_MULTIPLIER * 1
     NUCLEOTIDE_SIZE = SIZE_MULTIPLIER * 1
     TEXT_MARGIN = SIZE_MULTIPLIER * 4
@@ -143,15 +143,3 @@ class DRAWING:
     Z_FOCUS = 3
 
 
-class EDomainFunction( MEnum ):
-    """
-    Domain generator function.
-    
-    :data COMPONENT: Components (parameter is unused)
-    :data FIXED_WIDTH: Fixed-width (parameter defines width)
-    :data FIXED_COUNT: Fixed-count (parameter defines width)
-    """
-    NONE = 0
-    COMPONENT = 1
-    FIXED_WIDTH = 2
-    FIXED_COUNT = 3

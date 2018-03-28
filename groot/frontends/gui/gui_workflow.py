@@ -48,18 +48,15 @@ class LegoVisualiserCollection:
         from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
         from groot.frontends.gui.forms.frm_fusions import FrmFusions
         from groot.frontends.gui.forms.frm_view_splits import FrmViewSplits
-        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateTrees
         from groot.frontends.gui.forms.frm_samples import FrmLoadFile
         from groot.frontends.gui.forms.frm_samples import FrmSaveFile
-        from groot.frontends.gui.forms.frm_domain import FrmDomain
         from groot.frontends.gui.forms.frm_startup import FrmStartup
         from groot.frontends.gui.forms.frm_debug import FrmDebug
         from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
         from groot.frontends.gui.forms.frm_workflow import FrmWorkflow
         from groot.frontends.gui.forms.frm_wizard import FrmWizard
         from groot.frontends.gui.gui_actions import GuiActions
-        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateSubgraphs
-        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateAlignment
+        from groot.frontends.gui.forms.frm_run_algorithm import FrmCreateSubgraphs, FrmCreateAlignment, FrmCreateDomains, FrmCreateTrees
         from groot.extensions import ext_dropping, ext_generating, ext_files
         from groot.frontends.gui.forms.frm_about import FrmAbout
         
@@ -105,11 +102,11 @@ class LegoVisualiserCollection:
         self.VIEW_OPEN_FILE = LegoVisualiser( "Open", FrmLoadFile, icon = resources.open, key = "view_open_file" )
         self.VIEW_SAVE_FILE = LegoVisualiser( "Save", FrmSaveFile, icon = resources.save )
         self.VIEW_DEBUG = LegoVisualiser( "Debug", FrmDebug )
-        self.VIEW_DOMAINS = LegoVisualiser( "Domains", FrmDomain, view = STAGES.DOMAINS_4, create = STAGES.DOMAINS_4, drop = STAGES.DOMAINS_4, icon = resources.domain, key = "view_domains" )
         
         # Creating
-        self.CREATE_BLAST_FASTA = LegoVisualiser( "Import file", GuiActions.import_file, create = (STAGES.BLAST_1, STAGES.FASTA_2), icon = resources.create )
+        self.CREATE_BLAST_FASTA = LegoVisualiser( "Import file", GuiActions.import_file, create = (STAGES.BLAST_1, STAGES.FASTA_2), icon = resources.create, key = "import_file" )
         self.CREATE_COMPONENTS = LegoVisualiser( "Create components", ext_generating.create_components, create = STAGES.COMPONENTS_3, icon = resources.create, key = "create_components" )
+        self.CREATE_DOMAINS = LegoVisualiser( "Create domains", FrmCreateDomains, view = STAGES.DOMAINS_4, create = STAGES.DOMAINS_4, drop = STAGES.DOMAINS_4, icon = resources.create, key = "view_domains" )
         self.CREATE_ALIGNMENTS = LegoVisualiser( "Create alignments", FrmCreateAlignment, create = STAGES.ALIGNMENTS_5, icon = resources.create, key = "create_alignments" )
         self.CREATE_TREES = LegoVisualiser( "Create trees", FrmCreateTrees, create = STAGES.TREES_6, icon = resources.create, key = "create_trees" )
         self.CREATE_FUSIONS = LegoVisualiser( "Create fusions", ext_generating.create_fusions, create = STAGES.FUSIONS_7, icon = resources.create, key = "create_fusions" )

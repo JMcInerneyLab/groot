@@ -3,7 +3,7 @@ from groot.data.extendable_algorithm import AlgorithmCollection
 from groot.frontends.gui.forms.designer import frm_run_algorithm_designer
 from typing import Tuple
 
-from groot.algorithms import tree, alignment, supertree
+from groot import algorithms
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot import ext_generating, constants
 from intermake.engine.plugin import Plugin
@@ -136,7 +136,7 @@ class FrmCreateTrees( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Trees",
-                          tree.algorithms,
+                          algorithms.s6_tree.tree_algorithms,
                           ext_generating.create_trees )
 
 
@@ -160,7 +160,7 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Alignments",
-                          alignment.algorithms,
+                          algorithms.s5_alignment.alignment_algorithms,
                           ext_generating.create_alignments )
 
 class FrmCreateSubgraphs( FrmRunAlgorithm ):
@@ -183,5 +183,26 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Subgraphs",
-                          supertree.algorithms,
+                          algorithms.s11_supertrees.supertree_algorithms,
                           ext_generating.create_subgraphs )
+
+class FrmCreateDomains( FrmRunAlgorithm ):
+    def query_ready( self ):
+        model = self.get_model()
+        
+        if model.get_status( constants.STAGES.BLAST_1 ).is_not_complete:
+            return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
+        
+        
+        return True, ""
+    
+    
+    @exceptToGui()
+    def __init__( self, parent ):
+        """
+        CONSTRUCTOR
+        """
+        super().__init__( parent,
+                          "Domains",
+                          algorithms.s4_userdomains.domain_algorithms,
+                          ext_generating.create_domains )

@@ -89,7 +89,7 @@ class GuiMenu:
         self.add_action( ["Windows", "Visualisers", "Splits..."], visualiser = gui_workflow.VISUALISERS.VIEW_SPLITS, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Editors", "Trees..."], visualiser = gui_workflow.VISUALISERS.CREATE_TREES )
         self.add_action( ["Windows", "Editors", "Alignment..."], visualiser = gui_workflow.VISUALISERS.CREATE_ALIGNMENTS )
-        self.add_action( ["Windows", "Editors", "Domains..."], visualiser = gui_workflow.VISUALISERS.VIEW_DOMAINS )
+        self.add_action( ["Windows", "Editors", "Domains..."], visualiser = gui_workflow.VISUALISERS.CREATE_DOMAINS )
         self.add_action( ["Windows", "Others", "File open..."], visualiser = gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
         self.add_action( ["Windows", "Others", "File save..."], visualiser = gui_workflow.VISUALISERS.VIEW_SAVE_FILE )
         self.add_action( ["Windows", "Others", "Startup..."], visualiser = gui_workflow.VISUALISERS.VIEW_STARTUP )

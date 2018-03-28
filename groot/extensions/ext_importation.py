@@ -1,7 +1,7 @@
 from typing import Optional
 
-from groot.algorithms import importation
-from groot.algorithms.importation import EImportFilter
+from groot import algorithms
+from groot.algorithms.s1_importation import EImportFilter
 from groot.data import global_view
 from groot.constants import EXT_FASTA, EXT_BLAST
 from groot.frontends.gui.gui_view_utils import EChanges
@@ -23,7 +23,7 @@ def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Option
     :return: 
     """
     with MCMD.action( "Importing BLAST" ):
-        importation.import_blast( global_view.current_model(), file_name, evalue, length )
+        algorithms.s1_importation.import_blast( global_view.current_model(), file_name, evalue, length )
     
     return EChanges.MODEL_ENTITIES
 
@@ -36,7 +36,7 @@ def import_composites( file_name: Filename[EFileMode.READ] ) -> EChanges:
     :return: 
     """
     with MCMD.action( "Importing composites" ):
-        importation.import_composites( global_view.current_model(), file_name )
+        algorithms.s1_importation.import_composites( global_view.current_model(), file_name )
     
     return EChanges.MODEL_ENTITIES
 
@@ -49,7 +49,7 @@ def import_fasta( file_name: Filename[EFileMode.READ, EXT_FASTA] ) -> EChanges:
     :return: 
     """
     with MCMD.action( "Importing FASTA" ):
-        importation.import_fasta( global_view.current_model(), file_name )
+        algorithms.s1_importation.import_fasta( global_view.current_model(), file_name )
     
     return EChanges.MODEL_ENTITIES
 
@@ -68,7 +68,7 @@ def import_file( file_name: Filename[EFileMode.READ] ) -> EChanges:
     :param file_name:   File to import.
     """
     with MCMD.action( "Importing file" ):
-        importation.import_file( global_view.current_model(), file_name, skip_bad_extensions = False, filter = EImportFilter.ALL, query = False )
+        algorithms.s1_importation.import_file( global_view.current_model(), file_name, skip_bad_extensions = False, filter = EImportFilter.ALL, query = False )
     
     return EChanges.MODEL_ENTITIES
 
@@ -94,7 +94,7 @@ def import_directory( directory: str,
         else:
             MCMD.print( "Importing will start a new model." )
     
-    importation.import_directory( global_view.current_model(), directory, query, filter )
+    algorithms.s1_importation.import_directory( global_view.current_model(), directory, query, filter )
     
     if query:
         return EChanges.NONE

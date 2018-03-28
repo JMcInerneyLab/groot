@@ -1,7 +1,7 @@
 from typing import List, cast
 
 import groot.extensions.ext_importation
-from groot.constants import EFormat
+from groot.constants import EFormat, STAGES, LegoStage
 from groot.data import global_view
 from groot.extensions import ext_files, ext_generating, ext_gimmicks, ext_viewing, ext_modifications
 from groot.frontends.gui.gui_view_utils import EChanges
@@ -12,13 +12,13 @@ from intermake.engine.theme import Theme
 from mhelper import string_helper
 
 
-class Walkthrough:
+class Wizard:
     """
     SERIALISABLE
     
     Manages the guided wizard.
     """
-    __active_walkthrough: "Walkthrough" = None
+    __active_walkthrough: "Wizard" = None
     
     
     def __init__( self,
@@ -42,7 +42,8 @@ class Walkthrough:
                   tree: str,
                   view: bool,
                   save: bool,
-                  outgroups: List[str] ):
+                  outgroups: List[str],
+                  supertree: str ):
         """
         CONSTRUCTOR.
         
@@ -68,6 +69,7 @@ class Walkthrough:
         self.tree = tree
         self.view = view
         self.save = save
+        self.supertree = supertree
         self.__stage = 0
         self.is_paused = True
         self.is_completed = False
@@ -107,11 +109,12 @@ class Walkthrough:
         r.append( "pause_reason      = {}".format( self.pause_reason ) )
         r.append( "outgroups         = {}".format( self.outgroups ) )
         r.append( "save              = {}".format( self.save ) )
+        r.append( "supertree         = {}".format( self.supertree ) )
         
         return "\n".join( r )
     
     
-    def __pause( self, title: str, commands: tuple ) -> None:
+    def __pause( self, title: LegoStage, commands: tuple ) -> None:
         self.pause_reason = title
         MCMD.progress( "Walkthrough has paused after {}{}{} due to user request.".format( Theme.BOLD, title, Theme.RESET ) )
         MCMD.progress( "Use the following commands to review:" )
@@ -125,8 +128,8 @@ class Walkthrough:
         self.is_paused = True
     
     
-    def __line( self, title ):
-        title = "WIZARD: " + title
+    def __line( self, title: object ):
+        title = "WIZARD: " + str( title )
         title = " ".join( title.upper() )
         MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
         MCMD.progress( string_helper.centre_align( " " + title + " ", MENV.host.console_width, Theme.C.SHADE ) )
@@ -138,7 +141,7 @@ class Walkthrough:
     
     
     def stop( self ):
-        Walkthrough.__active_walkthrough = None
+        Wizard.__active_walkthrough = None
         MCMD.progress( "The active wizard has been deleted." )
     
     
@@ -162,59 +165,59 @@ class Walkthrough:
     
     
     def __fn8_make_splits( self ):
-        self.__line( "Splits" )
+        self.__line( STAGES.SPLITS_8 )
         ext_generating.create_splits()
         
         if self.pause_splits:
-            self.__pause( "Splits generated", (ext_viewing.print_viable,) )
+            self.__pause( STAGES.SPLITS_8, (ext_viewing.print_viable,) )
     
     
     def __fn9_make_consensus( self ):
-        self.__line( "Consensus" )
+        self.__line( STAGES.CONSENSUS_9 )
         ext_generating.create_consensus()
         
         if self.pause_consensus:
-            self.__pause( "Consensus generated", (ext_viewing.print_candidates,) )
+            self.__pause( STAGES.CONSENSUS_9, (ext_viewing.print_candidates,) )
     
     
     def __fn10_make_subsets( self ):
-        self.__line( "Subsets" )
+        self.__line( STAGES.SUBSETS_10 )
         ext_generating.create_subsets()
         
         if self.pause_subsets:
-            self.__pause( "Subsets generated", (ext_viewing.print_subsets,) )
+            self.__pause( STAGES.SUBSETS_10, (ext_viewing.print_subsets,) )
     
     
     def __fn11_make_subgraphs( self ):
         self.__line( "Subgraphs" )
-        ext_generating.create_subgraphs()
+        ext_generating.create_subgraphs( self.supertree )
         
         if self.pause_minigraph:
-            self.__pause( "Subgraphs generated", (ext_viewing.print_minigraphs,) )
+            self.__pause( STAGES.SUBGRAPHS_11, (ext_viewing.print_minigraphs,) )
     
     
     def __fn12_make_sewed( self ):
-        self.__line( "Raw NRFG" )
+        self.__line( STAGES.FUSED_12 )
         ext_generating.create_fused()
         
         if self.pause_sew:
-            self.__pause( "Raw NRFG generated", (ext_viewing.print_trees,) )
+            self.__pause( STAGES.FUSED_12, (ext_viewing.print_trees,) )
     
     
     def __fn13_make_clean( self ):
-        self.__line( "Clean NRFG" )
+        self.__line( STAGES.CLEANED_13 )
         ext_generating.create_cleaned()
         
         if self.pause_clean:
-            self.__pause( "Cleaned NRFG", (ext_viewing.print_trees,) )
+            self.__pause( STAGES.CLEANED_13, (ext_viewing.print_trees,) )
     
     
     def __fn14_make_checks( self ):
-        self.__line( "Check NRFG" )
+        self.__line( STAGES.CHECKED_14 )
         ext_generating.create_checked()
         
         if self.pause_check:
-            self.__pause( "Checked NRFG", (ext_viewing.print_trees,) )
+            self.__pause( STAGES.CHECKED_14, (ext_viewing.print_trees,) )
     
     
     def __fn15_view_nrfg( self ):
@@ -226,71 +229,71 @@ class Walkthrough:
     
     def __fn7_make_fusions( self ):
         # Make fusions
-        self.__line( "Fusions" )
+        self.__line( STAGES.FUSIONS_7 )
         self.__result |= ext_generating.create_fusions()
         
         if self.pause_fusion:
-            self.__pause( "Fusions identified", (ext_viewing.print_trees, ext_viewing.print_fusions) )
+            self.__pause( STAGES.FUSIONS_7, (ext_viewing.print_trees, ext_viewing.print_fusions) )
     
     
     def __fn6_make_trees( self ):
-        self.__line( "Trees" )
+        self.__line( STAGES.TREES_6 )
         
         self.__result |= ext_modifications.set_outgroups( self.outgroups )
         
         self.__result |= ext_generating.create_trees( self.tree )
         
         if self.pause_tree:
-            self.__pause( "Trees generated", (ext_viewing.print_trees,) )
+            self.__pause( STAGES.TREES_6, (ext_viewing.print_trees,) )
     
     
     def __fn5_make_alignments( self ):
-        self.__line( "Alignments" )
+        self.__line( STAGES.ALIGNMENTS_5 )
         self.__result |= ext_generating.create_alignments( self.alignment )
         
         if self.pause_align:
-            self.__pause( "Domains aligned", (ext_viewing.print_alignments,) )
+            self.__pause( STAGES.ALIGNMENTS_5, (ext_viewing.print_alignments,) )
     
     
     def __fn4_make_components( self ):
-        self.__line( "Components" )
+        self.__line( STAGES.COMPONENTS_3 )
         self.__result |= ext_generating.create_components( self.tolerance )
         
         if self.pause_components:
-            self.__pause( "components generated", (ext_viewing.print_genes, ext_viewing.print_components) )
+            self.__pause( STAGES.COMPONENTS_3, (ext_viewing.print_genes, ext_viewing.print_components) )
     
     
     def __fn3_import_data( self ):
-        self.__line( "Import" )
+        self.__line( STAGES.DATA_0 )
         for import_ in self.imports:
             self.__result |= groot.extensions.ext_importation.import_file( import_ )
         
         if self.pause_import:
-            self.__pause( "data imported", (ext_viewing.print_genes,) )
+            self.__pause( STAGES.DATA_0, (ext_viewing.print_genes,) )
     
     
     def __save_model( self ):
         if self.save:
-            self.__line( "Save" )
+            self.__line( STAGES.FILE_0 )
             self.__result |= ext_files.file_save( self.name )
     
     
     def __fn1_new_model( self ):
         # Start a new model
-        self.__line( "Clean" )
+        self.__line( "New" )
         if self.new:
             self.__result |= ext_files.file_new()
     
     
     def make_active( self ) -> None:
-        Walkthrough.__active_walkthrough = self
+        Wizard.__active_walkthrough = self
         MCMD.progress( str( self ) )
         MCMD.progress( "The wizard has been activated and is paused. Use the {}{}{} function to begin.".format( Theme.COMMAND_NAME, ext_gimmicks.continue_wizard, Theme.RESET ) )
     
     
     @staticmethod
-    def get_active() -> "Walkthrough":
-        return Walkthrough.__active_walkthrough
+    def get_active() -> "Wizard":
+        return Wizard.__active_walkthrough
     
     
     __stages = [__fn1_new_model,

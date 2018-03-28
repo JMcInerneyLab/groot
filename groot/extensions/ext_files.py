@@ -3,9 +3,8 @@ from os import path
 from typing import Optional
 
 import groot.data.global_view
-from groot.algorithms import marshal
-from groot.algorithms.importation import EImportFilter
-from groot.constants import EXT_GROOT
+from groot.algorithms.s1_importation import EImportFilter
+from groot import constants, algorithms
 from groot.data import global_view
 from groot.extensions.ext_importation import import_directory
 from groot.frontends.gui.gui_view_utils import EChanges
@@ -87,7 +86,7 @@ def file_recent():
 
 
 @command( names = ["file_save", "save"] )
-def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None ) -> EChanges:
+def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROOT]] = None ) -> EChanges:
     """
     Saves the model
     :param file_name: Filename. File to load. Either specify a complete path, or the name of the file in the `sessions` folder. If not specified the current filename is used.
@@ -108,7 +107,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, EXT_GROOT]] = None
     sys.setrecursionlimit( 10000 )
     
     with MCMD.action( "Saving file to «{}»".format( file_name ) ):
-        marshal.save_to_file( file_name, model )
+        algorithms.s0_file.save_to_file( file_name, model )
     
     model.file_name = file_name
     MCMD.progress( "Saved model to «{}»".format( file_name ) )
@@ -126,7 +125,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
                         (If you'd like to use the current "working" directory, use the prefix `./`)
     """
     file_name = __fix_path( file_name )
-    marshal.load_from_file( file_name )
+    algorithms.s0_file.load_from_file( file_name )
     
     return EChanges.MODEL_OBJECT
 

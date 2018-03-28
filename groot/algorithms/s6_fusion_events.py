@@ -7,7 +7,7 @@ from groot import constants
 from mgraph import MGraph, MNode, MEdge
 from mhelper import Logger, array_helper
 
-from groot.algorithms import lego_graph
+from groot.data import lego_graph
 from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, LegoPoint, LegoFusion
 
 
@@ -15,15 +15,11 @@ __LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
 
 
-def remove_fusions( model: LegoModel ) -> int:
+def drop_fusions( model: LegoModel ) -> int:
     """
     Removes all fusion points from the specified component.
     """
-    if model.get_status( constants.STAGES.FUSIONS_7 ).is_none:
-        raise ValueError( "Refusing to drop fusions because no fusions have been generated." )
-    
-    if model.get_status( constants.STAGES.SPLITS_8 ).is_partial:
-        raise ValueError( "Refusing to drop fusions because they are in use by the splits. Did you mean to drop the splits first?" )
+    model.get_status( constants.STAGES.FUSIONS_7 ).assert_drop()
     
     removed_count = 0
     
@@ -53,15 +49,16 @@ def remove_fusions( model: LegoModel ) -> int:
     return removed_count
 
 
-def find_all_fusion_points( model: LegoModel ) -> None:
+def create_fusions( model: LegoModel ) -> None:
     """
     Finds the fusion points in the model.
     i.e. Given the events (see `find_events`), find the exact points at which the fusion(s) occur.
     """
+    model.get_status( constants.STAGES.FUSIONS_7 ).assert_create()
+    
     r: List[LegoFusion] = []
     
-    if __fusions_exist( model ):
-        raise ValueError( "Cannot find fusion points because fusion points for this model already exist. Did you mean to remove the existing fusions first?" )
+    
     
     for event in __find_fusion_events( model ):
         __LOG( "Processing fusion event: {}", event )
@@ -131,16 +128,7 @@ def __find_fusion_events( model: LegoModel ) -> List[LegoFusion]:
     return results
 
 
-def __fusions_exist( model: LegoModel ):
-    if model.fusion_events:
-        return True
-    
-    for component in model.components:
-        for node in component.tree:
-            if isinstance( node.data, LegoPoint ):
-                return True
-    
-    return False
+
 
 
 def __find_fusion_points( fusion_event: LegoFusion,

@@ -3,7 +3,7 @@ from os import path
 import os
 from typing import Iterable
 
-from groot.algorithms.walkthrough import Walkthrough
+from groot.algorithms.wizard import Wizard
 from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.lego_model import LegoModel, LegoSequence
@@ -113,27 +113,27 @@ def run_test( name: str, refresh: bool = False, interpret: bool = True, view: bo
         shutil.copy( test_tree_file, results_original_file )
         
         # Create settings
-        walkthrough = Walkthrough( new = False,
-                                   name = path.join( results_folder, test_name + ".groot" ),
-                                   imports = global_view.get_sample_contents( test_case_folder ),
-                                   pause_import = False,
-                                   pause_components = False,
-                                   pause_align = False,
-                                   pause_tree = False,
-                                   pause_fusion = False,
-                                   pause_splits = False,
-                                   pause_consensus = False,
-                                   pause_subset = False,
-                                   pause_minigraph = False,
-                                   pause_sew = False,
-                                   pause_clean = False,
-                                   pause_check = False,
-                                   tolerance = wiz_tol,
-                                   outgroups = wiz_og,
-                                   alignment = "",
-                                   tree = "neighbor_joining",
-                                   view = not interpret,
-                                   save = False)
+        walkthrough = Wizard( new = False,
+                              name = path.join( results_folder, test_name + ".groot" ),
+                              imports = global_view.get_sample_contents( test_case_folder ),
+                              pause_import = False,
+                              pause_components = False,
+                              pause_align = False,
+                              pause_tree = False,
+                              pause_fusion = False,
+                              pause_splits = False,
+                              pause_consensus = False,
+                              pause_subset = False,
+                              pause_minigraph = False,
+                              pause_sew = False,
+                              pause_clean = False,
+                              pause_check = False,
+                              tolerance = wiz_tol,
+                              outgroups = wiz_og,
+                              alignment = "",
+                              tree = "neighbor_joining",
+                              view = not interpret,
+                              save = False )
         
         # Execute
         walkthrough.make_active()

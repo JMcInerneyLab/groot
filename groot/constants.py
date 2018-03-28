@@ -58,6 +58,9 @@ class LegoStage:
         for visualiser in gui_workflow.VISUALISERS:
             if self in visualiser.intents[intent]:
                 yield visualiser
+                
+    def __str__(self):
+        return self.name
 
 
 class LegoStageCollection:

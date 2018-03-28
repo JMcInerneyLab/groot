@@ -1,12 +1,14 @@
 from typing import Callable, List, Optional, Union
 
-import groot.algorithms.external_runner
-from groot.algorithms import importation
+import groot.utilities.external_runner
+from groot import algorithms
+from groot.constants import STAGES
+from groot.data import lego_graph
 from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import LegoSubset, ILegoNode
-from intermake.engine.function_inspector import FnInspect
-from mgraph import MGraph, analysing
+from groot.data.lego_model import LegoSubset, ILegoNode, LegoModel, NamedGraph
+from mgraph import MGraph, analysing, MNode
 from mhelper import LogicError, SwitchError, string_helper
+from mhelper.reflection_helper import FnInspect
 
 
 DAlgorithm = Callable[[Union[str, LegoSubset]], Union[str, MGraph]]
@@ -25,9 +27,44 @@ Output (ONE OF):
 Uses Pep-484 to indicate which input is required, otherwise the default will be assumed.
 """
 
-algorithms = AlgorithmCollection[DAlgorithm]( "Supertree" )
+supertree_algorithms = AlgorithmCollection[DAlgorithm]( "Supertree" )
+
+def drop_supertrees( model: LegoModel ):
+    model.get_status( STAGES.SUBGRAPHS_11 ).assert_drop()
+    
+    model.nrfg.minigraphs = tuple()
+    model.nrfg.minigraphs_destinations = tuple()
+    model.nrfg.minigraphs_sources = tuple()
 
 
+def create_supertrees( algorithm: str, model: LegoModel ) -> None:
+    model.get_status( STAGES.SUBGRAPHS_11 ).assert_create()
+    
+    subgraphs = []
+    
+    for subset in model.nrfg.subsets:
+        subgraph = algorithms.s11_supertrees.create_supertree( algorithm, subset )
+        
+        subgraphs.append( subgraph )
+    
+    destinations = set()
+    sources = set()
+    for minigraph in subgraphs:
+        sequences = lego_graph.get_sequence_data( minigraph )
+        
+        for node in lego_graph.get_fusion_nodes( minigraph ):
+            assert isinstance( node, MNode )
+            
+            fusion_event = node.data
+            if any( x in sequences for x in fusion_event.pertinent_inner ):
+                destinations.add( node.uid )
+            else:
+                sources.add( node.uid )
+                
+    model.nrfg.minigraphs_destinations = tuple( destinations )
+    model.nrfg.minigraphs_sources = tuple( sources )
+    model.nrfg.minigraphs = tuple( NamedGraph( x, algorithm + "_{}".format( i ) ) for i, x in enumerate( subgraphs ) )
+    
 def create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
     """
     Generates a supertree from a set of trees.
@@ -38,7 +75,7 @@ def create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
     """
     assert isinstance( subset, LegoSubset )
     
-    algo = algorithms[algorithm]
+    algo = supertree_algorithms[algorithm]
     ins = FnInspect( algo )
     
     if ins.args[0].type == LegoSubset:
@@ -56,12 +93,12 @@ def create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
         
         input = __graphs_to_newick( graphs )
     
-    output = groot.algorithms.external_runner.run_in_temporary( algo, input )
+    output = groot.utilities.external_runner.run_in_temporary( algo, input )
     
     if isinstance( output, MGraph ):
         result = output
     elif isinstance( output, str ):
-        result = importation.import_newick( output, subset.model )
+        result = algorithms.s1_importation.import_newick( output, subset.model )
     else:
         raise SwitchError( "create_supertree::output", output, instance = True )
     
@@ -80,7 +117,7 @@ def create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
 def __graphs_to_newick( graphs ):
     newick = []
     for graph in graphs:
-        newick.append( importation.export_newick( graph ) )
+        newick.append( algorithms.s1_importation.export_newick( graph ) )
     input = "\n".join( newick ) + "\n"
     return input
 
@@ -98,3 +135,5 @@ def __subset_to_possible_graphs( subset: LegoSubset ):
         if graph.nodes:
             graphs.append( graph )
     return graphs
+
+

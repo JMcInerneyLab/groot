@@ -6,6 +6,9 @@ See class `LegoModel`.
 
 import re
 from typing import Dict, FrozenSet, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
+
+from groot import constants
+from groot.data.exceptions import NotReadyError, InUseError
 from intermake import EColour, IVisualisable, UiInfo, MENV
 from intermake_qt import resources as intermake_resources
 from mgraph import MGraph, Split
@@ -19,7 +22,6 @@ from groot.frontends.gui.forms.resources import resources as groot_resources
 TEXT_EDGE_FORMAT = "{}[{}:{}]--{}[{}:{}]"
 TEXT_SEQ_FORMAT = "{}"
 
-_LegoModel_ = "LegoModel"
 __author__ = "Martin Rusilowicz"
 
 
@@ -683,7 +685,7 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
     """
     
     
-    def __init__( self, model: _LegoModel_, index: int, major_sequences: List[LegoSequence] ):
+    def __init__( self, model: "LegoModel", index: int, major_sequences: List[LegoSequence] ):
         """
         CONSTRUCTOR
         See class attributes for parameter descriptions.
@@ -1296,7 +1298,27 @@ class ModelStatus:
     def __init__( self, model: "LegoModel", stage: LegoStage ):
         self.model: LegoModel = model
         self.stage: LegoStage = stage
+        
+    def assert_drop( self ):
+        if self.is_none:
+            raise NotReadyError( "Cannot drop «{}» stage because this data does not yet exist.".format(self.stage))
     
+        for stage in constants.STAGES:
+            if stage.requires == self:
+                raise InUseError( "Cannot drop «{}» stage the following stage, «{}» is relying on that data. Perhaps you meant to drop that stage first?".format(self.stage, stage) )
+            
+    def assert_create( self ):
+        if self.is_complete:
+            raise NotReadyError( "Cannot create «{}» stage because this data already exists.".format(self.stage))
+            
+        if self.stage.requires is not None:
+            req = self.model.get_status(self.stage.requires)
+            
+            if req.is_not_complete:
+                raise NotReadyError( "Cannot create «{}» because the preceeding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format(self.stage, self.stage.requires) )
+        
+        
+        
     
     @property
     def requisite_complete( self ) -> bool:

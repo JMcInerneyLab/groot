@@ -1,7 +1,8 @@
 from typing import Optional, cast
 
-from groot.algorithms import editor, marshal, graph_viewing
-from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence, FusionPoint, LegoPoint, ILegoNode
+from groot import algorithms
+from groot.utilities import graph_viewing
+from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence, LegoPoint, ILegoNode
 from intermake import MCMD, common_commands
 from mgraph import MGraph, MNode, importing, exporting, analysing
 from mhelper import file_helper, bio_helper, ByRef, Logger, MFlags
@@ -81,7 +82,7 @@ def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, fi
     if filter.MODEL:
         if ext == ".groot":
             if not query:
-                marshal.load_from_file( file_name )
+                algorithms.s0_file.load_from_file( file_name )
                 return
             else:
                 MCMD.print( "Model: «{}».".format( file_name ) )
@@ -109,7 +110,7 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
         extra_data = "FASTA from '{}'".format( file_name )
         
         for name, sequence_data in bio_helper.parse_fasta( file = file_name ):
-            sequence = editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False, True )
+            sequence = algorithms.s0_editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False, True )
             
             if sequence:
                 LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( sequence_data ) ) )
@@ -185,14 +186,14 @@ def import_blast( model: LegoModel, file_name: str, evalue: float = None, length
                     if not (subject_length - TOL) <= query_length <= (subject_length + TOL):
                         raise ValueError( "Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format( query_length, subject_length, line ) )
                     
-                    query_s = editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
-                    subject_s = editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
+                    query_s = algorithms.s0_editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
+                    subject_s = algorithms.s0_editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
                     
                     if query_s and subject_s and query_s is not subject_s:
                         query = LegoSubsequence( query_s, query_start, query_end )
                         subject = LegoSubsequence( subject_s, subject_start, subject_end )
                         LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
-                        editor.make_edge( model, query, subject, line, False )
+                        algorithms.s0_editor.make_edge( model, query, subject, line, False )
     
     MCMD.progress( "Imported Blast from «{}».".format( file_name ) )
 
@@ -220,7 +221,7 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
                     
                     # COMPOSITE!
                     composite_name = line[1:]
-                    composite_sequence = editor.make_sequence( model, composite_name, False, 0, line, False, True )
+                    composite_sequence = algorithms.s0_editor.make_sequence( model, composite_name, False, 0, line, False, True )
                     composite_sequence.comments.append( "FILE '{}' LINE {}".format( file_name, line_number ) )
                 elif "\t" in line:
                     # FAMILY!
@@ -238,7 +239,7 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
                     # composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
-                    sequence = editor.make_sequence( model, line, False, fam_mean_length, line, False, True )
+                    sequence = algorithms.s0_editor.make_sequence( model, line, False, fam_mean_length, line, False, True )
                     sequence.comments.append( "Family '{}'".format( fam_name ) )
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     

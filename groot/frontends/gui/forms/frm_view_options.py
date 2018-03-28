@@ -1,13 +1,12 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QMessageBox, QCheckBox, QGroupBox
 from groot.frontends.gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
 from groot.data import global_view
-from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions
+from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions, EWindowMode
 from groot.frontends.gui.forms.frm_base import FrmBase
-from intermake import MENV, common_commands
+from intermake import common_commands
 from intermake_qt.forms.frm_arguments import FrmArguments
-from intermake_qt.host.gui import GuiHost
-from mhelper_qt import exqtSlot, qt_gui_helper
+from mhelper_qt import exqtSlot
 
 
 class FrmViewOptions( FrmBase ):
@@ -18,9 +17,6 @@ class FrmViewOptions( FrmBase ):
         super().__init__( parent )
         self.ui = Ui_Dialog( self )
         self.setWindowTitle( "Options" )
-        
-        self.ui.CMB_CSS.addItem( "default" )
-        self.ui.CMB_CSS.addItem( "minimal" )
         
         self.ignore_map = False
         
@@ -51,21 +47,17 @@ class FrmViewOptions( FrmBase ):
                   self.ui.RAD_STARTUP_SAMPLES,
                   self.ui.RAD_TREE_ASK,
                   self.ui.RAD_TREE_INBUILT,
-                  self.ui.RAD_TREE_SYSTEM)
+                  self.ui.RAD_TREE_SYSTEM,
+                  self.ui.RAD_WIN_MDI,
+                  self.ui.RAD_WIN_NORMAL,
+                  self.ui.RAD_WIN_TDI,
+                  self.ui.CHKTOOL_FILE,
+                  self.ui.CHKTOOL_VIS,
+                  self.ui.CHKTOOL_WORKFLOW)
         
         for ctrl in radios:
             ctrl.toggled[bool].connect( self.__on_radio_changed )
         
-        texts = (self.ui.TXT_VISJS,)
-        
-        for ctrl in texts:
-            ctrl.textEdited[str].connect( self.__on_radio_changed )
-        
-        combos = (self.ui.CMB_CSS,)
-        
-        for ctrl in combos:
-            ctrl.currentTextChanged[str].connect( self.__on_radio_changed )
-            
         self.map( False )
     
     
@@ -82,6 +74,10 @@ class FrmViewOptions( FrmBase ):
         # Global options
         global_options: GlobalOptions = global_view.options()
         
+        self.__map_check( write, global_options, "tool_file", self.ui.CHKTOOL_FILE, self.actions.frm_main.ui.FRA_FILE )
+        self.__map_check( write, global_options, "tool_visualisers", self.ui.CHKTOOL_VIS, self.actions.frm_main.ui.FRA_VISUALISERS )
+        self.__map_check( write, global_options, "tool_workflow", self.ui.CHKTOOL_WORKFLOW, self.actions.frm_main.ui.FRA_WORKFLOW )
+        
         self.__map( write, global_options, "browse_mode", { EBrowseMode.ASK    : self.ui.RAD_TREE_ASK,
                                                             EBrowseMode.INBUILT: self.ui.RAD_TREE_INBUILT,
                                                             EBrowseMode.SYSTEM : self.ui.RAD_TREE_SYSTEM } )
@@ -91,15 +87,9 @@ class FrmViewOptions( FrmBase ):
                                                              EStartupMode.WORKFLOW: self.ui.RAD_STARTUP_WORKFLOW,
                                                              EStartupMode.SAMPLES : self.ui.RAD_STARTUP_SAMPLES } )
         
-        # Intermake
-        host = MENV.host
-        assert isinstance( host, GuiHost )
-        host_settings = host.gui_settings
-        
-        if write:
-            host_settings.gui_css = self.ui.CMB_CSS.currentText()
-        else:
-            self.ui.CMB_CSS.setCurrentText( host_settings.gui_css )
+        self.__map( write, global_options, "window_mode", { EWindowMode.BASIC: self.ui.RAD_WIN_NORMAL,
+                                                            EWindowMode.MDI  : self.ui.RAD_WIN_MDI,
+                                                            EWindowMode.TDI  : self.ui.RAD_WIN_TDI } )
         
         # Model options
         model_options = self.get_model().ui_options
@@ -135,6 +125,17 @@ class FrmViewOptions( FrmBase ):
         self.ignore_map = False
     
     
+    def __map_check( self, write, target, field, checkbox: QCheckBox, tool: QGroupBox ):
+        if write:
+            setattr( target, field, checkbox.isChecked() )
+            
+            if tool:
+                tool.setVisible( checkbox.isChecked() )
+        
+        else:
+            checkbox.setChecked( getattr( target, field ) )
+    
+    
     def __map( self, write, object_, field, mapping ):
         if write:
             for k, v in mapping.items():
@@ -155,18 +156,11 @@ class FrmViewOptions( FrmBase ):
         """
         global_view.options().recent_files.clear()
         global_view.save_global_options()
+        QMessageBox.information( self, self.windowTitle(), "Recent files list cleared." )
     
     
     @exqtSlot()
-    def on_BTN_VISJS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        qt_gui_helper.browse_dir_on_textbox( self.ui.TXT_VISJS )
-    
-    
-    @exqtSlot()
-    def on_BTN_INTERMAKE_ADVANCED_clicked( self ) -> None:
+    def on_BTN_INTERMAKE_clicked( self ) -> None:
         """
         Signal handler:
         """

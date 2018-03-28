@@ -47,7 +47,8 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
     MCMD.print( "START" )
     r = []
     args_random_tree = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
-    args_seqgen = "-d 0.2"
+    #args_fn = "-d 0.2"
+    args_fn = ""
     
     if not types:
         raise ValueError( "Missing :param:`types`." )
@@ -57,6 +58,11 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
     for name in types:
         try:
             Ж.new()
+            # The SeqGen mutator has a weird problem where, given a root `(X,O)R` in which `R`
+            # is set as a result of an earlier tree, `O` will be more similar to the leaves of
+            # that earlier tree than to the leaves in X. For this reason we use a simple random
+            # model and not SeqGen.
+            fn = Ж.random 
             
             if name == "1":
                 # 1 fusion point; 3 genes; 2 origins
@@ -65,7 +71,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
                 outgroups = Ж.random_tree( ["A", "B", "C"], **args_random_tree )
                 a, b, c = (x.parent for x in outgroups)
                 
-                Ж.seqgen( [a, b, c], args_seqgen )
+                fn( [a, b, c], *args_fn )
                 
                 # Fusion point
                 fa = Ж.random_node( a, avoid = outgroups )
@@ -78,7 +84,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D"], **args_random_tree )
                 a, b, c, d = (x.parent for x in outgroups)
-                Ж.seqgen( [a, b, c, d], args_seqgen )
+                fn( [a, b, c, d], *args_fn )
                 
                 # Fusion points
                 fa1 = Ж.random_node( a, avoid = outgroups )
@@ -95,7 +101,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
                 a, b, c, d, e = (x.parent for x in outgroups)
-                Ж.seqgen( [a, b, c, d, e], args_seqgen )
+                fn( [a, b, c, d, e], *args_fn )
                 
                 # Fusion points
                 fa = Ж.random_node( a, avoid = outgroups )
@@ -111,7 +117,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 10, view:
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
                 a, b, c, d, e, f, g = (x.parent for x in outgroups)
-                Ж.seqgen( [a, b, c, d, e, f, g], args_seqgen )
+                fn( [a, b, c, d, e, f, g], *args_fn )
                 
                 # Fusion points
                 fa = Ж.random_node( a, avoid = outgroups )

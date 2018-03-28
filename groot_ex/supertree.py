@@ -1,5 +1,4 @@
-from groot.algorithms import supertree
-from groot.data.lego_model import LegoSubset, LegoSequence
+from groot import supertree_algorithms, LegoSubset, LegoSequence
 from mgraph import importing, MGraph
 from mhelper import file_helper, Logger, LogicError, exception_helper
 from intermake import subprocess_helper
@@ -8,7 +7,7 @@ from intermake import subprocess_helper
 __LOG_CREATE = Logger( "supertree" )
 
 
-@supertree.algorithms.register( "clann" )
+@supertree_algorithms.register( "clann" )
 def supertree_clann( inputs: str ) -> str:
     """
     Uses CLANN to generate a supertree.
@@ -31,7 +30,7 @@ def supertree_clann( inputs: str ) -> str:
     return result.split( ";" )[0]
 
 
-@supertree.algorithms.register( "legacy" )
+@supertree_algorithms.register( "legacy" )
 def supertree_groot( subset_src: LegoSubset ) -> MGraph:
     """
     Uses GROOT to grow a supertree from the splits.

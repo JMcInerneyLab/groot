@@ -4,8 +4,7 @@ from typing import List, Dict
 
 from groot import constants
 from groot.data import global_view
-from groot.algorithms import alignment, tree, walkthrough
-from groot.algorithms.walkthrough import Walkthrough
+from groot import algorithms
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.forms.frm_sample_browser import FrmSampleBrowser
 from groot.frontends.gui import gui_workflow
@@ -27,10 +26,10 @@ class FrmWizard( FrmBase ):
         self.ui = frm_wizard_designer.Ui_Dialog( self )
         self.setWindowTitle( "Wizard" )
         
-        for key in alignment.algorithms:
+        for key in algorithms.s5_alignment.alignment_algorithms:
             self.ui.CMB_ALIGNMENT_METHOD.addItem( key )
         
-        for key in tree.algorithms:
+        for key in algorithms.s6_tree.tree_algorithms:
             self.ui.CMB_TREE_METHOD.addItem( key )
         
         self.bind_to_label( self.ui.LBL_HELP_TITLE )
@@ -83,7 +82,7 @@ class FrmWizard( FrmBase ):
     
     
     def on_plugin_completed( self ):
-        w = walkthrough.Walkthrough.get_active()
+        w = algorithms.wizard.Wizard.get_active()
         m = global_view.current_model()
         
         if w is not None and not w.is_completed:
@@ -137,7 +136,7 @@ class FrmWizard( FrmBase ):
             item: QTreeWidgetItem = self.ui.LST_FILES.topLevelItem( i )
             imports.append( item.text( 0 ) )
         
-        walkthrough = Walkthrough(
+        walkthrough = algorithms.wizard.Wizard(
                 new = True,
                 name = self.ui.TXT_FILENAME.text(),
                 imports = imports,
@@ -163,7 +162,7 @@ class FrmWizard( FrmBase ):
         return walkthrough
     
     
-    def read_walkthrough( self, w: walkthrough.Walkthrough ):
+    def read_walkthrough( self, w: algorithms.wizard.Wizard ):
         """
         Loads a previous wizard.
         """
@@ -200,13 +199,13 @@ class FrmWizard( FrmBase ):
         """
         Signal handler: Load wizard
         """
-        walkthroughs_: List[Walkthrough] = MENV.local_data.store.get( SETTINGS_KEY, [] )
+        walkthroughs_: List[algorithms.wizard.Wizard] = MENV.local_data.store.get( SETTINGS_KEY, [] )
         
         if not walkthroughs_:
             self.alert( "You don't have any saved walkthroughs." )
             return
         
-        walkthroughs: Dict[str, Walkthrough] = dict( (x.name, x) for x in walkthroughs_ )
+        walkthroughs: Dict[str, algorithms.wizard.Wizard] = dict( (x.name, x) for x in walkthroughs_ )
         
         selected = self.show_menu( *sorted( walkthroughs.keys() ) )
         
@@ -219,13 +218,13 @@ class FrmWizard( FrmBase ):
         """
         Signal handler: Save wizard
         """
-        walkthrough: Walkthrough = self.write_walkthrough()
+        walkthrough: algorithms.wizard.Wizard = self.write_walkthrough()
         
         if not walkthrough.name:
             self.alert( "You must name your wizard before saving it." )
             return
         
-        walkthroughs: List[Walkthrough] = MENV.local_data.store.get( SETTINGS_KEY, [] )
+        walkthroughs: List[algorithms.wizard.Wizard] = MENV.local_data.store.get( SETTINGS_KEY, [] )
         
         array_helper.remove_where( walkthroughs, lambda x: x.name == walkthrough.name )
         walkthroughs.append( walkthrough )

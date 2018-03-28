@@ -9,7 +9,6 @@ from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from groot.data import global_view
 from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions, EPosition
 from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EMode
 from mhelper import array_helper, misc_helper, override
@@ -126,8 +125,7 @@ class LegoViewInfo_Edge:
     
     
     def is_in_global_selection( self ) -> bool:
-        selection = global_view.current_selection()
-        return self.edge in selection
+        return self.edge in self.owner_view.view_model.form.actions.get_selection()
     
     
     def get_upper_and_lower( self ) -> Tuple[_LegoViewInfo_Side_, _LegoViewInfo_Side_]:
@@ -192,7 +190,11 @@ class LegoView_Component:
 
 
 class LegoView_UserDomain( QGraphicsItem ):
-    def __init__( self, userdomain: LegoUserDomain, owner_view: _LegoViewSequence_, positional_index: int, precursor: Optional[_LegoView_Subsequence_] ) -> None:
+    def __init__( self,
+                  userdomain: LegoUserDomain, 
+                  owner_view: _LegoViewSequence_, 
+                  positional_index: int, 
+                  precursor: Optional[_LegoView_Subsequence_] ) -> None:
         """
         CONSTRUCTOR
         
@@ -247,7 +249,7 @@ class LegoView_UserDomain( QGraphicsItem ):
     
     def is_in_global_selection( self ):
         model = self.owner_model_view.model
-        selection = global_view.current_selection()
+        selection = self.owner_model_view.form.actions.get_selection()
         
         if self.domain in selection:
             return True

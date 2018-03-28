@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1249</width>
-    <height>788</height>
+    <width>1283</width>
+    <height>855</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -475,6 +475,93 @@ QToolButton[style=&quot;refresh&quot;]
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_2">
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="TXT_OUTGROUPS">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_23">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Outgroups</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_20">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Component tolerance</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_26">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Supertree algorithm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="CMB_SUPERTREE_METHOD">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_21">
          <property name="sizePolicy">
@@ -490,17 +577,7 @@ QToolButton[style=&quot;refresh&quot;]
           </size>
          </property>
          <property name="text">
-          <string>Alignment method</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE">
-         <property name="minimumSize">
-          <size>
-           <width>128</width>
-           <height>0</height>
-          </size>
+          <string>Alignment algorithm</string>
          </property>
         </widget>
        </item>
@@ -529,7 +606,7 @@ QToolButton[style=&quot;refresh&quot;]
           </size>
          </property>
          <property name="text">
-          <string>Tree method</string>
+          <string>Tree algorithm</string>
          </property>
         </widget>
        </item>
@@ -540,54 +617,6 @@ QToolButton[style=&quot;refresh&quot;]
            <width>128</width>
            <height>0</height>
           </size>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_20">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>140</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Component tolerance</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_23">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>140</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Outgroups</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="TXT_OUTGROUPS">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
          </property>
         </widget>
        </item>
@@ -820,7 +849,6 @@ QToolButton[style=&quot;refresh&quot;]
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
   <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>

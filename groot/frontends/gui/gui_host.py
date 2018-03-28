@@ -1,17 +1,15 @@
 
-from intermake.hosts.base import DMultiHostProvider
 
 
-def __create_lego_gui_host():
+def create_lego_gui_host():
     from typing import cast
-    
-    from intermake.hosts.base import RunHostArgs
-    from intermake_qt.host.gui import GuiHost
+    from intermake import RunHost
+    from intermake_qt import GuiHost
     from mhelper import ignore
     
     
     class LegoGuiHost( GuiHost ):
-        def on_run_host( self, args: RunHostArgs ):
+        def on_run_host( self, args: RunHost ):
             from PyQt5.QtCore import QCoreApplication, Qt
             from PyQt5.QtWebEngineWidgets import QWebEngineView
             ignore( QWebEngineView )
@@ -33,7 +31,3 @@ def __create_lego_gui_host():
     return LegoGuiHost()
 
 
-def setup() -> DMultiHostProvider:
-    from intermake import create_simple_host_provider_from_class
-    from intermake.hosts.console import ConsoleHost
-    return create_simple_host_provider_from_class( ConsoleHost, __create_lego_gui_host )

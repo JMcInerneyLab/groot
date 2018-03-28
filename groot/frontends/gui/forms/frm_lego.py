@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QGridLayout, QSizePolicy
 from groot.frontends.gui.forms.designer import frm_lego_designer
 
 from groot import constants
-from groot.algorithms import layout
+from groot.utilities import layout
 from groot.frontends.gui import gui_workflow
 from groot.data.lego_model import LegoUserDomain
 from groot.frontends.gui.forms.frm_base import FrmBase

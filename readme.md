@@ -359,35 +359,70 @@ $   make.checks
 
 And we're all done!
 
-Now you've done the tutorial, try using the GUI - it's a lot easier to check the workflow is progressing smoothly and view large trees.
+Now you've done the tutorial, try using the GUI - it's a lot easier to check the workflow is progressing smoothly and you can view the trees properly!
 
 
 Program architecture
 --------------------
 
-Gʀᴏᴏᴛ uses a simple MVC architecture:
+Gʀᴏᴏᴛ uses a simple MVC-like architecture:
 
 * The model:
-    * The dynamic model (`lego_model.py`):
+    * The dynamic model (`data/lego_model.py`):
         * Sequences
+        * Subsequences
         * Edges
-            * Subsequences
         * Components
-            * Subsequences
-    * The static model:
-        * Algorithms (`algorithms/`)
-* The abstract view (`gui_view.py`):
-    * Sequence views
-        * Subsequence views
-    * Edge views
-    * Component views
-    * Algorithm views
-* The concrete views:
-    * The CLI (Iɴᴛᴇʀᴍᴀᴋᴇ: `command_line.py`)
-    * The GUI (`frm_main.py`)
-* The controller:
-    * Controller superclass (Iɴᴛᴇʀᴍᴀᴋᴇ: `environment.py`)
-    * Controller subclass (`extensions/`)
+        * etc. 
+    * The static model (`algorithms/`):
+        * Tree algorithms
+        * Alignment algorithms
+        * Supertree algorithms
+        * etc. 
+* The controller (`extensions/`)
+* The views (`extensions`):
+    * CLI (Iɴᴛᴇʀᴍᴀᴋᴇ: `command_line.py`)
+    * GUI (`frontends/gui/frm_main.py`)
+    
+Extending
+---------
+
+You can incorporate your own extensions into Groot.
+
+### Algorithms
+
+To register algorithms use:
+```python
+@tree_algorithms.register()
+def my_algorithm( . . . )
+    . . .
+```
+
+The `groot_ex` package contains the default set of algorithms, you can use this as a template for your own.
+
+
+### Commands
+
+To register new Groot commands.
+```python
+@command()
+def my_command( . . . ):
+    . . .
+```
+
+
+The groot core commands can be found in the main `groot` package, under the `extensions` subfolder.
+See the Intermake documentation for more details.
+
+### Registering
+
+To add your own algorithm package to groot use the `import` command, e.g. from the CLI:
+
+```
+import my_algorithms +persist
+```
+
+You can also call this statement from Python, allowing your package to register itself with Groot.
     
 
 Troubleshooting

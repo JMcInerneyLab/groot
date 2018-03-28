@@ -1,9 +1,9 @@
 from intermake import subprocess_helper
 from mhelper import bio_helper, file_helper, SwitchError
-from groot.algorithms import tree
+from groot import tree_algorithms
 
 
-@tree.algorithms.register("neighbor_joining")
+@tree_algorithms.register( "neighbor_joining" )
 def tree_neighbor_joining( model: str, alignment: str ) -> str:
     """
     Uses PAUP to generate the tree using neighbour-joining.
@@ -36,7 +36,7 @@ def tree_neighbor_joining( model: str, alignment: str ) -> str:
     return file_helper.read_all_text( "out_file.nwk" )
 
 
-@tree.algorithms.register("maximum_likelihood")
+@tree_algorithms.register( "maximum_likelihood" )
 def tree_maximum_likelihood( model: str, alignment: str ) -> str:
     """
     Uses Raxml to generate the tree using maximum likelihood.

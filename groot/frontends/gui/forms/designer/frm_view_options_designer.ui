@@ -35,44 +35,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Graph viewer (vis.js)</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>heading</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="LBL_VISJS_WARNING">
-         <property name="text">
-          <string>You must configure the vis.js path in order to use the tree browser.
-Point this at the directory containing the 'visjs' folder.</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>helpbox</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLineEdit" name="TXT_VISJS"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="BTN_VISJS">
-           <property name="text">
-            <string>Browse</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
         <widget class="QLabel" name="label_11">
          <property name="text">
           <string>Graph browser</string>
@@ -211,6 +173,125 @@ Normally Groot will ask you, but you can select a default preference here.</stri
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>View</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_3">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="LBL_VISJS_WARNING_4">
+            <property name="text">
+             <string>Select how Groot's windows are displayed.
+Note that MDI and TDI may not be supported or work correctly on all platforms.
+Changes to this setting will only take effect when the GUI is restarted.</string>
+            </property>
+            <property name="style" stdset="0">
+             <string>helpbox</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_WIN_MDI">
+            <property name="toolTip">
+             <string>Multiple Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+            </property>
+            <property name="text">
+             <string>MDI</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_WIN_TDI">
+            <property name="toolTip">
+             <string>Tabbed Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+            </property>
+            <property name="text">
+             <string>TDI</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_WIN_NORMAL">
+            <property name="toolTip">
+             <string>Display the windows normally.</string>
+            </property>
+            <property name="text">
+             <string>Basic</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Toolbar</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_6">
+         <property name="text">
+          <string>Select what toolbars are displayed.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_FILE">
+         <property name="text">
+          <string>File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_VIS">
+         <property name="text">
+          <string>Visualisers</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_WORKFLOW">
+         <property name="text">
+          <string>Workflow</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="label_4">
          <property name="text">
           <string>Micellaneous</string>
@@ -231,6 +312,46 @@ Normally Groot will ask you, but you can select a default preference here.</stri
          <property name="text">
           <string>Clear recent files history</string>
          </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>Intermake</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_5">
+         <property name="text">
+          <string>Intermake handles algorithm call and response.
+Settings such as whether to keep windows open after running an algorithm can be found here.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BTN_INTERMAKE">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Intermake configuration</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -245,122 +366,6 @@ Normally Groot will ask you, but you can select a default preference here.</stri
           </size>
          </property>
         </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_3">
-      <attribute name="title">
-       <string>Intermake</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="6" column="0" colspan="2">
-        <widget class="QLabel" name="label_23">
-         <property name="text">
-          <string>Click the button below to show the standard Intermake configuration screen.</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>helpbox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QComboBox" name="CMB_CSS">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="editable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <widget class="QPushButton" name="BTN_INTERMAKE_ADVANCED">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Show</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QLabel" name="label_21">
-         <property name="text">
-          <string>General</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>heading</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="label_13">
-         <property name="text">
-          <string>Advanced</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="label_18">
-         <property name="text">
-          <string>Configure how Intermake should handle Groot. These settings require a restart to take effect.</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>helpbox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0" colspan="2">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_22">
-         <property name="text">
-          <string>Intermake uses Qt. You can specify a path to a stylesheet or select one of the defaults.</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>helpbox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_15">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>CSS</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLabel" name="label_20">
-         <property name="text">
-          <string>GUI</string>
-         </property>
-         <property name="style" stdset="0">
-          <string>heading</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -1118,7 +1123,7 @@ Normally Groot will ask you, but you can select a default preference here.</stri
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

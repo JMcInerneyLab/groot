@@ -3,11 +3,11 @@ from typing import Dict, Type
 
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton
+from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton, QMdiArea
 from groot.frontends.gui.forms.designer import frm_main_designer
 
 from groot.data import global_view
-from groot.data.global_view import EStartupMode
+from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
 from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui.gui_view_utils import EChanges
 from groot.frontends.gui import gui_workflow
@@ -47,7 +47,14 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         self.showMaximized()
         
-        self.mdi_mode = True
+        global_options: GlobalOptions = global_view.options()
+        self.mdi_mode = global_options.window_mode != EWindowMode.BASIC
+        self.ui.FRA_FILE.setVisible(global_options.tool_file)
+        self.ui.FRA_VISUALISERS.setVisible(global_options.tool_visualisers)
+        self.ui.FRA_WORKFLOW.setVisible(global_options.tool_workflow)
+        
+        if global_options.window_mode == EWindowMode.TDI:
+            self.ui.MDI_AREA.setViewMode( QMdiArea.TabbedView )
         
         from groot.frontends.gui.gui_menu import GuiMenu
         self.menu_handler = GuiMenu( self )
@@ -187,4 +194,4 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def return_to_console( self ):
-        return False
+        return True

@@ -1,8 +1,8 @@
 from os import path
 from typing import List, Optional
 
-from groot.algorithms import alignment as alignment_, graph_viewing, tree as tree_
-from groot.algorithms.walkthrough import Walkthrough
+from groot import algorithms
+from groot.utilities import graph_viewing
 from groot.data import global_view
 from groot.data.lego_model import ESiteType
 from groot.extensions import ext_files
@@ -10,11 +10,75 @@ from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, command, common_commands, visibilities
 from mgraph import importing
-from mhelper import EFileMode, Filename, file_helper, io_helper
+from mhelper import EFileMode, Filename, file_helper, io_helper, bio_helper
 
 
 __mcmd_folder_name__ = "Gimmicks"
 __EXT_FASTA = ".fasta"
+
+
+# noinspection SpellCheckingInspection
+@command()
+def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFileMode.READ], output: Filename[EFileMode.OUTPUT] ):
+    """
+    Composite search [1] uses a custom input format.
+    If you already have standard BLAST this converts to that format, so you don't need to BLAST again.
+    
+    [1] JS Pathmanathan, P Lopez, F-J Lapointe and E Bapteste
+    
+    :param blast:   BLAST file 
+    :param fasta:   FASTA file 
+    :param output:  Output
+    :return:        BLAST file, suitable for use with composite searcher 
+    """
+    # 
+    # CS: qseqid sseqid evalue pident    bitscore qstart     qend     qlen*  sstart send   slen*
+    # ST: qseqid sseqid pident alignment length   mismatches gapopens qstart qend   sstart send evalue bitscore
+    
+    lengths = { }
+    
+    with MCMD.action( "Reading FASTA" ) as action:
+        for accession, sequence in bio_helper.parse_fasta( file = fasta ):
+            if " " in accession:
+                accession = accession.split( " ", 1 )[0]
+            
+            lengths[accession] = len( sequence )
+            action.increment()
+    
+    MCMD.progress( "{} accessions".format( len( lengths ) ) )
+    count = 0
+    
+    with io_helper.open_write( output ) as file_out:
+        with MCMD.action( "Processing" ) as action:
+            with open( blast, "r" ) as file_in:
+                for row in file_in:
+                    count += 1
+                    action.increment()
+                    elements = row.strip().split( "\t" )
+                    
+                    qseqid = elements[0]
+                    sseqid = elements[1]
+                    pident = elements[2]
+                    # length = elements[3]
+                    # mismatches = elements[4]
+                    # gapopens = elements[5]
+                    qstart = elements[6]
+                    qend = elements[7]
+                    sstart = elements[8]
+                    send = elements[9]
+                    evalue = elements[10]
+                    bitscore = elements[11]
+                    
+                    try:
+                        qlen = str( lengths[qseqid] )
+                        slen = str( lengths[sseqid] )
+                    except KeyError as ex:
+                        raise ValueError( "Accession found in BLAST file but not in FASTA file. See internal error for details." ) from ex
+                    
+                    file_out.write( "\t".join( [qseqid, sseqid, evalue, pident, bitscore, qstart, qend, qlen, sstart, send, slen] ) )
+                    file_out.write( "\n" )
+    
+    MCMD.progress( "{} BLASTs".format( count ) )
 
 
 @command( visibility = visibilities.ADVANCED )
@@ -104,10 +168,10 @@ def continue_wizard() -> EChanges:
     """
     Continues the wizard after it was paused.
     """
-    if Walkthrough.get_active() is None:
+    if algorithms.wizard.Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to continue." )
     
-    return Walkthrough.get_active().step()
+    return algorithms.wizard.Wizard.get_active().step()
 
 
 @command( names = ["stop"] )
@@ -115,10 +179,10 @@ def stop_wizard() -> EChanges:
     """
     Stops a wizard.
     """
-    if Walkthrough.get_active() is None:
+    if algorithms.wizard.Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to stop." )
     
-    return Walkthrough.get_active().stop()
+    return algorithms.wizard.Wizard.get_active().stop()
 
 
 @command()
@@ -128,6 +192,7 @@ def wizard( new: Optional[bool] = None,
             outgroups: Optional[List[str]] = None,
             tolerance: Optional[int] = None,
             alignment: Optional[str] = None,
+            supertree: Optional[str] = None,
             tree: Optional[str] = None,
             view: Optional[bool] = None,
             save: Optional[bool] = None,
@@ -157,7 +222,8 @@ def wizard( new: Optional[bool] = None,
     :param outgroups:           Outgroup accessions?
     :param imports:             Import files into the model? 
     :param tolerance:           Component identification tolerance? 
-    :param alignment:           Alignment method? 
+    :param alignment:           Alignment method?
+    :param supertree:           Supertree method? 
     :param tree:                Tree generation method?
     :param view:                View the final NRFG in Vis.js?
     :param save:                Save file to disk? (requires `name`)
@@ -221,10 +287,13 @@ def wizard( new: Optional[bool] = None,
                 success = False
     
     if alignment is None:
-        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( alignment_.algorithms ) + [""] )
+        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( algorithms.s5_alignment.alignment_algorithms.keys ) + [""] )
     
     if tree is None:
-        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( tree_.algorithms ) + [""] )
+        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( algorithms.s6_tree.tree_algorithms.keys ) + [""] )
+    
+    if supertree is None:
+        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( algorithms.s11_supertrees.supertree_algorithms.keys ) + [""] )
     
     if pause_import is None:
         pause_import = question( "Do you wish the wizard to pause for you to review the imported data?" )
@@ -271,27 +340,28 @@ def wizard( new: Optional[bool] = None,
         else:
             save = question( "Save your model after each stage completes?" )
     
-    walkthrough = Walkthrough( new = new,
-                               name = name,
-                               imports = imports,
-                               pause_import = pause_import,
-                               pause_components = pause_components,
-                               pause_align = pause_align,
-                               pause_tree = pause_tree,
-                               pause_fusion = pause_fusion,
-                               pause_splits = pause_splits,
-                               pause_consensus = pause_consensus,
-                               pause_subset = pause_subset,
-                               pause_minigraph = pause_minigraph,
-                               pause_sew = pause_sew,
-                               pause_clean = pause_clean,
-                               pause_check = pause_check,
-                               tolerance = tolerance,
-                               alignment = alignment,
-                               tree = tree,
-                               view = view,
-                               save = save,
-                               outgroups = outgroups )
+    walkthrough = Wizard( new = new,
+                          name = name,
+                          imports = imports,
+                          pause_import = pause_import,
+                          pause_components = pause_components,
+                          pause_align = pause_align,
+                          pause_tree = pause_tree,
+                          pause_fusion = pause_fusion,
+                          pause_splits = pause_splits,
+                          pause_consensus = pause_consensus,
+                          pause_subset = pause_subset,
+                          pause_minigraph = pause_minigraph,
+                          pause_sew = pause_sew,
+                          pause_clean = pause_clean,
+                          pause_check = pause_check,
+                          tolerance = tolerance,
+                          alignment = alignment,
+                          tree = tree,
+                          view = view,
+                          save = save,
+                          outgroups = outgroups,
+                          supertree = supertree )
     
     walkthrough.make_active()
 

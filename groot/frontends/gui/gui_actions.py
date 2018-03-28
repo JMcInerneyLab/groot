@@ -13,10 +13,9 @@ from groot.frontends.gui.gui_workflow import EIntent, LegoStage, LegoVisualiser
 from groot.frontends.gui import gui_workflow
 from intermake.engine.environment import MENV
 from intermake.engine.plugin import Plugin
-from intermake.engine.plugin_arguments import ArgsKwargs
 from intermake.visualisables.visualisable import VisualisablePath
 from intermake_qt.forms.frm_arguments import FrmArguments
-from mhelper import SwitchError
+from mhelper import SwitchError, ArgsKwargs, FnArgValueCollection
 from mhelper_qt import qt_gui_helper, menu_helper
 
 
@@ -113,11 +112,11 @@ class GuiActions:
     def request( self, plugin: Plugin, *args, **kwargs ):
         if args is None:
             args = ()
-        
-        arguments: Optional[ArgsKwargs] = FrmArguments.request( self.window, plugin, *args, **kwargs )
+
+        arguments: Optional[FnArgValueCollection] = FrmArguments.request( self.window, plugin, *args, **kwargs )
         
         if arguments is not None:
-            plugin.run( *arguments.args, **arguments.kwargs )  # --> self.plugin_completed
+            plugin.run( **arguments.tokwargs() )  # --> self.plugin_completed
     
     
     def get_selection( self ):
