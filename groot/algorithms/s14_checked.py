@@ -12,7 +12,7 @@ def drop_checked( model: LegoModel ):
 
 
 def create_checked( model: LegoModel ):
-    model.get_status( constants.STAGES.CLEANED_13 ).assert_create()
+    model.get_status( constants.STAGES.CHECKED_14 ).assert_create()
     
     nrfg = model.nrfg.fusion_graph_clean.graph
     

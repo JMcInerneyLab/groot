@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>877</height>
+    <width>661</width>
+    <height>985</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -40,8 +40,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="text">
-        <string/>
+       <property name="maximumSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
        </property>
        <property name="style" stdset="0">
         <string>refresh</string>
@@ -77,28 +80,47 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="BTN_SHOW_WORKSPACE">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>Show</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>dropdown</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="FRA_WORKSPACE">
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <layout class="QGridLayout" name="LAY_WORKSPACE"/>
-    </widget>
+     <item>
+      <widget class="QToolButton" name="BTN_SHOW_WORKSPACE">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Show</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>dropdown</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="FRA_WORKSPACE">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>192</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <property name="style" stdset="0">
+        <string>contents</string>
+       </property>
+       <layout class="QGridLayout" name="LAY_WORKSPACE"/>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -128,28 +150,47 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="BTN_SHOW_RECENT">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>Show</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>dropdown</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="FRA_RECENT">
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <layout class="QGridLayout" name="LAY_RECENT"/>
-    </widget>
+     <item>
+      <widget class="QToolButton" name="BTN_SHOW_RECENT">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Show</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>dropdown</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="FRA_RECENT">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>192</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <property name="style" stdset="0">
+        <string>contents</string>
+       </property>
+       <layout class="QGridLayout" name="LAY_RECENT"/>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QLabel" name="LBL_TITLE_SAMPLE">
@@ -162,28 +203,47 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="BTN_SHOW_SAMPLE">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="text">
-      <string>Show</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>dropdown</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="FRA_SAMPLE">
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <layout class="QGridLayout" name="LAY_SAMPLE"/>
-    </widget>
+     <item>
+      <widget class="QToolButton" name="BTN_SHOW_SAMPLE">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Show</string>
+       </property>
+       <property name="style" stdset="0">
+        <string>dropdown</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="FRA_SAMPLE">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>192</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <property name="style" stdset="0">
+        <string>contents</string>
+       </property>
+       <layout class="QGridLayout" name="LAY_SAMPLE"/>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QLabel" name="LBL_TITLE_FILESYSTEM">
@@ -228,7 +288,7 @@
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

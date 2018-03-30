@@ -178,7 +178,7 @@ def print_trees( graph: Optional[MGraph] = None,
                 continue
         
         if model.nrfg.fusion_graph_clean:
-            trees.append( (str( "NRFG" ), model.nrfg.fusion_graph_clean) )
+            trees.append( (str( "NRFG" ), model.nrfg.fusion_graph_clean.graph) )
     else:
         name = "unknown"
         
@@ -186,10 +186,10 @@ def print_trees( graph: Optional[MGraph] = None,
             if graph is component.tree:
                 name = str( component )
         
-        if model.nrfg.fusion_graph_clean is not None and graph is model.nrfg.fusion_graph_clean:
+        if model.nrfg.fusion_graph_clean is not None and graph is model.nrfg.fusion_graph_clean.graph:
             name = "NRFG"
         
-        if model.nrfg.fusion_graph_unclean is not None and graph is model.nrfg.fusion_graph_unclean:
+        if model.nrfg.fusion_graph_unclean is not None and graph is model.nrfg.fusion_graph_unclean.graph:
             name = "NRFG (unclean)"
         
         trees.append( (name, graph) )

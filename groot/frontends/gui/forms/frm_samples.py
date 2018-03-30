@@ -30,7 +30,7 @@ class FrmSamples( FrmBase ):
         self.ui = frm_samples_designer.Ui_Dialog( self )
         self.browse_action = browse_action
         self.setWindowTitle( "Load diagram" )
-        self._buttons: List[QPushButton] = []
+        self.__controls: List[QWidget] = []
         self.data_warn = data_warn
         self.ui.LBL_TITLE_MAIN.setText( title )
         self.setWindowTitle( title )
@@ -42,14 +42,15 @@ class FrmSamples( FrmBase ):
         self.ui.LBL_HAS_DATA_WARNING.setVisible( False )
         self.view_mode = 1
         self.update_files()
-        self.update_buttons()
         self.update_view()
     
     
     def update_files( self ):
-        # Disable existing buttons
-        for button in self._buttons:
-            button.setEnabled( False )
+        # Remove existing buttons
+        for control in self.__controls:
+            control.setParent( None )
+            
+        self.__controls.clear()
         
         sample_dirs = global_view.get_samples()
         recent_files = reversed( groot.data.global_view.options().recent_files )
@@ -63,6 +64,7 @@ class FrmSamples( FrmBase ):
             lbl = QLabel()
             lbl.setText( "No samples available." )
             self.ui.LAY_SAMPLE.addWidget( lbl )
+            self.__controls.append(lbl)
         
         # RECENT
         for file in recent_files:
@@ -73,6 +75,7 @@ class FrmSamples( FrmBase ):
             lbl = QLabel()
             lbl.setText( "No recent files." )
             self.ui.LAY_RECENT.addWidget( lbl )
+            self.__controls.append(lbl)
         
         # WORKSPACE
         if len( workspace_files ) <= 10:
@@ -83,20 +86,18 @@ class FrmSamples( FrmBase ):
             lbl = QLabel()
             lbl.setText( "No workspace files." )
             self.ui.LAY_WORKSPACE.addWidget( lbl )
+            self.__controls.append(lbl)
         elif len( workspace_files ) > 10:
             lbl = QLabel()
             lbl.setText( "Too many ({}) files to list.".format( len( workspace_files ) ) )
             self.ui.LAY_WORKSPACE.addWidget( lbl )
+            self.__controls.append(lbl)
+            
+        self.update_buttons()
     
     
     def add_button( self, layout: QGridLayout, sample_dir, action, icon ):
         act = (action or "") + sample_dir
-        
-        for button in self._buttons:
-            if button.parent().layout() is layout and button.statusTip() == act:
-                if action:
-                    button.setEnabled( True )
-                return
         
         button = QCommandLinkButton()
         button.setText( file_helper.get_filename_without_extension( sample_dir ) )
@@ -107,7 +108,7 @@ class FrmSamples( FrmBase ):
         button.setAutoDefault( False )
         button.clicked[bool].connect( self.__on_button_clicked )
         button.setIcon( icon.icon() )
-        self._buttons.append( button )
+        self.__controls.append( button )
         i = layout.count()
         x = i % 3
         y = i // 3
@@ -142,7 +143,7 @@ class FrmSamples( FrmBase ):
         if self.data_warn:
             status = global_view.current_model().get_status( constants.STAGES.DATA_0 )
             
-            for button in self._buttons:
+            for button in self.__controls:
                 button.setEnabled( status.is_none )
             
             self.ui.BTN_BROWSE.setEnabled( status.is_none )

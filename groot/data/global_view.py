@@ -75,7 +75,8 @@ def get_sample_data_folder( name: str = None ):
     PRIVATE
     Obtains the sample data folder
     """
-    sdf = path.join( file_helper.get_directory( __file__, 2 ), "sample_data" )
+    import groot_data
+    sdf = groot_data.get_path()
     
     if not name:
         return sdf
