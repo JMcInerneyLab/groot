@@ -7,14 +7,14 @@ from groot.utilities import graph_viewing
 from groot.constants import EFormat, LegoStage
 from groot.data import global_view
 from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import IHasFasta, ILegoVisualisable, LegoComponent, LegoSubset
+from groot.data.lego_model import IHasFasta, LegoComponent, LegoSubset, INamedGraph
 from groot.extensions import ext_files, ext_generating
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MENV, Table, Theme, cli_helper, help_command, visibilities
 from intermake.engine.environment import MCMD
 from intermake.plugins.command_plugin import command
-from mgraph import MGraph
+from mgraph import exporting
 from mhelper import ByRef, Filename, MOptional, ansi, io_helper, string_helper
 
 
@@ -45,7 +45,7 @@ def algorithm_help():
 
 
 @command( names = ["print_fasta", "fasta"] )
-def print_fasta( target: ILegoVisualisable ) -> EChanges:
+def print_fasta( target: object ) -> EChanges:
     """
     Presents the FASTA sequences for an object.
     :param target:   Object to present.
@@ -74,8 +74,8 @@ def print_status() -> EChanges:
     p.value = False
     r.append( "" )
     r.append( Theme.HEADING + "Sequences" + Theme.RESET )
-    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_1, groot.extensions.ext_importation.import_blast ) ) )
-    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_2, groot.extensions.ext_importation.import_fasta ) ) )
+    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_1, groot.extensions.ext_importation.import_fasta ) ) )
+    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_2, groot.extensions.ext_importation.import_blast ) ) )
     r.append( "" )
     r.append( Theme.HEADING + "Components" + Theme.RESET )
     r.append( "Components:    {}".format( __get_status( p, constants.STAGES.COMPONENTS_3, ext_generating.create_components ) ) )
@@ -87,8 +87,8 @@ def print_status() -> EChanges:
     r.append( "Candidates:    {}".format( __get_status( p, constants.STAGES.SPLITS_8, ext_generating.create_splits ) ) )
     r.append( "Viable:        {}".format( __get_status( p, constants.STAGES.CONSENSUS_9, ext_generating.create_consensus ) ) )
     r.append( "Leaf subsets:  {}".format( __get_status( p, constants.STAGES.SUBSETS_10, ext_generating.create_subsets ) ) )
-    r.append( "Minigraphs:    {}".format( __get_status( p, constants.STAGES.SUBGRAPHS_11, ext_generating.create_subgraphs ) ) )
-    r.append( "Sewed graph:   {}".format( __get_status( p, constants.STAGES.FUSED_12, ext_generating.create_fused ) ) )
+    r.append( "Subgraphs :    {}".format( __get_status( p, constants.STAGES.SUBGRAPHS_11, ext_generating.create_subgraphs ) ) )
+    r.append( "Fused graph:   {}".format( __get_status( p, constants.STAGES.FUSED_12, ext_generating.create_fused ) ) )
     r.append( "Cleaned graph: {}".format( __get_status( p, constants.STAGES.CLEANED_13, ext_generating.create_cleaned ) ) )
     r.append( "Checked graph: {}".format( __get_status( p, constants.STAGES.CHECKED_14, ext_generating.create_checked ) ) )
     MCMD.print( "\n".join( r ) )
@@ -151,50 +151,35 @@ def print_help() -> str:
     return "\n".join( r )
 
 
-@command( names = ["print_trees", "trees"] )
-def print_trees( graph: Optional[MGraph] = None,
+@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"] )
+def print_trees( graph: INamedGraph = None,
                  format: EFormat = EFormat.ASCII,
                  file: MOptional[Filename] = None,
                  fnode: str = None
                  ) -> EChanges:
     """
-    Prints trees or graphs
+    Prints trees or graphs.
     
     :param file:       File to write the output to. See `file_write_help`.
-    :param graph:      What to print. See `specify_graph_help` for details.
-                       All graphs are printed if nothing is specified.
+                       The default prints to the current display.
+    :param graph:      What to print. See `format_help` for details.
     :param fnode:      How to format the nodes. See `print_help`.
     :param format:     How to view the tree.
     """
     model = global_view.current_model()
-    trees = []
     
     if graph is None:
-        for component_ in model.components:
-            if component_.tree:
-                trees.append( (str( component_ ), component_.tree) )
-            else:
-                MCMD.print( "I cannot draw the tree for component «{}» because it has not yet been generated.".format( component_ ) )
-                continue
-        
-        if model.nrfg.fusion_graph_clean:
-            trees.append( (str( "NRFG" ), model.nrfg.fusion_graph_clean.graph) )
-    else:
-        name = "unknown"
-        
-        for component in model.components:
-            if graph is component.tree:
-                name = str( component )
-        
-        if model.nrfg.fusion_graph_clean is not None and graph is model.nrfg.fusion_graph_clean.graph:
-            name = "NRFG"
-        
-        if model.nrfg.fusion_graph_unclean is not None and graph is model.nrfg.fusion_graph_unclean.graph:
-            name = "NRFG (unclean)"
-        
-        trees.append( (name, graph) )
+        MCMD.print( "Available graphs:" )
+        is_any = False
+        for named_graph in model.iter_graphs():
+            is_any = True
+            MCMD.print( type( named_graph ).__name__.ljust( 20 ) + named_graph.name )
+        if not is_any:
+            MCMD.print( "(None available)" )
+        MCMD.print( "(arbitrary)".ljust( 20 ) + "(see `format_help`)" )
+        return EChanges.INFORMATION
     
-    text = graph_viewing.create( fnode, trees, model, format )
+    text = graph_viewing.create( fnode, graph, model, format )
     
     with io_helper.open_write( file, format.to_extension() ) as file_out:
         file_out.write( text + "\n" )
@@ -473,8 +458,8 @@ def print_fusions() -> EChanges:
     return EChanges.INFORMATION
 
 
-@command()
-def print_candidates( component: Optional[LegoComponent] = None ) -> EChanges:
+@command( names = ["print_splits", "splits"] )
+def print_splits( component: Optional[LegoComponent] = None ) -> EChanges:
     """
     Prints NRFG candidate splits.
     :param component:   Component, or `None` for the global split set.
@@ -485,62 +470,72 @@ def print_candidates( component: Optional[LegoComponent] = None ) -> EChanges:
         for x in component.splits:
             MCMD.information( str( x ) )
     else:
-        for x in model.nrfg.splits:
+        for x in model.splits:
             MCMD.information( str( x ) )
     
     return EChanges.INFORMATION
 
 
-@command()
-def print_viable() -> EChanges:
+@command( names = ["print_consensus", "consensus"] )
+def print_consensus() -> EChanges:
     """
     Prints NRFG viable splits.
     """
     
     model = global_view.current_model()
     
-    for x in model.nrfg.consensus:
+    for x in model.consensus:
         MCMD.information( str( x ) )
     
     return EChanges.INFORMATION
 
 
-@command()
+@command( names = ["print_subsets", "subsets"] )
 def print_subsets() -> EChanges:
     """
     Prints NRFG subsets.
     """
     model = global_view.current_model()
     
-    for x in model.nrfg.subsets:
-        assert isinstance(x, LegoSubset)
-        MCMD.information( string_helper.format_array( x.contents, sort = True, autorange = True ) )
+    for x in sorted( model.subsets, key = str ):
+        assert isinstance( x, LegoSubset )
+        MCMD.information( "{} - {} elements: {}".format( x, len( x ), string_helper.format_array( x.contents, sort = True, autorange = True ) ) )
     
     return EChanges.INFORMATION
 
 
-@command()
-def print_minigraphs() -> EChanges:
+@command( names = ["print_subgraphs", "subgraphs"] )
+def print_subgraphs() -> EChanges:
     """
-    Prints the names of the NRFG minigraphs (you'll need to use `print_trees` to print the actual trees).
+    Prints the names of the NRFG subgraphs (you'll need to use `print_trees` to print the actual trees).
     """
     model = global_view.current_model()
     
-    for i in range( len( model.nrfg.minigraphs ) ):
-        MCMD.information( "{}{} - {}".format( constants.MINIGRAPH_PREFIX, i, model.nrfg.minigraphs[i] ) )
+    if not model.subgraphs:
+        MCMD.information( "The current model has no subgraphs." )
+    
+    for subgraph in model.subgraphs:
+        MCMD.information( "{} = {}".format( subgraph.name, exporting.export_newick( subgraph.graph ) ) )
+    
+    return EChanges.INFORMATION
+
+@command( names = ["print_pregraphs", "pregraphs"] )
+def print_pregraphs() -> EChanges:
+    """
+    Prints the names of the NRFG subgraphs (you'll need to use `print_trees` to print the actual trees).
+    """
+    model = global_view.current_model()
+    
+    if not model.pregraphs:
+        MCMD.information( "The current model has no subgraphs." )
+    
+    for subgraph in model.pregraphs:
+        MCMD.information( "{} = {}".format( subgraph.name, exporting.export_newick( subgraph.graph ) ) )
     
     return EChanges.INFORMATION
 
 
-@command( visibility = visibilities.ADVANCED )
-def groot():
-    """
-    Displays the application version.
-    """
-    MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )
-
-
-@command()
+@command( names = ["print_sequences", "sequences"] )
 def print_sequences( find: str ) -> EChanges:
     """
     Lists the sequences whose accession matches the specified regular expression.

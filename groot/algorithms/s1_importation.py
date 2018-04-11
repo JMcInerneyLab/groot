@@ -1,11 +1,18 @@
-from typing import Optional, cast
+"""
+File importation functions.
+
+Generally just FASTA is imported here, but we also have the generic `import_file`
+and `import_directory`, as well as some miscellaneous imports such as Composite
+Search and Newick imports, that don't belong anywhere else. 
+"""
+from typing import cast
+from intermake import MCMD, common_commands
+from mgraph import MGraph, MNode, analysing, exporting, importing
+from mhelper import ByRef, Logger, MFlags, bio_helper, file_helper
 
 from groot import algorithms
-from groot.utilities import graph_viewing
-from groot.data.lego_model import LegoModel, LegoSubsequence, LegoSequence, LegoPoint, ILegoNode
-from intermake import MCMD, common_commands
-from mgraph import MGraph, MNode, importing, exporting, analysing
-from mhelper import file_helper, bio_helper, ByRef, Logger, MFlags
+from groot.data import lego_graph
+from groot.data.lego_model import LegoModel, LegoPoint, LegoSequence
 
 
 LOG = Logger( "import" )
@@ -13,6 +20,8 @@ LOG = Logger( "import" )
 
 class EImportFilter( MFlags ):
     """
+    Mask on importing files.
+    
     :data DATA: Data files (`.fasta`, `.blast`, `.composites`)
     :data MODE: Model files (`.groot`)
     :data SCRIPT: Scripts (`.imk`)
@@ -44,12 +53,23 @@ def import_directory( model: LegoModel, directory: str, query: bool, filter: EIm
 
 
 def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, filter: EImportFilter, query: bool ) -> None:
+    """
+    Imports a file.
+    _How_ the file is imported is determined by its extension.
+    
+    :param model:                   Model to import file into. 
+    :param file_name:               Name of file to import. 
+    :param skip_bad_extensions:     When set, if the file has an extension we don't recognise, no error is raised. 
+    :param filter:                  Specifies what kind of files we are allowed to import.
+    :param query:                   When set the kind of the file is printed to `MCMD` and the file is not imported. 
+    :return:                        Nothing is returned, the file data is incorporated into the model and messages are sent via `MCMD`.
+    """
     ext = file_helper.get_extension( file_name ).lower()
     
     if filter.DATA:
         if ext == ".blast":
             if not query:
-                import_blast( model, file_name )
+                algorithms.s2_similarity.import_similarity( model, file_name )
                 return
             else:
                 MCMD.print( "BLAST: «{}».".format( file_name ) )
@@ -128,76 +148,6 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
     MCMD.progress( "Imported Fasta from «{}».".format( file_name ) )
 
 
-def import_blast( model: LegoModel, file_name: str, evalue: float = None, length: int = None ) -> None:
-    """
-    API
-    Imports a BLAST file.
-    If data already exists in the model, only lines referencing existing sequences are imported.
-    """
-    obtain_only = model._has_data()
-    
-    LOG( "IMPORT {} BLAST FROM '{}'", "MERGE" if obtain_only else "NEW", file_name )
-    
-    with LOG:
-        with open( file_name, "r" ) as file:
-            for line in file.readlines():
-                line = line.strip()
-                
-                if line and not line.startswith( "#" ) and not line.startswith( ";" ):
-                    # BLASTN     query acc. | subject acc. |                                 | % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
-                    # MEGABLAST  query id   | subject ids  | query acc.ver | subject acc.ver | % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
-                    # Fields: 
-                    
-                    # Split by tabs or spaces 
-                    if "\t" in line:
-                        e = line.split( "\t" )
-                    else:
-                        e = [x for x in line.split( " " ) if x]
-                    
-                    if len( e ) == 14:
-                        del e[2:4]
-                    
-                    # Assertion
-                    if len( e ) != 12:
-                        raise ValueError( "BLAST file '{}' should contain 12 values, but this line contains {}: {}".format( file_name, len( e ), line ) )
-                    
-                    query_accession = e[0]
-                    query_start = int( e[6] )
-                    query_end = int( e[7] )
-                    query_length = query_end - query_start
-                    subject_accession = e[1]
-                    subject_start = int( e[8] )
-                    subject_end = int( e[9] )
-                    subject_length = subject_end - subject_start
-                    e_value = float( e[10] )
-                    LOG( "BLAST SAYS {} {}:{} ({}) --> {} {}:{} ({})".format( query_accession, query_start, query_end, query_length, subject_accession, subject_start, subject_end, subject_length ) )
-                    
-                    if evalue is not None and e_value > evalue:
-                        LOG( "REJECTED E VALUE" )
-                        continue
-                    
-                    if length is not None and query_length < length:
-                        LOG( "REJECTED LENGTH" )
-                        continue
-                    
-                    assert query_length > 0 and subject_length > 0
-                    
-                    TOL = int( 10 + ((query_length + subject_length) / 2) / 5 )
-                    if not (subject_length - TOL) <= query_length <= (subject_length + TOL):
-                        raise ValueError( "Refusing to process BLAST file because the query length {} is not constant with the subject length {} at the line reading '{}'.".format( query_length, subject_length, line ) )
-                    
-                    query_s = algorithms.s0_editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
-                    subject_s = algorithms.s0_editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
-                    
-                    if query_s and subject_s and query_s is not subject_s:
-                        query = LegoSubsequence( query_s, query_start, query_end )
-                        subject = LegoSubsequence( subject_s, subject_start, subject_end )
-                        LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
-                        algorithms.s0_editor.make_edge( model, query, subject, line, False )
-    
-    MCMD.progress( "Imported Blast from «{}».".format( file_name ) )
-
-
 def import_composites( model: LegoModel, file_name: str ) -> None:
     """
     API
@@ -259,19 +209,25 @@ def export_newick( graph: MGraph ):
     * We don't label the other clades
     """
     # Declade fusion nodes
-    nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+    nodes = analysing.realise_node_predicate_as_set( graph, lego_graph.is_fusion_like )
     
     for node in nodes:
         node.add_child( node.data )
         node.data = None
     
+    # Ensure the root of the graph is not something weird
+    if not lego_graph.is_clade( graph.root ):
+        child = graph.root.child
+        assert lego_graph.is_clade( child )
+        child.make_root()
+    
     # Write newick
     return exporting.export_newick( graph,
-                                    fnode = graph_viewing.FORMATTER.prefixed_sequence_internal_id,
+                                    fnode = lambda x: x.data.legacy_accession if x.data else "",
                                     internal = False )
 
 
-def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None ) -> MGraph:
+def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None, reclade: bool = True ) -> MGraph:
     """
     Imports a newick string as an MGraph object.
     
@@ -284,41 +240,16 @@ def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None 
     
     # Convert node names back to references
     for node in graph.nodes:
-        node.data = import_leaf_reference( cast( str, node.data ),
-                                           model,
-                                           allow_empty = True )
+        node.data = lego_graph.import_leaf_reference( cast( str, node.data ),
+                                                      model,
+                                                      allow_empty = True )
     
-    # Enclade fusion nodes
-    fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
-    
-    for node in fusion_nodes:
-        node.parent.data = node.data
-        node.remove_node()
+    # Reclade fusion nodes
+    if reclade:
+        fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+        
+        for node in fusion_nodes:
+            node.parent.data = node.data
+            node.remove_node()
     
     return graph
-
-
-def import_leaf_reference( name: str, model: LegoModel, *, allow_empty: bool = False ) -> Optional[ILegoNode]:
-    """
-    Converts a sequence name to a sequence reference.
-    
-    :param name:        Name, either:
-                            i.  The accession
-                            ii. The ID, of the form `"S[0-9]+"`
-    :param model:       The model to find the sequence in 
-    :param allow_empty: Allow `None` or `""` to denote a missing sequence, `None`. 
-    :return:            The sequence, or `None` if `allow_empty` is set.
-    """
-    if allow_empty and name is None:
-        return None
-    
-    assert isinstance( name, str )
-    
-    if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
-        return None
-    elif LegoSequence.is_legacy_accession( name ):
-        return model.find_sequence_by_legacy_accession( name )
-    elif LegoPoint.is_legacy_accession( name ):
-        return model.find_fusion_point_by_legacy_accession( name )
-    else:
-        return model.find_sequence_by_accession( name )

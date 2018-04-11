@@ -1,15 +1,12 @@
 from typing import List, cast
+from mhelper import string_helper
+from intermake import MCMD, MENV, Plugin, Theme
 
 import groot.extensions.ext_importation
 from groot.constants import EFormat, STAGES, LegoStage
 from groot.data import global_view
 from groot.extensions import ext_files, ext_generating, ext_gimmicks, ext_viewing, ext_modifications
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD
-from intermake.engine.environment import MENV
-from intermake.engine.plugin import Plugin
-from intermake.engine.theme import Theme
-from mhelper import string_helper
 
 
 class Wizard:
@@ -33,6 +30,7 @@ class Wizard:
                   pause_splits: bool,
                   pause_consensus: bool,
                   pause_subset: bool,
+                  pause_pregraphs: bool,
                   pause_minigraph: bool,
                   pause_sew: bool,
                   pause_clean: bool,
@@ -61,6 +59,7 @@ class Wizard:
         self.pause_consensus = pause_consensus
         self.pause_subsets = pause_subset
         self.pause_minigraph = pause_minigraph
+        self.pause_pregraphs = pause_pregraphs
         self.pause_sew = pause_sew
         self.pause_clean = pause_clean
         self.pause_check = pause_check
@@ -131,9 +130,9 @@ class Wizard:
     def __line( self, title: object ):
         title = "WIZARD: " + str( title )
         title = " ".join( title.upper() )
-        MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
+        # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
         MCMD.progress( string_helper.centre_align( " " + title + " ", MENV.host.console_width, Theme.C.SHADE ) )
-        MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
+        # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
     
     
     def get_stage_name( self ):
@@ -169,7 +168,7 @@ class Wizard:
         ext_generating.create_splits()
         
         if self.pause_splits:
-            self.__pause( STAGES.SPLITS_8, (ext_viewing.print_viable,) )
+            self.__pause( STAGES.SPLITS_8, (ext_viewing.print_splits,) )
     
     
     def __fn9_make_consensus( self ):
@@ -177,7 +176,7 @@ class Wizard:
         ext_generating.create_consensus()
         
         if self.pause_consensus:
-            self.__pause( STAGES.CONSENSUS_9, (ext_viewing.print_candidates,) )
+            self.__pause( STAGES.CONSENSUS_9, (ext_viewing.print_consensus,) )
     
     
     def __fn10_make_subsets( self ):
@@ -188,15 +187,23 @@ class Wizard:
             self.__pause( STAGES.SUBSETS_10, (ext_viewing.print_subsets,) )
     
     
-    def __fn11_make_subgraphs( self ):
+    def __fn12_make_subgraphs( self ):
         self.__line( "Subgraphs" )
         ext_generating.create_subgraphs( self.supertree )
         
         if self.pause_minigraph:
-            self.__pause( STAGES.SUBGRAPHS_11, (ext_viewing.print_minigraphs,) )
+            self.__pause( STAGES.SUBGRAPHS_11, (ext_viewing.print_subgraphs,) )
     
     
-    def __fn12_make_sewed( self ):
+    def __fn11_make_pregraphs( self ):
+        self.__line( "Pregraphs" )
+        ext_generating.create_pregraphs()
+        
+        if self.pause_pregraphs:
+            self.__pause( STAGES.PREGRAPHS_11, (ext_viewing.print_pregraphs,) )
+    
+    
+    def __fn13_make_fused( self ):
         self.__line( STAGES.FUSED_12 )
         ext_generating.create_fused()
         
@@ -204,7 +211,7 @@ class Wizard:
             self.__pause( STAGES.FUSED_12, (ext_viewing.print_trees,) )
     
     
-    def __fn13_make_clean( self ):
+    def __fn14_make_clean( self ):
         self.__line( STAGES.CLEANED_13 )
         ext_generating.create_cleaned()
         
@@ -212,7 +219,7 @@ class Wizard:
             self.__pause( STAGES.CLEANED_13, (ext_viewing.print_trees,) )
     
     
-    def __fn14_make_checks( self ):
+    def __fn15_make_checks( self ):
         self.__line( STAGES.CHECKED_14 )
         ext_generating.create_checked()
         
@@ -220,9 +227,9 @@ class Wizard:
             self.__pause( STAGES.CHECKED_14, (ext_viewing.print_trees,) )
     
     
-    def __fn15_view_nrfg( self ):
+    def __fn16_view_nrfg( self ):
         if self.view:
-            self.__result |= ext_viewing.print_trees( graph = global_view.current_model().nrfg.fusion_graph_clean.graph,
+            self.__result |= ext_viewing.print_trees( graph = global_view.current_model().fusion_graph_clean.graph,
                                                       format = EFormat.VISJS,
                                                       file = "open" )
     
@@ -263,6 +270,11 @@ class Wizard:
             self.__pause( STAGES.COMPONENTS_3, (ext_viewing.print_genes, ext_viewing.print_components) )
     
     
+    def __fn4b_make_domains( self ):
+        self.__line( STAGES.DOMAINS_4 )
+        self.__result |= ext_generating.create_domains( "component" )
+    
+    
     def __fn3_import_data( self ):
         self.__line( STAGES.DATA_0 )
         for import_ in self.imports:
@@ -299,14 +311,16 @@ class Wizard:
     __stages = [__fn1_new_model,
                 __fn3_import_data,
                 __fn4_make_components,
+                __fn4b_make_domains,
                 __fn5_make_alignments,
                 __fn6_make_trees,
                 __fn7_make_fusions,
                 __fn8_make_splits,
                 __fn9_make_consensus,
                 __fn10_make_subsets,
-                __fn11_make_subgraphs,
-                __fn12_make_sewed,
-                __fn13_make_clean,
-                __fn14_make_checks,
-                __fn15_view_nrfg]
+                __fn11_make_pregraphs,
+                __fn12_make_subgraphs,
+                __fn13_make_fused,
+                __fn14_make_clean,
+                __fn15_make_checks,
+                __fn16_view_nrfg]

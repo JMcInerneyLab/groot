@@ -60,8 +60,8 @@ class GuiMenu:
         self.add_action( ["File", "-"] )
         self.add_action( ["File", "E&xit"], visualiser = gui_workflow.VISUALISERS.ACT_EXIT )
         
-        self.add_workflow( gui_workflow.STAGES.BLAST_1 )
-        self.add_workflow( gui_workflow.STAGES.FASTA_2 )
+        self.add_workflow( gui_workflow.STAGES.FASTA_1 )
+        self.add_workflow( gui_workflow.STAGES.BLAST_2 )
         self.add_workflow( gui_workflow.STAGES.COMPONENTS_3 )
         self.add_workflow( gui_workflow.STAGES.DOMAINS_4 )
         self.add_workflow( gui_workflow.STAGES.ALIGNMENTS_5 )
@@ -70,6 +70,7 @@ class GuiMenu:
         self.add_workflow( gui_workflow.STAGES.SPLITS_8 )
         self.add_workflow( gui_workflow.STAGES.CONSENSUS_9 )
         self.add_workflow( gui_workflow.STAGES.SUBSETS_10 )
+        self.add_workflow( gui_workflow.STAGES.PREGRAPHS_11 )
         self.add_workflow( gui_workflow.STAGES.SUBGRAPHS_11 )
         self.add_workflow( gui_workflow.STAGES.FUSED_12 )
         self.add_workflow( gui_workflow.STAGES.CLEANED_13 )
@@ -81,7 +82,6 @@ class GuiMenu:
         self.add_action( ["Windows", "&Preferences..."], visualiser = gui_workflow.VISUALISERS.VIEW_PREFERENCES, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "-"], toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Visualisers", "Text..."], visualiser = gui_workflow.VISUALISERS.VIEW_TEXT, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Entities..."], visualiser = gui_workflow.VISUALISERS.VIEW_ENTITIES, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Visualisers", "Lego..."], visualiser = gui_workflow.VISUALISERS.VIEW_LEGO, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Visualisers", "Alignment..."], visualiser = gui_workflow.VISUALISERS.VIEW_ALIGNMENT, toolbar = ui.FRA_VISUALISERS )
         self.add_action( ["Windows", "Visualisers", "Fusion..."], visualiser = gui_workflow.VISUALISERS.VIEW_FUSIONS, toolbar = ui.FRA_VISUALISERS )
@@ -107,9 +107,9 @@ class GuiMenu:
         path = ["Workflow", stage.name]
         mnu = self.add_menu( path, headline = stage.headline )
         
-        self.add_workflow_menu( path + ["Create"], stage, stage.visualisers( EIntent.CREATE ), icon = resources.create )
-        self.add_workflow_menu( path + ["Drop"], stage, stage.visualisers( EIntent.DROP ), icon = resources.remove )
-        self.add_workflow_menu( path + ["View"], stage, stage.visualisers( EIntent.VIEW ), icon = resources.view )
+        self.add_workflow_menu( path + ["Create"], stage.visualisers( EIntent.CREATE ), icon = resources.create )
+        self.add_workflow_menu( path + ["Drop"], stage.visualisers( EIntent.DROP ), icon = resources.remove )
+        self.add_workflow_menu( path + ["View"], stage.visualisers( EIntent.VIEW ), icon = resources.view )
         
         self.stages[stage] = mnu
         
@@ -140,20 +140,20 @@ class GuiMenu:
                 button.setIcon( ResourceIcon( path ).icon() )
     
     
-    def add_workflow_menu( self, path, stage: LegoStage, visualisers: Iterator[LegoVisualiser], icon: ResourceIcon ):
+    def add_workflow_menu( self, path, visualisers: Iterator[LegoVisualiser], icon: ResourceIcon ):
         visualisers = list( visualisers )
         
         if len( visualisers ) == 0:
             return
         if len( visualisers ) == 1:
-            self.add_action( path, visualiser = visualisers[0], icon = icon, stage = stage )
+            self.add_action( path, visualiser = visualisers[0], icon = icon )
         else:
             self.add_menu( path, icon = icon )
             for visualiser in visualisers:
-                self.add_action( path + [visualiser.name], visualiser = visualiser, stage = stage )
+                self.add_action( path + [visualiser.name], visualiser = visualiser )
     
     
-    def add_action( self, texts: Sequence[str], visualiser = None, stage: LegoStage = None, icon: ResourceIcon = None, shortcut: int = None, toolbar: QGroupBox = None ):
+    def add_action( self, texts: Sequence[str], visualiser = None, icon: ResourceIcon = None, shortcut: int = None, toolbar: QGroupBox = None ):
         menu = self.add_menu( texts[:-1] )
         final = texts[-1]
         
@@ -182,7 +182,7 @@ class GuiMenu:
             if icon is None and visualiser.icon is not None:
                 action.setIcon( visualiser.icon.icon() )
             
-            exec_ = VisWrap( self.gui_actions, visualiser, *((stage,) if stage else ()) )
+            exec_ = VisWrap( self.gui_actions, visualiser )
             action.triggered[bool].connect( exec_.execute )
             self.keep_alive.append( exec_ )
             action.TAG_visualiser = visualiser

@@ -1,19 +1,17 @@
 """
-Holds the Lego model, and its dependencies.
-
-See class `LegoModel`.
+Holds the Lego model :class:`LegoModel` and associated objects.
 """
 
 import re
-from typing import Dict, FrozenSet, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
-
-from groot import constants
-from groot.data.exceptions import NotReadyError, InUseError
+import warnings
+from typing import Dict, FrozenSet, Iterable, Iterator, List, Optional, Sequence, Set, Tuple, Any, cast
 from intermake import EColour, IVisualisable, UiInfo, MENV
 from intermake_qt import resources as intermake_resources
 from mgraph import MGraph, Split
-from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, utf_helper
+from mhelper import MEnum, NotFoundError, SwitchError, TTristate, array_helper, bio_helper, file_helper as FileHelper, string_helper, exception_helper
 
+from groot import constants
+from groot.data.exceptions import NotReadyError, InUseError
 from groot.constants import LegoStage
 from groot.frontends.gui.gui_view_support import EMode
 from groot.frontends.gui.forms.resources import resources as groot_resources
@@ -30,8 +28,8 @@ class EPosition( MEnum ):
     Node positions.
     
     :data NONE:     No specific position
-    :data ROOT:     Node is a root
-    :data OUTGROUP: Node is an outgroup
+    :data ROOT:     Node is a root. Many software and algorithms only allow named taxa on leaves so this isn't recommended.
+    :data OUTGROUP: Node is an outgroup.
     """
     NONE = 0
     ROOT = 1
@@ -41,7 +39,7 @@ class EPosition( MEnum ):
 class ILegoNode:
     """
     Things that can be data on graph nodes.
-    Genes (`LegoSequence`) and fusions (`FusionPoint`).
+    i.e. Genes/Taxa (`LegoSequence`) and fusions (`FusionPoint`).
     """
     pass
 
@@ -49,14 +47,6 @@ class ILegoNode:
 class ILegoSelectable:
     """
     Components of the model the user can select.
-    """
-    pass
-
-
-# noinspection PyAbstractClass
-class ILegoVisualisable( IVisualisable ):
-    """
-    Things the user can visualise.
     """
     pass
 
@@ -106,7 +96,7 @@ class ETristate( MEnum ):
     NO = -1
 
 
-class LegoEdge( ILegoVisualisable, ILegoSelectable, IHasFasta ):
+class LegoEdge( ILegoSelectable, IHasFasta ):
     """
     Edge from one subsequence (or set of subsequences) to another
     
@@ -248,7 +238,7 @@ class LegoEdge( ILegoVisualisable, ILegoSelectable, IHasFasta ):
         return self.side( item, opposite = True )
 
 
-class LegoSubsequence( ILegoVisualisable, IHasFasta ):
+class LegoSubsequence( IHasFasta ):
     """
     Portion of a sequence
     """
@@ -463,7 +453,7 @@ class LegoUserDomain( LegoSubsequence, ILegoSelectable ):
     pass
 
 
-class LegoSequence( ILegoVisualisable, ILegoNode, ILegoSelectable, IHasFasta ):
+class LegoSequence( ILegoNode, ILegoSelectable, IHasFasta ):
     """
     Protein (or DNA) sequence
     
@@ -495,6 +485,14 @@ class LegoSequence( ILegoVisualisable, ILegoNode, ILegoSelectable, IHasFasta ):
         self.comments: List[str] = []
         self.length = 1
         self.position = EPosition.NONE
+    
+    
+    def iter_edges( self ):
+        return (x for x in self.model.edges if x.left is self or x.right is self)
+    
+    
+    def iter_userdomains( self ):
+        return (x for x in self.model.user_domains if x.sequence is self)
     
     
     @property
@@ -566,14 +564,7 @@ class LegoSequence( ILegoVisualisable, ILegoNode, ILegoSelectable, IHasFasta ):
         """
         OVERRIDE 
         """
-        r = self.accession or "(no-accession)"
-        
-        if self.position == EPosition.OUTGROUP:
-            return "*" + r
-        elif self.position == EPosition.ROOT:
-            return "**" + r
-        else:
-            return r
+        return "G{}".format( self.accession or self.index )
     
     
     @property
@@ -642,16 +633,11 @@ class INamedGraph( ILegoSelectable ):
     
     
     def on_get_name( self ) -> str:
-        raise NotImplementedError( "abstract" )
+        return str( self )
 
 
-class NamedGraph( INamedGraph ):
-    def __init__( self, graph: MGraph, name: str ):
-        self.__graph = graph
-        self.__name = name
-    
-    
-    def on_get_graph( self ) -> MGraph:
+class UserGraph( INamedGraph ):
+    def on_get_graph( self ) -> Optional[MGraph]:
         return self.__graph
     
     
@@ -659,11 +645,18 @@ class NamedGraph( INamedGraph ):
         return self.__name
     
     
-    def __str__( self ) -> str:
+    def __init__( self, graph: MGraph, name = "user_graph" ):
+        assert isinstance( graph, MGraph )
+        assert isinstance( name, str )
+        self.__graph = graph
+        self.__name = name
+    
+    
+    def __str__( self ):
         return self.name
 
 
-class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
+class LegoComponent( INamedGraph, IHasFasta ):
     """
     Stores information about a component of the (:class:`LegoModel`).
     
@@ -700,6 +693,21 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
         self.tree: MGraph = None
         self.tree_unrooted: MGraph = None
         self.tree_newick: str = None
+    
+    
+    def get_accid( self ):
+        for x in sorted( self.major_sequences, key = cast( Any, str ) ):
+            return x.accession
+    
+    
+    @property
+    def named_tree( self ):
+        return _ComponentAsGraph( self, False )
+    
+    
+    @property
+    def named_tree_unrooted( self ):
+        return _ComponentAsGraph( self, True )
     
     
     def to_details( self ):
@@ -785,7 +793,7 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
         """
         OVERRIDE 
         """
-        return utf_helper.circled( re.sub( "[0-9]", " ", self.major_sequences[0].accession ) )[0]
+        return "comp_{}".format( self.get_accid() )
     
     
     def incoming_components( self ) -> List["LegoComponent"]:
@@ -820,7 +828,7 @@ class LegoComponent( INamedGraph, ILegoVisualisable, IHasFasta ):
         raise NotFoundError( "Sequence «{}» not in component «{}».".format( sequence, self ) )
 
 
-class ComponentAsData( ILegoVisualisable ):
+class ComponentAsData:
     def __init__( self, component: "LegoComponent" ):
         self.component = component
     
@@ -833,7 +841,58 @@ class ComponentAsData( ILegoVisualisable ):
         return "{}::data".format( self.component )
 
 
-class ComponentAsAlignment( ILegoVisualisable, IHasFasta ):
+class FusionGraph( INamedGraph ):
+    def __init__( self, graph, is_clean ):
+        self.__graph = graph
+        self.is_clean = is_clean
+    
+    
+    def on_get_graph( self ):
+        return self.__graph
+    
+    
+    def on_get_name( self ):
+        return str( self )
+    
+    
+    def __str__( self ):
+        return "nrfg" if self.is_clean else "nrfg_unclean"
+
+
+class Subgraph( INamedGraph ):
+    
+    
+    def __init__( self, graph: MGraph, subset: "LegoSubset", algorithm: str ):
+        """
+        CONSTRUCTOR
+        :param graph:       The actual graph 
+        :param subset:      The subset from whence it came 
+        :param algorithm:   The algorithm used to generate the graph 
+        """
+        self.__graph = graph
+        self.__subset = subset
+        self.__algorithm = algorithm
+    
+    
+    def on_get_graph( self ) -> Optional[MGraph]:
+        return self.__graph
+    
+    
+    def on_get_name( self ) -> str:
+        return str( self )
+    
+    
+    def __str__( self ):
+        return "subgraph_{}".format( self.__subset.get_accid() )
+    
+    
+    def visualisable_info( self ):
+        return UiInfo( name = str( self ),
+                       value = str( self.graph ),
+                       extra = { "algorithm": self.__algorithm } )
+
+
+class ComponentAsAlignment( IHasFasta ):
     def __init__( self, component: "LegoComponent" ):
         self.component = component
     
@@ -850,7 +909,7 @@ class ComponentAsAlignment( ILegoVisualisable, IHasFasta ):
         return "{}::alignment".format( self.component )
 
 
-class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
+class _ComponentAsGraph( INamedGraph ):
     def on_get_graph( self ) -> Optional[MGraph]:
         if self.unrooted:
             return self.component.tree_unrooted
@@ -859,7 +918,7 @@ class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
     
     
     def on_get_name( self ) -> str:
-        return self.component.name
+        return str( self )
     
     
     def __init__( self, component: "LegoComponent", unrooted = False ):
@@ -868,7 +927,9 @@ class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
     
     
     def visualisable_info( self ):
-        return self.component.visualisable_info()
+        x = self.component.visualisable_info()
+        x.name = str( self )
+        return x
     
     
     def to_fasta( self ):
@@ -876,7 +937,7 @@ class ComponentAsGraph( ILegoVisualisable, INamedGraph ):
     
     
     def __str__( self ):
-        return "{}::{}".format( self.component, "unrooted" if self.unrooted else "tree" )
+        return "{}_{}".format( self.component, "unrooted" if self.unrooted else "tree" )
 
 
 class LegoEdgeCollection:
@@ -1045,6 +1106,15 @@ class LegoSequenceCollection:
         return sum( x.site_array is not None for x in self )
     
     
+    def to_fasta( self ):
+        r = []
+        
+        for s in self:
+            r.append( s.to_fasta() )
+        
+        return "\n".join( r )
+    
+    
     def __bool__( self ):
         return bool( self.__sequences )
     
@@ -1144,7 +1214,7 @@ class LegoViewOptions:
         self.domain_positions: Dict[Tuple[int, int], Tuple[int, int]] = { }
 
 
-class LegoSplit( ILegoSelectable, ILegoVisualisable ):
+class LegoSplit( ILegoSelectable ):
     """
     Wraps a :class:`Split` making it Groot-friendly.
     """
@@ -1209,7 +1279,7 @@ class LegoSplit( ILegoSelectable, ILegoVisualisable ):
                or self.split.inside.issubset( other.split.inside ) and self.split.outside.issubset( other.split.outside )
 
 
-class NrfgReport( ILegoSelectable, ILegoVisualisable ):
+class NrfgReport( ILegoSelectable ):
     def __init__( self ):
         pass
     
@@ -1227,7 +1297,7 @@ class NrfgReport( ILegoSelectable, ILegoVisualisable ):
                        icon = groot_resources.black_check )
 
 
-class LegoSubset( ILegoVisualisable, ILegoSelectable ):
+class LegoSubset( ILegoSelectable, IVisualisable ):
     """
     Represents a subset of leaf nodes (see `ILeaf`).
     """
@@ -1237,10 +1307,23 @@ class LegoSubset( ILegoVisualisable, ILegoSelectable ):
         self.model = model
         self.index = index
         self.contents = contents
+        self.pregraphs: List[LegoPregraph] = None
+    
+    
+    def get_accid( self ):
+        for x in sorted( self.contents, key = cast( Any, str ) ):
+            if isinstance( x, LegoSequence ):
+                return x.accession
+        
+        return self.index
+    
+    
+    def __len__( self ):
+        return len( self.contents )
     
     
     def __str__( self ):
-        return "Subset{}".format( self.index )
+        return "subset_{}".format( self.get_accid() )
     
     
     def get_details( self ):
@@ -1257,68 +1340,31 @@ class LegoSubset( ILegoVisualisable, ILegoSelectable ):
                        extra_indexed = self.contents )
 
 
-class LegoNrfg( ILegoSelectable, IVisualisable ):
-    """
-    Holds both the NRFG and the information required to create it.
-    """
-    
-    
-    def __init__( self ):
-        self.splits: FrozenSet[LegoSplit] = frozenset()
-        self.consensus: FrozenSet[LegoSplit] = frozenset()
-        self.fusion_graph_unclean: NamedGraph = None
-        self.fusion_graph_clean: NamedGraph = None
-        self.report: NrfgReport = None
-        self.subsets: FrozenSet[LegoSubset] = frozenset()
-        self.minigraphs: Sequence[NamedGraph] = tuple()
-        self.minigraphs_sources: Sequence[int] = tuple()
-        self.minigraphs_destinations: Sequence[int] = tuple()
-    
-    
-    def __str__( self ):
-        return "NRFG"
-    
-    
-    def visualisable_info( self ):
-        return UiInfo( name = "nrfg",
-                       value = "",
-                       comment = "",
-                       extra = { "splits"               : self.splits,
-                                 "consensus"            : self.consensus,
-                                 "fusion_graph_clean"   : self.fusion_graph_clean,
-                                 "fusion_graph_unclean" : self.fusion_graph_unclean,
-                                 "report"               : self.report,
-                                 "subsets"              : self.subsets,
-                                 "subgraphs"            : self.minigraphs,
-                                 "subgraph_sources"     : self.minigraphs_sources,
-                                 "subgraph_destinations": self.minigraphs_destinations } )
-
-
 class ModelStatus:
     def __init__( self, model: "LegoModel", stage: LegoStage ):
         self.model: LegoModel = model
         self.stage: LegoStage = stage
-        
+    
+    
     def assert_drop( self ):
         if self.is_none:
-            raise NotReadyError( "Cannot drop «{}» stage because this data does not yet exist.".format(self.stage))
-    
+            raise NotReadyError( "Cannot drop «{}» stage because this data does not yet exist.".format( self.stage ) )
+        
         for stage in constants.STAGES:
             if stage.requires == self:
-                raise InUseError( "Cannot drop «{}» stage the following stage, «{}» is relying on that data. Perhaps you meant to drop that stage first?".format(self.stage, stage) )
-            
+                raise InUseError( "Cannot drop «{}» stage the following stage, «{}» is relying on that data. Perhaps you meant to drop that stage first?".format( self.stage, stage ) )
+    
+    
     def assert_create( self ):
         if self.is_complete:
-            raise NotReadyError( "Cannot create «{}» stage because this data already exists.".format(self.stage))
-            
+            raise NotReadyError( "Cannot create «{}» stage because this data already exists.".format( self.stage ) )
+        
         if self.stage.requires is not None:
-            req = self.model.get_status(self.stage.requires)
+            req = self.model.get_status( self.stage.requires )
             
             if req.is_not_complete:
-                raise NotReadyError( "Cannot create «{}» because the preceeding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format(self.stage, self.stage.requires) )
-        
-        
-        
+                raise NotReadyError( "Cannot create «{}» because the preceding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format( self.stage, self.stage.requires ) )
+    
     
     @property
     def requisite_complete( self ) -> bool:
@@ -1377,7 +1423,7 @@ class ModelStatus:
         return has_any
 
 
-class LegoFusion( ILegoVisualisable, ILegoSelectable ):
+class LegoFusion( ILegoSelectable, IVisualisable ):
     """
     Describes a fusion event
     
@@ -1391,7 +1437,7 @@ class LegoFusion( ILegoVisualisable, ILegoSelectable ):
     
     
     def visualisable_info( self ):
-        return UiInfo( name = self.short_name,
+        return UiInfo( name = str( self ),
                        comment = "",
                        type_name = "Fusion",
                        value = self.long_name,
@@ -1402,7 +1448,7 @@ class LegoFusion( ILegoVisualisable, ILegoSelectable ):
                                  "component_b"    : self.component_b,
                                  "products"       : self.products,
                                  "future_products": self.future_products,
-                                 "points"         : self.points } )
+                                 "formations"     : self.formations } )
     
     
     def __init__( self, index: int, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
@@ -1417,7 +1463,7 @@ class LegoFusion( ILegoVisualisable, ILegoSelectable ):
         self.component_b: LegoComponent = component_b
         self.products: Set[LegoComponent] = intersections
         self.future_products: Set[LegoComponent] = set( intersections )
-        self.points: List[LegoPoint] = None
+        self.formations: List[LegoFormation] = []
     
     
     @property
@@ -1430,16 +1476,70 @@ class LegoFusion( ILegoVisualisable, ILegoSelectable ):
         return "({}+{}={})".format( self.component_a, self.component_b, ",".join( x.__str__() for x in self.products ) )
     
     
+    def __repr__( self ):
+        return "F" + str( self.get_accid() )
+    
+    
+    def get_accid( self ):
+        return self.component_c.get_accid()
+
+
+class LegoFormation( IVisualisable, ILegoNode ):
+    
+    
+    def __init__( self,
+                  event: LegoFusion,
+                  component: LegoComponent,
+                  sequences: Set[ILegoNode],
+                  index: int ):
+        self.event = event
+        self.component = component
+        self.sequences = sequences
+        self.pertinent_inner = frozenset( self.sequences.intersection( self.event.component_c.major_sequences ) )
+        self.points: List[LegoPoint] = []
+        self.index = index
+    
+    
+    def visualisable_info( self ) -> UiInfo:
+        return UiInfo( name = str( self ),
+                       type_name = "Formation",
+                       value = "{} points".format( len( self.points ) ),
+                       extra = {
+                           "component"      : self.component,
+                           "sequences"      : self.sequences,
+                           "pertinent_inner": self.pertinent_inner,
+                           "index"          : self.index,
+                           "points"         : self.points } )
+    
+    
+    def __repr__( self ):
+        return "{}.{}".format( self.event, self.index )
+    
+    
+    _LEGACY_IDENTIFIER = re.compile( "^GrtF([0-9]+)F([0-9]+)$" )
+    _LEGACY_FORMAT = "GrtF{}F{}"
+    
+    
     @property
-    def short_name( self ):
-        return "{}".format( ",".join( x.__str__() for x in self.products ) )
+    def legacy_accession( self ):
+        return self._LEGACY_FORMAT.format( self.event.index, self.index )
     
     
-    def __str__( self ) -> str:
-        return "F" + str( self.index )
+    @classmethod
+    def read_legacy_accession( cls, name: str ) -> Tuple[int, int]:
+        g = cls._LEGACY_IDENTIFIER.match( name ).groups()
+        return int( g[0] ), int( g[1] )
+    
+    
+    @classmethod
+    def is_legacy_accession( cls, name: str ):
+        """
+        Determines if an accession was created via the `legacy_accession` property.
+        """
+        return bool( cls._LEGACY_IDENTIFIER.match( name ) )
 
 
-class LegoPoint( ILegoNode, ILegoSelectable, ILegoVisualisable ):
+class LegoPoint( ILegoNode, ILegoSelectable, IVisualisable ):
     """
     Point of fusion.
     
@@ -1449,110 +1549,94 @@ class LegoPoint( ILegoNode, ILegoSelectable, ILegoVisualisable ):
     :attr outer_sequences:  A subset of genes from which this fusion point _originates_
     """
     
+    
     # Formats for finding and creating legacy accessions
-    _LEGACY_IDENTIFIER = re.compile( "^GrtF([0-9]+)P([0-9]+)$" )
-    _LEGACY_FORMAT = "GrtF{}P{}"
     
-    
-    def __init__( self, event: LegoFusion, component: LegoComponent, sequences: Set[ILegoNode], outer_sequences: Set[ILegoNode], index: int ):
-        self.event = event
-        self.component = component
-        self.sequences = sequences
+    def __init__( self,
+                  formation: LegoFormation,
+                  outer_sequences: Set[ILegoNode],
+                  index: int ):
+        self.formation = formation
         self.outer_sequences = outer_sequences
-        self.pertinent_inner = frozenset( self.sequences.intersection( self.event.component_c.major_sequences ) )
-        self.pertinent_outer = frozenset( self.outer_sequences.intersection( set( self.event.component_a.major_sequences ).union( set( self.event.component_b.major_sequences ) ) ) )
+        self.pertinent_outer = frozenset( self.outer_sequences.intersection( set( self.formation.event.component_a.major_sequences ).union( set( self.formation.event.component_b.major_sequences ) ) ) )
         self.index = index
+    
+    
+    def __repr__( self ):
+        return "{}.{}".format( self.formation, self.index )
+    
+    
+    @property
+    def component( self ):
+        warnings.warn( "use .formation.", DeprecationWarning )
+        return self.formation.component
+    
+    
+    @property
+    def sequences( self ):
+        warnings.warn( "use .formation.", DeprecationWarning )
+        return self.formation.sequences
+    
+    
+    @property
+    def pertinent_inner( self ):
+        warnings.warn( "use .formation.", DeprecationWarning )
+        return self.formation.pertinent_inner
+    
+    
+    @property
+    def event( self ):
+        warnings.warn( "use .formation.", DeprecationWarning )
+        return self.formation.event
+    
+    
+    _LEGACY_IDENTIFIER = re.compile( "^GrtP([0-9]+)P([0-9]+)P([0-9]+)$" )
+    _LEGACY_FORMAT = "GrtP{}P{}P{}"
     
     
     @property
     def legacy_accession( self ):
-        return self._LEGACY_FORMAT.format( self.event.index, self.index )
+        return self._LEGACY_FORMAT.format( self.formation.event.index, self.formation.index, self.index )
     
     
-    @staticmethod
-    def read_legacy_accession( name: str ) -> Tuple[int, int]:
-        g = LegoPoint._LEGACY_IDENTIFIER.match( name ).groups()
-        return int( g[0] ), int( g[1] )
+    @classmethod
+    def read_legacy_accession( cls, name: str ) -> Tuple[int, int, int]:
+        g = cls._LEGACY_IDENTIFIER.match( name ).groups()
+        return int( g[0] ), int( g[1] ), int( g[2] )
     
     
-    @staticmethod
-    def is_legacy_accession( name: str ):
+    @classmethod
+    def is_legacy_accession( cls, name: str ):
         """
         Determines if an accession was created via the `legacy_accession` property.
         """
-        return bool( LegoPoint._LEGACY_IDENTIFIER.match( name ) )
+        return bool( cls._LEGACY_IDENTIFIER.match( name ) )
     
     
     def visualisable_info( self ):
         return UiInfo( name = str( self ),
                        comment = "",
-                       value = "{} sequences".format( len( self.sequences ) ),
+                       value = "{} sequences".format( len( self.formation.sequences ) ),
                        colour = EColour.MAGENTA,
                        icon = groot_resources.black_fusion,
                        type_name = "Point",
                        extra = {
-                           "component"      : self.component,
-                           "sequences"      : self.sequences,
                            "outer_sequences": self.outer_sequences,
-                           "pertinent_inner": self.pertinent_inner,
-                           "pertinent_outer": self.pertinent_outer } )
+                           "pertinent_outer": self.pertinent_outer,
+                           "index"          : self.index } )
     
     
     @property
     def count( self ):
-        return len( self.sequences )
-    
-    
-    def __repr__( self ):
-        return "{}.{}".format( self.event, self.index )
-    
-    
-    def __eq__( self, other ):
-        if not isinstance( other, LegoPoint ):
-            return False
-        
-        return other.event == self.event and other.pertinent_inner == other.pertinent_inner
-    
-    
-    def __hash__( self ):
-        return hash( (self.event, self.pertinent_inner) )
+        return len( self.formation.sequences )
     
     
     def get_pertinent_inner( self ):
-        return self.pertinent_inner.union( { self } )
+        return self.formation.pertinent_inner.union( { self } )
     
     
     def get_pertinent_outer( self ):
         return self.pertinent_outer.union( { self } )
-    
-    
-    def __format_elements( self, y ):
-        r = []
-        
-        if len( y ) == 0:
-            return "∅"
-        
-        for x in y:
-            if isinstance( x, LegoSequence ):
-                r.append( x.__str__() )
-            elif isinstance( x, LegoPoint ):
-                r.append( x.str_id() )
-        
-        return string_helper.format_array( r, join = ",", sort = True, autorange = True )
-    
-    
-    def str_id( self ):
-        return "{}{}".format( self.event, utf_helper.subscript( str( self.count ) ) )
-    
-    
-    def str_short( self ):
-        return self.event.__str__()
-    
-    
-    def str_long( self ):
-        return "¨EVENT {}: GENES {} FORMING {}¨".format( self.event,
-                                                         self.__format_elements( self.pertinent_outer ),
-                                                         self.__format_elements( self.pertinent_inner ) )
 
 
 class LegoFusionEventCollection:
@@ -1582,10 +1666,60 @@ class LegoFusionEventCollection:
     
     @property
     def num_points( self ):
-        return sum( x.points.__len__() for x in self )
+        return sum( sum( y.points.__len__() for y in x.formations ) for x in self )
 
 
-class LegoModel( ILegoVisualisable ):
+class FixedUserGraph( UserGraph ):
+    """
+    :class:`UserGraph` that has been saved by the user to the :class:`LegoUserGraphCollection` at :field:`LegoModel.user_graphs`.
+    """
+    pass
+
+
+class LegoUserGraphCollection:
+    def __init__( self, model: "LegoModel" ):
+        self.__model = model
+        self.__contents = []
+    
+    
+    def __len__( self ):
+        return len( self.__contents )
+    
+    
+    def append( self, graph: FixedUserGraph ):
+        exception_helper.assert_type( "graph", graph, FixedUserGraph )
+        
+        for graph2 in self.__model.iter_graphs():
+            if graph2.name == graph.name:
+                raise ValueError( "Your graph is called '{}' but there is already a graph with this name." )
+        
+        self.__contents.append( graph )
+    
+    
+    def remove( self, graph: FixedUserGraph ):
+        self.__contents.remove( graph )
+    
+    
+    def __iter__( self ):
+        return iter( self.__contents )
+
+
+class LegoPregraph( INamedGraph ):
+    def on_get_graph( self ) -> Optional[MGraph]:
+        return self.__graph
+    
+    
+    def __str__( self ):
+        return "pregraph_{}_in_{}".format( self.subset.get_accid(), self.component.get_accid() )
+    
+    
+    def __init__( self, graph: MGraph, subset: LegoSubset, component: LegoComponent ):
+        self.__graph = graph
+        self.subset = subset
+        self.component = component
+
+
+class LegoModel( IVisualisable ):
     """
     The model used by Groot.
     """
@@ -1605,15 +1739,34 @@ class LegoModel( ILegoVisualisable ):
         self.__seq_type = ESiteType.UNKNOWN
         self.file_name = None
         self.fusion_events = LegoFusionEventCollection()
-        self.nrfg: LegoNrfg = LegoNrfg()
         self.ui_options = LegoViewOptions()
         self.user_domains = LegoUserDomainCollection( self )
+        self.user_graphs = LegoUserGraphCollection( self )
+        self.splits: FrozenSet[LegoSplit] = frozenset()
+        self.consensus: FrozenSet[LegoSplit] = frozenset()
+        self.fusion_graph_unclean: FusionGraph = None
+        self.fusion_graph_clean: FusionGraph = None
+        self.report: NrfgReport = None
+        self.subsets: FrozenSet[LegoSubset] = frozenset()
+        self.subgraphs: Sequence[Subgraph] = tuple()
+        self.subgraphs_sources: Sequence[int] = tuple()
+        self.subgraphs_destinations: Sequence[int] = tuple()
+    
+    
+    def iter_pregraphs( self ) -> Iterable[LegoPregraph]:
+        """
+        Iterates through the model pregraphs.
+        """
+        for subset in self.subsets:  # type: LegoSubset
+            if subset.pregraphs is not None:
+                yield from subset.pregraphs
     
     
     @property
     def fusion_points( self ) -> Iterator[LegoPoint]:
         for event in self.fusion_events:
-            yield from event.points
+            for formation in event.formations:
+                yield from formation.points
     
     
     def get_status( self, stage: LegoStage ) -> ModelStatus:
@@ -1631,16 +1784,32 @@ class LegoModel( ILegoVisualisable ):
                        value = "{} sequences".format( len( self.sequences ) ),
                        colour = EColour.YELLOW,
                        icon = intermake_resources.folder,
-                       extra = { "comments"     : "\n".join( self.comments ),
-                                 "file_name"    : self.file_name,
-                                 "documentation": self.__doc__,
-                                 "site_type"    : self.site_type,
-                                 "sequences"    : self.sequences,
-                                 "edges"        : self.edges,
-                                 "fusion_events": self.fusion_events,
-                                 "components"   : self.components,
-                                 "nrfg"         : self.nrfg,
-                                 "plugins"      : MENV.plugins.plugins() } )
+                       extra = { "documentation"         : self.__doc__,
+                                 "graphs"                : list( self.iter_graphs() ),
+        
+                                 "sequences"             : self.sequences,
+                                 "components"            : self.components,
+                                 "edges"                 : self.edges,
+                                 "comments"              : self.comments,
+                                 "site_type"             : self.site_type,
+                                 "file_name"             : self.file_name,
+                                 "fusion_events"         : self.fusion_events,
+                                 "ui_options"            : self.ui_options,
+                                 "user_domains"          : self.user_domains,
+                                 "user_graphs"           : self.user_graphs,
+                                 "splits"                : self.splits,
+                                 "consensus"             : self.consensus,
+                                 "fusion_graph_unclean"  : self.fusion_graph_unclean,
+                                 "fusion_graph_clean"    : self.fusion_graph_clean,
+                                 "report"                : self.report,
+                                 "subsets"               : self.subsets,
+                                 "pregraphs"             : self.iter_pregraphs(),
+                                 "subgraphs"             : self.subgraphs,
+                                 "subgraphs_sources"     : self.subgraphs_sources,
+                                 "subgraphs_destinations": self.subgraphs_destinations,
+        
+                                 "results"               : MENV.host.last_results,
+                                 "plugins"               : MENV.plugins.plugins() } )
     
     
     def __str__( self ):
@@ -1707,7 +1876,7 @@ class LegoModel( ILegoVisualisable ):
             if x.accession == name:
                 return x
         
-        raise LookupError( "There is no sequence with the accession «{}».".format( name ) )
+        raise NotFoundError( "There is no sequence with the accession «{}».".format( name ) )
     
     
     def find_sequence_by_legacy_accession( self, name: str ) -> "LegoSequence":
@@ -1717,19 +1886,44 @@ class LegoModel( ILegoVisualisable ):
             if x.id == id:
                 return x
         
-        raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
+        raise NotFoundError( "There is no sequence with the internal ID «{}».".format( id ) )
     
     
-    def find_fusion_point_by_legacy_accession( self, name: str ) -> "LegoSequence":
-        event, point = LegoPoint.read_legacy_accession( name )
+    def find_fusion_point_by_legacy_accession( self, name: str ) -> "LegoPoint":
+        i_event, i_formation, i_point = LegoPoint.read_legacy_accession( name )
         
-        for x in self.fusion_events:
-            if x.index == event:
-                for y in x.points:
-                    if y.index == point:
-                        return y
+        for event in self.fusion_events:
+            if event.index == i_event:
+                for formation in event.formations:
+                    if formation.index == i_formation:
+                        for point in formation.points:
+                            if point.index == i_point:
+                                return point
         
-        raise LookupError( "There is no sequence with the internal ID «{}».".format( id ) )
+        raise NotFoundError( "There is no fusion point with the internal ID «{}».".format( id ) )
+    
+    
+    def find_fusion_formation_by_legacy_accession( self, name: str ) -> "LegoFormation":
+        i_event, i_formation = LegoFormation.read_legacy_accession( name )
+        
+        for event in self.fusion_events:
+            if event.index == i_event:
+                for formation in event.formations:
+                    if formation.index == i_formation:
+                        return formation
+        
+        raise NotFoundError( "There is no fusion formation with the internal ID «{}».".format( id ) )
+    
+    
+    def iter_graphs( self ):
+        yield from (x.named_tree for x in self.components if x.tree is not None)
+        yield from (x.named_tree_unrooted for x in self.components if x.tree_unrooted is not None)
+        yield from self.subgraphs
+        if self.fusion_graph_unclean:
+            yield self.fusion_graph_unclean
+        if self.fusion_graph_clean:
+            yield self.fusion_graph_clean
+        yield from self.user_graphs
 
 
 # Obsolete names, do not use

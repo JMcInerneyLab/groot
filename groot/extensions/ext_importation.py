@@ -4,6 +4,7 @@ from groot import algorithms
 from groot.algorithms.s1_importation import EImportFilter
 from groot.data import global_view
 from groot.constants import EXT_FASTA, EXT_BLAST
+from groot.data.lego_model import INamedGraph, FixedUserGraph
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake.engine.environment import MCMD, MENV
 from intermake.plugins import console_explorer
@@ -11,7 +12,27 @@ from intermake.plugins.command_plugin import command
 from intermake.visualisables.visualisable import VisualisablePath
 from mhelper import Filename, EFileMode
 
+
 __mcmd_folder_name__ = "Importation"
+
+
+@command()
+def import_graph( graph: INamedGraph, name: str = "" ):
+    """
+    Imports a graph or tree as a user-graph.
+    
+    User graphs are graphs that can be viewed and explored but do not, by default, form part of the model.
+    
+    :param graph:   Graph to import. See `format_help`. If you specify an existing user-graph or a graph
+                    that is already part of the model, a copy will be made. 
+    :param name:    Name of the graph. If not provided your graph will be assigned a default name. 
+    """
+    model = global_view.current_model()
+    
+    graph = FixedUserGraph( graph.graph.copy(), name or "usergraph{}".format( len( model.user_graphs ) ) )
+    
+    model.user_graphs.append( graph )
+
 
 @command()
 def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
@@ -23,7 +44,7 @@ def import_blast( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Option
     :return: 
     """
     with MCMD.action( "Importing BLAST" ):
-        algorithms.s1_importation.import_blast( global_view.current_model(), file_name, evalue, length )
+        algorithms.s2_similarity.import_similarity( global_view.current_model(), file_name, evalue, length )
     
     return EChanges.MODEL_ENTITIES
 

@@ -45,7 +45,6 @@ class LegoVisualiserCollection:
         from groot.frontends.gui.forms.frm_big_text import FrmBigText
         from groot.frontends.gui.forms.frm_alignment import FrmAlignment
         from groot.frontends.gui.forms.frm_webtree import FrmWebtree
-        from groot.frontends.gui.forms.frm_selection_list import FrmSelectionList
         from groot.frontends.gui.forms.frm_fusions import FrmFusions
         from groot.frontends.gui.forms.frm_view_splits import FrmViewSplits
         from groot.frontends.gui.forms.frm_samples import FrmLoadFile
@@ -62,8 +61,8 @@ class LegoVisualiserCollection:
         
         
         # Workflow viewing
-        self.VIEW_TEXT = LegoVisualiser( "Report", FrmBigText, view = (STAGES.BLAST_1,
-                                                                       STAGES.FASTA_2,
+        self.VIEW_TEXT = LegoVisualiser( "Report", FrmBigText, view = (STAGES.FASTA_1,
+                                                                       STAGES.BLAST_2,
                                                                        STAGES.COMPONENTS_3,
                                                                        STAGES.DOMAINS_4,
                                                                        STAGES.ALIGNMENTS_5,
@@ -72,39 +71,30 @@ class LegoVisualiserCollection:
                                                                        STAGES.SPLITS_8,
                                                                        STAGES.CONSENSUS_9,
                                                                        STAGES.SUBSETS_10,
+                                                                       STAGES.PREGRAPHS_11,
                                                                        STAGES.SUBGRAPHS_11,
                                                                        STAGES.FUSED_12,
                                                                        STAGES.CLEANED_13,
                                                                        STAGES.CHECKED_14), icon = resources.text )
-        self.VIEW_LEGO = LegoVisualiser( "Lego", FrmLego, view = (STAGES.BLAST_1,
-                                                                  STAGES.FASTA_2,
+        self.VIEW_LEGO = LegoVisualiser( "Lego", FrmLego, view = (STAGES.FASTA_1,
+                                                                  STAGES.BLAST_2,
                                                                   STAGES.COMPONENTS_3,
                                                                   STAGES.DOMAINS_4), icon = resources.lego, key = "view_lego" )
-        self.VIEW_ALIGNMENT = LegoVisualiser( "Alignment", FrmAlignment, view = (STAGES.FASTA_2, STAGES.COMPONENTS_3, STAGES.ALIGNMENTS_5), icon = resources.align, key = "view_alignments" )
+        self.VIEW_ALIGNMENT = LegoVisualiser( "Alignment", FrmAlignment, view = (STAGES.FASTA_1, STAGES.COMPONENTS_3, STAGES.ALIGNMENTS_5), icon = resources.align, key = "view_alignments" )
         self.VIEW_TREE = LegoVisualiser( "Tree", FrmWebtree, view = (STAGES.TREES_6,
+                                                                     STAGES.PREGRAPHS_11,
                                                                      STAGES.SUBGRAPHS_11,
                                                                      STAGES.FUSED_12,
                                                                      STAGES.CLEANED_13,
                                                                      STAGES.CHECKED_14), icon = resources.tree, key = "view_trees" )
-        self.VIEW_ENTITIES = LegoVisualiser( "Database", FrmSelectionList, view = (STAGES.BLAST_1,
-                                                                                   STAGES.FASTA_2,
-                                                                                   STAGES.COMPONENTS_3,
-                                                                                   STAGES.DOMAINS_4,
-                                                                                   STAGES.FUSIONS_7,
-                                                                                   STAGES.SPLITS_8,
-                                                                                   STAGES.CONSENSUS_9,
-                                                                                   STAGES.SUBSETS_10,
-                                                                                   STAGES.SUBGRAPHS_11,
-                                                                                   STAGES.FUSED_12,
-                                                                                   STAGES.CLEANED_13), icon = resources.database, key = "view_entities" )
         self.VIEW_FUSIONS = LegoVisualiser( "Fusions", FrmFusions, view = STAGES.FUSIONS_7, icon = resources.fusion )
-        self.VIEW_SPLITS = LegoVisualiser( "Splits", FrmViewSplits, view = (STAGES.FASTA_2, STAGES.COMPONENTS_3, STAGES.SPLITS_8, STAGES.CONSENSUS_9), icon = resources.split )
+        self.VIEW_SPLITS = LegoVisualiser( "Splits", FrmViewSplits, view = (STAGES.FASTA_1, STAGES.COMPONENTS_3, STAGES.SPLITS_8, STAGES.CONSENSUS_9), icon = resources.split )
         self.VIEW_OPEN_FILE = LegoVisualiser( "Open", FrmLoadFile, icon = resources.open, key = "view_open_file" )
         self.VIEW_SAVE_FILE = LegoVisualiser( "Save", FrmSaveFile, icon = resources.save )
         self.VIEW_DEBUG = LegoVisualiser( "Debug", FrmDebug )
         
         # Creating
-        self.CREATE_BLAST_FASTA = LegoVisualiser( "Import file", GuiActions.import_file, create = (STAGES.BLAST_1, STAGES.FASTA_2), icon = resources.create, key = "import_file" )
+        self.CREATE_BLAST_FASTA = LegoVisualiser( "Import file", GuiActions.import_file, create = (STAGES.FASTA_1, STAGES.BLAST_2), icon = resources.create, key = "import_file" )
         self.CREATE_COMPONENTS = LegoVisualiser( "Create components", ext_generating.create_components, create = STAGES.COMPONENTS_3, icon = resources.create, key = "create_components" )
         self.CREATE_DOMAINS = LegoVisualiser( "Create domains", FrmCreateDomains, view = STAGES.DOMAINS_4, create = STAGES.DOMAINS_4, drop = STAGES.DOMAINS_4, icon = resources.create, key = "view_domains" )
         self.CREATE_ALIGNMENTS = LegoVisualiser( "Create alignments", FrmCreateAlignment, create = STAGES.ALIGNMENTS_5, icon = resources.create, key = "create_alignments" )
@@ -113,6 +103,7 @@ class LegoVisualiserCollection:
         self.CREATE_SPLITS = LegoVisualiser( "Create splits", ext_generating.create_splits, create = STAGES.SPLITS_8, icon = resources.create )
         self.CREATE_CONSENSUS = LegoVisualiser( "Create consensus", ext_generating.create_consensus, create = STAGES.CONSENSUS_9, icon = resources.create )
         self.CREATE_SUBSETS = LegoVisualiser( "Create subsets", ext_generating.create_subsets, create = STAGES.SUBSETS_10, icon = resources.create, key = "create_subsets" )
+        self.CREATE_PREGRAPHS = LegoVisualiser( "Create pregraphs", ext_generating.create_pregraphs, create = STAGES.PREGRAPHS_11, icon = resources.create )
         self.CREATE_SUBGRAPHS = LegoVisualiser( "Create subgraphs", FrmCreateSubgraphs, create = STAGES.SUBGRAPHS_11, icon = resources.create, key = "create_subgraphs" )
         self.CREATE_FUSED = LegoVisualiser( "Create fused", ext_generating.create_fused, create = STAGES.FUSED_12, icon = resources.create, key = "create_fused" )
         self.CREATE_CLEANED = LegoVisualiser( "Create cleaned", ext_generating.create_cleaned, create = STAGES.CLEANED_13, icon = resources.create )
@@ -126,6 +117,7 @@ class LegoVisualiserCollection:
         self.DROP_CANDIDATES = LegoVisualiser( "Drop splits", ext_dropping.drop_candidates, drop = STAGES.SPLITS_8, icon = resources.remove )
         self.DROP_VIABLE = LegoVisualiser( "Drop consensus", ext_dropping.drop_viable, drop = STAGES.CONSENSUS_9, icon = resources.remove )
         self.DROP_SUBSETS = LegoVisualiser( "Drop subsets", ext_dropping.drop_subsets, drop = STAGES.SUBSETS_10, icon = resources.remove )
+        self.DROP_PREGRAPHS = LegoVisualiser( "Drop pregraphs", ext_dropping.drop_subgraphs, drop = STAGES.PREGRAPHS_11, icon = resources.remove, key = "drop_subgraphs" )
         self.DROP_SUBGRAPHS = LegoVisualiser( "Drop subgraphs", ext_dropping.drop_subgraphs, drop = STAGES.SUBGRAPHS_11, icon = resources.remove, key = "drop_subgraphs" )
         self.DROP_FUSED = LegoVisualiser( "Drop fused", ext_dropping.drop_fused, drop = STAGES.FUSED_12, icon = resources.remove )
         self.DROP_CLEANED = LegoVisualiser( "Drop cleaned", ext_dropping.drop_cleaned, drop = STAGES.CLEANED_13, icon = resources.remove )

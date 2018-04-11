@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QMessageBox, QCheckBox, QGroupBox
 from groot.frontends.gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
+from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions, EWindowMode
 from groot.frontends.gui.forms.frm_base import FrmBase
@@ -51,6 +52,9 @@ class FrmViewOptions( FrmBase ):
                   self.ui.RAD_WIN_MDI,
                   self.ui.RAD_WIN_NORMAL,
                   self.ui.RAD_WIN_TDI,
+                  self.ui.RAD_JS_NONE,
+                  self.ui.RAD_JS_VIS,
+                  self.ui.RAD_JS_CY,
                   self.ui.CHKTOOL_FILE,
                   self.ui.CHKTOOL_VIS,
                   self.ui.CHKTOOL_WORKFLOW)
@@ -90,6 +94,10 @@ class FrmViewOptions( FrmBase ):
         self.__map( write, global_options, "window_mode", { EWindowMode.BASIC: self.ui.RAD_WIN_NORMAL,
                                                             EWindowMode.MDI  : self.ui.RAD_WIN_MDI,
                                                             EWindowMode.TDI  : self.ui.RAD_WIN_TDI } )
+        
+        self.__map( write, global_options, "gui_tree_view", { EFormat.VISJS: self.ui.RAD_JS_VIS,
+                                                              EFormat.CYJS : self.ui.RAD_JS_CY,
+                                                              EFormat.SVG  : self.ui.RAD_JS_NONE } )
         
         # Model options
         model_options = self.get_model().ui_options
@@ -165,3 +173,11 @@ class FrmViewOptions( FrmBase ):
         Signal handler:
         """
         FrmArguments.request( self, common_commands.LOCAL_DATA_PLUGIN )
+    
+    
+    @exqtSlot()
+    def on_BTN_INTERMAKE_EXP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_intermake()

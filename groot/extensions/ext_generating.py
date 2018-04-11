@@ -12,6 +12,22 @@ from mhelper import string_helper
 
 __mcmd_folder_name__ = "Generating"
 
+@command()
+def create_similarity( algorithm: str, evalue : Optional[float] = None, length: Optional[int] = None ) -> EChanges:
+    """
+    Creates the similarity matrix.
+    
+    :param algorithm:   Algorithm to use. See `algorithm_help`. 
+    :param evalue:      e-value cutoff. 
+    :param length:      length cutoff. 
+    """
+    model = global_view.current_model()
+    
+    algorithms.s2_similarity.create_similarity( model, algorithm, evalue, length)
+    
+    MCMD.progress( "Similarities created, there are now {} edges.".format( len( model.edges ) ) )
+    
+    return EChanges.MODEL_ENTITIES
 
 @command()
 def create_domains( algorithm: str, param: int = 0 ) -> EChanges:
@@ -131,7 +147,7 @@ def create_fusions() -> EChanges:
         if x.tree is None:
             raise ValueError( "Cannot find fusion events because there is no tree data for at least one component ({}). Did you mean to generate the trees first?".format( x ) )
     
-    algorithms.s6_fusion_events.create_fusions( model )
+    algorithms.s7_fusion_events.create_fusions( model )
     
     n = len( model.fusion_events )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
@@ -176,17 +192,26 @@ def create_subsets( super: bool = False ) -> EChanges:
     algorithms.s10_subsets.create_subsets( global_view.current_model(), not super )
     return EChanges.MODEL_DATA
 
+@command()
+def create_pregraphs(  ) -> EChanges:
+    """
+    Creates the pregraphs.
+    
+    Requisites: `create_subsets`
+    """
+    algorithms.s11_pregraphs.create_pregraphs( global_view.current_model() )
+    return EChanges.MODEL_DATA
 
 @command()
 def create_subgraphs( algorithm: str = "" ) -> EChanges:
     """
-    Creates the minigraphs.
+    Creates the subgraphs.
     
-    Requisites: `create_subsets`
+    Requisites: `create_pregraphs`
     
     :param algorithm: Algorithm to use, see `algorithm_help`.
     """
-    algorithms.s11_supertrees.create_supertrees( algorithm, global_view.current_model() )
+    algorithms.s12_supertrees.create_supertrees( algorithm, global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -197,7 +222,7 @@ def create_fused() -> EChanges:
     
     Requisites: `create_subgraphs`
     """
-    algorithms.s12_unclean.create_fused( global_view.current_model() )
+    algorithms.s13_fuse.create_fused( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -208,7 +233,7 @@ def create_cleaned() -> EChanges:
     
     Requisites: `create_fused`
     """
-    algorithms.s13_clean.create_cleaned( global_view.current_model() )
+    algorithms.s14_clean.create_cleaned( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -219,5 +244,5 @@ def create_checked() -> EChanges:
     
     Requisites: `create_cleaned`
     """
-    algorithms.s14_checked.create_checked( global_view.current_model() )
+    algorithms.s15_checked.create_checked( global_view.current_model() )
     return EChanges.MODEL_DATA

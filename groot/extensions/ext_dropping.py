@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from groot import algorithms
 from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoSequence
+from groot.data.lego_model import LegoComponent, LegoSequence, INamedGraph, FixedUserGraph
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import command
@@ -10,6 +10,20 @@ from intermake.engine.environment import MCMD
 
 
 __mcmd_folder_name__ = "Removing"
+
+
+@command()
+def drop_graph( graph: INamedGraph ):
+    """
+    Removes a graph created with `import_graph`.
+    :param graph:   Graph to remove. See `format_help`.
+    """
+    model = global_view.current_model()
+    
+    if not isinstance(graph, FixedUserGraph):
+        raise ValueError( "The specified graph is not a user-graph and cannot be removed. Please specify an _existing_ user-graph." )
+    
+    model.user_graphs.remove( graph )
 
 
 @command()
@@ -82,7 +96,7 @@ def drop_fusions() -> EChanges:
     """
     model = global_view.current_model()
     previous = len( model.fusion_events )
-    removed = algorithms.s6_fusion_events.drop_fusions( model )
+    removed = algorithms.s7_fusion_events.drop_fusions( model )
     
     MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
@@ -106,6 +120,13 @@ def drop_viable() -> EChanges:
     algorithms.s9_consensus.drop_consensus( global_view.current_model() )
     return EChanges.COMP_DATA
 
+@command()
+def drop_pregraphs() -> EChanges:
+    """
+    Removes data from the model.
+    """
+    algorithms.s11_pregraphs.drop_pregraphs( global_view.current_model() )
+    return EChanges.COMP_DATA
 
 @command()
 def drop_subsets() -> EChanges:
@@ -121,7 +142,7 @@ def drop_subgraphs() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s11_supertrees.drop_supertrees( global_view.current_model() )
+    algorithms.s12_supertrees.drop_supertrees( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -130,15 +151,16 @@ def drop_fused() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s12_unclean.drop_fused( global_view.current_model() )
+    algorithms.s13_fuse.drop_fused( global_view.current_model() )
     return EChanges.COMP_DATA
+
 
 @command()
 def drop_cleaned() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s13_clean.drop_cleaned( global_view.current_model() )
+    algorithms.s14_clean.drop_cleaned( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -147,7 +169,5 @@ def drop_checked() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s14_checked.drop_checked( global_view.current_model() )
+    algorithms.s15_checked.drop_checked( global_view.current_model() )
     return EChanges.COMP_DATA
-
-

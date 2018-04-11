@@ -7,17 +7,16 @@ from PyQt5.QtWidgets import QGraphicsScene, QGridLayout, QSizePolicy
 from groot.frontends.gui.forms.designer import frm_lego_designer
 
 from groot import constants
-from groot.utilities import layout
-from groot.frontends.gui import gui_workflow
 from groot.data.lego_model import LegoUserDomain
-from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
 from groot.frontends.gui.gui_view import LegoView_Model
-from groot.frontends.gui.gui_view_utils import EChanges, LegoSelection, MyView
+from groot.frontends.gui.gui_view_utils import EChanges, ESelect, LegoSelection, MyView
+from groot.utilities import layout
 from mhelper_qt import exceptToGui, exqtSlot
 
 
-class FrmLego( FrmBase ):
+class FrmLego( FrmSelectingToolbar ):
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -52,14 +51,7 @@ class FrmLego( FrmBase ):
         self.update_view()
         
         self.bind_to_label( self.ui.LBL_NO_DOMAINS )
-        self.bind_to_select( self.ui.BTN_CHANGE_SELECTION )
-        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
-                                   self.ui.BTN_WORKFLOW,
-                                   self.ui.BTN_CREATE,
-                                   self.ui.BTN_REMOVE,
-                                   self.ui.BTN_VIEW,
-                                   gui_workflow.VISUALISERS.VIEW_LEGO,
-                                   gui_workflow.STAGES.COMPONENTS_3 )
+        self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.ALL )
     
     
     def on_plugin_completed( self ):
@@ -102,7 +94,7 @@ class FrmLego( FrmBase ):
                     select.add( component )
         elif self.workflow == constants.STAGES.DOMAINS_4:
             select.add( domain )
-        elif self.workflow == constants.STAGES.FASTA_2:
+        elif self.workflow == constants.STAGES.FASTA_1:
             select.add( domain.sequence )
         
         if toggle:
@@ -150,60 +142,6 @@ class FrmLego( FrmBase ):
         self.show_form( FrmViewOptions )
     
     
-    @exqtSlot()
-    def on_BTN_WORKFLOW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_CREATE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_REMOVE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_RAD_SEL_COMPONENT_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_COMPONENT' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_RAD_SEL_GENES_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_GENES' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_RAD_SEL_DOMAINS_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'RAD_SEL_DOMAINS' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        pass
     
     
     @exqtSlot()
@@ -214,9 +152,3 @@ class FrmLego( FrmBase ):
         self.update_view()
     
     
-    @exqtSlot()
-    def on_BTN_CHANGE_SELECTION_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass

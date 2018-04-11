@@ -17,6 +17,7 @@
         <file>black_gene.svg</file>
         <file>black_nrfg.svg</file>
         <file>black_outgroup.svg</file>
+        <file>black_pregraph.svg</file>
         <file>black_split.svg</file>
         <file>black_subgraph.svg</file>
         <file>black_subset.svg</file>
@@ -41,6 +42,7 @@
         <file>green_gene.svg</file>
         <file>green_nrfg.svg</file>
         <file>green_outgroup.svg</file>
+        <file>green_pregraph.svg</file>
         <file>green_split.svg</file>
         <file>green_subgraph.svg</file>
         <file>green_subset.svg</file>
@@ -73,6 +75,7 @@
         <file>red_gene.svg</file>
         <file>red_nrfg.svg</file>
         <file>red_outgroup.svg</file>
+        <file>red_pregraph.svg</file>
         <file>red_split.svg</file>
         <file>red_subgraph.svg</file>
         <file>red_subset.svg</file>

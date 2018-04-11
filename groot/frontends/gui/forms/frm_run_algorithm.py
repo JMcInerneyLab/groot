@@ -183,14 +183,14 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Subgraphs",
-                          algorithms.s11_supertrees.supertree_algorithms,
+                          algorithms.s12_supertrees.supertree_algorithms,
                           ext_generating.create_subgraphs )
 
 class FrmCreateDomains( FrmRunAlgorithm ):
     def query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES.BLAST_1 ).is_not_complete:
+        if model.get_status( constants.STAGES.DATA_0 ).is_none:
             return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
         
         

@@ -1,63 +1,95 @@
-# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-# ░░░░░░░░░░░░░░░░░░░░░░░░░░ String coercion    ░░░░░░░░░░░░░░░░░░░░░░░░░░
-# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-from typing import Optional
-
-import re
-import stringcoercion
-from groot import constants
-from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence
-from mgraph import MGraph
-from mhelper import string_helper
-from stringcoercion import CoercionError
-
 
 def setup():
+    from typing import Optional
+    
+    import re
+    
+    from os import path
+    
+    import stringcoercion
+    from groot import constants
+    from groot.data import global_view
+    from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence, INamedGraph, UserGraph
+    from mgraph import MGraph, importing
+    from mhelper import string_helper, file_helper
+    from stringcoercion import CoercionError
+    
+    
     class MGraphCoercer( stringcoercion.Coercer ):
         """
         **Graphs and trees** are referenced by one of the following:
-            * `nrfg` - the _NRFG_
-            * `unrfg` - the _NRFG_ prior to cleaning
-            * `c:xxx` - The graph for the _component with index_ `xxx`
-            * `m:xxx` - The _minigraph with index_ xxx
-            * `xxx` - The _component with the name_ `xxx`
+            * Graph in model  : The name of a graph in the current model (you can get a list of graph names via `cd /graphs ; ls`)
+            * Graph on disk   : The name of a file 
+            * Compact edgelist: File extension is `.edg` OR argument is prefixed `compact:` or `file-compact:` OR argument/file contains `pipe`
+            * TSV             : ''                `.tsv` OR ''                   `tsv:`     or `file-tsv:`     OR ''                     `newline` and `tab`
+            * CSV             : ''                `.csv` OR ''                   `csv:`     or `file-csv:`     OR ''                     `newline` and not `tab` 
+            * Newick          : ''                `.nwk` OR ''                   `newick:`  or `file-newick:`  OR ''                     none of the above
+        * You can be explicit by prefixing your string with `newick:` `compact:` `csv:` `tsv:` `file:` `file-newick:` `file-compact:` `file-csv:` `file-tsv:`
         """
         
+        
+        
+        
+        
         def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return self.PRIORITY.HIGH if info.annotation.is_directly_below( MGraph ) else False
+            return self.PRIORITY.HIGH if (info.annotation.is_directly_below( INamedGraph ) or info.annotation.is_directly_below( MGraph )) else False
         
         
         def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
-            txt = info.source.lower()
+            txt = info.source
+            prefixes = "newick", "compact", "csv", "tsv", "file", "file-newick", "file-compact", "file-csv", "file-tsv"
+            prefix = None
+            is_file = None
+            
+            for prefix_ in prefixes:
+                if txt.startswith( prefix_ + ":" ):
+                    prefix = prefix_
+                    txt = txt[len( prefix_ ) + 1:]
+                    
+                    if prefix == "file":
+                        is_file = True
+                        prefix = None
+                    elif prefix.startswith( "file-" ):
+                        is_file = True
+                        prefix = prefix[5:]
+                    
+                    break
+            
+            name_graph = info.annotation.is_directly_below( INamedGraph )
+            
+            if is_file is True or (is_file is None and path.isfile( txt )):
+                if prefix is None:
+                    ext = file_helper.get_extension( txt )
+                    if ext in (".nwk", ".new", ".newick"):
+                        prefix = "newick"
+                    elif ext == ".tsv":
+                        prefix = "tsv"
+                    elif ext == ".edg":
+                        prefix = "compact"
+                    elif ext == ".csv":
+                        prefix = "csv"
+                
+                txt = file_helper.read_all_text( txt )
+            
             model = global_view.current_model()
             
-            if txt == "nrfg":
-                if model.nrfg.fusion_graph_clean is None:
-                    raise stringcoercion.CoercionError( "The model does not have an NRFG (clean)." )
-                
-                return model.nrfg.fusion_graph_clean
+            for named_graph in model.iter_graphs():
+                if named_graph.name == txt:
+                    return named_graph if name_graph else named_graph.graph
             
-            if txt == "unrfg":
-                if model.nrfg.fusion_graph_unclean is None:
-                    raise stringcoercion.CoercionError( "The model does not have an NRFG (unclean)." )
-                
-                return model.nrfg.fusion_graph_unclean
-            
-            if txt.startswith( constants.MINIGRAPH_PREFIX ):
-                try:
-                    i = int( txt[2:] )
-                except ValueError:
-                    pass
+            if prefix == "compact" or (prefix is None and "|" in txt):
+                r = importing.import_compact( txt )
+            elif prefix in ("csv", "tsv") or (prefix is None and "\n" in txt):
+                if prefix == "tsv" or (prefix is None and "\t" in txt):
+                    r = importing.import_edgelist( txt, delimiter = "\t" )
                 else:
-                    if 0 <= i < len( model.nrfg.minigraphs ):
-                        return model.nrfg.minigraphs[i]
+                    assert prefix is None or prefix == "csv"
+                    r = importing.import_edgelist( txt )
+            else:
+                assert prefix is None or prefix == "newick"
+                r = importing.import_newick( txt )
             
-            try:
-                component = info.collection.coerce( LegoComponent, info.source )
-                return component.tree
-            except CoercionError as ex:
-                raise stringcoercion.CoercionError( "«{}» is not a valid graph name.".format( info.source ) ) from ex
+            return UserGraph( r ) if name_graph else r
     
     
     class MSequenceCoercer( stringcoercion.Coercer ):
@@ -77,8 +109,7 @@ def setup():
                 sequence = model.find_sequence_by_accession( info.source )
             except LookupError:
                 try:
-                    id = int( info.source )
-                    sequence = model.find_sequence_by_legacy_accession( id )
+                    sequence = model.find_sequence_by_legacy_accession( info.source )
                 except ValueError:
                     sequence = None
                 except LookupError:

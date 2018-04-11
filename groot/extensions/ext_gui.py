@@ -1,4 +1,4 @@
-from groot.data.lego_model import ILegoVisualisable, IHasFasta
+from groot.data.lego_model import IHasFasta
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import EThread, MENV, command, visibilities
 from intermake.engine.environment import MCMD
@@ -17,7 +17,7 @@ def refresh( change: EChanges ) -> EChanges:
 
 
 @command( visibility = _VIS, threading = EThread.UNMANAGED )
-def view_fasta_gui( entity: ILegoVisualisable ) -> None:
+def view_fasta_gui( entity: object ) -> None:
     """
     Views the FASTA in the GUI.
     :param entity:  Entity to view Fasta for

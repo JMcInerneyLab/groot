@@ -4,6 +4,7 @@ from os import path
 from typing import List
 
 from groot import constants
+from groot.constants import EFormat
 from groot.data.lego_model import LegoModel
 from intermake.engine.environment import MENV
 from intermake.hosts.console import ConsoleHost
@@ -69,6 +70,16 @@ def get_workspace_files() -> List[str]:
     
     return r
 
+def get_test_data_folder(name:str=None):
+    sdf = MENV.local_data.local_folder("test_cases")
+    
+    if not name:
+        return sdf
+    
+    if path.sep in name:
+        return name
+    
+    return path.join( sdf, name )
 
 def get_sample_data_folder( name: str = None ):
     """
@@ -121,11 +132,11 @@ class GlobalOptions:
         self.recent_files: List[RecentFile] = []
         self.browse_mode = EBrowseMode.ASK
         self.startup_mode = EStartupMode.STARTUP
-        self.visjs_component_view = False
         self.window_mode = EWindowMode.BASIC
         self.tool_file = True
         self.tool_visualisers = True
         self.tool_workflow = True
+        self.gui_tree_view = EFormat.CYJS 
 
 
 __global_options = None

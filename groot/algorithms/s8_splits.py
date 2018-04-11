@@ -12,7 +12,7 @@ __LOG_SPLITS = Logger( "nrfg.splits", False )
 def drop_splits( model: LegoModel ):
     model.get_status( STAGES.SPLITS_8 ).assert_drop()
     
-    model.nrfg.splits = frozenset()
+    model.splits = frozenset()
     
     for component in model.components:
         component.splits = None
@@ -83,4 +83,4 @@ def create_splits( model: LegoModel ):
         component.splits = frozenset( component_splits_r )
         component.leaves = frozenset( component_sequences )
     
-    model.nrfg.splits = frozenset( all_splits.values() )
+    model.splits = frozenset( all_splits.values() )

@@ -6,7 +6,7 @@ import groot.data.global_view
 from groot.algorithms.s1_importation import EImportFilter
 from groot import constants, algorithms
 from groot.data import global_view
-from groot.extensions.ext_importation import import_directory
+from groot import extensions
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, MENV, command
 from intermake.engine.theme import Theme
@@ -16,7 +16,7 @@ from mhelper import EFileMode, Filename, MOptional, file_helper
 __mcmd_folder_name__ = "Files"
 
 
-@command( names = ["file_sample", "sample"] )
+@command( names = ["file_sample", "sample", "samples"] )
 def file_sample( name: Optional[str] = None, query: bool = False, load: bool = False ) -> EChanges:
     """
     Lists the available samples, or loads the specified sample.
@@ -37,7 +37,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
         else:
             MCMD.print( "Sample data: «{}».".format( file_name ) )
         
-        return import_directory( file_name, filter = (EImportFilter.DATA | EImportFilter.SCRIPT) if not load else EImportFilter.DATA, query = query )
+        return extensions.ext_importation.import_directory( file_name, filter = (EImportFilter.DATA | EImportFilter.SCRIPT) if not load else EImportFilter.DATA, query = query )
     else:
         for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
@@ -80,7 +80,7 @@ def file_recent():
     
     r.append( "\nRECENT:" )
     for file in reversed( groot.data.global_view.options().recent_files ):
-        r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
+        r.append( file_helper.highlight_file_name_without_extension( file.file_name, Theme.BOLD, Theme.RESET ) )
     
     MCMD.information( "\n".join( r ) )
 

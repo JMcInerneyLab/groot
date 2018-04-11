@@ -1,14 +1,14 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
-from groot.data.lego_model import LegoSplit, LegoFusion
 from groot.frontends.gui.forms.designer import frm_view_splits_designer
 
-from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui import gui_workflow
-from mhelper import string_helper, array_helper
+from groot.data.lego_model import LegoSplit
+from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
+from groot.frontends.gui.gui_view_utils import ESelect
+from mhelper import string_helper
 from mhelper_qt import exceptToGui, exqtSlot, tree_helper
 
 
-class FrmViewSplits( FrmBase ):
+class FrmViewSplits( FrmSelectingToolbar ):
     
     @exceptToGui()
     def __init__( self, parent ):
@@ -19,14 +19,7 @@ class FrmViewSplits( FrmBase ):
         self.ui = frm_view_splits_designer.Ui_Dialog( self )
         self.setWindowTitle( "Splits" )
         
-        self.bind_to_select( self.ui.BTN_CHANGE_SELECTION_, self.ui.BTN_CLEAR_ )
-        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
-                                   self.ui.BTN_WORKFLOW_,
-                                   self.ui.BTN_CREATE_,
-                                   self.ui.BTN_REMOVE_,
-                                   self.ui.BTN_VIEW_,
-                                   gui_workflow.VISUALISERS.VIEW_ALIGNMENT,
-                                   gui_workflow.STAGES.SPLITS_8 )
+        self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.IS_SPLIT )
         
         self.ui.LST_MAIN.itemSelectionChanged.connect( self.__on_widget_itemSelectionChanged )
         
@@ -125,7 +118,7 @@ class FrmViewSplits( FrmBase ):
         accepted = 0
         rejected = 0
         
-        for split in model.nrfg.splits:
+        for split in model.splits:
             if not self.check_filter( split ):
                 rejected += 1
                 continue

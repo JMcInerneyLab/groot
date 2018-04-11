@@ -1,10 +1,9 @@
-from typing import Optional, Callable, List
+from typing import Callable, List, Optional
 
 import groot.utilities.external_runner
-from groot import constants
-from groot import algorithms
+from groot import algorithms, constants
 from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, EPosition, ESiteType
+from groot.data.lego_model import EPosition, ESiteType, LegoComponent, LegoModel, LegoSequence
 from mgraph import MGraph
 from mhelper import SwitchError
 
@@ -13,6 +12,7 @@ DAlgorithm = Callable[[LegoModel, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
 
 tree_algorithms = AlgorithmCollection[DAlgorithm]( "Tree" )
+
 
 def drop_tree( component: LegoComponent ) -> bool:
     if component.model.get_status( constants.STAGES.FUSIONS_7 ):
@@ -79,7 +79,7 @@ def reposition_tree( tree: MGraph ) -> bool:
         d = node.data
         if isinstance( d, LegoSequence ):
             if d.position == EPosition.OUTGROUP:
-                node.relation.make_root()
+                node.make_outgroup()
                 return True
             elif d.position == EPosition.ROOT:
                 node.make_root()
@@ -90,5 +90,3 @@ def reposition_tree( tree: MGraph ) -> bool:
                 raise SwitchError( "node.data.position", d.position )
     
     return False
-
-

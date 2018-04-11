@@ -1,17 +1,16 @@
 import re
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QDialog, QMessageBox, QWidget, QLabel, QToolButton, QGroupBox, QMenu, QAction, QAbstractButton
-from typing import Tuple
 
-from groot.frontends.gui.gui_menu import GuiActions
-from groot.constants import EWorkflow
-from groot.data import global_view
-from groot.frontends.gui.gui_view_utils import LegoSelection
-from groot.frontends.gui.gui_workflow import LegoVisualiser, LegoStage, EIntent
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtWidgets import QAbstractButton, QDialog, QFrame, QGroupBox, QHBoxLayout, QLabel, QMessageBox, QToolButton, QWidget, QSpacerItem, QSizePolicy
 from groot.frontends.gui.forms.resources import resources
-from intermake.engine.environment import MCMD
+
+from groot.data import global_view
+from groot.frontends.gui.gui_menu import GuiActions
+from groot.frontends.gui.gui_view_utils import ESelect, LegoSelection
+from groot.frontends.gui.gui_workflow import LegoStage
 from mhelper import virtual
-from mhelper_qt import menu_helper, exceptToGui
+from mhelper_qt import exceptToGui, menu_helper
 
 
 class FrmBase( QDialog ):
@@ -23,21 +22,6 @@ class FrmBase( QDialog ):
         super().__init__( parent )
         
         self.actions: GuiActions = GuiActions( self.frm_main, self )
-        self.__select_button: QAbstractButton = None
-        self.__clear_button: QAbstractButton = None
-        self.__workflow_frame: QGroupBox = None
-        self.__workflow_workflow: QToolButton = None
-        self.__workflow_create: QToolButton = None
-        self.__workflow_remove: QToolButton = None
-        self.__workflow_view: QToolButton = None
-        self.__workflow_options: Tuple[EWorkflow, ...] = None
-        self.__workflow_selected: LegoStage = None
-        self.__selection: LegoSelection = LegoSelection()
-    
-    
-    @property
-    def select_button( self ):
-        return self.__select_button
     
     
     @property
@@ -45,124 +29,11 @@ class FrmBase( QDialog ):
         return self.__workflow_selected
     
     
-    def set_parameters( self, *parameters ):
-        if len( parameters ) > 0 and isinstance( parameters[0], LegoStage ):
-            if self.__workflow_options and parameters[0] in self.__workflow_options:
-                assert isinstance( parameters[0], LegoStage )
-                self.__workflow_selected = parameters[0]
-                self.update_workflow_selected()
-    
-    
     def on_plugin_completed( self ):
         self.on_refresh_data()
     
     
-    def on_selection_changed( self ):
-        pass
-    
-    
-    def selection_changed( self ):
-        if self.__select_button is not None:
-            self.__select_button.setText( str( self.actions.get_selection() ) )
-        
-        self.on_selection_changed()
-        self.on_refresh_data()
-    
-    
     def on_refresh_data( self ):
-        pass
-    
-    
-    def bind_to_workflow_box( self,
-                              frame: QGroupBox,
-                              workflow: QToolButton,
-                              create: QToolButton,
-                              remove: QToolButton,
-                              view: QToolButton,
-                              visualiser: LegoVisualiser,
-                              selected: LegoStage ):
-        assert isinstance( selected, LegoStage )
-        self.__workflow_frame = frame
-        self.__workflow_workflow = workflow
-        self.__workflow_create = create
-        self.__workflow_remove = remove
-        self.__workflow_view = view
-        self.__workflow_options = visualiser.intents[EIntent.VIEW]
-        self.__workflow_selected = selected
-        
-        frame.setTitle( "Workflow" )
-        workflow.setIcon( resources.workflow.icon() )
-        workflow.clicked.connect( self.__on_workflow_workflow_clicked )
-        create.clicked.connect( self.__on_workflow_create_clicked )
-        remove.clicked.connect( self.__on_workflow_remove_clicked )
-        view.clicked.connect( self.__on_workflow_view_clicked )
-        workflow.setProperty( "style", "combo" )
-        view.setVisible( False )
-        self.update_workflow_selected()
-    
-    
-    def update_workflow_selected( self ):
-        self.__workflow_workflow.setText( self.get_workflow_name( self.__workflow_selected ) )
-        
-        if self.__select_button:
-            self.__select_button.setIcon( self.workflow.icon.icon() )
-        
-        self.actions.set_selection( LegoSelection() )
-        self.on_refresh_data()
-    
-    
-    @virtual
-    def on_workflow_changed( self ):
-        pass
-    
-    
-    def __on_workflow_workflow_clicked( self ):
-        menu = QMenu()
-        actions = []
-        
-        for stage in self.__workflow_options:
-            assert isinstance( stage, LegoStage )
-            
-            action = QAction()
-            actions.append( action )
-            action.setText( stage.name )
-            action.setIcon( stage.icon.icon() )
-            action.TAG_item = stage
-            
-            if stage == self.__workflow_selected:
-                action.setCheckable( True )
-                action.setChecked( True )
-            
-            menu.addAction( action )
-        
-        ot = self.__workflow_workflow.text()
-        self.__workflow_workflow.setText( "Workflow" )
-        selected = menu_helper.show_menu( self, menu )
-        self.__workflow_workflow.setText( ot )
-        
-        if selected is None:
-            return
-        
-        assert isinstance( selected, QAction )
-        assert hasattr( selected, "TAG_item" )
-        
-        self.__workflow_selected = selected.TAG_item
-        self.update_workflow_selected()
-    
-    
-    def get_workflow_name( self, item ):
-        return MCMD.host.translate_name( item.name.split( "_" )[0].lower() )
-    
-    
-    def __on_workflow_create_clicked( self ):
-        self.actions.launch_intent( self.__workflow_selected, EIntent.CREATE )
-    
-    
-    def __on_workflow_remove_clicked( self ):
-        self.actions.launch_intent( self.__workflow_selected, EIntent.DROP )
-    
-    
-    def __on_workflow_view_clicked( self ):
         pass
     
     
@@ -175,24 +46,92 @@ class FrmBase( QDialog ):
                 raise ValueError( "«{}» in the text «{}» in the label «{}».«{}» is not a valid Groot URL.".format( x, label.text(), type( label.window() ), label.objectName() ) )
     
     
-    def bind_to_select( self, button: QAbstractButton, clear: QAbstractButton = None ):
-        self.__select_button = button
-        self.__clear_button = clear
-        button.setText( str( self.actions.get_selection() ) )
-        button.clicked.connect( self.actions.show_selection )
-        button.setProperty( "style", "combo" )
-        self.actions.select_button = button
-        
-        if clear:
-            clear.clicked.connect( self.actions.clear_selection )
-    
-    
     def alert( self, message: str ):
         msg = QMessageBox()
         msg.setText( message )
         msg.setWindowTitle( self.windowTitle() )
         msg.setIcon( QMessageBox.Warning )
         msg.exec_()
+    
+    
+    def get_model( self ):
+        return global_view.current_model()
+    
+    
+    def closeEvent( self, event: QCloseEvent ):
+        self.frm_main.remove_form( self )
+    
+    
+    def show_menu( self, *args ):
+        return menu_helper.show( self.sender(), *args )
+    
+    
+    def show_form( self, form_class ):
+        self.frm_main.show_form( form_class )
+
+
+class FrmSelectingToolbar( FrmBase ):
+    def __init__( self, parent: QWidget ):
+        super().__init__( parent )
+        
+        self.selecting_frame: QGroupBox = None
+        self.selecting_mode: ESelect = None
+        
+        self.__selection: LegoSelection = LegoSelection()
+        
+        self.select_button: QAbstractButton = None
+        self.__clear_button: QAbstractButton = None
+    
+    
+    def bind_to_workflow_box( self, frame: QFrame, mode: ESelect ):
+        self.selecting_frame = frame
+        self.selecting_mode = mode
+        frame.setContentsMargins( 0, 0, 0, 8 )
+        frame.setProperty( "style", "custom" )
+        frame.setStyleSheet( 'QFrame[style="custom"] { border-top: none; border-left: none; border-right: none; border-bottom: 1px dotted gray; }' )
+        layout: QHBoxLayout = frame.layout()
+        layout.setContentsMargins( 0, 0, 0, 0 )
+        
+        # Create the select button
+        c = QToolButton()
+        c.setFixedSize( QSize( 192, 64 ) )
+        c.setToolButtonStyle( Qt.ToolButtonTextBesideIcon )
+        c.setIcon( resources.black_check.icon() )
+        c.setIconSize( QSize( 32, 32 ) )
+        c.setText( str( self.actions.get_selection() ) )
+        c.clicked.connect( self.actions.show_selection )
+        # c.setProperty( "style", "combo" )
+        c.setStyleSheet( SELECT_STYLE )
+        layout.insertWidget( 0, c )
+        self.actions.select_button = c
+        self.select_button = c
+        
+        # Create the divider
+        c = QFrame()
+        c.setFixedWidth( 16 )
+        c.setFrameShape( QFrame.VLine )
+        c.setFrameShadow( QFrame.Sunken )
+        layout.insertWidget( 1, c )
+        
+        # Create the spacer
+        c = QSpacerItem( 1, 1, QSizePolicy.Expanding, QSizePolicy.Minimum )
+        layout.addItem( c )
+    
+    
+    def set_selection( self, selection: LegoSelection ):
+        self.__selection = selection
+        self.handle_selection_changed()
+    
+    
+    def handle_selection_changed( self ):
+        self.select_button.setText( str( self.actions.get_selection() ) )
+        self.on_selection_changed()
+        self.on_refresh_data()
+    
+    
+    @virtual
+    def on_selection_changed( self ):
+        pass
     
     
     def set_selected( self, item, selected ):
@@ -211,26 +150,39 @@ class FrmBase( QDialog ):
             self.actions.set_selection( LegoSelection( selection.items - { item } ) )
     
     
-    def set_selection( self, selection: LegoSelection ):
-        self.__selection = selection
-        self.selection_changed()
-    
-    
     def get_selection( self ) -> LegoSelection:
         return self.__selection
     
     
-    def get_model( self ):
-        return global_view.current_model()
-    
-    
-    def closeEvent( self, event: QCloseEvent ):
-        self.frm_main.remove_form( self )
-    
-    
-    def show_menu( self, *args ):
-        return menu_helper.show( self.sender(), *args )
-    
-    
-    def show_form( self, form_class ):
-        self.frm_main.show_form( form_class )
+    def show_selection_menu( self ):
+        self.select_button.setStyleSheet( MENU_SHOWN_STYLE )
+        from groot.frontends.gui import gui_view_utils
+        gui_view_utils.show_selection_menu( self.select_button, self.actions, self.selecting_mode )
+        self.select_button.setStyleSheet( SELECT_STYLE )
+
+
+SELECT_STYLE = """
+                QToolButton
+                {
+                color: black;
+                background: #FFFFFF;
+                border: 1px outset #808080;
+                border-radius: 8px;
+                }
+                
+                QToolButton:pressed
+                {
+                background: #EEEEEE;
+                border: 1px inset #808080;
+                }
+                """
+
+MENU_SHOWN_STYLE = """
+                    QToolButton
+                    {
+                    color: blue;
+                    background: #EEEEFF;
+                    border: 1px solid black;
+                    border-radius: 8px;
+                    }
+                    """

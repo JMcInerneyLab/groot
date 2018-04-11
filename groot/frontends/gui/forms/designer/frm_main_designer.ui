@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1658</width>
-    <height>1018</height>
+    <width>1184</width>
+    <height>805</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -143,7 +143,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
-           <height>0</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -238,8 +238,27 @@ border: 2px inset gray;
        </item>
        <item>
         <widget class="QLabel" name="LBL_STATUS">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Everything is good.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_FILENAME">
+         <property name="text">
+          <string>.</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -253,7 +272,7 @@ border: 2px inset gray;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1658</width>
+     <width>1184</width>
      <height>22</height>
     </rect>
    </property>

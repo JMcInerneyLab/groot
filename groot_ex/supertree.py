@@ -30,10 +30,12 @@ def supertree_clann( inputs: str ) -> str:
     return result.split( ";" )[0]
 
 
-@supertree_algorithms.register( "legacy" )
+@supertree_algorithms.register( "groot" )
 def supertree_groot( subset_src: LegoSubset ) -> MGraph:
     """
     Uses GROOT to grow a supertree from the splits.
+    
+    This is a fast, ad-hoc algorithm and should not substitute a well defined, peer reviewed tool.
     """
     
     __LOG_CREATE.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CREATE GRAPHS FOR POINTS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
@@ -48,7 +50,7 @@ def supertree_groot( subset_src: LegoSubset ) -> MGraph:
     __LOG_CREATE.pause( "LEAF SET {}", subset )
     model = subset_src.model
     
-    for split in model.nrfg.consensus:
+    for split in model.consensus:
         subset_sequences = frozenset( x for x in subset if isinstance( x, LegoSequence ) )
         
         if split.split.all.issuperset( subset_sequences ):  # S c G

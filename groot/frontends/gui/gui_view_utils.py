@@ -2,17 +2,40 @@
 Collection of miscellany for dealing with the GUI in GROOT.
 """
 
-from typing import FrozenSet, Iterable
+from typing import FrozenSet, Iterable, List, Optional, Callable
 
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QWheelEvent
-from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QToolButton
+from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QAbstractButton
 
 from groot.data import global_view
-from groot.data.lego_model import ComponentAsAlignment, ComponentAsGraph, ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain, LegoFusion, LegoSplit
-from groot.frontends.gui.gui_workflow import LegoStage
-from groot.frontends.gui import gui_workflow
-from mhelper import MFlags, array_helper, string_helper
+from groot.data.lego_model import ComponentAsAlignment, ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain, LegoFusion, LegoSplit
+from groot.frontends.gui.forms.resources import resources
+from mhelper import MFlags, array_helper, string_helper, ResourceIcon
+
+
+class ESelect( MFlags ):
+    EX_SPECIAL = 1 << 1
+    EX_SEQUENCES = 1 << 2
+    EX_DOMAINS = 1 << 3
+    EX_EDGES = 1 << 4
+    EX_COMPONENTS = 1 << 5
+    EX_ALIGNMENTS = 1 << 6
+    EX_TREES_ROOTED = 1 << 7
+    EX_TREES_UNROOTED = 1 << 8
+    EX_FUSIONS = 1 << 9
+    EX_POINTS = 1 << 10
+    EX_SPLITS = 1 << 11
+    EX_CONSENSUS = 1 << 12
+    EX_SUBSETS = 1 << 13
+    EX_SUBGRAPHS = 1 << 14
+    EX_NRFGS = 1 << 15
+    EX_CHECKED = 1 << 16
+    EX_USERGRAPHS = 1 << 17
+    
+    HAS_FASTA = EX_SEQUENCES | EX_DOMAINS | EX_EDGES | EX_COMPONENTS | EX_ALIGNMENTS
+    HAS_GRAPH = EX_TREES_ROOTED | EX_TREES_UNROOTED | EX_SUBGRAPHS | EX_NRFGS | EX_USERGRAPHS
+    IS_SPLIT = EX_SPLITS | EX_CONSENSUS
 
 
 class LegoSelection:
@@ -192,158 +215,100 @@ class SelectionManipulator:
         return LegoSelection( model.user_domains )
 
 
-def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = None ):
+def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESelect.ALL ):
     from groot.frontends.gui.gui_menu import GuiActions
     assert isinstance( actions, GuiActions )
     
     model = global_view.current_model()
     selection = actions.get_selection()
     alive = []
-    roots = []
     
     root = QMenu()
     root.setTitle( "Make selection" )
     
     # Meta
-    if workflow in (None,):
-        relational = QMenu()
-        relational.setTitle( "Relational" )
-        OPTION_1 = "Select all"
-        OPTION_2 = "Select none"
-        OPTION_3 = "Invert selection"
-        OPTION_4 = "Select sequences with no site data"
-        OPTION_5 = "Select domains to left of selected domains"
-        OPTION_6 = "Select domains to right of selected domains"
-        OPTION_7 = "Select domains connected to selected domains"
-        OPTIONS = (OPTION_1, OPTION_2, OPTION_3, OPTION_4, OPTION_5, OPTION_6, OPTION_7)
-        
-        _add_submenu( alive, OPTIONS, root, roots, selection, "Relational" )
+    relational = QMenu()
+    relational.setTitle( "Relational" )
+    OPTION_1 = "Select all"
+    OPTION_2 = "Select none"
+    OPTION_3 = "Invert selection"
+    OPTION_4 = "Select sequences with no site data"
+    OPTION_5 = "Select domains to left of selected domains"
+    OPTION_6 = "Select domains to right of selected domains"
+    OPTION_7 = "Select domains connected to selected domains"
+    OPTIONS = (OPTION_1, OPTION_2, OPTION_3, OPTION_4, OPTION_5, OPTION_6, OPTION_7)
+
+    _add_submenu( "(Selection)", mode & ESelect.EX_SPECIAL, alive, OPTIONS, root, selection, None )
     
     # Sequences
-    if workflow in (None, gui_workflow.STAGES.FASTA_2) and model.sequences:
-        _add_submenu( alive, model.sequences, root, roots, selection, "Genes" )
-    
-    # Domains
-    if workflow in (None, gui_workflow.STAGES.DOMAINS_4) and model.user_domains:
-        _add_submenu( alive, model.user_domains, root, roots, selection, "Domains" )
+    _add_submenu( "1. Genes", mode & ESelect.EX_SEQUENCES, alive, model.sequences, root, selection, resources.black_gene )
     
     # Edges
-    if workflow in (None, gui_workflow.STAGES.BLAST_1) and model.edges:
-        edges = QMenu()
-        edges.setTitle( "Edges" )
-        
-        for sequence in model.sequences:
-            assert isinstance( sequence, LegoSequence )
-            sequence_edges = QMenu()
-            sequence_edges.setTitle( str( sequence ) )
-            
-            for edge in model.edges:
-                if edge.left.sequence is not sequence and edge.right.sequence is not sequence:
-                    continue
-                
-                _add_action( alive, edge, selection, sequence_edges )
-            
-            alive.append( sequence_edges )
-            edges.addMenu( sequence_edges )
-        
-        roots.append( edges )
-        root.addMenu( edges )
+    _add_submenu( "2. Edges", mode & ESelect.EX_EDGES, alive, model.sequences, root, selection, resources.black_edge, ex = [LegoSequence.iter_edges] )
     
     # Components
-    if workflow in (None, gui_workflow.STAGES.COMPONENTS_3):
-        _add_submenu( alive, model.components, root, roots, selection, "Components" )
+    _add_submenu( "3. Components", mode & ESelect.EX_COMPONENTS, alive, model.components, root, selection, resources.black_component )
+
+    # Domains
+    _add_submenu( "4. Domains", mode & ESelect.EX_DOMAINS, alive, model.sequences, root, selection, resources.black_domain, ex = [LegoSequence.iter_userdomains] )
     
     # Components - alignments
-    if workflow in (None, gui_workflow.STAGES.ALIGNMENTS_5):
-        _add_submenu( alive, [ComponentAsAlignment( x ) for x in model.components], root, roots, selection, "Alignments" )
+    _add_submenu( "5. Alignments", mode & ESelect.EX_ALIGNMENTS, alive, (ComponentAsAlignment( x ) for x in model.components), root, selection, resources.black_alignment )
     
     # Components - trees
-    if workflow in (None, gui_workflow.STAGES.TREES_6):
-        _add_submenu( alive, [ComponentAsGraph( x ) for x in model.components], root, roots, selection, "Trees" )
-        
+    _add_submenu( "6a. Trees", mode & ESelect.EX_TREES_ROOTED, alive, (x.named_tree for x in model.components), root, selection, resources.black_tree )
+    
     # Components - trees (unrooted)
-    if workflow in (None, gui_workflow.STAGES.TREES_6):
-        _add_submenu( alive, [ComponentAsGraph( x, unrooted = True ) for x in model.components], root, roots, selection, "Trees (unrooted)" )
+    _add_submenu( "6b. Unrooted trees", mode & ESelect.EX_TREES_UNROOTED, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
     
     # Fusions
-    if workflow in (None, gui_workflow.STAGES.FUSIONS_7):
-        _add_submenu( alive, model.fusion_events, root, roots, selection, "Fusions" )
+    _add_submenu( "7a. Fusion events", mode & ESelect.EX_FUSIONS, alive, model.fusion_events, root, selection, resources.black_fusion )
+    
+    # Fusion formations
+    _add_submenu( "7b. Fusion formations", mode & ESelect.EX_POINTS, alive, model.fusion_events, root, selection, resources.black_fusion, ex = [lambda x: x.formations] )
     
     # Fusion points
-    if workflow in (None, gui_workflow.STAGES.POINTS_7b):
-        fusion_points = QMenu()
-        fusion_points.setTitle( "Fusion points" )
-        
-        for fusion in model.fusion_events:
-            fusions_points = QMenu()
-            fusions_points.setTitle( str( fusion ) )
-            
-            for fusion_point in fusion.points:
-                _add_action( alive, fusion_point, selection, fusions_points )
-            
-            alive.append( fusions_points )
-            fusion_points.addMenu( fusions_points )
-        
-        roots.append( fusion_points )
-        root.addMenu( fusion_points )
+    _add_submenu( "7c. Fusion points", mode & ESelect.EX_POINTS, alive, model.fusion_events, root, selection, resources.black_fusion, ex = [lambda x: x.formations, lambda x: x.points] )
     
     #  Splits
-    if workflow in (None, gui_workflow.STAGES.SPLITS_8):
-        _add_submenu( alive, model.nrfg.splits, root, roots, selection, "Splits (candidates)" )
+    _add_submenu( "8. Splits", mode & ESelect.EX_SPLITS, alive, model.splits, root, selection, resources.black_split )
     
     # Consensus
-    if workflow in (None, gui_workflow.STAGES.CONSENSUS_9):
-        _add_submenu( alive, model.nrfg.consensus, root, roots, selection, "Splits (consensus)" )
-        
+    _add_submenu( "9. Consensus", mode & ESelect.EX_CONSENSUS, alive, model.consensus, root, selection, resources.black_consensus )
+    
     # Subsets
-    if workflow in (None, gui_workflow.STAGES.SUBSETS_10):
-        _add_submenu( alive, model.nrfg.subsets, root, roots, selection, "Subsets" )
+    _add_submenu( "10. Subsets", mode & ESelect.EX_SUBSETS, alive, model.subsets, root, selection, resources.black_subset )
+    
+    # Pregraphs
+    _add_submenu( "11. Pregraphs", mode & ESelect.EX_SUBGRAPHS, alive, model.iter_pregraphs(), root, selection, resources.black_pregraph )
     
     # Subgraphs
-    if workflow in (None, gui_workflow.STAGES.SUBGRAPHS_11):
-        _add_submenu( alive, model.nrfg.minigraphs, root, roots, selection, "Subgraphs" )
+    _add_submenu( "12. Supertrees", mode & ESelect.EX_SUBGRAPHS, alive, model.subgraphs, root, selection, resources.black_subgraph )
     
-    # NRFG - unclean
-    graphs = None
+    # NRFG - clean
+    _add_submenu( "13. Fusion graphs", mode & ESelect.EX_NRFGS, alive, (model.fusion_graph_unclean, model.fusion_graph_clean), root, selection, resources.black_nrfg )
     
-    if workflow in (None, gui_workflow.STAGES.FUSED_12):
-        if model.nrfg.fusion_graph_unclean:
-            graphs = QMenu()
-            _add_action( alive, model.nrfg.fusion_graph_unclean, selection, graphs )
-    
-    # NRFG - clean        
-    if workflow in (None, gui_workflow.STAGES.CLEANED_13):
-        if model.nrfg.fusion_graph_clean:
-            graphs = graphs or QMenu()
-            _add_action( alive, model.nrfg.fusion_graph_clean, selection, graphs )
-        
-    
-        
     # NRFG - report
-    if workflow in (None, gui_workflow.STAGES.CHECKED_14):
-        if model.nrfg.report:
-            graphs = graphs or QMenu()
-            _add_action( alive, model.nrfg.report, selection, graphs )
-        
-    if graphs is not None:
-        graphs.setTitle( "Graphs" )
-        roots.append( graphs )
-        root.addMenu( graphs )
+    _add_submenu( "14. Reports", mode & ESelect.EX_CHECKED, alive, (model.report,), root, selection, resources.black_check )
+    
+    # Usergraphs
+    _add_submenu( "User graphs", mode & ESelect.EX_USERGRAPHS, alive, model.user_graphs, root, selection, resources.black_nrfg )
     
     # Special
-    if not roots:
+    if len( root.actions() ) == 0:
         act = QAction()
         act.setText( "List is empty" )
         act.setEnabled( False )
         act.tag = None
         alive.append( act )
         root.addAction( act )
-    elif len( roots ) == 1:
-        root = roots[0]
+    elif len( root.actions() ) == 1:
+        root = root.actions()[0].menu()
     
     # Show menu
     orig = control.text()
     control.setText( root.title() )
+    root.setStyleSheet("font-size: 24px;")
     selected = root.exec_( control.mapToGlobal( QPoint( 0, control.height() ) ) )
     control.setText( orig )
     
@@ -352,29 +317,46 @@ def show_selection_menu( control: QToolButton, actions, workflow: LegoStage = No
     
     tag = selected.tag
     
-    
-    
     if tag is not None:
         actions.set_selection( LegoSelection( frozenset( { tag } ) ) )
 
 
-def _add_submenu( alive, e, root, roots, selection, text ):
-    if not e:
-        return
+def _add_submenu( text: str, requirement: bool, alive: List[object], elements: Iterable[object], root: QMenu, selection: LegoSelection, icon: Optional[ResourceIcon], ex: Optional[List[Callable[[object], Iterable[object]]]] = None ) -> int:
+    sub_menu = QMenu()
+    sub_menu.setTitle( text )
+    count = 0
     
-    fusions = QMenu()
-    fusions.setTitle( text )
-    for x in e:
-        _add_action( alive, x, selection, fusions )
-    roots.append( fusions )
-    root.addMenu( fusions )
+    for element in elements:
+        if not ex:
+            if _add_action( requirement, alive, element, selection, sub_menu, icon ):
+                count += 1
+        else:
+            count += _add_submenu( str( element ), requirement, alive, ex[0]( element ), sub_menu, selection, icon, ex = list( ex[1:] ) )
+    
+    if not count:
+        # Nothing in the menu
+        return 0
+    
+    alive.append( sub_menu )
+    root.addMenu( sub_menu )
+    return count
 
 
-def _add_action( alive, minigraph, selection, sub ):
+def _add_action( requirement: bool,
+                 alive,
+                 minigraph,
+                 selection,
+                 sub,
+                 icon ):
+    e = bool( requirement )
     act = QAction()
     act.setCheckable( True )
     act.setChecked( minigraph in selection )
     act.setText( str( minigraph ) )
+    act.setEnabled( e )
+    if icon:
+        act.setIcon( icon.icon() )
     act.tag = minigraph
     alive.append( act )
     sub.addAction( act )
+    return e

@@ -49,23 +49,19 @@ class GuiActions:
             selected = menu_helper.show_menu( self.window, menu )
             
             if selected is not None:
-                self.launch( map[selected], stage )
+                self.launch( map[selected] )
     
     
-    def launch( self, visualiser: LegoVisualiser, stage: LegoStage = None ):
+    def launch( self, visualiser: LegoVisualiser, *args ):
         from groot.frontends.gui.forms.frm_base import FrmBase
         
-        if stage is None:
-            args = ()
-        else:
-            args = (stage,)
         
         if isinstance( visualiser.action, type ) and issubclass( visualiser.action, FrmBase ):
-            self.frm_main.show_form( visualiser.action, *args )
+            self.frm_main.show_form( visualiser.action )
         elif isinstance( visualiser.action, Plugin ):
-            self.request( visualiser.action )
+            self.request( visualiser.action, *args )
         else:
-            visualiser.action( self, *args )
+            visualiser.action( self )
     
     
     def menu( self, stage: LegoStage ):
@@ -112,15 +108,11 @@ class GuiActions:
     def request( self, plugin: Plugin, *args, **kwargs ):
         if args is None:
             args = ()
-
+        
         arguments: Optional[FnArgValueCollection] = FrmArguments.request( self.window, plugin, *args, **kwargs )
         
         if arguments is not None:
             plugin.run( **arguments.tokwargs() )  # --> self.plugin_completed
-    
-    
-    def get_selection( self ):
-        return self.window.get_selection()
     
     
     def show_status_message( self, text: str ):
@@ -172,12 +164,23 @@ class GuiActions:
         FrmTreeView.request( self.window, root = VisualisablePath.get_root(), flat = True )
     
     
+    def __get_selection_form( self ):
+        from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
+        form: FrmSelectingToolbar = self.window
+        assert isinstance( form, FrmSelectingToolbar )
+        return form
+    
+    
+    def get_selection( self ):
+        return self.__get_selection_form().get_selection()
+    
+    
     def show_selection( self ):
-        form = self.window
-        
-        from groot.frontends.gui.forms.frm_base import FrmBase
-        assert isinstance( form, FrmBase )
-        gui_view_utils.show_selection_menu( form.select_button, self, form.workflow )
+        return self.__get_selection_form().show_selection_menu()
+    
+    
+    def set_selection( self, value: LegoSelection ):
+        return self.__get_selection_form().set_selection( value )
     
     
     def clear_selection( self ):
@@ -189,10 +192,6 @@ class GuiActions:
         
         if file_name:
             extensions.ext_files.file_load( file_name )
-    
-    
-    def set_selection( self, value: LegoSelection ):
-        self.window.set_selection( value )
     
     
     def enable_inbuilt_browser( self ):

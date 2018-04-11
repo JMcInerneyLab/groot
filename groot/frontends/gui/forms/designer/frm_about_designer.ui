@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>664</width>
-        <height>1169</height>
+        <height>1182</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -102,7 +102,7 @@ Images made by Freepik, Google and Good Ware from www.flaticon.com
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

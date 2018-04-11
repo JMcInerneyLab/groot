@@ -1,9 +1,10 @@
 from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set
+from mhelper import Logger
 
 from groot.constants import STAGES
-from groot.data.lego_model import ILegoNode, LegoModel, LegoPoint, LegoSequence, LegoSubset
-from mhelper import Logger
+from groot.data.lego_model import ILegoNode, LegoModel, LegoPoint, LegoSequence, LegoSubset, LegoFusion
+
 
 
 __LOG = Logger( "nrfg.find", False )
@@ -11,7 +12,7 @@ __LOG = Logger( "nrfg.find", False )
 def drop_subsets( model: LegoModel ):
     model.get_status( STAGES.SUBSETS_10 ).assert_drop()
     
-    model.nrfg.subsets = frozenset()
+    model.subsets = frozenset()
 
 
 def create_subsets( model: LegoModel, no_super: bool ):
@@ -37,41 +38,41 @@ def create_subsets( model: LegoModel, no_super: bool ):
     :return:            The set of gene sets
     """
     
+    # Check we are good to go
     model.get_status( STAGES.SUBSETS_10 ).assert_create()
-    
-    
-    __LOG.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ FIND POINTS WITH SAME GENES ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
     # Define our output variables
     all_gene_sets: Set[FrozenSet[ILegoNode]] = set()
     gene_set_to_fusion: Dict[FrozenSet[ILegoNode], List[LegoPoint]] = defaultdict( list )
     
     # Iterate over the fusion points 
-    for fusion_event in model.fusion_events:
-        for fusion_point in fusion_event.points:
-            # Each fusion point splits the graph into two halves ("inside" and "outside" that point)
-            # Each half defines one of our minigraphs.
-            pertinent_inner = frozenset( fusion_point.pertinent_inner )
-            pertinent_outer = frozenset( fusion_point.pertinent_outer )
-            all_gene_sets.add( pertinent_inner )
-            all_gene_sets.add( pertinent_outer )
-            
-            # Note that multiple points may define the same graphs, hence here we specify which points define which graphs. 
-            gene_set_to_fusion[pertinent_inner].append( fusion_point )
-            gene_set_to_fusion[pertinent_outer].append( fusion_point )
+    for event in model.fusion_events: #type: LegoFusion
+        for formation in event.formations:
+            for point in formation.points:
+                # Each fusion point splits the graph into two halves ("inside" and "outside" that point)
+                # Each half defines one of our subgraphs.
+                pertinent_inner = frozenset( point.pertinent_inner )
+                pertinent_outer = frozenset( point.pertinent_outer )
+                all_gene_sets.add( pertinent_inner )
+                all_gene_sets.add( pertinent_outer )
+                
+                # Note that multiple points may define the same graphs, we don't want these
+                # extra graphs, so we remember which points define which graphs. 
+                gene_set_to_fusion[pertinent_inner].append( point )
+                gene_set_to_fusion[pertinent_outer].append( point )
     
     to_remove = set()
     
-    # Some of our gene sets will ̶d̶e̶v̶o̶i̶d̶ ̶o̶f̶ ̶g̶e̶n̶e̶s shit
+    # Drop any useless gene sets
     
-    # Drop these now 
     for gene_set in all_gene_sets:
+        # Drop EMPTY gene sets
         if not any( isinstance( x, LegoSequence ) for x in gene_set ):
-            # No genes in this set
             __LOG( "DROP GENE SET (EMPTY): {}", gene_set )
             to_remove.add( gene_set )
             continue
         
+        # Drop gene sets that are a SUPERSET of another
         if no_super:
             remaining = set( gene_set )
             
@@ -88,8 +89,8 @@ def create_subsets( model: LegoModel, no_super: bool ):
         
         # Good gene set (keep)
         __LOG( "KEEP GENE SET: {}", gene_set )
-        for fusion_point in gene_set_to_fusion[gene_set]:
-            __LOG( "    POINT: {}", fusion_point )
+        for point in gene_set_to_fusion[gene_set]:
+            __LOG( "    POINT: {}", point )
     
     for gene_set in to_remove:
         all_gene_sets.remove( gene_set )
@@ -103,4 +104,4 @@ def create_subsets( model: LegoModel, no_super: bool ):
         new_set.update( gene_set_to_fusion[gene_set] )
         results.add( frozenset( new_set ) )
     
-    model.nrfg.subsets = frozenset( LegoSubset( model, i, x ) for i, x in enumerate( results ) )
+    model.subsets = frozenset( LegoSubset( model, i, x ) for i, x in enumerate( results ) )

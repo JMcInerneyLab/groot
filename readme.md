@@ -488,20 +488,24 @@ Terminology
 List of terms used in Groot. 
 Legacy terms and aliases are listed on the right because some of these are still used in the Groot source code (if not shown to the user in the program).
 
-| Term         | Description                                                                                   | Legacy name(s)
-|--------------|-----------------------------------------------------------------------------------------------|--------------------
-| Fusion event | An event in the evolution in which 2 genes join                                               | Event
-| Fusion point | The realisation of a fusion event within an individual tree                                   | Point
-| Splits       | The set of edges found within all trees                                                       | Candidate splits
-| Consensus    | A subset of splits supported by the majority-rule consensus                                   | Consensus splits, viable splits
-| NRFG         | The N-rooted fusion graph                                                                     | Stitched graph, sewed graph, fusion graph
-| Genes        | The input genes or sequences                                                                  | Sequences
-| Domains      | Part of a gene (conventional or imputed, Groot doesn't care)                                  | Subsequences
-| Sites        | The site data for the genes (FASTA)                                                           | FASTA data
-| Edges        | How the genes are connected (BLAST)                                                           | BLAST data
-| Subgraphs    | Stage of NRFG creation representing a part of the evolution free of fusions                   | Minigraphs
-| Subsets      | The predecessors to the subgraphs - a set of genes free of fusion events                      | Gene subsets
-| Split        | An edge of a tree represented as the left and right leaf-sets                                 | Edge (of a tree)
+| Term          | Description                                                                                   |
+|---------------|-----------------------------------------------------------------------------------------------|
+| Fusion event  | An event in the evolution in which 2 genes join                                               |
+| Fusion point  | The realisation of a fusion event within an individual tree                                   |
+| Splits        | The set of edges found within all trees                                                       |
+| Consensus     | A subset of splits supported by the majority-rule consensus                                   |
+| NRFG          | The N-rooted fusion graph                                                                     | 
+| Fused graph   | The N-rooted fusion graph without redundancies removed                                        |
+| Cleaned graph | The N-rooted fusion graph with redundancies removed                                           |
+| Genes         | The input sequences*                                                                          |
+| Domains       | Part of a gene*                                                                               |
+| Sites         | The site data for the genes (FASTA)                                                           |
+| Edges         | How the genes are connected (BLAST)                                                           |
+| Subgraphs     | Stage of NRFG creation representing a part of the evolution free of fusions                   |
+| Subsets       | The predecessors to the subgraphs - a set of genes free of fusion events                      |
+| Split         | An edge of a tree represented as the left and right leaf-sets                                 |
+
+* Data may be conventional or imputed, concrete or abstract, Groot doesn't care.
 
 Data formats
 ------------

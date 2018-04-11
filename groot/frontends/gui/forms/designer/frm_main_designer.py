@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1658, 1018)
+        MainWindow.resize(1184, 805)
         MainWindow.setUnifiedTitleAndToolBarOnMac(True)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -53,7 +53,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setSpacing(0)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.horizontalLayout.addWidget(self.FRA_WORKFLOW)
-        spacerItem = QtWidgets.QSpacerItem(40, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.gridLayout.addWidget(self.frame, 0, 0, 1, 1)
         self.MDI_AREA = QtWidgets.QMdiArea(self.centralwidget)
@@ -99,12 +99,22 @@ class Ui_MainWindow(object):
         self.BTN_STATUS.setObjectName("BTN_STATUS")
         self.horizontalLayout_5.addWidget(self.BTN_STATUS)
         self.LBL_STATUS = QtWidgets.QLabel(self.FRA_STATUSBAR)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.LBL_STATUS.sizePolicy().hasHeightForWidth())
+        self.LBL_STATUS.setSizePolicy(sizePolicy)
         self.LBL_STATUS.setObjectName("LBL_STATUS")
         self.horizontalLayout_5.addWidget(self.LBL_STATUS)
+        self.LBL_FILENAME = QtWidgets.QLabel(self.FRA_STATUSBAR)
+        self.LBL_FILENAME.setScaledContents(True)
+        self.LBL_FILENAME.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.LBL_FILENAME.setObjectName("LBL_FILENAME")
+        self.horizontalLayout_5.addWidget(self.LBL_FILENAME)
         self.gridLayout.addWidget(self.FRA_STATUSBAR, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1658, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1184, 22))
         self.menuBar.setObjectName("menuBar")
         MainWindow.setMenuBar(self.menuBar)
 
@@ -118,5 +128,6 @@ class Ui_MainWindow(object):
         self.FRA_VISUALISERS.setTitle(_translate("MainWindow", "Visualisers"))
         self.FRA_WORKFLOW.setTitle(_translate("MainWindow", "Workflow"))
         self.LBL_STATUS.setText(_translate("MainWindow", "Everything is good."))
+        self.LBL_FILENAME.setText(_translate("MainWindow", "."))
 
 

@@ -1,26 +1,66 @@
-from os import path
 from typing import List, Optional
 
 from groot import algorithms
-from groot.utilities import graph_viewing
 from groot.data import global_view
-from groot.data.lego_model import ESiteType
+from groot.data.lego_model import ESiteType, INamedGraph
 from groot.extensions import ext_files
 from groot.frontends.cli import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, command, common_commands, visibilities
-from mgraph import importing
-from mhelper import EFileMode, Filename, file_helper, io_helper, bio_helper
+from intermake.engine.environment import MENV
+from mgraph import Quartet, analysing
+from mhelper import EFileMode, Filename, bio_helper, file_helper, io_helper
 
 
 __mcmd_folder_name__ = "Gimmicks"
 __EXT_FASTA = ".fasta"
 
 
+@command( visibility = visibilities.ADVANCED )
+def query_quartet( graph: INamedGraph, a: str, b: str, c: str, d: str ):
+    """
+    Displays what a particular quartet looks like for a particular graph.
+    
+    :param graph:   Graph to query. 
+    :param a:       Name of node in quartet. 
+    :param b:       Name of node in quartet.
+    :param c:       Name of node in quartet. 
+    :param d:       Name of node in quartet. 
+    """
+    g = graph.graph
+    an = g.nodes.by_predicate( lambda x: str( x ) == a )
+    bn = g.nodes.by_predicate( lambda x: str( x ) == b )
+    cn = g.nodes.by_predicate( lambda x: str( x ) == c )
+    dn = g.nodes.by_predicate( lambda x: str( x ) == d )
+    
+    q = analysing.get_quartet( g, (an, bn, cn, dn) )
+    
+    if isinstance( q, Quartet ):
+        l1, l2 = q.left_nodes
+        r1, r2 = q.right_nodes
+        
+        l1t = "{}".format( l1 ).rjust( 10 )
+        l2t = "{}".format( l2 ).rjust( 10 )
+        r1t = "{}".format( r1 ).ljust( 10 )
+        r2t = "{}".format( r2 ).ljust( 10 )
+        
+        MCMD.print( str( q ) + ":" )
+        MCMD.print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l1t, YYYYYYYY = r1t ) )
+        MCMD.print( r"              \        /          " )
+        MCMD.print( r"               --------           " )
+        MCMD.print( r"              /        \          " )
+        MCMD.print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l2t, YYYYYYYY = r2t ) )
+    else:
+        MCMD.print( str( q ) )
+        MCMD.print( r"    (unresolved)" )
+
+
 # noinspection SpellCheckingInspection
-@command()
+@command( visibility = visibilities.ADVANCED )
 def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFileMode.READ], output: Filename[EFileMode.OUTPUT] ):
     """
+    Converts standard BLAST format 6 TSV to `Composite search` formatted BLAST. 
+    
     Composite search [1] uses a custom input format.
     If you already have standard BLAST this converts to that format, so you don't need to BLAST again.
     
@@ -95,32 +135,6 @@ def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -
 
 
 @command( visibility = visibilities.ADVANCED )
-def view_graph( text: str, title: Optional[str] = None ):
-    """
-    Views a graph in Vis-Js.
-    
-    :param text:    Text representing the graph, created with `MGraph.to_compact` OR a filename, created with `MGRAPH.to_csv`.
-    :param title:   Title of graph (optional)
-    """
-    if path.isfile( text ):
-        try:
-            g = importing.import_edgelist( file_helper.read_all_text( text ), delimiter = "\t" )
-        except Exception as ex:
-            raise ValueError( "Invalid file: " + text ) from ex
-    else:
-        g = importing.import_compact( text )
-    
-    visjs = graph_viewing.create_vis_js( graph = [("custom-graph", g)],
-                                         title = title,
-                                         inline_title = title is not None )
-    
-    MCMD.print( str( g ) )
-    
-    with io_helper.open_write( "open", extension = ".html" ) as file_out:
-        file_out.write( visjs )
-
-
-@command( visibility = visibilities.ADVANCED )
 def update_model() -> EChanges:
     """
     Update model to new version.
@@ -163,7 +177,7 @@ def __review( review, msg, fns, *, retry = True ):
             raise ValueError( "User cancelled." )
 
 
-@command( names = ["continue"] )
+@command( visibility = visibilities.ADVANCED, names = ["continue"] )
 def continue_wizard() -> EChanges:
     """
     Continues the wizard after it was paused.
@@ -174,7 +188,7 @@ def continue_wizard() -> EChanges:
     return algorithms.wizard.Wizard.get_active().step()
 
 
-@command( names = ["stop"] )
+@command( visibility = visibilities.ADVANCED, names = ["stop"] )
 def stop_wizard() -> EChanges:
     """
     Stops a wizard.
@@ -204,6 +218,7 @@ def wizard( new: Optional[bool] = None,
             pause_splits: Optional[bool] = None,
             pause_consensus: Optional[bool] = None,
             pause_subset: Optional[bool] = None,
+            pause_pregraphs: Optional[bool] = None,
             pause_minigraph: Optional[bool] = None,
             pause_sew: Optional[bool] = None,
             pause_clean: Optional[bool] = None,
@@ -217,6 +232,7 @@ def wizard( new: Optional[bool] = None,
     
     This method is represented in the GUI by the wizard window.
     
+    :param pause_pregraphs:     Pause after stage. 
     :param new:                 Create a new model? 
     :param name:                Name the model?
     :param outgroups:           Outgroup accessions?
@@ -293,7 +309,7 @@ def wizard( new: Optional[bool] = None,
         tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( algorithms.s6_tree.tree_algorithms.keys ) + [""] )
     
     if supertree is None:
-        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( algorithms.s11_supertrees.supertree_algorithms.keys ) + [""] )
+        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( algorithms.s12_supertrees.supertree_algorithms.keys ) + [""] )
     
     if pause_import is None:
         pause_import = question( "Do you wish the wizard to pause for you to review the imported data?" )
@@ -319,6 +335,9 @@ def wizard( new: Optional[bool] = None,
     if pause_subset is None:
         pause_subset = question( "Do you wish the wizard to pause for you to review the subsets?" )
     
+    if pause_pregraphs is None:
+        pause_pregraphs = question( "Do you wish the wizard to pause for you to review the pregraphs?" )
+    
     if pause_minigraph is None:
         pause_minigraph = question( "Do you wish the wizard to pause for you to review the subgraphs?" )
     
@@ -340,31 +359,41 @@ def wizard( new: Optional[bool] = None,
         else:
             save = question( "Save your model after each stage completes?" )
     
-    walkthrough = Wizard( new = new,
-                          name = name,
-                          imports = imports,
-                          pause_import = pause_import,
-                          pause_components = pause_components,
-                          pause_align = pause_align,
-                          pause_tree = pause_tree,
-                          pause_fusion = pause_fusion,
-                          pause_splits = pause_splits,
-                          pause_consensus = pause_consensus,
-                          pause_subset = pause_subset,
-                          pause_minigraph = pause_minigraph,
-                          pause_sew = pause_sew,
-                          pause_clean = pause_clean,
-                          pause_check = pause_check,
-                          tolerance = tolerance,
-                          alignment = alignment,
-                          tree = tree,
-                          view = view,
-                          save = save,
-                          outgroups = outgroups,
-                          supertree = supertree )
+    walkthrough = algorithms.wizard.Wizard( new = new,
+                                            name = name,
+                                            imports = imports,
+                                            pause_import = pause_import,
+                                            pause_components = pause_components,
+                                            pause_align = pause_align,
+                                            pause_tree = pause_tree,
+                                            pause_fusion = pause_fusion,
+                                            pause_splits = pause_splits,
+                                            pause_consensus = pause_consensus,
+                                            pause_subset = pause_subset,
+                                            pause_pregraphs = pause_pregraphs,
+                                            pause_minigraph = pause_minigraph,
+                                            pause_sew = pause_sew,
+                                            pause_clean = pause_clean,
+                                            pause_check = pause_check,
+                                            tolerance = tolerance,
+                                            alignment = alignment,
+                                            tree = tree,
+                                            view = view,
+                                            save = save,
+                                            outgroups = outgroups,
+                                            supertree = supertree )
     
     walkthrough.make_active()
+    MCMD.progress( "The wizard has been created paused.\nYou can use the {} and {} commands to manage your wizard.".format( continue_wizard, stop_wizard ) )
 
 
 def question( *args ):
     return MCMD.question( *args )
+
+
+@command( names = ["groot"], visibility = visibilities.ADVANCED )
+def cmd_groot():
+    """
+    Displays the application version.
+    """
+    MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )

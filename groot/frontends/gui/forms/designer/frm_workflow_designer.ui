@@ -966,7 +966,7 @@ margin-bottom: 2px;</string>
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake/hosts/frontends/gui_qt/designer/resource_files/resources.qrc"/>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
   <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>

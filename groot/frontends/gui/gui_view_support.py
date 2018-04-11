@@ -43,23 +43,6 @@ class EMode( Enum ):
     COMPONENT = 3
 
 
-class ESelect( Enum ):
-    """
-    Selection mode
-    """
-    ONLY = 1
-    """Only select this item (i.e. clear before select)"""
-    
-    APPEND = 2
-    """Add this item from the current selection"""
-    
-    REMOVE = 3
-    """Remove this item from the current selection"""
-    
-    TOGGLE = 4
-    """Toggle this items selected status"""
-
-
 class DRAWING:
     # Order of sites in piano roll
     PROTEIN_ORDER_TABLE = array_helper.create_index_lookup( "IVLFCMAGTSWYPHEQDNKR" )
@@ -141,5 +124,3 @@ class DRAWING:
     Z_SEQUENCE = 1
     Z_EDGES = 2
     Z_FOCUS = 3
-
-

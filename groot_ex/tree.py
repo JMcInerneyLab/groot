@@ -8,10 +8,16 @@ def tree_neighbor_joining( model: str, alignment: str ) -> str:
     """
     Uses PAUP to generate the tree using neighbour-joining.
     
+    :remarks:
+    PAUP is trial-ware, displaying a "This version of PAUP has expired"
+    after a timeout period. If this function doesn't work, check your
+    PAUP version.
+    
     :param model:       Format, a string `n` or `p` denoting the site type.
     :param alignment:   Alignment in FASTA format.
     :return:            The tree in Newick format.
     """
+    # TODO: Use an alternative that doesn't have the PAUP time-out problem.
     file_helper.write_all_text( "in_file.fasta", alignment )
     
     script = """

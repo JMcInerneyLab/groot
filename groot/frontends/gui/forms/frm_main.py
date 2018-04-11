@@ -6,6 +6,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton, QMdiArea
 from groot.frontends.gui.forms.designer import frm_main_designer
 
+from groot import constants
 from groot.data import global_view
 from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
 from groot.frontends.gui.forms.frm_base import FrmBase
@@ -49,9 +50,9 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         global_options: GlobalOptions = global_view.options()
         self.mdi_mode = global_options.window_mode != EWindowMode.BASIC
-        self.ui.FRA_FILE.setVisible(global_options.tool_file)
-        self.ui.FRA_VISUALISERS.setVisible(global_options.tool_visualisers)
-        self.ui.FRA_WORKFLOW.setVisible(global_options.tool_workflow)
+        self.ui.FRA_FILE.setVisible( global_options.tool_file )
+        self.ui.FRA_VISUALISERS.setVisible( global_options.tool_visualisers )
+        self.ui.FRA_WORKFLOW.setVisible( global_options.tool_workflow )
         
         if global_options.window_mode == EWindowMode.TDI:
             self.ui.MDI_AREA.setViewMode( QMdiArea.TabbedView )
@@ -62,16 +63,17 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         view = global_view.options().startup_mode
         
-        if view == EStartupMode.STARTUP:
-            self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_STARTUP )
-        elif view == EStartupMode.WORKFLOW:
-            self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_WORKFLOW )
-        elif view == EStartupMode.SAMPLES:
-            self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
-        elif view == EStartupMode.NOTHING:
-            pass
-        else:
-            raise SwitchError( "view", view )
+        if global_view.current_model().get_status( constants.STAGES.DATA_0 ).is_none:
+            if view == EStartupMode.STARTUP:
+                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_STARTUP )
+            elif view == EStartupMode.WORKFLOW:
+                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_WORKFLOW )
+            elif view == EStartupMode.SAMPLES:
+                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
+            elif view == EStartupMode.NOTHING:
+                pass
+            else:
+                raise SwitchError( "view", view )
         
         self.completed_changes = None
         self.completed_plugin = None
@@ -81,6 +83,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     def update_title( self ):
         self.setWindowTitle( MENV.name + " - " + MENV.root.visualisable_info().name )
+        self.ui.LBL_FILENAME.setText( MENV.root.visualisable_info().name )
     
     
     def on_selection_changed( self ):
@@ -147,7 +150,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
             form.close()
     
     
-    def show_form( self, form_class, *parameters ):
+    def show_form( self, form_class ):
         self.menu_handler.gui_actions.dismiss_startup_screen()
         
         if form_class.__name__ in self.mdi:
@@ -166,9 +169,6 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         form.show()
         self.mdi[form_class.__name__] = form
         self.ui.MDI_AREA.setBackground( self.COLOUR_NOT_EMPTY )
-        
-        if isinstance( form, FrmBase ):
-            form.set_parameters( *parameters )
     
     
     @exqtSlot()

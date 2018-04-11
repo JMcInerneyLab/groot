@@ -64,11 +64,11 @@ class FrmWorkflow( FrmBase ):
         
         self.gray_indicator = False
         
-        self._refresh_label( constants.STAGES.FASTA_2,
+        self._refresh_label( constants.STAGES.FASTA_1,
                              self.ui.LBL_WARNI_SEQUENCES,
                              self.ui.TXT_SEQUENCES )
         
-        self._refresh_label( constants.STAGES.BLAST_1,
+        self._refresh_label( constants.STAGES.BLAST_2,
                              self.ui.LBL_WARNI_EDGES,
                              self.ui.TXT_EDGES )
         
@@ -145,7 +145,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.actions.menu( gui_workflow.STAGES.FASTA_2 )
+        self.actions.menu( gui_workflow.STAGES.FASTA_1 )
     
     
     @exqtSlot()
@@ -177,7 +177,7 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.actions.menu( gui_workflow.STAGES.BLAST_1 )
+        self.actions.menu( gui_workflow.STAGES.BLAST_2 )
     
     
     @exqtSlot()

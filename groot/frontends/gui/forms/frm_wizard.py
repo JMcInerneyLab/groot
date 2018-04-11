@@ -149,6 +149,7 @@ class FrmWizard( FrmBase ):
                 pause_splits = self.ui.CHK_PAUSE_SPLITS.isChecked(),
                 pause_consensus = self.ui.CHK_PAUSE_CONSENSUS.isChecked(),
                 pause_subset = self.ui.CHK_PAUSE_SUBSETS.isChecked(),
+                pause_pregraphs = False, # self.ui.CHK_PAUSE_PREGRAPHS.isChecked() TODO
                 pause_minigraph = self.ui.CHK_PAUSE_MINIGRAPHS.isChecked(),
                 pause_sew = self.ui.CHK_PAUSE_RAW_NRFG.isChecked(),
                 pause_clean = self.ui.CHK_PAUSE_CLEANED_NRFG.isChecked(),
@@ -157,6 +158,7 @@ class FrmWizard( FrmBase ):
                 pause_import = self.ui.CHK_PAUSE_DATA.isChecked(),
                 save = self.ui.CHK_SAVE.isChecked(),
                 view = False,
+                supertree = "", #TODO
                 outgroups = [x.strip() for x in self.ui.TXT_OUTGROUPS.text().split( "," )] )  # TODO
         
         return walkthrough
@@ -199,7 +201,7 @@ class FrmWizard( FrmBase ):
         """
         Signal handler: Load wizard
         """
-        walkthroughs_: List[algorithms.wizard.Wizard] = MENV.local_data.store.get( SETTINGS_KEY, [] )
+        walkthroughs_: List[algorithms.wizard.Wizard] = MENV.local_data.store.retrieve( SETTINGS_KEY, [] )
         
         if not walkthroughs_:
             self.alert( "You don't have any saved walkthroughs." )

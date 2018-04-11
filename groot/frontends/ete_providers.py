@@ -4,10 +4,11 @@ from ete3 import Tree
 from groot.data.lego_model import LegoModel
 from intermake import Theme
 from mgraph import DNodeToText, MGraph, exporting
+from mgraph.exporting import UNodeToFormat
 
 
-def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
-    ascii = tree_from_newick( exporting.export_newick( target, fnode = formatter ) ).get_ascii( show_internal = True )
+def tree_to_ascii( target: MGraph, model: LegoModel, fnode : UNodeToFormat ):
+    ascii = tree_from_newick( exporting.export_newick( target, fnode = fnode ) ).get_ascii( show_internal = True )
     
     for sequence in model.sequences:
         component = model.components.find_component_for_major_sequence(sequence)
@@ -17,8 +18,8 @@ def tree_to_ascii( target: MGraph, model: LegoModel, formatter : DNodeToText ):
     return ascii
 
 
-def show_tree( target: MGraph, model: LegoModel, formatter : DNodeToText ):
-    tree__ = tree_from_newick( exporting.export_newick( target, fnode = formatter ) )
+def show_tree( target: MGraph, model: LegoModel, fnode : UNodeToFormat ):
+    tree__ = tree_from_newick( exporting.export_newick( target, fnode = fnode ) )
     colours = ["#C00000", "#00C000", "#C0C000", "#0000C0", "#C000C0", "#00C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFC0"]
     
     for n in tree__.traverse():

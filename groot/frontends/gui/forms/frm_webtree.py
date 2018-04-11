@@ -1,6 +1,4 @@
-import shutil
-from os import path, system
-from typing import List, Tuple
+from os import path
 
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QGridLayout
@@ -8,20 +6,19 @@ from groot.frontends.gui.forms.designer import frm_webtree_designer
 
 import intermake
 from groot import constants
-from groot.utilities import graph_viewing
-from groot.frontends.gui import gui_workflow
+from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.global_view import EBrowseMode
 from groot.data.lego_model import INamedGraph, LegoModel
-from groot.frontends.gui.forms.frm_base import FrmBase
-from groot.frontends.gui.gui_view_utils import LegoSelection
+from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
+from groot.frontends.gui.gui_view_utils import ESelect, LegoSelection
+from groot.utilities import graph_viewing
 from intermake.engine.environment import MENV
-from mgraph import MGraph
 from mhelper import SwitchError, file_helper
-from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
+from mhelper_qt import exceptToGui, exqtSlot
 
 
-class FrmWebtree( FrmBase ):
+class FrmWebtree( FrmSelectingToolbar ):
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -38,17 +35,10 @@ class FrmWebtree( FrmBase ):
         self.__file_name = None
         self.browser = None
         
-        self.bind_to_select( self.ui.BTN_SELECTION )
         self.bind_to_label( self.ui.LBL_NO_TREES_WARNING )
         self.bind_to_label( self.ui.LBL_SELECTION_WARNING )
         self.bind_to_label( self.ui.LBL_NO_INBUILT )
-        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
-                                   self.ui.BTN_WORKFLOW,
-                                   self.ui.BTN_CREATE,
-                                   self.ui.BTN_REMOVE,
-                                   self.ui.BTN_VIEW,
-                                   gui_workflow.VISUALISERS.VIEW_TREE,
-                                   gui_workflow.STAGES.TREES_6 )
+        self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.HAS_GRAPH )
         
         self.update_trees()
         
@@ -81,27 +71,29 @@ class FrmWebtree( FrmBase ):
     def update_trees( self ):
         selection: LegoSelection = self.get_selection()
         model: LegoModel = self.get_model()
-        names_and_graphs: List[Tuple[str, MGraph]] = []
         self.file_name = path.join( MENV.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "temporary_visjs.html" )
         
-        self.ui.LBL_NO_TREES_WARNING.setVisible( model.get_status(constants.STAGES.TREES_6).is_none )
+        self.ui.LBL_NO_TREES_WARNING.setVisible( model.get_status( constants.STAGES.TREES_6 ).is_none )
+        
+        graph = None
         
         for item in selection:
             if isinstance( item, INamedGraph ) and item.graph is not None:
-                names_and_graphs.append( (str( item ), item.graph) )
+                graph = item
             else:
-                names_and_graphs.clear()
+                graph = None
                 break
         
-        error = not names_and_graphs
+        error = not graph
         self.ui.LBL_SELECTION_WARNING.setVisible( error )
         
         if error:
             visjs = ""
         else:
-            visjs = graph_viewing.create_vis_js( graph = names_and_graphs,
-                                                 inline_title = False,
-                                                 title = "{} - {} - {}".format( MENV.name, model.name, str( selection ) ) )
+            visjs = graph_viewing.create( format_str = None,
+                                          graph = graph,
+                                          model = model,
+                                          format = global_view.options().gui_tree_view )
         
         file_helper.write_all_text( self.file_name, visjs )
         
@@ -113,27 +105,6 @@ class FrmWebtree( FrmBase ):
     
     
     @exqtSlot()
-    def on_BTN_SYSTEM_BROWSER_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'BTN_SYSTEM_BROWSER' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        if self.file_name:
-            system( 'open "{}"'.format( self.file_name ) )
-    
-    
-    @exqtSlot()
-    def on_BTN_SAVE_TO_FILE_clicked( self ) -> None: #TODO: BAD_HANDLER - The widget 'BTN_SAVE_TO_FILE' does not appear in the designer file.
-        """
-        Signal handler:
-        """
-        if self.file_name:
-            new_file_name = qt_gui_helper.browse_save( self, "HTML files (*.html)" )
-            
-            if new_file_name:
-                shutil.copy( self.file_name, new_file_name )
-    
-    
-    @exqtSlot()
     def on_BTN_BROWSE_HERE_clicked( self ) -> None:
         """
         Signal handler:
@@ -142,7 +113,7 @@ class FrmWebtree( FrmBase ):
     
     
     @exqtSlot()
-    def on_BTN_WORKFLOW_clicked( self ) -> None:
+    def on_BTN_SYSTEM_BROWSER_clicked( self ) -> None:
         """
         Signal handler:
         """
@@ -150,35 +121,11 @@ class FrmWebtree( FrmBase ):
     
     
     @exqtSlot()
-    def on_BTN_CREATE_clicked( self ) -> None:
+    def on_BTN_SAVE_TO_FILE_clicked( self ) -> None:
         """
         Signal handler:
         """
         pass
-    
-    
-    @exqtSlot()
-    def on_BTN_REMOVE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_SELECTION_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass  # intentional
     
     
     def __disable_inbuilt_browser( self ):

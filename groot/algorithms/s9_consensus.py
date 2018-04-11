@@ -10,7 +10,7 @@ __LOG_EVIDENCE = Logger( "nrfg.evidence", False )
 def drop_consensus( model: LegoModel ):
     model.get_status( STAGES.CONSENSUS_9 ).assert_drop()
     
-    model.nrfg.consensus = frozenset()
+    model.consensus = frozenset()
 
 
 def create_consensus( model: LegoModel, cutoff: float ) -> None:
@@ -36,10 +36,10 @@ def create_consensus( model: LegoModel, cutoff: float ) -> None:
     
     model.get_status( STAGES.CONSENSUS_9 ).assert_create()
     
-    __LOG_EVIDENCE( "BEGIN EVIDENCE ({} splits)".format( len( model.nrfg.splits ) ) )
+    __LOG_EVIDENCE( "BEGIN EVIDENCE ({} splits)".format( len( model.splits ) ) )
     viable_splits: Set[LegoSplit] = set()
     
-    for split in model.nrfg.splits:
+    for split in model.splits:
         assert isinstance( split, LegoSplit ), split
         
         if split.split.is_empty:
@@ -94,4 +94,4 @@ def create_consensus( model: LegoModel, cutoff: float ) -> None:
         if accept:
             viable_splits.add( split )
     
-    model.nrfg.consensus = frozenset( viable_splits )
+    model.consensus = frozenset( viable_splits )

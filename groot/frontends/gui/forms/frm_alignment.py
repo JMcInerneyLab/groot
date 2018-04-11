@@ -3,11 +3,10 @@ from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 from groot.frontends.gui.forms.designer import frm_alignment_designer
 
-from groot.data.lego_model import IHasFasta, FastaError
-from groot.frontends.gui.forms.frm_base import FrmBase
+from groot.data.lego_model import FastaError, IHasFasta
+from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.gui_view import LookupTable
-from groot.frontends.gui.gui_workflow import EWorkflow
-from groot.frontends.gui import  gui_workflow
+from groot.frontends.gui.gui_view_utils import ESelect
 from mhelper import bio_helper
 from mhelper_qt import exqtSlot, qt_colour_helper
 
@@ -182,7 +181,7 @@ class AlignmentViewWidget( QWidget ):
         self.update()
 
 
-class FrmAlignment( FrmBase ):
+class FrmAlignment( FrmSelectingToolbar ):
     def __init__( self, parent ):
         """
         CONSTRUCTOR
@@ -198,14 +197,7 @@ class FrmAlignment( FrmBase ):
         
         self.ui.LBL_ERROR.setVisible( False )
         self.bind_to_label( self.ui.LBL_SELECTION_WARNING )
-        self.bind_to_select( self.ui.BTN_SELECTION )
-        self.bind_to_workflow_box( self.ui.GRP_WORKFLOW,
-                                   self.ui.BTN_WORKFLOW,
-                                   self.ui.BTN_CREATE,
-                                   self.ui.BTN_REMOVE,
-                                   self.ui.BTN_VIEW,
-                                   gui_workflow.VISUALISERS.VIEW_ALIGNMENT,
-                                   gui_workflow.STAGES.ALIGNMENTS_5 )
+        self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.HAS_FASTA )
         
         self.update_view()
         self.ui.CHK_ACCESSIONS.toggled[bool].connect( self.update_view )
@@ -251,7 +243,6 @@ class FrmAlignment( FrmBase ):
             self.ui.SCR_MAIN.setMinimum( 0 )
             self.ui.SCR_MAIN.setMaximum( self.seq_view.max_len - 1 )
             self.ui.SCR_MAIN.setValue( 0 )
-            self.ui.BTN_SELECTION.setText( str( selection ) )
             self.ui.LBL_POSITION_START.setText( str( 1 ) )
             self.ui.LBL_POSITION_END.setText( str( self.seq_view.max_len ) )
         
@@ -287,41 +278,4 @@ class FrmAlignment( FrmBase ):
         self.ui.SCR_MAIN.setValue( self.ui.SCR_MAIN.maximum() )
     
     
-    @exqtSlot()
-    def on_BTN_WORKFLOW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
     
-    
-    @exqtSlot()
-    def on_BTN_CREATE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_REMOVE_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_VIEW_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
-    
-    
-    @exqtSlot()
-    def on_BTN_SELECTION_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        pass
