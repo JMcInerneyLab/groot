@@ -30,7 +30,6 @@ setup( name = "groot",
                            "PyQt5",  # ui (GUI)
                            "sip",  # ui (GUI)
                            "dendropy",
-                           "mgvis",  # MJR (bundler)
                            "biopython",
                            "six",  # groot doesn't use this, but ete needs it
                            ],
