@@ -4,7 +4,7 @@ Groot entry point.
 
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.42"
+__version__ = "0.0.0.43"
 
 import groot.init
 from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator  # export; to register
