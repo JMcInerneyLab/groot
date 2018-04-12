@@ -41,6 +41,8 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
     else:
         for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
+        else:
+            MCMD.print( "No samples available. Please download and add sample data to `{}`.".format( global_view.get_sample_data_folder() ) )
         
         return EChanges.NONE
 

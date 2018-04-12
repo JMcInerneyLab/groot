@@ -86,8 +86,7 @@ def get_sample_data_folder( name: str = None ):
     PRIVATE
     Obtains the sample data folder
     """
-    import groot_data
-    sdf = groot_data.get_path()
+    sdf = MENV.local_data.local_folder("sample_data")
     
     if not name:
         return sdf
