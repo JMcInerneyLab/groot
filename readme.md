@@ -14,7 +14,6 @@ Installation
 ------------
 
 Please make sure you have Python (3.6+) and Pɪᴩ installed first!
-If you'd like to visualise trees please download vis.js also.
 
 * Python: https://www.python.org/downloads/
 * Pip: https://pip.pypa.io/en/stable/installing/
@@ -54,7 +53,7 @@ Tutorial
 ### Getting started ###
 
 Groot has a nice GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
-It's much easier to explain and we get to cover all the specific details.
+It's much easier to explain and we get to cover all the specifics.
 The workflow we'll be following looks like this:
 
 0. Load FASTA data       
@@ -67,7 +66,7 @@ The workflow we'll be following looks like this:
 0. Viable splits     
 0. Subsets               
 0. Subgraphs             
-0. Stitch                
+0. Fuse                  
 0. Clean                 
 0. Check
 
@@ -83,13 +82,19 @@ Once in Gʀᴏᴏᴛ, type `help` for help.
 ```bash
 $  help
    
-#  INF   help................................
+   INF   help................................
 
    You are in command-line mode.
    ...
 ```
 
-There are three groups of workflow commands in Groot, the `make.` commands, used to advance the workflow, the `drop.` commands, used to go back a step, and the `print.` commands, used to display information. For instance, to create the NRFG it's `make.nrfg`, to view it it's `print.nrfg`, and to delete it and go back a step, it's `drop.nrfg`. Type `cmdlist` to see all the commands.
+There are three groups of workflow commands in Groot.
+The `create.` commands are used to advance the workflow,
+the `drop.` commands are used to go back a step,
+and the `print.` commands are used to display information.
+For instance, to create the alignments it's `create.alignments`,
+to view them it's `print.alignments`, and to delete them and go back a step, it's `drop.alignments`.
+Type `cmdlist` to see all the commands.
 
 ### Introduction to the sample data ###
  
@@ -103,6 +108,8 @@ $   file.sample
         simple
         triptych
 ```
+
+_Note: The samples available will vary depending on which version of Groot you are using._
 
 The _triptych_ sample contains a set of genes which have undergone two recombination events "X" and "Y":
 
@@ -128,20 +135,27 @@ Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the tr
 
 ### Loading the sample ###
 
-The `sample` command can be used to load the sample files automatically, but for the sake of providing a tutorial, we will load the data manually.
+The `sample` command can be used to load the sample files automatically, but for the sake of providing a tutorial, we will be importing the data manually.
+For reference, the ways of getting Groot to do stuff with the minimal possible effort are listed in the table below.
 
-Unless you can remember where Pip installed the files to earlier, you can find out where the sample is located by executing the following command:
+| Mode of operation | What it does            | How to get there         |
+|-------------------|-------------------------|--------------------------|
+| Wizard            | Does everything for you | Use the `wizard` command |
+| GUI               | Shows you things        | Use the `gui` command    |
+| Sample loader     | Loads samples           | Use the `sample` command |
+
+Unless you can remember where Pip installed the files to earlier, you can find out where the sample is located by executing the following:
 
 ```bash
-$   sample triptych +query
+$   sample triptych +q
     
 #   INF import_directory "/blah/blah/blah/triptych"
 ```
 
-The `+query` bit tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves.
+The `+q` bit of our input tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves.
+Groot works out what you mean most of the time, so `+q` is equivalent to `true`, `+query`, `query=true`, `q=1`, etc.
 The _import_directory_ bit of the output tells us where the sample lives.
-Write that down.
-Remember, your path will look different to mine.
+Write that down, and take note, your path will look different to mine.
 
 You can now load the files into Gʀᴏᴏᴛ:
 
@@ -152,7 +166,7 @@ $   import.fasta /blah/blah/blah/triptych/triptych.fasta
 
 You should notice that at this point the prompt changes from _Empty model_ to _Unsaved model_.
 
-Unsaved model isn't very informative, so save our model with a more interesting name:
+Unsaved model isn't very informative and serves as a reminder to _save our data_, so save our model with a more interesting name:
 
 ```bash
 $   save tri
@@ -163,6 +177,8 @@ $   save tri
 ```
 
 We didn't specify a path, or an extension, so you'll notice Gʀᴏᴏᴛ has added them for us.
+Groot uses directory in your home folder to store its data.
+The directory is hidden by default to avoid bloating your home folder, but you can find out where it is (or change it!) using the `workspace` command. 
 
 Preparing your data
 -------------------
