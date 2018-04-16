@@ -262,12 +262,19 @@ class Wizard:
             self.__pause( STAGES.ALIGNMENTS_5, (ext_viewing.print_alignments,) )
     
     
-    def __fn4_make_components( self ):
-        self.__line( STAGES.COMPONENTS_3 )
-        self.__result |= ext_generating.create_components( self.tolerance )
+    def __fn4_make_major( self ):
+        self.__line( STAGES.MAJOR_3 )
+        self.__result |= ext_generating.create_major( self.tolerance )
         
         if self.pause_components:
-            self.__pause( STAGES.COMPONENTS_3, (ext_viewing.print_genes, ext_viewing.print_components) )
+            self.__pause( STAGES.MAJOR_3, (ext_viewing.print_genes, ext_viewing.print_components) )
+            
+    def __fn4_make_minor( self ):
+        self.__line( STAGES.MINOR_3 )
+        self.__result |= ext_generating.create_minor( self.tolerance )
+        
+        if self.pause_components:
+            self.__pause( STAGES.MINOR_3, (ext_viewing.print_genes, ext_viewing.print_components) )
     
     
     def __fn4b_make_domains( self ):
@@ -276,17 +283,17 @@ class Wizard:
     
     
     def __fn3_import_data( self ):
-        self.__line( STAGES.DATA_0 )
+        self.__line( STAGES._DATA_0 )
         for import_ in self.imports:
             self.__result |= groot.extensions.ext_importation.import_file( import_ )
         
         if self.pause_import:
-            self.__pause( STAGES.DATA_0, (ext_viewing.print_genes,) )
+            self.__pause( STAGES._DATA_0, (ext_viewing.print_genes,) )
     
     
     def __save_model( self ):
         if self.save:
-            self.__line( STAGES.FILE_0 )
+            self.__line( STAGES._FILE_0 )
             self.__result |= ext_files.file_save( self.name )
     
     
@@ -310,7 +317,8 @@ class Wizard:
     
     __stages = [__fn1_new_model,
                 __fn3_import_data,
-                __fn4_make_components,
+                __fn4_make_major,
+                __fn4_make_minor,
                 __fn4b_make_domains,
                 __fn5_make_alignments,
                 __fn6_make_trees,

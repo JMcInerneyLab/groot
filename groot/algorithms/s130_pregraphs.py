@@ -1,10 +1,10 @@
 from typing import List
-
-from groot.data import lego_graph
-from groot.data.lego_model import LegoModel, LegoSubset, ILegoNode, LegoPregraph
-from groot.constants import STAGES
 from mgraph import analysing
 from mhelper import Logger, LogicError, string_helper, ComponentFinder
+
+from groot.data import LegoModel, LegoSubset, ILegoNode, LegoPregraph
+from groot.utilities import lego_graph
+from groot.constants import STAGES
 
 
 LOG = Logger( "pregraphs", False )

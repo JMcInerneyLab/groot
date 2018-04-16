@@ -1,6 +1,6 @@
 from groot.constants import STAGES
-from groot.data import lego_graph
-from groot.data.lego_model import LegoModel, LegoPoint, FusionGraph, LegoFormation
+from groot.data import LegoModel, FusionGraph, LegoFormation
+from groot.utilities import lego_graph
 from mgraph import MGraph
 from mhelper import array_helper, Logger, string_helper
 

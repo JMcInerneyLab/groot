@@ -1,6 +1,8 @@
 from typing import Iterable, List, Set, Optional
 from mgraph import MNode, MGraph
-from groot.data.lego_model import ILegoNode, LegoSequence, LegoPoint, LegoModel, EPosition, LegoFormation
+from groot.data.model_interfaces import EPosition, ILegoNode
+from groot.data.model_core import LegoFormation, LegoSequence, LegoPoint
+from groot.data.model import LegoModel
 from mhelper import NotFoundError
 
 

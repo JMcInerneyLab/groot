@@ -5,6 +5,7 @@ from PyQt5.QtGui import QResizeEvent, QKeySequence
 from PyQt5.QtWidgets import QAction, QApplication, QLabel, QMainWindow, QMenu, QMenuBar, QSizePolicy, QWidgetAction, QGroupBox, QHBoxLayout, QFrame, QToolButton, QAbstractButton
 
 from groot import constants
+from groot.constants import STAGES
 from mhelper import file_helper, ResourceIcon
 from groot.frontends.gui import gui_workflow
 from groot.data import global_view
@@ -12,6 +13,25 @@ from groot.data.global_view import RecentFile
 from groot.frontends.gui.gui_workflow import EIntent, LegoStage, LegoVisualiser
 from groot.frontends.gui.gui_actions import GuiActions
 from groot.frontends.gui.forms.resources import resources
+
+
+_SUFFIX = """
+QToolButton
+{{
+    border-left: 4px solid palette(button);
+    border-top: 4px solid palette(button);
+    border-right: 4px solid palette(button);
+    border-bottom: 4px solid {};
+}}
+QToolButton:hover
+{{
+    border-top: 6px solid palette(button); 
+}} 
+QToolButton:pressed 
+{{
+    background: palette(dark); 
+}}
+"""
 
 
 class VisWrap:
@@ -50,7 +70,7 @@ class GuiMenu:
         self.workflow_buttons = []
         self.gui_actions: GuiActions = GuiActions( self.frm_main, self.frm_main )
         
-        self.mnu_file = self.add_menu( ["File"], headline = lambda m: constants.STAGES.FILE_0.headline( m ) )
+        self.mnu_file = self.add_menu( ["File"], headline = lambda m: constants.STAGES._FILE_0.headline( m ) )
         self.add_action( ["File", "New"], visualiser = gui_workflow.VISUALISERS.ACT_FILE_NEW, toolbar = ui.FRA_FILE )
         self.add_action( ["File", "Open..."], visualiser = gui_workflow.VISUALISERS.VIEW_OPEN_FILE, toolbar = ui.FRA_FILE )
         self.add_action( ["File", "Recent", "r"] )
@@ -60,21 +80,8 @@ class GuiMenu:
         self.add_action( ["File", "-"] )
         self.add_action( ["File", "E&xit"], visualiser = gui_workflow.VISUALISERS.ACT_EXIT )
         
-        self.add_workflow( gui_workflow.STAGES.FASTA_1 )
-        self.add_workflow( gui_workflow.STAGES.BLAST_2 )
-        self.add_workflow( gui_workflow.STAGES.COMPONENTS_3 )
-        self.add_workflow( gui_workflow.STAGES.DOMAINS_4 )
-        self.add_workflow( gui_workflow.STAGES.ALIGNMENTS_5 )
-        self.add_workflow( gui_workflow.STAGES.TREES_6 )
-        self.add_workflow( gui_workflow.STAGES.FUSIONS_7 )
-        self.add_workflow( gui_workflow.STAGES.SPLITS_8 )
-        self.add_workflow( gui_workflow.STAGES.CONSENSUS_9 )
-        self.add_workflow( gui_workflow.STAGES.SUBSETS_10 )
-        self.add_workflow( gui_workflow.STAGES.PREGRAPHS_11 )
-        self.add_workflow( gui_workflow.STAGES.SUBGRAPHS_11 )
-        self.add_workflow( gui_workflow.STAGES.FUSED_12 )
-        self.add_workflow( gui_workflow.STAGES.CLEANED_13 )
-        self.add_workflow( gui_workflow.STAGES.CHECKED_14 )
+        for stage in STAGES:
+            self.add_workflow( stage )
         
         self.mnu_windows = self.add_menu( ["Windows"] )
         self.add_action( ["Windows", "&Workflow..."], visualiser = gui_workflow.VISUALISERS.VIEW_WORKFLOW, toolbar = ui.FRA_VISUALISERS )

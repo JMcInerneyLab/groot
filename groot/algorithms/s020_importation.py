@@ -11,8 +11,8 @@ from mgraph import MGraph, MNode, analysing, exporting, importing
 from mhelper import ByRef, Logger, MFlags, bio_helper, file_helper
 
 from groot import algorithms
-from groot.data import lego_graph
-from groot.data.lego_model import LegoModel, LegoPoint, LegoSequence
+from groot.data import LegoPoint, LegoModel
+from groot.utilities import lego_graph
 
 
 LOG = Logger( "import" )
@@ -69,7 +69,7 @@ def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, fi
     if filter.DATA:
         if ext == ".blast":
             if not query:
-                algorithms.s2_similarity.import_similarity( model, file_name )
+                algorithms.s030_similarity.import_similarity( model, file_name )
                 return
             else:
                 MCMD.print( "BLAST: «{}».".format( file_name ) )
@@ -102,7 +102,7 @@ def import_file( model: LegoModel, file_name: str, skip_bad_extensions: bool, fi
     if filter.MODEL:
         if ext == ".groot":
             if not query:
-                algorithms.s0_file.load_from_file( file_name )
+                algorithms.s010_file.load_from_file( file_name )
                 return
             else:
                 MCMD.print( "Model: «{}».".format( file_name ) )
@@ -130,7 +130,7 @@ def import_fasta( model: LegoModel, file_name: str ) -> None:
         extra_data = "FASTA from '{}'".format( file_name )
         
         for name, sequence_data in bio_helper.parse_fasta( file = file_name ):
-            sequence = algorithms.s0_editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False, True )
+            sequence = algorithms.s999_editor.make_sequence( model, str( name ), obtain_only, len( sequence_data ), extra_data, False, True )
             
             if sequence:
                 LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( sequence_data ) ) )
@@ -171,7 +171,7 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
                     
                     # COMPOSITE!
                     composite_name = line[1:]
-                    composite_sequence = algorithms.s0_editor.make_sequence( model, composite_name, False, 0, line, False, True )
+                    composite_sequence = algorithms.s999_editor.make_sequence( model, composite_name, False, 0, line, False, True )
                     composite_sequence.comments.append( "FILE '{}' LINE {}".format( file_name, line_number ) )
                 elif "\t" in line:
                     # FAMILY!
@@ -189,7 +189,7 @@ def import_composites( model: LegoModel, file_name: str ) -> None:
                     # composite_subsequence = editor.make_subsequence( composite_sequence, fam_mean_start, fam_mean_end, line, True, False )
                 elif line:
                     # SEQUENCE
-                    sequence = algorithms.s0_editor.make_sequence( model, line, False, fam_mean_length, line, False, True )
+                    sequence = algorithms.s999_editor.make_sequence( model, line, False, fam_mean_length, line, False, True )
                     sequence.comments.append( "Family '{}'".format( fam_name ) )
                     sequence.comments.append( "Accession '{}'".format( line ) )
                     

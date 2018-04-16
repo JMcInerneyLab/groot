@@ -2,11 +2,25 @@ Groot
 =====
 Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
-Gʀᴏᴏᴛ:
-* Is accessible. Gʀᴏᴏᴛ has **command line, friendly GUI and Python library** capabilities.
-* Is understandable. Gʀᴏᴏᴛ follows a simple MVC architecture with **heavily documented source code**.
-* **Is free**. Users are invited to call upon the library or modify the source code to suit their own needs.
+```
+\         /       /
+ A       B       C       <-Roots
+  \     /       /
+   \   /       /
+    \ /       /
+     AB      /           <-Fusion product
+      \     /
+       \   /
+        \ /
+        ABC              <-Fusion product
+          \
+```
 
+Gʀᴏᴏᴛ aims to be
+
+* Accessible. Gʀᴏᴏᴛ has **command line, friendly GUI and Python library** capabilities.
+* Understandable. Gʀᴏᴏᴛ follows a simple workflow with MVC architecture and **heavily documented source code**.
+* Free. Users are invited to call upon the library or modify the source code to suit their own needs.
 
 [](toc)
 
@@ -17,6 +31,8 @@ Please make sure you have Python (3.6+) and Pɪᴩ installed first!
 
 * Python: https://www.python.org/downloads/
 * Pip: https://pip.pypa.io/en/stable/installing/
+
+_Warning: MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, you'll need to install Python 3.6 for Groot__   
 
 
 Then download Gʀᴏᴏᴛ using Pip, i.e. from Bᴀꜱʜ:
@@ -444,7 +460,12 @@ You can also call this statement from Python, allowing your package to register 
 Troubleshooting
 ---------------
 
-Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section.
+***Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section***
+
+### Screen goes black, images or windows disappear ###
+
+Go to `Windows` -> `Preferences` -> `View` and turn the MDI mode to `basic`.
+
 
 Image credits
 -------------
@@ -535,6 +556,139 @@ The following formats are supported:
 * Networks: CSV
 * Scripts: Python
 * Internal data: Pickle
+
+The Groot test suite
+--------------------
+
+Groot comes with the ability to generate random test cases.
+To create and run them, use `groot create.test n`, where `n` specifies the test case (denoted by the expected number of components).
+All tests trees should be recoverable by Groot using the default settings, with the exclusion of the specific instances of test case 4, noted below.
+
+### Case 1: Single fusion ###
+```
+ A-------->
+  \     a0
+   \a1
+    \
+     -->C--->
+    /
+   /b1
+  /     b0
+ B-------->
+```
+
+### Case 4: Repeated fusions ###
+```
+ A------------------->
+  \       \       a0
+   \a1     \a2
+    \       \
+     -->C    -->D
+    /       /
+   /a2     /b2
+  /       /       b0
+ B------------------->
+```
+
+As the test cases are randomly generated, this may result in _a1=a2_ and/or _b1=b2_, giving the _triangle_ or _spaceship_ problems listed below. 
+
+### Case 5: Fusion cascade ###
+
+```
+ A
+  \
+   -->C
+  /    \
+ B      -->E
+       /
+      D
+```
+
+### Case 7: Fusion web ###
+
+```
+ A
+  \
+   -->C
+  /    \
+ B      \
+         -->G
+ D      /
+  \    /
+   -->F
+  /
+ E
+```
+ 
+
+Handling the spaceship and the triangle
+--------------------------------------
+
+There are a couple of cases that Groot will suffer from.
+
+The first is the spaceship (Figure 1, below) which is a specific variant of Case 4 (above) in which A1=A2 and B1=B2.
+If two fusion events (C and D) occur at the same time, this isn't distinguishable from the normal case of one fusion event (X) that later diverges into two lineages (C and D) (Figure 2).
+However, if you know (or wish to pretend) that this is the case, you should specify the Groot components manually, rather than letting Groot infer them.
+
+The second problematic case is the triangle (Figure 3), which is also a specific variant of Case 4 in which A1=A2 and B1≠B2.
+This scenario _initially_ looks like the spaceship (Figure 1).
+However, things become apparent once Groot runs down to the NRFG stage, since the fusion will be malformed (Figure 4), with 3 origins, one output ("CD") but only 2 input components (A, B).
+At the present time, Groot doesn't remedy this situation automatically and you'll need to rectify the problem yourself.
+From your Figure-4-like result, write down or export the sequences in each of your lineages A, B, C and D.
+Then, go back to the component stage and specify your components manually: A, B, C and D.
+
+```
+A───────┬────>
+        │\
+        │ ───────────┐
+        │            │
+        C─────>      D──────────>
+        │            │
+        │ ───────────┘
+        │/
+B───────┴────>
+
+Figure 1. The spaceship
+
+A───────┬────>
+        │
+        │ C─────>
+        │/
+        X
+        │\
+        │ D─────>
+        │
+B───────┴────>
+
+Figure 2. Normal case
+
+A─────┬──────>
+      │\
+      │ \
+      │  ────────────D─────>
+      │              │
+      C─────>        │
+      │              │
+      │              │
+      │              │
+B─────┴──────────────┴───>
+
+Figure 3. The triangle
+
+A─────┬──────>
+      │
+      │
+      └──────────   D
+                 \ /
+                  X
+                 /│\
+      ┌────────── | C
+      │           |
+B─────┴───────────┴───>
+
+Figure 4. The failed triangle
+```
+_NB. Figures require a utf8 compliant browser_
 
 
 Meta-data

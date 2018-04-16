@@ -1,19 +1,33 @@
 from typing import List, Optional
+from intermake import command, MCMD
+from mhelper import string_helper
 
 from groot import algorithms
-from groot.data import global_view
-from groot.data.lego_model import LegoComponent
-from groot.frontends.cli import cli_view_utils
+from groot.data import global_view, LegoComponent, INamedGraph
+from groot.utilities import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import command
-from intermake.engine.environment import MCMD
-from mhelper import string_helper
 
 
 __mcmd_folder_name__ = "Generating"
 
+
 @command()
-def create_similarity( algorithm: str, evalue : Optional[float] = None, length: Optional[int] = None ) -> EChanges:
+def create_comparison( left: INamedGraph, right: INamedGraph ) -> EChanges:
+    """
+    Compares two graphs.
+    The resulting report is added to the current model's user reports.
+    :param left:        First graph. The calculated or "new" data. 
+    :param right:       Second graph. The original or "existing" data.
+    """
+    model = global_view.current_model()
+    
+    model.user_reports.append( algorithms.s999_compare.compare_graphs( left, right ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
+def create_similarity( algorithm: str, evalue: Optional[float] = None, length: Optional[int] = None ) -> EChanges:
     """
     Creates the similarity matrix.
     
@@ -23,11 +37,12 @@ def create_similarity( algorithm: str, evalue : Optional[float] = None, length: 
     """
     model = global_view.current_model()
     
-    algorithms.s2_similarity.create_similarity( model, algorithm, evalue, length)
+    algorithms.s030_similarity.create_similarity( model, algorithm, evalue, length )
     
     MCMD.progress( "Similarities created, there are now {} edges.".format( len( model.edges ) ) )
     
     return EChanges.MODEL_ENTITIES
+
 
 @command()
 def create_domains( algorithm: str, param: int = 0 ) -> EChanges:
@@ -41,7 +56,7 @@ def create_domains( algorithm: str, param: int = 0 ) -> EChanges:
     """
     model = global_view.current_model()
     
-    algorithms.s4_userdomains.create_userdomains( model, algorithm, param )
+    algorithms.s060_userdomains.create_userdomains( model, algorithm, param )
     
     MCMD.progress( "Domains created, there are now {} domains.".format( len( model.user_domains ) ) )
     
@@ -49,33 +64,45 @@ def create_domains( algorithm: str, param: int = 0 ) -> EChanges:
 
 
 @command()
-def create_components( major_tol: int = 0, minor_tol: Optional[int] = None, debug: bool = False ) -> EChanges:
+def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     """
     Detects composites in the model.
     
     Requisites: Sequence similarity (BLAST data) must have been loaded
     
-    :param major_tol:   Tolerance on overlap, in sites.
-    :param minor_tol:   Tolerance on overlap, in sites. If `None` uses the `major_tol`.
+    :param tol:         Tolerance on overlap, in sites.
     :param debug:       Internal parameter.
     """
-    if minor_tol is None:
-        minor_tol = major_tol
     
     model = global_view.current_model()
     
-    if len( model.edges ) == 0:
-        raise ValueError( "Refusing to make components because there is no edge data. Did you mean to load the edge data (BLAST) first?" )
-    
-    with MCMD.action( "Component detection" ):
-        algorithms.s3_components.detect( model, major_tol, minor_tol, debug )
+    with MCMD.action( "Major component detection" ):
+        algorithms.s040_major.create_major( model, tol, debug )
     
     for component in model.components:
         if len( component.major_sequences ) == 1:
-            MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}/{}?".format( major_tol, minor_tol ) )
+            MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ) )
             break
     
     MCMD.progress( "{} components detected.".format( len( model.components ) ) )
+    
+    return EChanges.COMPONENTS
+
+
+@command()
+def create_minor( tol: int = 0 ) -> EChanges:
+    """
+    Detects composites in the model.
+    
+    Requisites: `create_major`
+    
+    :param tol:         Tolerance on overlap, in sites.
+    """
+    
+    model = global_view.current_model()
+    
+    with MCMD.action( "Minor component detection" ):
+        algorithms.s050_minor.create_minor( model, tol )
     
     return EChanges.COMPONENTS
 
@@ -85,7 +112,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     """
     Aligns the component. If no component is specified, aligns all components.
     
-    Requisites: `create_components` and FASTA data.
+    Requisites: `create_minor` and FASTA data.
     
     :param algorithm:   Algorithm to use. See `algorithm_help`.
     :param component:   Component to align, or `None` for all.
@@ -99,7 +126,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     before = sum( x.alignment is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
-        algorithms.s5_alignment.create_alignments( algorithm, component_ )
+        algorithms.s070_alignment.create_alignments( algorithm, component_ )
     
     after = sum( x.alignment is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -126,7 +153,7 @@ def create_trees( algorithm: Optional[str] = None, component: Optional[List[Lego
     before = sum( x.tree is not None for x in model.components )
     
     for component_ in MCMD.iterate( to_do, "Generating trees", text = True ):
-        algorithms.s6_tree.create_tree( algorithm, component_ )
+        algorithms.s080_tree.create_tree( algorithm, component_ )
     
     after = sum( x.tree is not None for x in model.components )
     MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -147,7 +174,7 @@ def create_fusions() -> EChanges:
         if x.tree is None:
             raise ValueError( "Cannot find fusion events because there is no tree data for at least one component ({}). Did you mean to generate the trees first?".format( x ) )
     
-    algorithms.s7_fusion_events.create_fusions( model )
+    algorithms.s090_fusion_events.create_fusions( model )
     
     n = len( model.fusion_events )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
@@ -162,7 +189,7 @@ def create_splits() -> EChanges:
     
     Requisites: `create_fusions`
     """
-    algorithms.s8_splits.create_splits( global_view.current_model() )
+    algorithms.s100_splits.create_splits( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -175,7 +202,7 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     
     :param cutoff:      Cutoff on consensus
     """
-    algorithms.s9_consensus.create_consensus( global_view.current_model(), cutoff )
+    algorithms.s110_consensus.create_consensus( global_view.current_model(), cutoff )
     return EChanges.MODEL_DATA
 
 
@@ -189,18 +216,20 @@ def create_subsets( super: bool = False ) -> EChanges:
     :param super:    Keep supersets in the trees. You don't want this.
                      Turn it on to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities!).
     """
-    algorithms.s10_subsets.create_subsets( global_view.current_model(), not super )
+    algorithms.s120_subsets.create_subsets( global_view.current_model(), not super )
     return EChanges.MODEL_DATA
 
+
 @command()
-def create_pregraphs(  ) -> EChanges:
+def create_pregraphs() -> EChanges:
     """
     Creates the pregraphs.
     
     Requisites: `create_subsets`
     """
-    algorithms.s11_pregraphs.create_pregraphs( global_view.current_model() )
+    algorithms.s130_pregraphs.create_pregraphs( global_view.current_model() )
     return EChanges.MODEL_DATA
+
 
 @command()
 def create_subgraphs( algorithm: str = "" ) -> EChanges:
@@ -211,7 +240,7 @@ def create_subgraphs( algorithm: str = "" ) -> EChanges:
     
     :param algorithm: Algorithm to use, see `algorithm_help`.
     """
-    algorithms.s12_supertrees.create_supertrees( algorithm, global_view.current_model() )
+    algorithms.s140_supertrees.create_supertrees( algorithm, global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -222,7 +251,7 @@ def create_fused() -> EChanges:
     
     Requisites: `create_subgraphs`
     """
-    algorithms.s13_fuse.create_fused( global_view.current_model() )
+    algorithms.s150_fuse.create_fused( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -233,7 +262,7 @@ def create_cleaned() -> EChanges:
     
     Requisites: `create_fused`
     """
-    algorithms.s14_clean.create_cleaned( global_view.current_model() )
+    algorithms.s160_clean.create_cleaned( global_view.current_model() )
     return EChanges.MODEL_DATA
 
 
@@ -244,5 +273,5 @@ def create_checked() -> EChanges:
     
     Requisites: `create_cleaned`
     """
-    algorithms.s15_checked.create_checked( global_view.current_model() )
+    algorithms.s170_checked.create_checked( global_view.current_model() )
     return EChanges.MODEL_DATA

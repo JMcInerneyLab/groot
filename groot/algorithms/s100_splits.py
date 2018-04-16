@@ -1,8 +1,8 @@
 from typing import Dict
 
 from groot.constants import STAGES
-from groot.data import lego_graph
-from groot.data.lego_model import LegoModel, LegoSplit, ILegoNode
+from groot.data import LegoModel, LegoSplit, ILegoNode
+from groot.utilities import lego_graph
 from mgraph import Split, MGraph, exporting
 from mhelper import Logger
 

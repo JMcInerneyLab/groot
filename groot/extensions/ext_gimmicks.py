@@ -2,9 +2,9 @@ from typing import List, Optional
 
 from groot import algorithms
 from groot.data import global_view
-from groot.data.lego_model import ESiteType, INamedGraph
+from groot.data.model_interfaces import ESiteType, INamedGraph
 from groot.extensions import ext_files
-from groot.frontends.cli import cli_view_utils
+from groot.utilities import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import MCMD, command, common_commands, visibilities
 from intermake.engine.environment import MENV
@@ -182,10 +182,10 @@ def continue_wizard() -> EChanges:
     """
     Continues the wizard after it was paused.
     """
-    if algorithms.wizard.Wizard.get_active() is None:
+    if algorithms.s999_wizard.Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to continue." )
     
-    return algorithms.wizard.Wizard.get_active().step()
+    return algorithms.s999_wizard.Wizard.get_active().step()
 
 
 @command( visibility = visibilities.ADVANCED, names = ["stop"] )
@@ -193,10 +193,10 @@ def stop_wizard() -> EChanges:
     """
     Stops a wizard.
     """
-    if algorithms.wizard.Wizard.get_active() is None:
+    if algorithms.s999_wizard.Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to stop." )
     
-    return algorithms.wizard.Wizard.get_active().stop()
+    return algorithms.s999_wizard.Wizard.get_active().stop()
 
 
 @command()
@@ -303,13 +303,13 @@ def wizard( new: Optional[bool] = None,
                 success = False
     
     if alignment is None:
-        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( algorithms.s5_alignment.alignment_algorithms.keys ) + [""] )
+        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( algorithms.s070_alignment.alignment_algorithms.keys ) + [""] )
     
     if tree is None:
-        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( algorithms.s6_tree.tree_algorithms.keys ) + [""] )
+        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( algorithms.s080_tree.tree_algorithms.keys ) + [""] )
     
     if supertree is None:
-        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( algorithms.s12_supertrees.supertree_algorithms.keys ) + [""] )
+        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( algorithms.s140_supertrees.supertree_algorithms.keys ) + [""] )
     
     if pause_import is None:
         pause_import = question( "Do you wish the wizard to pause for you to review the imported data?" )
@@ -359,29 +359,29 @@ def wizard( new: Optional[bool] = None,
         else:
             save = question( "Save your model after each stage completes?" )
     
-    walkthrough = algorithms.wizard.Wizard( new = new,
-                                            name = name,
-                                            imports = imports,
-                                            pause_import = pause_import,
-                                            pause_components = pause_components,
-                                            pause_align = pause_align,
-                                            pause_tree = pause_tree,
-                                            pause_fusion = pause_fusion,
-                                            pause_splits = pause_splits,
-                                            pause_consensus = pause_consensus,
-                                            pause_subset = pause_subset,
-                                            pause_pregraphs = pause_pregraphs,
-                                            pause_minigraph = pause_minigraph,
-                                            pause_sew = pause_sew,
-                                            pause_clean = pause_clean,
-                                            pause_check = pause_check,
-                                            tolerance = tolerance,
-                                            alignment = alignment,
-                                            tree = tree,
-                                            view = view,
-                                            save = save,
-                                            outgroups = outgroups,
-                                            supertree = supertree )
+    walkthrough = algorithms.s999_wizard.Wizard( new = new,
+                                                 name = name,
+                                                 imports = imports,
+                                                 pause_import = pause_import,
+                                                 pause_components = pause_components,
+                                                 pause_align = pause_align,
+                                                 pause_tree = pause_tree,
+                                                 pause_fusion = pause_fusion,
+                                                 pause_splits = pause_splits,
+                                                 pause_consensus = pause_consensus,
+                                                 pause_subset = pause_subset,
+                                                 pause_pregraphs = pause_pregraphs,
+                                                 pause_minigraph = pause_minigraph,
+                                                 pause_sew = pause_sew,
+                                                 pause_clean = pause_clean,
+                                                 pause_check = pause_check,
+                                                 tolerance = tolerance,
+                                                 alignment = alignment,
+                                                 tree = tree,
+                                                 view = view,
+                                                 save = save,
+                                                 outgroups = outgroups,
+                                                 supertree = supertree )
     
     walkthrough.make_active()
     MCMD.progress( "The wizard has been created paused.\nYou can use the {} and {} commands to manage your wizard.".format( continue_wizard, stop_wizard ) )

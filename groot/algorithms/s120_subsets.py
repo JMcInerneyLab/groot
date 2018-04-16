@@ -3,8 +3,7 @@ from typing import Dict, FrozenSet, List, Set
 from mhelper import Logger
 
 from groot.constants import STAGES
-from groot.data.lego_model import ILegoNode, LegoModel, LegoPoint, LegoSequence, LegoSubset, LegoFusion
-
+from groot.data import LegoModel, LegoSequence, LegoSubset, LegoFusion, LegoPoint, ILegoNode
 
 
 __LOG = Logger( "nrfg.find", False )

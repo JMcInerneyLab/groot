@@ -1,5 +1,6 @@
 from typing import List, Iterable
-from groot import LegoSequence, LegoUserDomain, LegoSubsequence, LegoModel, domain_algorithms
+from groot import LegoSequence, LegoUserDomain, LegoModel, domain_algorithms
+from groot.data.model_core import LegoSubsequence
 from mhelper import array_helper
 
 

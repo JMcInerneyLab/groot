@@ -3,166 +3,26 @@ Components algorithms.
 
 The only one publicly exposed is `detect`, so start there.
 """
+import warnings
 from collections import defaultdict
-from typing import Tuple, Set, cast, List, Dict
+from typing import Dict, Set, Tuple
+from mhelper import Logger, array_helper, string_helper
 
-from groot.data.lego_model import LegoModel, LegoSequence, LegoComponent, LegoEdge, LegoSubsequence
-from intermake.engine.environment import MCMD
-from mhelper import Logger, ImplementationError, array_helper, string_helper, ansi, NotFoundError
-from mhelper.component_helper import ComponentFinder
+from groot.constants import STAGES
+from groot.data import LegoSubsequence, LegoModel, LegoEdge, LegoSequence, LegoComponent
 
 
-LOG_MAJOR = Logger( "comp.major", False )
-LOG_MAJOR_V = Logger( "comp.major.v", False )
 LOG_MINOR = Logger( "comp.minor", False )
-LOG_GRAPH = Logger( "comp.graph", False )
 
 
-def detect( model: LegoModel, major_tol: int, minor_tol: int, debug: bool ) -> None:
-    """
-    Detects model components.
-    See :function:`ext_generating.create_components` for parameter details.
+def drop_minor( model: LegoModel ):
+    model.get_status( STAGES.MINOR_3 ).assert_drop()
     
-    :returns: nothing, the components are written to :attr:`model.components`.
-    """
-    if not model.sequences:
-        raise ValueError( "Cannot perform component detection because the model has no sequences." )
-    
-    __clear( model )
-    __detect_major( model, major_tol, debug )
-    __detect_minor( model, minor_tol, debug )
+    for comp in model.components:
+        comp.minor_subsequences = None
 
 
-def drop( model: LegoModel ) -> int:
-    """
-    Drops all components from the model.
-    The components are removed from :attr:`model.components`.
-    
-    :returns: Number of components removed.
-    """
-    if model.fusion_events:
-        raise ValueError( "Refusing to drop the components because there are already fusion events which depend on them. Did you mean to drop the fusion events first?" )
-    
-    if model.nrfg:
-        raise ValueError( "Refusing to drop the components because there is already an NRFG which depends on them. Did you mean to drop the NRFG first?" )
-    
-    previous_count = len( model.components )
-    __clear( model )
-    return previous_count
-
-
-def get_average_component_lengths( model: LegoModel ):
-    """
-    Obtains a dictionary detailing the average lengths of the sequences in each component.
-    :return: Dictionary:
-                key:    component
-                value:  average length 
-    """
-    average_lengths = { }
-    
-    for component in model.components:
-        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
-    
-    return average_lengths
-
-
-def __clear( model: LegoModel ) -> None:
-    """
-    Clears the components from the model.
-    """
-    model.components.clear()
-
-
-def __detect_major( model: LegoModel, tolerance: int, debug: bool ) -> None:
-    """
-    First step of finding the components.
-    
-    We classify each component as a set of "major" genes.
-    
-    Components are defined as sets of genes that share a similarity path between them, where each edge between element 𝓧 and 𝓨 in that path:
-        * Is sourced from no less than 𝓧's length, less the tolerance
-        * Is targeted to no less than 𝓨's length, less the tolerance
-        * The difference between 𝓧 and 𝓨's length is less than the tolerance
-        
-    We'll grab the minor domains that this component extends into in the next step. 
-    
-    :param model:       Model
-    :param tolerance:   Tolerance value 
-    """
-    # Find connected components
-    components = ComponentFinder()
-    
-    # Basic assertions
-    LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
-    missing_edges = []
-    
-    for sequence in model.sequences:
-        edges = model.edges.find_sequence( sequence )
-        
-        if not edges:
-            missing_edges.append( sequence )
-    
-    if missing_edges:
-        raise ValueError( "Refusing to detect components because some sequences have no edges: «{}»".format( string_helper.format_array( missing_edges ) ) )
-    
-    # Iterate sequences
-    for sequence_alpha in model.sequences:
-        assert isinstance( sequence_alpha, LegoSequence )
-        
-        alpha_edges = model.edges.find_sequence( sequence_alpha )
-        any_accept = False
-        
-        LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( alpha_edges ) )
-        
-        for edge in alpha_edges:
-            source_difference = abs( edge.left.length - edge.left.sequence.length )
-            destination_difference = abs( edge.right.length - edge.right.sequence.length )
-            total_difference = abs( edge.left.sequence.length - edge.right.sequence.length )
-            
-            LOG_MAJOR_V( "{}", edge )
-            LOG_MAJOR_V( "-- Source difference ({})", source_difference )
-            LOG_MAJOR_V( "-- Destination difference ({})", destination_difference )
-            LOG_MAJOR_V( "-- Total difference ({})", total_difference )
-            
-            if source_difference > tolerance:
-                LOG_MAJOR_V( "-- ==> REJECTED (SOURCE)" )
-                continue
-            elif destination_difference > tolerance:
-                LOG_MAJOR_V( "-- ==> REJECTED (DEST)" )
-                continue
-            elif total_difference > tolerance:
-                LOG_MAJOR_V( "-- ==> REJECTED (TOTAL)" )
-                continue
-            else:
-                LOG_MAJOR_V( "-- ==> ACCEPTED" )
-            
-            if debug and edge.left.sequence.accession[0] != edge.right.sequence.accession[0]:
-                raise ValueError( "Debug assertion failed. This edge not rejected: {}".format( edge ) )
-            
-            any_accept = True
-            beta = edge.opposite( sequence_alpha ).sequence
-            LOG_MAJOR( "-- {:<40} LINKS {:<5} AND {:<5}", edge, sequence_alpha, beta )
-            components.join( sequence_alpha, beta )
-        
-        if debug and not any_accept:
-            raise ValueError( "Debug assertion failed. This sequence has no good edges: {}".format( sequence_alpha ) )
-    
-    # Create the components!
-    sequences_in_components = set()
-    
-    for index, sequence_list in enumerate( components.tabulate() ):
-        model.components.add( LegoComponent( model, index, cast( List[LegoSequence], sequence_list ) ) )
-        LOG_MAJOR( "COMPONENT MAJOR: {}", sequence_list )
-        sequences_in_components.update( sequence_list )
-    
-    # Create components for orphans
-    for sequence in model.sequences:
-        if sequence not in sequences_in_components:
-            LOG_MAJOR( "ORPHAN: {}", sequence )
-            model.components.add( LegoComponent( model, len( model.components ), [sequence] ) )
-
-
-def __detect_minor( model: LegoModel, tolerance: int, debug: bool ) -> None:
+def create_minor( model: LegoModel, tolerance: int ) -> None:
     """
     Finds the subsequence components, here termed the "minor" elements.
     
@@ -173,9 +33,7 @@ def __detect_minor( model: LegoModel, tolerance: int, debug: bool ) -> None:
         When one sequence of a component possesses an edge to a sequence of another component (an "entry").
         Subsequences of all sequences in that second component receive the first component, at the position of the entry.
     """
-    
-    if not model.components:
-        raise ValueError( "Cannot detect subsequence components because sequence components have not yet been calculated. Please calculate sequence components first." )
+    model.get_status( STAGES.MINOR_3 ).assert_create()
     
     average_lengths = get_average_component_lengths( model )
     
@@ -299,30 +157,19 @@ def __detect_minor( model: LegoModel, tolerance: int, debug: bool ) -> None:
                 comp.minor_subsequences.append( subsequence_list )
 
 
-def __fit_to_range( max_value: int, start: int, end: int, tolerance: int ) -> Tuple[int, int]:
+def get_average_component_lengths( model: LegoModel ):
     """
-    Given a range "start..end" this tries to shift it such that it does not lie outside "1..max_value".
+    Obtains a dictionary detailing the average lengths of the sequences in each component.
+    :return: Dictionary:
+                key:    component
+                value:  average length 
     """
-    if end > max_value:
-        subtract = min( end - max_value, start - 1 )
-        
-        if subtract > tolerance:
-            MCMD.warning( "Fitting the subsequence to the new range results in a concerning ({}>{}) shift in position.".format( subtract, tolerance ) )
-        
-        LOG_MINOR( "fix. {}...{} SLIPS PAST {}, SUBTRACTING {}", start, end, max_value, subtract )
-        end -= subtract
-        start -= subtract
-        
-        if end > max_value:
-            if (end - max_value) > tolerance:
-                MCMD.warning( "Fitting the subsequence to the new range results in a concerning ({}>{}) excess in length.".format( end - max_value, tolerance ) )
-            
-            LOG_MINOR( "fix. -- FIXING TAIL." )
-            end = max_value
-        
-        LOG_MINOR( "fix. -- FIXED TO {} {} OF {}", start, end, max_value )
+    average_lengths = { }
     
-    return end, start
+    for component in model.components:
+        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
+    
+    return average_lengths
 
 
 def __find_largest_relationship( model: LegoModel, done: Set[LegoSequence], to_do: Set[LegoSequence] ) -> Tuple[LegoEdge, LegoSubsequence, LegoSubsequence]:
@@ -354,3 +201,29 @@ def __find_largest_relationship( model: LegoModel, done: Set[LegoSequence], to_d
         raise ValueError( "find_largest_relationship cannot find a relationship between the following sets. Set 1: {}. Set 2: {}.".format( to_do, done ) )
     
     return candidate
+
+
+def __fit_to_range( max_value: int, start: int, end: int, tolerance: int ) -> Tuple[int, int]:
+    """
+    Given a range "start..end" this tries to shift it such that it does not lie outside "1..max_value".
+    """
+    if end > max_value:
+        subtract = min( end - max_value, start - 1 )
+        
+        if subtract > tolerance:
+            warnings.warn( "Fitting the subsequence to the new range results in a concerning ({}>{}) shift in position.".format( subtract, tolerance ), UserWarning )
+        
+        LOG_MINOR( "fix. {}...{} SLIPS PAST {}, SUBTRACTING {}", start, end, max_value, subtract )
+        end -= subtract
+        start -= subtract
+        
+        if end > max_value:
+            if (end - max_value) > tolerance:
+                warnings.warn( "Fitting the subsequence to the new range results in a concerning ({}>{}) excess in length.".format( end - max_value, tolerance ), UserWarning )
+            
+            LOG_MINOR( "fix. -- FIXING TAIL." )
+            end = max_value
+        
+        LOG_MINOR( "fix. -- FIXED TO {} {} OF {}", start, end, max_value )
+    
+    return end, start

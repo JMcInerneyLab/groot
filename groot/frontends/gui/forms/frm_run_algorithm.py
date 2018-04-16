@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QWidget
-from groot.data.extendable_algorithm import AlgorithmCollection
+from groot.utilities.extendable_algorithm import AlgorithmCollection
 from groot.frontends.gui.forms.designer import frm_run_algorithm_designer
 from typing import Tuple
 
@@ -136,7 +136,7 @@ class FrmCreateTrees( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Trees",
-                          algorithms.s6_tree.tree_algorithms,
+                          algorithms.s080_tree.tree_algorithms,
                           ext_generating.create_trees )
 
 
@@ -147,8 +147,8 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         if model.get_status( constants.STAGES.ALIGNMENTS_5 ).is_complete:
             return False, '<html><body>Alignments already exist, you can <a href="action:view_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body></html>'
         
-        if model.get_status( constants.STAGES.COMPONENTS_3 ).is_not_complete:
-            return False, '<html><body>You need to <a href="action:create_components">create the components</a> before creating the alignments.</body></html>'
+        if model.get_status( constants.STAGES.MINOR_3 ).is_not_complete:
+            return False, '<html><body>You need to <a href="action:create_major">create the components</a> before creating the alignments.</body></html>'
         
         return True, ""
     
@@ -160,7 +160,7 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Alignments",
-                          algorithms.s5_alignment.alignment_algorithms,
+                          algorithms.s070_alignment.alignment_algorithms,
                           ext_generating.create_alignments )
 
 class FrmCreateSubgraphs( FrmRunAlgorithm ):
@@ -183,14 +183,14 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Subgraphs",
-                          algorithms.s12_supertrees.supertree_algorithms,
+                          algorithms.s140_supertrees.supertree_algorithms,
                           ext_generating.create_subgraphs )
 
 class FrmCreateDomains( FrmRunAlgorithm ):
     def query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES.DATA_0 ).is_none:
+        if model.get_status( constants.STAGES._DATA_0 ).is_none:
             return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
         
         
@@ -204,5 +204,5 @@ class FrmCreateDomains( FrmRunAlgorithm ):
         """
         super().__init__( parent,
                           "Domains",
-                          algorithms.s4_userdomains.domain_algorithms,
+                          algorithms.s060_userdomains.domain_algorithms,
                           ext_generating.create_domains )

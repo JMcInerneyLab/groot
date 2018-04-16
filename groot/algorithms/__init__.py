@@ -1,12 +1,13 @@
 """
 Groot's core logic.
 
-Groot's workflow is linear, so the stages are named after the order in which they appear.
-
-As these processes are subject to change, the algorithms aren't part of the public API, use `groot.extensions` for that.
-Note that several algorithms are outsourced to external tools and can be modified by providing a Groot extension.
+* As these processes are subject to change, these algorithms aren't part of the public API,
+    * The `.extensions` subpackage providing the clean, managed, entry points.
+* Groot's workflow is linear, so the stages are named after the order in which they appear.
+* Note that despite this submodule's name, several algorithms are outsourced to user provided
+  functions or external tools and can be modified by providing a Groot extension:- see the `groot_ex` package.
+* These algorithms are able to report their progress through Intermake (`MCMD`).
 """
 
-from groot.algorithms import s0_editor, s0_file, s1_importation, s3_components, s4_userdomains, s5_alignment, s7_fusion_events, s6_tree, s8_splits, s9_consensus, s10_subsets, s12_supertrees, s13_fuse, s14_clean, s15_checked, wizard, s2_similarity, s11_pregraphs
-
+from groot.algorithms import s999_editor, s010_file, s020_importation, s040_major, s060_userdomains, s070_alignment, s090_fusion_events, s080_tree, s100_splits, s110_consensus, s120_subsets, s140_supertrees, s150_fuse, s160_clean, s170_checked, s999_wizard, s030_similarity, s130_pregraphs, s050_minor, s999_compare
 

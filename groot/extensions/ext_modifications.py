@@ -1,11 +1,9 @@
 from typing import List, Optional
+from intermake import command, MCMD
 
 from groot import constants, algorithms
-from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoEdge, LegoSubsequence, LegoSequence, EPosition
+from groot.data import global_view, LegoEdge, LegoSequence, LegoComponent, EPosition, LegoSubsequence
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import command
-from intermake.engine.environment import MCMD
 
 
 __mcmd_folder_name__ = "Modifications"
@@ -34,7 +32,7 @@ def set_outgroups( accessions: List[str] ) -> EChanges:
         else:
             sequence.position = EPosition.NONE
     
-    if algorithms.s6_tree.reposition_all( global_view.current_model() ):
+    if algorithms.s080_tree.reposition_all( global_view.current_model() ):
         r = EChanges.COMP_DATA
     else:
         r = EChanges.NONE
@@ -84,10 +82,10 @@ def set_tree( component: LegoComponent, newick: str ) -> EChanges:
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
     
-    component.tree_unrooted = algorithms.s1_importation.import_newick( newick, component.model )
+    component.tree_unrooted = algorithms.s020_importation.import_newick( newick, component.model )
     component.tree = component.tree_unrooted.copy()
     component.tree_newick = newick
-    algorithms.s6_tree.reposition_all( global_view.current_model(), component )
+    algorithms.s080_tree.reposition_all( global_view.current_model(), component )
     
     return EChanges.COMP_DATA
 
@@ -114,7 +112,7 @@ def new_edge( left: LegoSubsequence, right: LegoSubsequence ) -> EChanges:
     :param left:     Subsequence to create the edge from 
     :param right:    Subsequence to create the edge to
     """
-    algorithms.s0_editor.add_new_edge( left, right, no_fresh = False )
+    algorithms.s999_editor.add_new_edge( left, right, no_fresh = False )
     return EChanges.MODEL_ENTITIES
 
 
@@ -127,7 +125,7 @@ def new_sequence( accessions: List[str] ) -> EChanges:
     """
     model = global_view.current_model()
     for accession in accessions:
-        sequence = algorithms.s0_editor.add_new_sequence( model, accession, no_fresh = False )
+        sequence = algorithms.s999_editor.add_new_sequence( model, accession, no_fresh = False )
         MCMD.progress( "Added: {}".format( sequence ) )
     return EChanges.MODEL_ENTITIES
 
@@ -152,7 +150,7 @@ def new_component( index: int, sequences: List[LegoSequence], minor_sequences: O
     if minor_sequences is not None:
         subsequences.extend( [x.get_totality() for x in minor_sequences] )
     
-    component = algorithms.s0_editor.add_new_component( index, model, sequences, subsequences )
+    component = algorithms.s999_editor.add_new_component( index, model, sequences, subsequences )
     MCMD.progress( "Added: {}".format( component ) )
     
     return EChanges.MODEL_ENTITIES
@@ -165,5 +163,5 @@ def remove_edges( subsequences: List[LegoSubsequence], edges: List[LegoEdge] ) -
     :param subsequences:    Subsequences to unlink
     :param edges:           Edges to affect
     """
-    algorithms.s0_editor.remove_edges( subsequences, edges, no_fresh = False )
+    algorithms.s999_editor.remove_edges( subsequences, edges, no_fresh = False )
     return EChanges.MODEL_ENTITIES

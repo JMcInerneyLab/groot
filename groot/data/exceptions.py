@@ -12,3 +12,10 @@ class AlreadyError(Exception):
     
 class InUseError(Exception):
     pass
+
+
+class FastaError( Exception ):
+    """
+    Returned by `IHasFasta.to_fasta` when the request cannot be completed.
+    """
+    pass

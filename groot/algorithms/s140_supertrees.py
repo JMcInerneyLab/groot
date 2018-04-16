@@ -2,10 +2,9 @@ from typing import Callable, Iterable, Optional, Union, Sequence
 
 import groot.utilities.external_runner
 from groot import algorithms
+from groot.data import LegoModel, LegoSequence, LegoSubset, LegoPoint, INamedGraph, Subgraph, LegoFormation, LegoPregraph
 from groot.constants import STAGES
-from groot.data import lego_graph
-from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import ILegoNode, INamedGraph, LegoModel, LegoSubset, Subgraph, LegoPregraph, LegoSequence, LegoPoint, FusionPoint, LegoFormation
+from groot.utilities import lego_graph, AlgorithmCollection
 from mgraph import MGraph, MNode
 from mhelper import Logger, SwitchError, string_helper
 from mhelper.reflection_helper import FnInspect
@@ -56,7 +55,7 @@ def create_supertrees( algorithm: str, model: LegoModel ) -> None:
     subgraphs = []
     
     for subset in model.subsets:
-        subgraph = algorithms.s12_supertrees.create_supertree( algorithm, subset )
+        subgraph = algorithms.s140_supertrees.create_supertree( algorithm, subset )
         
         subgraphs.append( (subset, subgraph) )
     
@@ -117,7 +116,7 @@ def create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
         result = output
     elif isinstance( output, str ):
         # We don't reclade the newick, it's pointless at this stage and we remove redundancies during the NRFG_CLEAN stage anyway 
-        result = algorithms.s1_importation.import_newick( output, subset.model, reclade = False )
+        result = algorithms.s020_importation.import_newick( output, subset.model, reclade = False )
     else:
         raise SwitchError( "create_supertree::output", output, instance = True )
     
@@ -161,7 +160,7 @@ def __graphs_to_newick( graphs: Iterable[LegoPregraph] ):
     """
     newick = []
     for graph in graphs:
-        newick.append( algorithms.s1_importation.export_newick( graph.graph ) )
+        newick.append( algorithms.s020_importation.export_newick( graph.graph ) )
     
     return newick
 

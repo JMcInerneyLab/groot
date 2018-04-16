@@ -6,8 +6,7 @@ from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QGraphicsScene, QGridLayout, QSizePolicy
 from groot.frontends.gui.forms.designer import frm_lego_designer
 
-from groot import constants
-from groot.data.lego_model import LegoUserDomain
+from groot import constants, LegoUserDomain
 from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.forms.frm_view_options import FrmViewOptions
 from groot.frontends.gui.gui_view import LegoView_Model

@@ -5,8 +5,8 @@ Used for display, nothing to do with the model.
 """
 from typing import Callable
 
-from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import LegoModel, LegoSequence
+from groot.utilities.extendable_algorithm import AlgorithmCollection
+from groot.data import LegoModel, LegoSequence
 
 
 DAlgorithm = Callable[[LegoSequence, int], str]

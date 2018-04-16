@@ -141,7 +141,7 @@ class FrmSamples( FrmBase ):
     
     def update_buttons( self ):
         if self.data_warn:
-            status = global_view.current_model().get_status( constants.STAGES.DATA_0 )
+            status = global_view.current_model().get_status( constants.STAGES._DATA_0 )
             
             for button in self.__controls:
                 button.setEnabled( status.is_none )
@@ -204,9 +204,9 @@ class FrmSamples( FrmBase ):
 
 class FrmLoadFile( FrmSamples ):
     def __init__( self, parent ):
-        super().__init__( parent, "Load model", "action:load_file_from/", "action:load_sample_from/", "action:file_open", True )
+        super().__init__( parent, "Load model", "file_load:", "file_sample:", "action:file_open", True )
 
 
 class FrmSaveFile( FrmSamples ):
     def __init__( self, parent ):
-        super().__init__( parent, "Save model", "action:save_file_to/", None, "action:file_save_as", False )
+        super().__init__( parent, "Save model", "file_save:", None, "action:file_save_as", False )

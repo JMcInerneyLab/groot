@@ -1,21 +1,15 @@
 import re
-from typing import List, Optional, TypeVar
-
-import groot.extensions.ext_importation
-from groot import constants, algorithms
-from groot.utilities import graph_viewing
-from groot.constants import EFormat, LegoStage
-from groot.data import global_view
-from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import IHasFasta, LegoComponent, LegoSubset, INamedGraph
-from groot.extensions import ext_files, ext_generating
-from groot.frontends.cli import cli_view_utils
-from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MENV, Table, Theme, cli_helper, help_command, visibilities
-from intermake.engine.environment import MCMD
-from intermake.plugins.command_plugin import command
+from typing import List, Optional, TypeVar, cast, Any
+from intermake import MENV, Table, Theme, cli_helper, help_command, MCMD, command
 from mgraph import exporting
-from mhelper import ByRef, Filename, MOptional, ansi, io_helper, string_helper
+from mhelper import Filename, MOptional, ansi, io_helper, string_helper
+
+from groot import algorithms
+from groot.constants import EFormat, STAGES
+from groot.data import global_view
+from groot.data import LegoComponent, LegoSubset, IHasFasta, INamedGraph
+from groot.frontends.gui.gui_view_utils import EChanges
+from groot.utilities import graph_viewing, cli_view_utils, AlgorithmCollection
 
 
 __mcmd_folder_name__ = "Viewing"
@@ -65,33 +59,32 @@ def print_status() -> EChanges:
     :return: 
     """
     model = global_view.current_model()
-    
-    p = ByRef[bool]( False )
     r = []
-    r.append( Theme.HEADING + "Model" + Theme.RESET )
-    r.append( "Project name:  {}".format( model.name ) )
-    r.append( "File name:     {}".format( __get_status( p, constants.STAGES.FILE_0, ext_files.file_save ) ) )
-    p.value = False
-    r.append( "" )
-    r.append( Theme.HEADING + "Sequences" + Theme.RESET )
-    r.append( "FASTA:         {}".format( __get_status( p, constants.STAGES.FASTA_1, groot.extensions.ext_importation.import_fasta ) ) )
-    r.append( "BLAST:         {}".format( __get_status( p, constants.STAGES.BLAST_2, groot.extensions.ext_importation.import_blast ) ) )
-    r.append( "" )
-    r.append( Theme.HEADING + "Components" + Theme.RESET )
-    r.append( "Components:    {}".format( __get_status( p, constants.STAGES.COMPONENTS_3, ext_generating.create_components ) ) )
-    r.append( "Alignments:    {}".format( __get_status( p, constants.STAGES.ALIGNMENTS_5, ext_generating.create_alignments ) ) )
-    r.append( "Trees:         {}".format( __get_status( p, constants.STAGES.TREES_6, ext_generating.create_trees ) ) )
-    r.append( "" )
-    r.append( Theme.HEADING + "NRFG" + Theme.RESET )
-    r.append( "Fusion points: {}".format( __get_status( p, constants.STAGES.FUSIONS_7, ext_generating.create_fusions ) ) )
-    r.append( "Candidates:    {}".format( __get_status( p, constants.STAGES.SPLITS_8, ext_generating.create_splits ) ) )
-    r.append( "Viable:        {}".format( __get_status( p, constants.STAGES.CONSENSUS_9, ext_generating.create_consensus ) ) )
-    r.append( "Leaf subsets:  {}".format( __get_status( p, constants.STAGES.SUBSETS_10, ext_generating.create_subsets ) ) )
-    r.append( "Subgraphs :    {}".format( __get_status( p, constants.STAGES.SUBGRAPHS_11, ext_generating.create_subgraphs ) ) )
-    r.append( "Fused graph:   {}".format( __get_status( p, constants.STAGES.FUSED_12, ext_generating.create_fused ) ) )
-    r.append( "Cleaned graph: {}".format( __get_status( p, constants.STAGES.CLEANED_13, ext_generating.create_cleaned ) ) )
-    r.append( "Checked graph: {}".format( __get_status( p, constants.STAGES.CHECKED_14, ext_generating.create_checked ) ) )
-    MCMD.print( "\n".join( r ) )
+    
+    r.append( Theme.HEADING + model.name + Theme.RESET + "\n" )
+    if model.file_name:
+        r.append( "File name:          {}\n".format( model.file_name ) )
+    else:
+        r.append( Theme.WARNING + "Not saved" + Theme.RESET + "\n" )
+    for stage in STAGES:
+        status = model.get_status( stage )
+        
+        r.append( ("{}. {}:".format( stage.index, stage.name )).ljust( 20 ) )
+        
+        if status.is_complete:
+            r.append( Theme.STATUS_YES + str( status ) + Theme.RESET )
+        else:
+            if status.is_partial:
+                r.append( Theme.STATUS_INTERMEDIATE + str( status ) + Theme.RESET )
+            else:
+                r.append( Theme.STATUS_NO + str( status ) + Theme.RESET )
+            
+            if status.is_hot:
+                r.append( " - Consider running " + Theme.COMMAND_NAME + "create_" + MENV.host.translate_name( stage.name ) + Theme.RESET )
+        
+        r.append( "\n" )
+    
+    MCMD.print( "".join( r ) )
     return EChanges.INFORMATION
 
 
@@ -116,7 +109,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n 
     
     for component_ in to_do:
         if colour or len( to_do ) > 1:
-            r.append( graph_viewing.print_header( component_ ) )
+            return "\n" + Theme.TITLE + "---------- COMPONENT {} ----------".format( component_ ) + Theme.RESET
         
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
@@ -152,7 +145,7 @@ def print_help() -> str:
 
 
 @command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"] )
-def print_trees( graph: INamedGraph = None,
+def print_trees( graph: Optional[INamedGraph] = None,
                  format: EFormat = EFormat.ASCII,
                  file: MOptional[Filename] = None,
                  fnode: str = None
@@ -168,7 +161,7 @@ def print_trees( graph: INamedGraph = None,
     """
     model = global_view.current_model()
     
-    if graph is None:
+    if graph is None and file is None and format == EFormat.ASCII and fnode is None:
         MCMD.print( "Available graphs:" )
         is_any = False
         for named_graph in model.iter_graphs():
@@ -178,6 +171,9 @@ def print_trees( graph: INamedGraph = None,
             MCMD.print( "(None available)" )
         MCMD.print( "(arbitrary)".ljust( 20 ) + "(see `format_help`)" )
         return EChanges.INFORMATION
+    
+    if graph is None:
+        raise ValueError( "Graph cannot be `None` when other parameters are set." )
     
     text = graph_viewing.create( fnode, graph, model, format )
     
@@ -244,7 +240,7 @@ def print_component_edges( component: Optional[LegoComponent] = None, verbose: b
     else:
         message.add_title( "all components" )
     
-    average_lengths = algorithms.s3_components.get_average_component_lengths( model )
+    average_lengths = algorithms.s050_minor.get_average_component_lengths( model )
     
     message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
     message.add_hline()
@@ -333,7 +329,7 @@ def print_genes( domain: str = "", parameter: int = 0 ) -> EChanges:
             else:
                 r.append( "Ø " )
             
-            subsequences = algorithms.s4_userdomains.list_userdomains( sequence, domain, parameter )
+            subsequences = algorithms.s060_userdomains.list_userdomains( sequence, domain, parameter )
             
             for subsequence in subsequences:
                 components = model.components.find_components_for_minor_subsequence( subsequence )
@@ -402,24 +398,6 @@ def print_components( verbose: bool = False ) -> EChanges:
     MCMD.print( message.to_string() )
     
     return EChanges.INFORMATION | print_component_edges()
-
-
-def __get_status( warned: ByRef[bool], stage: LegoStage, incomplete, *, yes = None ):
-    status = global_view.current_model().get_status( stage )
-    
-    if status.is_complete:
-        r = Theme.STATUS_YES + (yes or str( status )) + Theme.RESET
-    else:
-        if status.is_partial:
-            r = Theme.STATUS_INTERMEDIATE + str( status ) + Theme.RESET
-        else:
-            r = Theme.STATUS_NO + str( status ) + Theme.RESET
-        
-        if not warned.value:
-            warned.value = True
-            r += " - Consider running " + Theme.COMMAND_NAME + incomplete.__name__ + Theme.RESET
-    
-    return r
 
 
 @command( names = ["print_fusions", "fusions"] )
@@ -497,7 +475,7 @@ def print_subsets() -> EChanges:
     """
     model = global_view.current_model()
     
-    for x in sorted( model.subsets, key = str ):
+    for x in sorted( model.subsets, key = cast( Any, str ) ):
         assert isinstance( x, LegoSubset )
         MCMD.information( "{} - {} elements: {}".format( x, len( x ), string_helper.format_array( x.contents, sort = True, autorange = True ) ) )
     
@@ -511,13 +489,13 @@ def print_subgraphs() -> EChanges:
     """
     model = global_view.current_model()
     
-    if not model.subgraphs:
-        MCMD.information( "The current model has no subgraphs." )
-    
     for subgraph in model.subgraphs:
         MCMD.information( "{} = {}".format( subgraph.name, exporting.export_newick( subgraph.graph ) ) )
+    else:
+        MCMD.information( "The current model has no subgraphs." )
     
     return EChanges.INFORMATION
+
 
 @command( names = ["print_pregraphs", "pregraphs"] )
 def print_pregraphs() -> EChanges:
@@ -526,11 +504,10 @@ def print_pregraphs() -> EChanges:
     """
     model = global_view.current_model()
     
-    if not model.pregraphs:
-        MCMD.information( "The current model has no subgraphs." )
-    
-    for subgraph in model.pregraphs:
+    for subgraph in model.iter_pregraphs():
         MCMD.information( "{} = {}".format( subgraph.name, exporting.export_newick( subgraph.graph ) ) )
+    else:
+        MCMD.information( "The current model has no subgraphs." )
     
     return EChanges.INFORMATION
 

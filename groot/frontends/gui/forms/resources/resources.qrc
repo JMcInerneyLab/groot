@@ -8,13 +8,14 @@
         <file>black_alignment.svg</file>
         <file>black_check.svg</file>
         <file>black_clean.svg</file>
-        <file>black_component.svg</file>
         <file>black_consensus.svg</file>
         <file>black_domain.svg</file>
         <file>black_edge.svg</file>
         <file>black_file.svg</file>
         <file>black_fusion.svg</file>
         <file>black_gene.svg</file>
+        <file>black_major.svg</file>
+        <file>black_minor.svg</file>
         <file>black_nrfg.svg</file>
         <file>black_outgroup.svg</file>
         <file>black_pregraph.svg</file>
@@ -33,13 +34,14 @@
         <file>green_alignment.svg</file>
         <file>green_check.svg</file>
         <file>green_clean.svg</file>
-        <file>green_component.svg</file>
         <file>green_consensus.svg</file>
         <file>green_domain.svg</file>
         <file>green_edge.svg</file>
         <file>green_file.svg</file>
         <file>green_fusion.svg</file>
         <file>green_gene.svg</file>
+        <file>green_major.svg</file>
+        <file>green_minor.svg</file>
         <file>green_nrfg.svg</file>
         <file>green_outgroup.svg</file>
         <file>green_pregraph.svg</file>
@@ -66,13 +68,14 @@
         <file>red_alignment.svg</file>
         <file>red_check.svg</file>
         <file>red_clean.svg</file>
-        <file>red_component.svg</file>
         <file>red_consensus.svg</file>
         <file>red_domain.svg</file>
         <file>red_edge.svg</file>
         <file>red_file.svg</file>
         <file>red_fusion.svg</file>
         <file>red_gene.svg</file>
+        <file>red_major.svg</file>
+        <file>red_minor.svg</file>
         <file>red_nrfg.svg</file>
         <file>red_outgroup.svg</file>
         <file>red_pregraph.svg</file>

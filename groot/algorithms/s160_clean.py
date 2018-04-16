@@ -1,11 +1,12 @@
-from groot.constants import STAGES
-from groot.data import lego_graph
-from groot.data.lego_model import EPosition, FusionGraph, LegoModel, LegoPoint, LegoSequence, LegoFormation
-from mgraph import MEdge, MGraph, MNode, analysing
+from mgraph import MGraph, MNode, analysing
 from mhelper import Logger, LoopDetector, SwitchError
 
+from groot.constants import STAGES
+from groot.data import LegoModel, LegoSequence, LegoPoint, EPosition, FusionGraph, LegoFormation
+from groot.utilities import lego_graph
 
-LOG = Logger( "clean", True )
+
+LOG = Logger( "clean", False )
 
 
 def drop_cleaned( model: LegoModel ):
@@ -67,24 +68,31 @@ def __make_fusions_rootlets( nrfg: MGraph ) -> None:
             for p in fusion.event.products:
                 major.update( p.major_sequences )
             
-            path = analysing.find_shortest_path( nrfg,
-                                                 start = node,
-                                                 end = lambda x: isinstance( x.data, LegoSequence ) and x.data in major )
+            # Sometimes a fusion has more than the expected number of inputs/outputs (when we haven't been able to resolve it properly)
+            # For this reason, we deal with each edge in turn
             
-            # "path" now points to one of our event's created sequences (i.e. the things that are formed)
-            for edge in list( node.edges ):
-                assert isinstance( edge, MEdge )
+            for edge in list(node.edges):
                 oppo = edge.opposite( node )
                 
-                if oppo is path[1]:
-                    # OUTGOING edge
+                path = analysing.find_shortest_path( graph = nrfg,
+                                                     start = oppo,
+                                                     end = lego_graph.is_sequence_node,
+                                                     filter = lambda x: x is not node )
+                
+                end = path[-1]
+                assert lego_graph.is_sequence_node( end )
+                
+                if end.data in major:
+                    # Is a product
+                    LOG( "PRODUCT: {} --> {}".format( node, oppo ) )
                     oppo.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ),
                                     edge_filter = lambda x: not isinstance( x.left.data, LegoPoint ) and not isinstance( x.right.data, LegoPoint ),
                                     ignore_cycles = True )
                     
                     edge.ensure( node, oppo )
                 else:
-                    # INCOMING edge
+                    # Is an ingredient
+                    LOG( "INGREDIENT: {} <-- {}".format( node, oppo ) )
                     edge.ensure( oppo, node )
 
 
@@ -108,10 +116,6 @@ def __remove_redundant_clades( nrfg: MGraph ) -> None:
                     node.remove_node_safely( directed = False )
                     safe.persist()
                     break
-                else:
-                    LOG( "Node has <> 2 relations: {}", node )
-            else:
-                LOG( "Node is not clade: {}", node )
 
 
 def __remove_redundant_fusions( nrfg: MGraph ) -> None:

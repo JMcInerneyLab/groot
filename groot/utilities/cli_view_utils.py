@@ -1,9 +1,8 @@
 from typing import Optional, List
-
 from intermake import Theme
 from mhelper import ansi, bio_helper
-from groot.data import global_view
-from groot.data.lego_model import ESiteType, LegoComponent, LegoModel, LegoSequence
+
+from groot.data import global_view, LegoModel, LegoSequence, LegoComponent, ESiteType
 
 
 PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.FORE_WHITE, "L": ansi.FORE_WHITE, "I": ansi.FORE_WHITE,
@@ -90,6 +89,6 @@ def get_component_list( component: Optional[List[LegoComponent]] ):
         to_do = global_view.current_model().components
         
         if not to_do:
-            raise ValueError( "No components available, consider running `create_components`." )
+            raise ValueError( "No components available, consider running `create_major`." )
     
     return to_do

@@ -1,8 +1,9 @@
 from typing import Set
+from mhelper import LogicError, ansi_helper, string_helper, Logger
 
 from groot.constants import STAGES
-from groot.data.lego_model import LegoModel, LegoSplit
-from mhelper import LogicError, ansi_helper, string_helper, Logger
+from groot.data import LegoModel, LegoSplit
+
 
 
 __LOG_EVIDENCE = Logger( "nrfg.evidence", False )

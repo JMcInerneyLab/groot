@@ -1,8 +1,8 @@
 from typing import Callable
 
 import groot.utilities.external_runner
-from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import LegoComponent, LegoModel
+from groot.utilities.extendable_algorithm import AlgorithmCollection
+from groot.data import LegoModel, LegoComponent
 
 
 DAlgorithm = Callable[[LegoModel, str], str]
@@ -24,7 +24,7 @@ def drop_alignments( component: LegoComponent ):
 
 
 def create_alignments( algorithm: str, component: LegoComponent ):
-    fasta = component.to_legacy_fasta()
+    fasta = component.get_unaligned_legacy_fasta()
     
     component.alignment = groot.utilities.external_runner.run_in_temporary( alignment_algorithms[algorithm], component.model, fasta )
 

@@ -1,20 +1,18 @@
 import os
-from os import path
 import shutil
-from typing import Iterable, List, Set
 import uuid
-import itertools
+from os import path
+from intermake import MCMD, MENV, Theme, command, subprocess_helper, visibilities
+from mgraph import exporting, importing
+from mhelper import SwitchError, file_helper, io_helper
 
-from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import MCMD, MENV, command, visibilities, subprocess_helper, Theme
-from mgraph import AbstractQuartet, MGraph, MNode, QuartetCollection, QuartetComparison, analysing, exporting, importing
-from mhelper import SwitchError, ansi, file_helper, io_helper, string_helper
-
-from groot.algorithms.wizard import Wizard
+from groot.algorithms import s999_compare
+from groot.algorithms.s999_wizard import Wizard
 from groot.constants import EFormat
-from groot.data import global_view, lego_graph
-from groot.data.lego_model import LegoModel, LegoSequence, UserGraph, FixedUserGraph
+from groot.data import global_view, LegoSequence, UserGraph, FixedUserGraph
+from groot.utilities import lego_graph
 from groot.extensions import ext_files, ext_viewing
+from groot.frontends.gui.gui_view_utils import EChanges
 
 
 @command( visibility = visibilities.TEST )
@@ -29,7 +27,7 @@ def list_tests() -> EChanges:
     return EChanges.INFORMATION
 
 
-@command( visibility = visibilities.TEST )
+@command( visibility = visibilities.TEST, names = ("reload_test", "xrun_test") )
 def reload_test( name: str ) -> EChanges:
     """
     Loads the model created via `run_test`.
@@ -114,7 +112,8 @@ def run_test( name: str,
     except KeyError as ex:
         raise ValueError( "This is not a test case (it is missing the «{}» setting from the «wizard» section of the INI «{}»).".format( ex, test_ini_file ) )
     
-    test_tree_file_data = UserGraph( importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" ), name = "ORIGINAL GRAPH. GUID = {}.".format( guid ) )
+    test_tree_file_data = UserGraph( importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" ), name = "original_graph" )
+    lego_graph.rectify_nodes( test_tree_file_data.graph, global_view.current_model() )
     
     # Remove obsolete results
     if any( path.isfile( file ) for file in all_files ):
@@ -197,215 +196,26 @@ def run_test( name: str,
     
     # Save extra data
     ext_viewing.print_alignments( file = results_saved_alignments )
-    ext_viewing.print_trees( format = EFormat.TSV, file = results_edges_file )
+    ext_viewing.print_trees( model.fusion_graph_clean, format = EFormat.TSV, file = results_edges_file )
     
     # Read original graph
     new_newicks = []
-    differences = []
-    differences.append( "<html><body>" )
-    differences.append( '<table border=1 style="border-collapse: collapse;">' )
-    differences.append( "<tr><td colspan=2><b>SUMMARY</b></td></tr>".format( test_case_folder ) )
-    differences.append( "<tr><td>test_case_folder      </td><td>{}</td></tr>".format( test_case_folder ) )
-    differences.append( "<tr><td>original_graph        </td><td>{}</td></tr>".format( test_tree_file ) )
-    differences.append( "<tr><td>recalculated_graph    </td><td>{}</td></tr>".format( results_edges_file ) )
-    differences.append( "<tr><td>original_graph_cmd    </td><td>groot print.graph {} visjs open</td></tr>".format( test_tree_file ) )
-    differences.append( "<tr><td>recalculated_graph_cmd</td><td>groot print.graph {} visjs open</td></tr>".format( results_edges_file ) )
-    differences.append( "</table><br/>" )
     
-    original_graph = importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" )
-    lego_graph.rectify_nodes( original_graph, model )
-    differences.append( compare_graphs( model.fusion_graph_clean.graph, original_graph ) )
-    differences.append( "</body></html>" )
+    differences = s999_compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
     
     # Write results
     file_helper.write_all_text( results_newick_file, new_newicks, newline = True )
-    file_helper.write_all_text( results_compare_file, differences, newline = True )
+    file_helper.write_all_text( results_compare_file, differences.html, newline = True )
     
     if view:
         os.system( "open \"" + results_compare_file + "\"" )
     
+    # Add the report to the model
+    global_view.current_model().user_reports.append( differences )
+    ext_files.file_save( results_saved_file )
+    
     MCMD.progress( "The test has completed, see «{}».".format( results_compare_file ) )
     return EChanges.MODEL_OBJECT
-
-
-def compare_graphs( calc_graph: MGraph,
-                    orig_graph: MGraph ):
-    """
-    Compares graphs using quartets.
-    
-    :param calc_graph: The model graph. Data is ILeaf or None. 
-    :param orig_graph: The source graph. Data is str.
-    :return: 
-    """
-    ccs = analysing.find_connected_components( calc_graph )
-    if len( ccs ) != 1:
-        raise ValueError( "The graph has more than 1 connected component ({}).".format( len( ccs ) ) )
-    
-    calc_seq: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( calc_graph, lego_graph.is_sequence_node ) )
-    orig_seq: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( orig_graph, lego_graph.is_sequence_node ) )
-    
-    if not calc_seq:
-        raise ValueError( "The calculated graph contains no sequences." )
-    
-    if not orig_seq:
-        raise ValueError( "The original graph contains no sequences." )
-    
-    if calc_seq != orig_seq:
-        raise ValueError( "The calculated graph has a different sequence set to the original. Missing: {}; additional: {}.".format(
-                string_helper.format_array( orig_seq - calc_seq, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ),
-                string_helper.format_array( calc_seq - orig_seq, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ) ) )
-    
-    calc_quartets = __get_quartets_with_progress( calc_graph, "calculated" )
-    orig_quartets = __get_quartets_with_progress( orig_graph, "original" )
-    comparison: QuartetComparison = calc_quartets.compare( orig_quartets )
-    
-    res = []
-    
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=2><b>QUARTETS</b></td></tr>" )
-    res.append( "<tr><td>total_quartets</td><td>{}</td></tr>".format( len( comparison ) ) )
-    res.append( "<tr><td>match_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.match ), len( comparison.all ) ) ) )
-    res.append( "<tr><td>mismatch_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.mismatch ), len( comparison.all ) ) ) )
-    if comparison.missing_in_left:
-        res.append( "<tr><td>new_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.missing_in_left ), len( comparison.all ) ) ) )
-    if comparison.missing_in_right:
-        res.append( "<tr><td>missing_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.missing_in_right ), len( comparison.all ) ) ) )
-    res.append( "</table><br/>" )
-    
-    __enumerate_2sequences( calc_seq, comparison, res, 1 )
-    __enumerate_2sequences( calc_seq, comparison, res, 2 )
-    __enumerate_2sequences( calc_seq, comparison, res, 3 )
-    
-    c = calc_quartets.get_unsorted_lookup()
-    o = orig_quartets.get_unsorted_lookup()
-    __list_comp( comparison.match, "MATCHING", res, c, o )
-    __list_comp( comparison.mismatch, "MISMATCH", res, c, o )
-    if comparison.missing_in_left:
-        __list_comp( comparison.missing_in_left, "MISSING IN LEFT", res, c, o )
-    if comparison.missing_in_right:
-        __list_comp( comparison.missing_in_right, "MISSING IN RIGHT", res, c, o )
-    
-    return "\n".join( res )
-
-
-def __list_comp( comparison, t, res, c, o ):
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=6><b>{} QUARTETS</b></td></tr>".format( t ) )
-    for quartet in comparison:
-        calc = c[quartet.get_unsorted_key()]
-        orig = o[quartet.get_unsorted_key()]
-        res.append( "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format( *quartet.get_unsorted_key(), calc, orig ) )
-    res.append( "</table><br/>" )
-
-
-def __enumerate_2sequences( calc_seq: Set[object],
-                            comparison: QuartetComparison,
-                            res: List[str],
-                            r: int
-                            ) -> None:
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=5><b>BREAKDOWN FOR COMBINATIONS OF {}</b></td></tr>".format( r ) )
-    res.append( "<tr><td>total</td><td>hit</td><td>miss</td><td>missing in left</td><td>missing in right</td></tr>" )
-    
-    for comb in sorted( itertools.combinations( calc_seq, r ), key = str ):  # type: Iterable[object]
-        n_tot = []
-        n_hit = []
-        n_mis = []
-        n_mil = []
-        n_mir = []
-        
-        for quartet in comparison.all:
-            assert isinstance( quartet, AbstractQuartet )
-            
-            if all( x in quartet.get_unsorted_key() for x in comb ):
-                n_tot.append( quartet )
-                
-                if quartet in comparison.match:
-                    n_hit.append( quartet )
-                elif quartet in comparison.mismatch:
-                    n_mis.append( quartet )
-                elif quartet in comparison.missing_in_left:
-                    n_mil.append( quartet )
-                elif quartet in comparison.missing_in_right:
-                    n_mir.append( quartet )
-                else:
-                    raise SwitchError( "quartet(in)", quartet )
-        
-        if not n_mis and not n_mil and not n_mir:
-            continue
-        
-        res.append( "<tr>" )
-        res.append( "<td>{}</td>".format( format( string_helper.format_array( comb ) ) ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_hit ), len( n_tot ) ) if n_hit else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mis ), len( n_tot ) ) if n_mis else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mil ), len( n_tot ) ) if n_mil else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mir ), len( n_tot ) ) if n_mil else "" ) )
-        res.append( "</tr>" )
-        
-        if len( n_hit ) < len( n_mis ) < 10:
-            for quartet in n_mis:
-                res.append( "<tr>" )
-                res.append( "<td></td>" )
-                res.append( "<td colspan=4>{}</td>".format( quartet ) )
-                res.append( "</tr>" )
-    
-    res.append( "</table><br/>" )
-
-
-def __get_quartets_with_progress( graph, title ) -> QuartetCollection:
-    r = []
-    
-    for q in MCMD.iterate( analysing.iter_quartets( graph, lego_graph.is_sequence_node ), "Reducing '{}' to quartets".format( title ), count = analysing.get_num_quartets( graph, lego_graph.is_sequence_node ) ):
-        r.append( q )
-    
-    return QuartetCollection( r )
-
-
-def __append_ev( out_list: List[str],
-                 the_set,
-                 title: str
-                 ) -> None:
-    for index, b_split in enumerate( the_set ):
-        out_list.append( title + "_({}/{}) = {}".format( index + 1, len( the_set ), b_split.to_string() ) )
-
-
-class __NodeFilter:
-    def __init__( self, model: LegoModel, accessions: Iterable[str] ):
-        self.sequences = [model.find_sequence_by_accession( accession ) for accession in accessions]
-    
-    
-    def format( self, node: MNode ):
-        d = node.data
-        
-        if d is None:
-            t = "x"
-        else:
-            t = str( d )
-        
-        if d in self.sequences:
-            assert isinstance( d, LegoSequence )
-            return ansi.FORE_GREEN + t + ansi.RESET
-        
-        for rel in node.relations:
-            if rel.data in self.sequences:
-                return ansi.FORE_YELLOW + t + ansi.RESET
-        
-        return ansi.FORE_RED + t + ansi.RESET
-    
-    
-    def query( self, node: MNode ):
-        if isinstance( node.data, LegoSequence ):
-            return node.data in self.sequences
-        
-        for rel in node.relations:
-            if rel.data in self.sequences:
-                return True
-        
-        for rel in node.relations:
-            if isinstance( rel.data, LegoSequence ) and rel.data not in self.sequences:
-                return False
-        
-        return True
 
 
 @command( visibility = visibilities.ADVANCED )
@@ -444,7 +254,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
     r = []
     args_random_tree = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
     # args_fn = "-d 0.2"
-    args_fn = ""
+    mutate_args = ""
     
     if not types:
         raise ValueError( "Missing :param:`types`." )
@@ -458,17 +268,26 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
             # is set as a result of an earlier tree, `O` will be more similar to the leaves of
             # that earlier tree than to the leaves in X. For this reason we use a simple random
             # model and not SeqGen.
-            fn = Ж.random
+            mutate_fn = Ж.random
             
             if name == "1":
                 # 1 fusion point; 3 genes; 2 origins
+                #
+                # # Should be an acyclic 2-rooted tree:
+                #
+                # A
+                #  \
+                #   -->C
+                #  /
+                # B
+                #
                 
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C"], **args_random_tree )
                 a, b, c = (x.parent for x in outgroups)
-                __remove( outgroups, 2 )
+                __remove_outgroups( outgroups, 2 )
                 
-                fn( [a, b, c], *args_fn )
+                mutate_fn( [a, b, c], *mutate_args )
                 
                 # Fusion point
                 fa = Ж.random_node( a, avoid = outgroups )
@@ -477,30 +296,52 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
                 Ж.mk_composite( [c] )
             elif name == "4":
                 # 2 fusion points; 4 genes; 2 origins
+                # (Possibly the most difficult scenario because the result is cyclic)
+                #
+                # Should be a cyclic 2-rooted graph:
+                #
+                #
+                # A--------
+                #  \       \
+                #   -->C    -->D
+                #  /       /
+                # B--------
+                #         
+                
                 
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D"], **args_random_tree )
                 a, b, c, d = (x.parent for x in outgroups)
-                fn( [a, b, c, d], *args_fn )
-                __remove( outgroups, 2, 3 )
+                mutate_fn( [a, b, c, d], *mutate_args )
+                __remove_outgroups( outgroups, 2, 3 )
                 
                 # Fusion points
                 fa1 = Ж.random_node( a, avoid = outgroups )
                 fb1 = Ж.random_node( b, avoid = outgroups )
-                fa2 = Ж.random_node( fa1, avoid = outgroups )
-                fb2 = Ж.random_node( fb1, avoid = outgroups )
+                fa2 = Ж.random_node( a, avoid = outgroups )
+                fb2 = Ж.random_node( b, avoid = outgroups )
                 Ж.branch( [fa1, fb1], c )
                 Ж.branch( [fa2, fb2], d )
                 Ж.mk_composite( [c, d] )
             
             elif name == "5":
                 # 2 fusion points; 5 genes; 3 origins
+                #
+                # # Should be an acyclic 3-rooted tree:
+                #
+                # A
+                #  \
+                #   -->C
+                #  /    \
+                # B      -->E
+                #       /
+                #      D
                 
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
                 a, b, c, d, e = (x.parent for x in outgroups)
-                fn( [a, b, c, d, e], *args_fn )
-                __remove( outgroups, 2, 4 )
+                mutate_fn( [a, b, c, d, e], *mutate_args )
+                __remove_outgroups( outgroups, 2, 4 )
                 
                 # Fusion points
                 fa = Ж.random_node( a, avoid = outgroups )
@@ -512,12 +353,28 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
                 Ж.mk_composite( [c, e] )
             elif name == "7":
                 # 3 fusion points; 7 genes; 4 origins
+                #
+                # Should be an acyclic 4-rooted tree:
+                #
+                # A
+                #  \
+                #   -->C
+                #  /    \
+                # B      \
+                #         -->G
+                # D      /
+                #  \    /
+                #   -->F
+                #  /
+                # E
+                #
+                
                 
                 # Trees
                 outgroups = Ж.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
                 a, b, c, d, e, f, g = (x.parent for x in outgroups)
-                fn( [a, b, c, d, e, f, g], *args_fn )
-                __remove( outgroups, 2, 5, 6 )
+                mutate_fn( [a, b, c, d, e, f, g], *mutate_args )
+                __remove_outgroups( outgroups, 2, 5, 6 )
                 
                 # Fusion points
                 fa = Ж.random_node( a, avoid = outgroups )
@@ -568,13 +425,19 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
             return EChanges.INFORMATION
         
         if run:
-            return run_test( path_, refresh = True, view = view )
+            return run_test( path_, view = view )
     
     return EChanges.INFORMATION
 
 
-def __remove( outgroups, *args ):
+def __remove_outgroups( outgroups, *args ):
+    # noinspection PyPackageRequirements
     import faketree
+    
+    # Check is actually outgroup!
+    for x in args:
+        assert outgroups[x].num_children == 0
+    
     faketree.remove( [outgroups[x] for x in args] )
     
     for x in sorted( args, reverse = True ):

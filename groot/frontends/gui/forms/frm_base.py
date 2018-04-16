@@ -8,7 +8,6 @@ from groot.frontends.gui.forms.resources import resources
 from groot.data import global_view
 from groot.frontends.gui.gui_menu import GuiActions
 from groot.frontends.gui.gui_view_utils import ESelect, LegoSelection
-from groot.frontends.gui.gui_workflow import LegoStage
 from mhelper import virtual
 from mhelper_qt import exceptToGui, menu_helper
 
@@ -24,9 +23,6 @@ class FrmBase( QDialog ):
         self.actions: GuiActions = GuiActions( self.frm_main, self )
     
     
-    @property
-    def workflow( self ) -> LegoStage:
-        return self.__workflow_selected
     
     
     def on_plugin_completed( self ):

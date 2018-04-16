@@ -2,14 +2,12 @@ import os
 import time
 from os import path
 from typing import List
+from intermake import MENV, ConsoleHost, VisualisablePath
+from mhelper import MEnum, array_helper, file_helper, exception_helper
 
 from groot import constants
+from groot.data.model import LegoModel
 from groot.constants import EFormat
-from groot.data.lego_model import LegoModel
-from intermake.engine.environment import MENV
-from intermake.hosts.console import ConsoleHost
-from intermake.visualisables.visualisable import VisualisablePath
-from mhelper import MEnum, array_helper, file_helper, exception_helper
 
 
 __model: LegoModel = None

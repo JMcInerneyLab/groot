@@ -9,7 +9,9 @@ from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
-from groot.data.lego_model import ESiteType, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, LegoUserDomain, LegoViewOptions, EPosition
+from groot.data.model_interfaces import EPosition, ESiteType
+from groot.data.model_core import LegoSubsequence
+from groot import LegoModel, LegoEdge, LegoUserDomain, LegoSequence, LegoComponent, LegoViewOptions
 from groot.frontends.gui.gui_view_support import ColourBlock, DRAWING, EMode
 from mhelper import array_helper, misc_helper, override
 from mhelper_qt import Pens, qt_colour_helper
@@ -723,7 +725,7 @@ class LegoView_AllEdges( QGraphicsItem ):
             for left, right in array_helper.lagged_iterate( sequence_view.userdomain_views.values() ):
                 self.interlink_views[left] = LegoViewInfo_Interlink( self, left, right )
         
-        # Our bounds has_encompass the totality of the model
+        # Our bounds encompass the totality of the model
         # - find this!
         self.rect = QRectF( 0, 0, 0, 0 )
         

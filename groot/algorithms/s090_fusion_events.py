@@ -1,14 +1,15 @@
 """
 Deals with the model's fusion events and fusion points.
 """
-from typing import List, Set, cast
+from typing import List, Set, cast, FrozenSet
 
-from groot import constants
+from groot.data import LegoModel, LegoSequence, LegoComponent, LegoFusion, LegoPoint, ILegoNode
 from mgraph import MGraph, MNode, MEdge
 from mhelper import Logger, array_helper
 
-from groot.data import lego_graph
-from groot.data.lego_model import LegoComponent, LegoModel, LegoSequence, LegoPoint, LegoFusion, ILegoNode, LegoFormation
+from groot import constants
+from groot.utilities import lego_graph
+from groot.data.model_core import LegoFormation
 
 
 __LOG = Logger( "fusion", False )
@@ -128,24 +129,26 @@ def __find_fusion_events( model: LegoModel ) -> List[LegoFusion]:
 
 def __find_or_create_point( event: LegoFusion,
                             component: LegoComponent,
-                            inner: Set[ILegoNode],
-                            outer: Set[ILegoNode] ):
+                            inner: FrozenSet[ILegoNode],
+                            outer: FrozenSet[ILegoNode] ):
     """
     Given an event and construct parameters, either retrieves the
     pertinent point or generates a new one.
     """
     formation = None
     
+    pertinent_inner = frozenset( inner.intersection( event.component_c.major_sequences ) )
+    
     for x in event.formations:  # type: LegoFormation
-        if x.pertinent_inner == inner:
+        if x.pertinent_inner == pertinent_inner:
             formation = x
             break
     
     if formation is None:
-        formation = LegoFormation( event, component, inner, len( event.formations ) )
+        formation = LegoFormation( event, component, inner, len( event.formations ), pertinent_inner )
         event.formations.append( formation )
     
-    p = LegoPoint( formation, outer, len( formation.points ) )
+    p = LegoPoint( formation, outer, component, len( formation.points ) )
     
     formation.points.append( p )
     return p
@@ -184,11 +187,11 @@ def __find_fusion_points( fusion_event: LegoFusion,
         first: MNode = graph.root
         root: MNode = first.add_parent()
         root.make_root()
-        sequences: Set[LegoSequence] = lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_sequences ) )
+        sequences: FrozenSet[LegoSequence] = frozenset( lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_sequences ) ) )
         result: LegoPoint = __find_or_create_point( fusion_event,
                                                     cast( LegoComponent, component ),
                                                     sequences,
-                                                    set() )
+                                                    frozenset() )
         root.data = result
         return
     
@@ -248,7 +251,7 @@ def __find_fusion_points( fusion_event: LegoFusion,
         edge.remove_edge()
         
         sequences = lego_graph.get_ileaf_data( isolation_point.outside_nodes )
-        outer_sequences = lego_graph.get_ileaf_data( isolation_point.inside_nodes )
+        outer_sequences = frozenset( lego_graph.get_ileaf_data( isolation_point.inside_nodes ) )
         fusion_point = __find_or_create_point( fusion_event, component, sequences, outer_sequences )
         fusion_node.data = fusion_point
 

@@ -3,15 +3,16 @@ Collection of miscellany for dealing with the GUI in GROOT.
 """
 
 from typing import FrozenSet, Iterable, List, Optional, Callable
-
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QAbstractButton
+from mhelper import MFlags, array_helper, string_helper, ResourceIcon, identity
 
-from groot.data import global_view
-from groot.data.lego_model import ComponentAsAlignment, ILegoSelectable, LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoUserDomain, LegoFusion, LegoSplit
+from groot.data import global_view, LegoModel, LegoEdge, LegoUserDomain, LegoSequence, LegoComponent, LegoSplit, LegoFusion
 from groot.frontends.gui.forms.resources import resources
-from mhelper import MFlags, array_helper, string_helper, ResourceIcon
+
+
+_MENUCSS = 'font-size: 18px; font-family: "Segoe UI";'
 
 
 class ESelect( MFlags ):
@@ -45,14 +46,14 @@ class LegoSelection:
     """
     
     
-    def __init__( self, items: Iterable[ILegoSelectable] = None ):
+    def __init__( self, items: Iterable[object] = None ):
         if items is None:
             items = frozenset()
         
         if not isinstance( items, FrozenSet ):
             items = frozenset( items )
         
-        self.items: FrozenSet[ILegoSelectable] = items
+        self.items: FrozenSet[object] = items
         self.sequences = frozenset( x for x in self.items if isinstance( x, LegoSequence ) )
         self.user_domains = frozenset( x for x in self.items if isinstance( x, LegoUserDomain ) )
         self.components = frozenset( x for x in self.items if isinstance( x, LegoComponent ) )
@@ -237,7 +238,7 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     OPTION_6 = "Select domains to right of selected domains"
     OPTION_7 = "Select domains connected to selected domains"
     OPTIONS = (OPTION_1, OPTION_2, OPTION_3, OPTION_4, OPTION_5, OPTION_6, OPTION_7)
-
+    
     _add_submenu( "(Selection)", mode & ESelect.EX_SPECIAL, alive, OPTIONS, root, selection, None )
     
     # Sequences
@@ -247,19 +248,22 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     _add_submenu( "2. Edges", mode & ESelect.EX_EDGES, alive, model.sequences, root, selection, resources.black_edge, ex = [LegoSequence.iter_edges] )
     
     # Components
-    _add_submenu( "3. Components", mode & ESelect.EX_COMPONENTS, alive, model.components, root, selection, resources.black_component )
-
+    _add_submenu( "3. Components", mode & ESelect.EX_COMPONENTS, alive, model.components, root, selection, resources.black_major )
+    
+    # Components - FASTA (unaligned)
+    _add_submenu( "3b. Component FASTA (unaligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_unaligned_fasta for x in model.components), root, selection, resources.black_alignment )
+    
     # Domains
     _add_submenu( "4. Domains", mode & ESelect.EX_DOMAINS, alive, model.sequences, root, selection, resources.black_domain, ex = [LegoSequence.iter_userdomains] )
     
-    # Components - alignments
-    _add_submenu( "5. Alignments", mode & ESelect.EX_ALIGNMENTS, alive, (ComponentAsAlignment( x ) for x in model.components), root, selection, resources.black_alignment )
+    # Components - FASTA (aligned)
+    _add_submenu( "5. Component FASTA (aligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_aligned_fasta for x in model.components), root, selection, resources.black_alignment )
     
-    # Components - trees
-    _add_submenu( "6a. Trees", mode & ESelect.EX_TREES_ROOTED, alive, (x.named_tree for x in model.components), root, selection, resources.black_tree )
+    # Components - trees (rooted)
+    _add_submenu( "6a. Component trees (rooted)", mode & ESelect.EX_TREES_ROOTED, alive, (x.named_tree for x in model.components), root, selection, resources.black_tree )
     
     # Components - trees (unrooted)
-    _add_submenu( "6b. Unrooted trees", mode & ESelect.EX_TREES_UNROOTED, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
+    _add_submenu( "6b. Component trees (unrooted)", mode & ESelect.EX_TREES_UNROOTED, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
     
     # Fusions
     _add_submenu( "7a. Fusion events", mode & ESelect.EX_FUSIONS, alive, model.fusion_events, root, selection, resources.black_fusion )
@@ -271,10 +275,10 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     _add_submenu( "7c. Fusion points", mode & ESelect.EX_POINTS, alive, model.fusion_events, root, selection, resources.black_fusion, ex = [lambda x: x.formations, lambda x: x.points] )
     
     #  Splits
-    _add_submenu( "8. Splits", mode & ESelect.EX_SPLITS, alive, model.splits, root, selection, resources.black_split )
+    _add_submenu( "8. Splits", mode & ESelect.EX_SPLITS, alive, model.splits, root, selection, resources.black_split, it = True )
     
     # Consensus
-    _add_submenu( "9. Consensus", mode & ESelect.EX_CONSENSUS, alive, model.consensus, root, selection, resources.black_consensus )
+    _add_submenu( "9. Consensus", mode & ESelect.EX_CONSENSUS, alive, model.consensus, root, selection, resources.black_consensus, it = True )
     
     # Subsets
     _add_submenu( "10. Subsets", mode & ESelect.EX_SUBSETS, alive, model.subsets, root, selection, resources.black_subset )
@@ -308,7 +312,7 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     # Show menu
     orig = control.text()
     control.setText( root.title() )
-    root.setStyleSheet("font-size: 24px;")
+    root.setStyleSheet( _MENUCSS )
     selected = root.exec_( control.mapToGlobal( QPoint( 0, control.height() ) ) )
     control.setText( orig )
     
@@ -321,17 +325,41 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
         actions.set_selection( LegoSelection( frozenset( { tag } ) ) )
 
 
-def _add_submenu( text: str, requirement: bool, alive: List[object], elements: Iterable[object], root: QMenu, selection: LegoSelection, icon: Optional[ResourceIcon], ex: Optional[List[Callable[[object], Iterable[object]]]] = None ) -> int:
+def _add_submenu( text: str,
+                  requirement: bool,
+                  alive: List[object],
+                  elements: Iterable[object],
+                  root: QMenu,
+                  selection: LegoSelection,
+                  icon: Optional[ResourceIcon],
+                  ex: Optional[List[Callable[[object], Iterable[object]]]] = None,
+                  it: bool = False ) -> int:
+    if it:
+        lst = sorted( elements, key = str )
+        ne = []
+        for s in range( 0, len( lst ), 20 ):
+            ne.append( (s, lst[s:s + 20]) )
+        
+        ex = ((lambda x: x[1]),)
+        elements = ne
+        fmt = lambda x: "{}-{}".format( x[0], x[0] + 20 )
+    else:
+        fmt = str
+    
     sub_menu = QMenu()
     sub_menu.setTitle( text )
+    sub_menu.setStyleSheet( _MENUCSS )
     count = 0
     
     for element in elements:
+        if element is None:
+            continue
+        
         if not ex:
             if _add_action( requirement, alive, element, selection, sub_menu, icon ):
                 count += 1
         else:
-            count += _add_submenu( str( element ), requirement, alive, ex[0]( element ), sub_menu, selection, icon, ex = list( ex[1:] ) )
+            count += _add_submenu( fmt( element ), requirement, alive, ex[0]( element ), sub_menu, selection, icon, ex = list( ex[1:] ) )
     
     if not count:
         # Nothing in the menu

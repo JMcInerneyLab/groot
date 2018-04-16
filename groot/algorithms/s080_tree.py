@@ -1,11 +1,12 @@
 from typing import Callable, List, Optional
 
-import groot.utilities.external_runner
-from groot import algorithms, constants
-from groot.data.extendable_algorithm import AlgorithmCollection
-from groot.data.lego_model import EPosition, ESiteType, LegoComponent, LegoModel, LegoSequence
 from mgraph import MGraph
 from mhelper import SwitchError
+
+from groot.utilities import AlgorithmCollection, external_runner
+from groot import algorithms, constants
+from groot.data import LegoModel, LegoSequence, LegoComponent, EPosition, ESiteType
+
 
 
 DAlgorithm = Callable[[LegoModel, str], str]
@@ -44,8 +45,8 @@ def create_tree( algorithm: Optional[str], component: LegoComponent ) -> None:
         raise SwitchError( "component.model.site_type", component.model.site_type )
     
     # Read the result
-    newick = groot.utilities.external_runner.run_in_temporary( tree_algorithms[algorithm], site_type, component.alignment )
-    component.tree_unrooted = algorithms.s1_importation.import_newick( newick, component.model )
+    newick = external_runner.run_in_temporary( tree_algorithms[algorithm], site_type, component.alignment )
+    component.tree_unrooted = algorithms.s020_importation.import_newick( newick, component.model )
     component.tree = component.tree_unrooted.copy()
     component.tree_newick = newick
     reposition_tree( component.tree )

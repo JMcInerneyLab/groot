@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
 from groot.frontends.gui.forms.designer import frm_view_splits_designer
 
-from groot.data.lego_model import LegoSplit
+from groot import LegoSplit
 from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.gui_view_utils import ESelect
 from mhelper import string_helper

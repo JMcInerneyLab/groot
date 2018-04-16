@@ -1,15 +1,16 @@
 from os import path
+import os
 
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QGridLayout
 from groot.frontends.gui.forms.designer import frm_webtree_designer
 
 import intermake
-from groot import constants
+from groot import constants, LegoModel
 from groot.constants import EFormat
 from groot.data import global_view
 from groot.data.global_view import EBrowseMode
-from groot.data.lego_model import INamedGraph, LegoModel
+from groot.data.model_interfaces import INamedGraph
 from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.gui_view_utils import ESelect, LegoSelection
 from groot.utilities import graph_viewing
@@ -48,7 +49,6 @@ class FrmWebtree( FrmSelectingToolbar ):
             pass
         elif switch == EBrowseMode.INBUILT:
             self.enable_inbuilt_browser()
-            self.ui.BTN_SYSTEM_BROWSER.setVisible( False )
         elif switch == EBrowseMode.SYSTEM:
             self.__disable_inbuilt_browser()
         else:
@@ -117,7 +117,9 @@ class FrmWebtree( FrmSelectingToolbar ):
         """
         Signal handler:
         """
-        pass
+        from mhelper import io_helper
+        io_helper.system_open(self.file_name)
+        
     
     
     @exqtSlot()

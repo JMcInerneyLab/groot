@@ -134,11 +134,6 @@ class GuiActions:
             key = link
             value = None
         
-        if "/" in value:
-            value, param = value.split( "/", 1 )
-        else:
-            param = None
-        
         if key == "action":
             try:
                 visualiser = gui_workflow.VISUALISERS.find_by_key( value )
@@ -151,7 +146,13 @@ class GuiActions:
             if validate:
                 return True
             
-            self.launch( visualiser, param if param else None )
+            self.launch( visualiser )
+        elif key == "file_save":
+            ext_files.file_save( value )
+        elif key == "file_load":
+            ext_files.file_load( value )
+        elif key == "file_sample":
+            ext_files.file_sample( value )
         else:
             if validate:
                 return False
@@ -247,13 +248,13 @@ class GuiActions:
         filter_index = filters.index( filter )
         
         if filter_index == 0:
-            groot.extensions.ext_importation.import_file( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_file( file_name )
         elif filter_index == 0:
-            groot.extensions.ext_importation.import_fasta( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_fasta( file_name )
         elif filter_index == 1:
-            groot.extensions.ext_importation.import_blast( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_blast( file_name )
         elif filter_index == 2:
-            groot.extensions.ext_importation.import_composites( self.get_model(), file_name )
+            groot.extensions.ext_importation.import_composites( file_name )
         else:
             raise SwitchError( "filter_index", filter_index )
     

@@ -2,21 +2,42 @@
 Groot entry point.
 """
 
-
+#
+# Meta-data
+#
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.44"
+__version__ = "0.0.0.45"
 
+#
+# Initialise Groot
+#
 import groot.init
+
+#
+# Export API
+#
 from groot.extensions import ext_dropping, ext_files, ext_generating, ext_gimmicks, ext_gui, ext_modifications, ext_viewing, ext_unittests, ext_unittests_creator  # export; to register
 from groot import extensions
 from groot import algorithms
-from groot.algorithms.s5_alignment import alignment_algorithms
-from groot.algorithms.s12_supertrees import supertree_algorithms
-from groot.algorithms.s6_tree import tree_algorithms
-from groot.algorithms.s4_userdomains import domain_algorithms
-from groot.data.lego_model import LegoModel, LegoPoint, LegoSubset, LegoSequence, LegoStage, LegoSplit, LegoComponent, LegoSubsequence, LegoEdge, LegoUserDomain, LegoComponentCollection, LegoEdgeCollection, LegoFusion, LegoFusionEventCollection, LegoSequenceCollection, LegoUserDomainCollection, LegoViewOptions, ILegoNode, ILegoSelectable
+from groot.algorithms.s070_alignment import alignment_algorithms
+from groot.algorithms.s140_supertrees import supertree_algorithms
+from groot.algorithms.s080_tree import tree_algorithms
+from groot.algorithms.s060_userdomains import domain_algorithms
+from groot.constants import LegoStage
+from groot.data.model_meta import LegoViewOptions
+from groot.data.model_interfaces import ILegoNode
+from groot.data.model_core import LegoEdge, LegoSubsequence, LegoUserDomain, LegoSequence, LegoComponent, LegoSplit, LegoSubset, LegoFusion, LegoPoint
+from groot.data.model import LegoModel
+from groot.data.model_collections import LegoEdgeCollection, LegoComponentCollection, LegoSequenceCollection, LegoUserDomainCollection, LegoFusionEventCollection
 
+#
+# Setup for use with Jupyter 
+#
 from intermake import run_jupyter
 run_jupyter = run_jupyter
 
+#
+# Import default Groot algorithm collection
+#
+# noinspection PyUnresolvedReferences
 import groot_ex

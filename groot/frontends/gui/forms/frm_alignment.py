@@ -3,7 +3,8 @@ from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 from groot.frontends.gui.forms.designer import frm_alignment_designer
 
-from groot.data.lego_model import FastaError, IHasFasta
+from groot.data.model_interfaces import IHasFasta
+from groot.data import FastaError
 from groot.frontends.gui.forms.frm_base import FrmSelectingToolbar
 from groot.frontends.gui.gui_view import LookupTable
 from groot.frontends.gui.gui_view_utils import ESelect

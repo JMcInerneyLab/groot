@@ -1,16 +1,15 @@
 """
 Imports or creates the BLAST data.
 
-More generically called the "similarity matrix" or "egde" data, we allow the user to load an existing file or run their own algorithm.
+More generically called the "similarity matrix" or "edge" data, we allow the user to load an existing file or run their own algorithm.
 BLAST is the default algorithm and this invocation can be found in the `groot_ex` project. 
 """
 from typing import Callable
 from intermake import MCMD
 from mhelper import Logger
 
-from groot.data.lego_model import LegoModel, LegoSubsequence
-from groot.utilities import external_runner
-from groot.data.extendable_algorithm import AlgorithmCollection
+from groot.data import LegoModel, LegoSubsequence
+from groot.utilities import external_runner, AlgorithmCollection
 
 
 LOG = Logger( "import/blast" )
@@ -102,13 +101,13 @@ def __import_blast_format_6( evalue, file, file_title, length, model, obtain_onl
             
             assert query_length > 0 and subject_length > 0
             
-            query_s = algorithms.s0_editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
-            subject_s = algorithms.s0_editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
+            query_s = algorithms.s999_editor.make_sequence( model, query_accession, obtain_only, 0, line, False, True )
+            subject_s = algorithms.s999_editor.make_sequence( model, subject_accession, obtain_only, 0, line, False, True )
             
             if query_s and subject_s and query_s is not subject_s:
                 query = LegoSubsequence( query_s, query_start, query_end )
                 subject = LegoSubsequence( subject_s, subject_start, subject_end )
                 LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
-                algorithms.s0_editor.make_edge( model, query, subject, line, False )
+                algorithms.s999_editor.make_edge( model, query, subject, False )
     
     MCMD.progress( "Imported Blast from «{}».".format( file_title ) )

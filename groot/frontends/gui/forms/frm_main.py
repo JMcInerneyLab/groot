@@ -63,7 +63,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         view = global_view.options().startup_mode
         
-        if global_view.current_model().get_status( constants.STAGES.DATA_0 ).is_none:
+        if global_view.current_model().get_status( constants.STAGES._DATA_0 ).is_none:
             if view == EStartupMode.STARTUP:
                 self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_STARTUP )
             elif view == EStartupMode.WORKFLOW:

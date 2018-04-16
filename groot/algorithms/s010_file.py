@@ -3,7 +3,7 @@ from intermake.engine.environment import MCMD
 from mhelper import io_helper
 
 from groot.data import global_view
-from groot.data.lego_model import LegoModel
+from groot.data.model import LegoModel
 
 
 def save_to_file( file_name: str, model: LegoModel = None ) -> None:

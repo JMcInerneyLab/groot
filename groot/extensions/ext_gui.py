@@ -1,4 +1,4 @@
-from groot.data.lego_model import IHasFasta
+from groot.data.model_interfaces import IHasFasta
 from groot.frontends.gui.gui_view_utils import EChanges
 from intermake import EThread, MENV, command, visibilities
 from intermake.engine.environment import MCMD

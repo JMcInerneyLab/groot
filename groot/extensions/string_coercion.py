@@ -1,4 +1,3 @@
-
 def setup():
     from typing import Optional
     
@@ -8,8 +7,7 @@ def setup():
     
     import stringcoercion
     from groot import constants
-    from groot.data import global_view
-    from groot.data.lego_model import LegoComponent, LegoSequence, LegoSubsequence, INamedGraph, UserGraph
+    from groot.data import global_view, LegoComponent, INamedGraph, UserGraph, LegoSubsequence, LegoSequence
     from mgraph import MGraph, importing
     from mhelper import string_helper, file_helper
     from stringcoercion import CoercionError
@@ -26,9 +24,6 @@ def setup():
             * Newick          : ''                `.nwk` OR ''                   `newick:`  or `file-newick:`  OR ''                     none of the above
         * You can be explicit by prefixing your string with `newick:` `compact:` `csv:` `tsv:` `file:` `file-newick:` `file-compact:` `file-csv:` `file-tsv:`
         """
-        
-        
-        
         
         
         def can_handle( self, info: stringcoercion.CoercionInfo ):

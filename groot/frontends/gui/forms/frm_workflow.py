@@ -1,16 +1,17 @@
-from PyQt5.QtWidgets import QLineEdit, QMenu, QToolButton, QWidget
-from groot.frontends.gui.forms.designer import frm_workflow_designer
-
-from groot import constants
-from groot.algorithms.wizard import Wizard
-from groot.constants import LegoStage
+from PyQt5.QtWidgets import QGridLayout, QLabel, QLineEdit, QMenu, QToolButton, QWidget
+from groot.algorithms.s999_wizard import Wizard
+from groot.constants import LegoStage, STAGES
 from groot.data import global_view
-from groot.frontends.gui.forms.frm_base import FrmBase
 from groot.frontends.gui import gui_workflow
+from groot.frontends.gui.forms.designer import frm_workflow_designer
+from groot.frontends.gui.forms.frm_base import FrmBase
 from mhelper_qt import exceptToGui, exqtSlot, menu_helper
 
 
 class FrmWorkflow( FrmBase ):
+    INDICATOR_SUFFIX = " margin-top: 2px; margin-bottom: 2px;"
+    
+    
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -21,33 +22,21 @@ class FrmWorkflow( FrmBase ):
         self.setWindowTitle( "Workflow" )
         self.bind_to_label( self.ui.LBL_NEXT )
         self.bind_to_label( self.ui.LBL_CLOSE )
+        
+        self.map = []
+        
+        for row, stage in enumerate( STAGES ):
+            self.add( self.ui.LAY_MAIN, stage, row )
+        
         self._refresh_labels()
-        self.gray_indicator = False
     
     
     def on_plugin_completed( self ):
         self._refresh_labels()
     
     
-    def _refresh_label( self, stage: LegoStage, indicator: QWidget, label: QLineEdit ):
-        suffix = " margin-top: 2px; margin-bottom: 2px;"
-        
-        status = global_view.current_model().get_status( stage )
-        
-        if status.is_complete:
-            indicator.setStyleSheet( "background:green;" + suffix )
-        elif status.is_partial:
-            indicator.setStyleSheet( "background:orange;" + suffix )
-        elif not self.gray_indicator:
-            indicator.setStyleSheet( "background:red;" + suffix )
-            self.gray_indicator = True
-        else:
-            indicator.setStyleSheet( "background:silver;" + suffix )
-        
-        label.setText( str( status ) )
-    
-    
     def _refresh_labels( self ):
+        # Wizard
         wt = Wizard.get_active()
         
         if wt is not None and wt.is_paused:
@@ -56,71 +45,45 @@ class FrmWorkflow( FrmBase ):
         else:
             self.ui.FRA_PAUSED.setVisible( False )
         
-        self.gray_indicator = False
+        # Others
+        m = global_view.current_model()
         
-        self._refresh_label( constants.STAGES.FILE_0,
-                             self.ui.LBL_WARNI_FILENAME,
-                             self.ui.TXT_FILENAME )
+        for stage, indicator, label, box, btn in self.map:
+            status = m.get_status( stage )
+            
+            if status.is_hot:
+                indicator.setStyleSheet( "background:red;" + self.INDICATOR_SUFFIX )
+            elif status.is_complete:
+                indicator.setStyleSheet( "background:green;" + self.INDICATOR_SUFFIX )
+            elif status.is_partial:
+                indicator.setStyleSheet( "background:orange;" + self.INDICATOR_SUFFIX )
+            else:
+                indicator.setStyleSheet( "background:silver;" + self.INDICATOR_SUFFIX )
+            
+            box.setText( str( status ) )
+    
+    
+    def add( self, layout: QGridLayout, stage: LegoStage, row ):
+        indicator = QWidget()
+        indicator.setMinimumWidth( 4 )
+        indicator.setMaximumWidth( 4 )
+        indicator.setStyleSheet( "background:blue; " + self.INDICATOR_SUFFIX )
+        layout.addWidget( indicator, row, 0 )
         
-        self.gray_indicator = False
+        label = QLabel()
+        label.setText( stage.name )
+        layout.addWidget( label, row, 1 )
         
-        self._refresh_label( constants.STAGES.FASTA_1,
-                             self.ui.LBL_WARNI_SEQUENCES,
-                             self.ui.TXT_SEQUENCES )
+        box = QLineEdit()
+        box.setReadOnly( True )
+        layout.addWidget( box, row, 2 )
         
-        self._refresh_label( constants.STAGES.BLAST_2,
-                             self.ui.LBL_WARNI_EDGES,
-                             self.ui.TXT_EDGES )
+        btn = QToolButton()
+        btn.setText( "﻿▼" )
+        btn.clicked[bool].connect( self.__on_btn_clicked )
+        layout.addWidget( btn, row, 3 )
         
-        self._refresh_label( constants.STAGES.COMPONENTS_3,
-                             self.ui.LBL_WARNI_COMPONENTS,
-                             self.ui.TXT_COMPONENTS )
-        
-        self._refresh_label( constants.STAGES.ALIGNMENTS_5,
-                             self.ui.LBL_WARNI_ALIGNMENTS,
-                             self.ui.TXT_ALIGNMENTS )
-        
-        self._refresh_label( constants.STAGES.TREES_6,
-                             self.ui.LBL_WARNI_TREES,
-                             self.ui.TXT_TREES )
-        
-        self._refresh_label( constants.STAGES.FUSIONS_7,
-                             self.ui.LBL_WARNI_FUSIONS,
-                             self.ui.TXT_FUSIONS )
-        
-        self._refresh_label( constants.STAGES.SPLITS_8,
-                             self.ui.LBL_WARNI_SPLITS,
-                             self.ui.TXT_SPLITS )
-        
-        self._refresh_label( constants.STAGES.CONSENSUS_9,
-                             self.ui.LBL_WARNI_CONSENSUS,
-                             self.ui.TXT_CONSENSUS )
-        
-        self._refresh_label( constants.STAGES.SUBSETS_10,
-                             self.ui.LBL_WARNI_SUBSETS,
-                             self.ui.TXT_SUBSETS )
-        
-        self._refresh_label( constants.STAGES.SUBGRAPHS_11,
-                             self.ui.LBL_WARNI_SUBGRAPHS,
-                             self.ui.TXT_SUBGRAPHS )
-        
-        self._refresh_label( constants.STAGES.FUSED_12,
-                             self.ui.LBL_WARNI_STITCHED,
-                             self.ui.TXT_STITCHED )
-        
-        self._refresh_label( constants.STAGES.CLEANED_13,
-                             self.ui.LBL_WARNI_CLEANED,
-                             self.ui.TXT_CLEANED )
-        
-        self._refresh_label( constants.STAGES.CHECKED_14,
-                             self.ui.LBL_WARNI_CHECKED,
-                             self.ui.TXT_CHECKED )
-        
-        self.gray_indicator = True
-        
-        self._refresh_label( constants.STAGES.DOMAINS_4,
-                             self.ui.LBL_WARNI_DOMAINS,
-                             self.ui.TXT_DOMAINS )
+        self.map.append( (stage, indicator, label, box, btn) )
     
     
     def __show_menu( self, menu: QMenu ):
@@ -132,60 +95,16 @@ class FrmWorkflow( FrmBase ):
         control.setText( ot )
     
     
-    @exqtSlot()
-    def on_BTN_FILENAME_clicked( self ) -> None:
+    @exceptToGui()
+    def __on_btn_clicked( self, _ ) -> None:
         """
         Signal handler:
         """
-        menu_helper.show_menu( self.window, self.actions.frm_main.menu_handler.mnu_file )
-    
-    
-    @exqtSlot()
-    def on_BTN_SEQUENCES_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FASTA_1 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SUBSETS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SUBSETS_10 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SPLITS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SPLITS_8 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CONSENSUS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CONSENSUS_9 )
-    
-    
-    @exqtSlot()
-    def on_BTN_EDGES_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.BLAST_2 )
-    
-    
-    @exqtSlot()
-    def on_BTN_SUBGRAPHS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.SUBGRAPHS_11 )
+        sender = self.sender()
+        
+        for stage, indicator, label, box, btn in self.map:
+            if btn is sender:
+                self.actions.menu( stage )
     
     
     @exqtSlot()
@@ -194,67 +113,3 @@ class FrmWorkflow( FrmBase ):
         Signal handler:
         """
         self.actions.launch( gui_workflow.VISUALISERS.ACT_WIZARD_NEXT )
-    
-    
-    @exqtSlot()
-    def on_BTN_COMPONENTS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.COMPONENTS_3 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CLEANED_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CLEANED_13 )
-    
-    
-    @exqtSlot()
-    def on_BTN_STITCHED_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FUSED_12 )
-    
-    
-    @exqtSlot()
-    def on_BTN_CHECKED_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.CHECKED_14 )
-    
-    
-    @exqtSlot()
-    def on_BTN_DOMAINS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.DOMAINS_4 )
-    
-    
-    @exqtSlot()
-    def on_BTN_ALIGNMENTS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.ALIGNMENTS_5 )
-    
-    
-    @exqtSlot()
-    def on_BTN_TREES_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.TREES_6 )
-    
-    
-    @exqtSlot()
-    def on_BTN_FUSIONS_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.actions.menu( gui_workflow.STAGES.FUSIONS_7 )

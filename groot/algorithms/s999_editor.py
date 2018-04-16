@@ -7,7 +7,8 @@ In order to maintain correct within-model relationships, the model should only b
 from typing import List, Union
 
 from groot import constants
-from groot.data.lego_model import LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence
+from groot.data.model import LegoModel
+from groot.data.model_core import LegoEdge, LegoSequence, LegoComponent, LegoSubsequence
 from mhelper import Logger
 
 
@@ -54,7 +55,7 @@ def make_sequence( model: LegoModel,
     return result
 
 
-def make_edge( model: LegoModel, source: LegoSubsequence, destination: LegoSubsequence, extra_data, no_fresh: bool ) -> LegoEdge:
+def make_edge( model: LegoModel, source: LegoSubsequence, destination: LegoSubsequence, no_fresh: bool ) -> LegoEdge:
     """
     Creates the specified edge, or returns it if it already exists.
     """
@@ -65,11 +66,9 @@ def make_edge( model: LegoModel, source: LegoSubsequence, destination: LegoSubse
     for edge in model.edges:
         if (edge.left == source and edge.right == destination) \
                 or (edge.left == destination and edge.right == source):
-            edge.comments.append( extra_data )
             return edge
     
     result = LegoEdge( source, destination )
-    result.comments.append( extra_data )
     model.edges.add( result )
     
     return result
@@ -128,7 +127,7 @@ def assert_model_freshness( model : LegoModel, no_fresh: bool ):
     if no_fresh:
         return
     
-    if model.get_status(constants.STAGES.COMPONENTS_3).is_partial:
+    if model.get_status(constants.STAGES.MAJOR_3).is_partial:
         raise ValueError( "Refusing to modify the model whilst it is in use. Did you mean to drop the components first?" )
 
 

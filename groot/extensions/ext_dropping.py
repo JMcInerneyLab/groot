@@ -1,12 +1,10 @@
 from typing import List, Optional
+from intermake import command, MCMD
 
 from groot import algorithms
-from groot.data import global_view
-from groot.data.lego_model import LegoComponent, LegoSequence, INamedGraph, FixedUserGraph
-from groot.frontends.cli import cli_view_utils
+from groot.data import global_view, LegoSequence, LegoComponent, INamedGraph, FixedUserGraph
+from groot.utilities import cli_view_utils
 from groot.frontends.gui.gui_view_utils import EChanges
-from intermake import command
-from intermake.engine.environment import MCMD
 
 
 __mcmd_folder_name__ = "Removing"
@@ -36,7 +34,7 @@ def drop_sequences( sequences: List[LegoSequence] ):
     
     :param sequences:    One or more sequences to drop.
     """
-    algorithms.s0_editor.remove_sequences( sequences, False )
+    algorithms.s999_editor.remove_sequences( sequences, False )
 
 
 @command()
@@ -45,7 +43,7 @@ def drop_components() -> EChanges:
     Removes all the components from the model.
     """
     model = global_view.current_model()
-    count = algorithms.s3_components.drop( model )
+    count = algorithms.s040_major.drop_major( model )
     
     MCMD.progress( "Dropped all {} components from the model.".format( count ) )
     
@@ -62,7 +60,7 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
     count = 0
     
     for component_ in to_do:
-        if algorithms.s5_alignment.drop_alignments( component_ ):
+        if algorithms.s070_alignment.drop_alignments( component_ ):
             count += 1
     
     MCMD.progress( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
@@ -81,7 +79,7 @@ def drop_tree( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     count = 0
     
     for component_ in to_do:
-        if algorithms.s6_tree.drop_tree( component_ ):
+        if algorithms.s080_tree.drop_tree( component_ ):
             count += 1
     
     MCMD.progress( "{} trees removed across {} components.".format( count, len( to_do ) ) )
@@ -96,7 +94,7 @@ def drop_fusions() -> EChanges:
     """
     model = global_view.current_model()
     previous = len( model.fusion_events )
-    removed = algorithms.s7_fusion_events.drop_fusions( model )
+    removed = algorithms.s090_fusion_events.drop_fusions( model )
     
     MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed ) )
     
@@ -108,7 +106,7 @@ def drop_candidates() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s8_splits.drop_splits( global_view.current_model() )
+    algorithms.s100_splits.drop_splits( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -117,7 +115,7 @@ def drop_viable() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s9_consensus.drop_consensus( global_view.current_model() )
+    algorithms.s110_consensus.drop_consensus( global_view.current_model() )
     return EChanges.COMP_DATA
 
 @command()
@@ -125,7 +123,7 @@ def drop_pregraphs() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s11_pregraphs.drop_pregraphs( global_view.current_model() )
+    algorithms.s130_pregraphs.drop_pregraphs( global_view.current_model() )
     return EChanges.COMP_DATA
 
 @command()
@@ -133,7 +131,7 @@ def drop_subsets() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s10_subsets.drop_subsets( global_view.current_model() )
+    algorithms.s120_subsets.drop_subsets( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -142,7 +140,7 @@ def drop_subgraphs() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s12_supertrees.drop_supertrees( global_view.current_model() )
+    algorithms.s140_supertrees.drop_supertrees( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -151,7 +149,7 @@ def drop_fused() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s13_fuse.drop_fused( global_view.current_model() )
+    algorithms.s150_fuse.drop_fused( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -160,7 +158,7 @@ def drop_cleaned() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s14_clean.drop_cleaned( global_view.current_model() )
+    algorithms.s160_clean.drop_cleaned( global_view.current_model() )
     return EChanges.COMP_DATA
 
 
@@ -169,5 +167,5 @@ def drop_checked() -> EChanges:
     """
     Removes data from the model.
     """
-    algorithms.s15_checked.drop_checked( global_view.current_model() )
+    algorithms.s170_checked.drop_checked( global_view.current_model() )
     return EChanges.COMP_DATA
