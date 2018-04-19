@@ -3,16 +3,15 @@ Converts Lego entities to HTML.
 """
 from typing import List
 from intermake import IVisualisable, VisualisablePath
-from mgraph import exporting
 from mhelper import array_helper, string_helper
 from mhelper_qt import qt_gui_helper
 
-from groot.data import LegoModel, IHasFasta, INamedGraph, LegoReport
-from groot.utilities import cli_view_utils
+from groot.data import LegoModel, IHasFasta, INamedGraph, LegoReport, global_view
+from groot.utilities import cli_view_utils, graph_viewing
 
 
 HTML = List[str]
-_ANSI_SCHEME = qt_gui_helper.ansi_scheme_light( family = 'Consolas,"Courier New",monospace' )
+_ANSI_SCHEME = qt_gui_helper.ansi_scheme_light( family = 'monospace' )
 
 
 def render( item, model: LegoModel ):
@@ -22,11 +21,12 @@ def render( item, model: LegoModel ):
     
     html = []
     
+    html.append( "<html><head><title>{}</title></head><body>".format( str( item ) ) )
     html.append( '<h2>{}</h2>'.format( str( item ) ) )
     
     # Trees and graphs
     if isinstance( item, INamedGraph ):
-        render_tree( html, item )
+        render_tree( html, item, model )
     
     # Anything with FASTA
     if isinstance( item, IHasFasta ):
@@ -35,6 +35,8 @@ def render( item, model: LegoModel ):
     # Anything with metadata
     if isinstance( item, IVisualisable ):
         render_visualisable( html, item )
+    
+    html.append( "</body></html>" )
     
     return "\n".join( html )
 
@@ -64,16 +66,20 @@ def render_visualisable( html: HTML, item: IVisualisable ):
     html.append( "</table>" )
 
 
-def render_tree( html: HTML, item: INamedGraph ):
+def render_tree( html: HTML, item: INamedGraph, model: LegoModel ):
     if not isinstance( item, INamedGraph ) or item.graph is None:
         return
     
-    if len( list( item.graph.nodes.roots ) ) == 1:
-        html.append( "<h3>Tree</h3>" )
-        html.append( "<p>" + exporting.export_newick( item.graph ) + "</p>" )
-    else:
-        html.append( "<h3>Graph</h3>" )
-        html.append( "<p>" + exporting.export_edgelist( item.graph ) + "</p>" )
+    visjs = graph_viewing.create( format_str = None,
+                                  graph = item,
+                                  model = model,
+                                  format = global_view.options().gui_tree_view )
+    
+    visjs = visjs.replace( "</body>", "" )
+    visjs = visjs.replace( "</html>", "" )
+    
+    html.clear()
+    html.append( visjs )
 
 
 def render_fasta( html: HTML, item: IHasFasta, model: LegoModel ):

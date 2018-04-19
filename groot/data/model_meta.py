@@ -1,14 +1,14 @@
-from typing import Optional, Dict, Tuple
+from typing import Optional
 
 from groot.constants import LegoStage, STAGES
 from groot.data.exceptions import NotReadyError, InUseError
 from groot.data.model_interfaces import INamed, IHasFasta, INamedGraph
-from groot.frontends.gui.gui_view_support import EMode
 from groot.data.model_core import LegoComponent
 from mgraph import MGraph
-from mhelper import TTristate
+
 
 _LegoModel_ = "LegoModel"
+
 
 class _ComponentAsFasta( INamed, IHasFasta ):
     def __init__( self, component: LegoComponent, is_aligned: bool ):
@@ -62,38 +62,9 @@ class _ComponentAsGraph( INamedGraph ):
         return self.name
 
 
-class LegoViewOptions:
-    """
-    Options on the lego view
-    
-    :attr y_snap:                      Snap movements to the Y axis (yes | no | when no alt)
-    :attr x_snap:                      Snap movements to the X axis (yes | no | when no alt)
-    :attr move_enabled:                Allow movements (yes | no | when double click)
-    :attr view_piano_roll:             View piano roll (yes | no | when selected)
-    :attr view_names:                  View sequence names (yes | no | when selected)
-    :attr view_positions:              View domain positions (yes | no | when selected)
-    :attr view_components:             View domain components (yes | no | when selected)
-    :attr mode:                        Edit mode
-    :attr domain_function:             Domain generator
-    :attr domain_function_parameter:   Parameter passed to domain generator (domain_function dependent)
-    :attr domain_positions:            Positions of the domains on the screen - maps (id, site) --> (x, y)
-    """
-    
-    
-    def __init__( self ):
-        self.y_snap: TTristate = None
-        self.x_snap: TTristate = None
-        self.move_enabled: TTristate = None
-        self.view_piano_roll: TTristate = None
-        self.view_names: TTristate = True
-        self.view_positions: TTristate = None
-        self.view_components: TTristate = None
-        self.mode = EMode.SEQUENCE
-        self.domain_positions: Dict[Tuple[int, int], Tuple[int, int]] = { }
-
-
 class ModelStatus:
     def __init__( self, model: _LegoModel_, stage: LegoStage ):
+        assert isinstance( stage, LegoStage )
         self.model: _LegoModel_ = model
         self.stage: LegoStage = stage
     
@@ -102,25 +73,54 @@ class ModelStatus:
         if self.is_none:
             raise NotReadyError( "Cannot drop «{}» stage because this data does not yet exist.".format( self.stage ) )
         
-        for stage in STAGES:
-            if stage.requires == self:
-                raise InUseError( "Cannot drop «{}» stage the following stage, «{}» is relying on that data. Perhaps you meant to drop that stage first?".format( self.stage, stage ) )
+        self.assert_not_in_use( "drop" )
+    
+    
+    def assert_not_in_use( self, method ):
+        for dependant_stage in STAGES:
+            if self in dependant_stage.requires:
+                dependant_status: ModelStatus = self.model.get_status( self.stage.requires )
+                
+                if dependant_status.is_partial:
+                    raise InUseError( "Cannot {} «{}» because at least one subsequent stage, «{}», is relying on the current data. Perhaps you meant to drop that stage first?".format( method, self.stage, dependant_stage ) )
+        
+        return False
+    
+    
+    def assert_import( self ):
+        """
+        Asserts that data for this stage can be imported.
+        
+        Ideally, this means we can skip earlier parts of the model, however at the present time, this is the same as `assert_create`,
+        because stages only mark their immediate prerequisites and assume that all their prerequisites have themselves been met.
+        """
+        self.assert_create()
+    
+    
+    def assert_set( self ):
+        self.assert_create()
     
     
     def assert_create( self ):
         if self.is_complete:
             raise NotReadyError( "Cannot create «{}» stage because this data already exists.".format( self.stage ) )
         
-        if self.stage.requires is not None:
-            req = self.model.get_status( self.stage.requires )
+        self.assert_not_in_use( "create" )
+        
+        for required_stage in self.stage.requires:
+            required_status = self.model.get_status( required_stage )
             
-            if req.is_not_complete:
-                raise NotReadyError( "Cannot create «{}» because the preceding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format( self.stage, self.stage.requires ) )
+            if required_status.is_not_complete:
+                raise NotReadyError( "Cannot create «{}» because the preceding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format( self.stage, required_stage ) )
     
     
     @property
     def requisite_complete( self ) -> bool:
-        return self.stage.requires is None or ModelStatus( self.model, self.stage.requires ).is_complete
+        for requisite in self.stage.requires:
+            if not ModelStatus( self.model, requisite ).is_complete:
+                return False
+        
+        return True
     
     
     def __bool__( self ):

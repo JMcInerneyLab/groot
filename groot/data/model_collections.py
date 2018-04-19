@@ -6,6 +6,7 @@ from groot.data.model_core import LegoSubsequence, FixedUserGraph, LegoEdge, Leg
 
 _LegoModel_ = "LegoModel"
 
+
 class LegoEdgeCollection:
     """
     The collection of edges, held by the model.
@@ -88,6 +89,10 @@ class LegoComponentCollection:
         self.__components.append( component )
     
     
+    def remove( self, component: LegoComponent ):
+        self.__components.remove( component )
+    
+    
     def __getitem__( self, item ):
         return self.__components[item]
     
@@ -123,6 +128,14 @@ class LegoComponentCollection:
                     break
         
         return r
+    
+    
+    def has_major_sequence_got_component( self, sequence: LegoSequence ) -> bool:
+        try:
+            self.find_component_for_major_sequence( sequence )
+            return True
+        except NotFoundError:
+            return False
     
     
     def find_component_for_major_sequence( self, sequence: LegoSequence ) -> LegoComponent:

@@ -1,6 +1,7 @@
 Groot
 =====
-Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
+
+Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
 ```
 \         /       /
@@ -16,38 +17,67 @@ Gʀᴏᴏᴛ imports Bʟᴀꜱᴛ data and produces a genomic [N-Rooted Fusion G
           \
 ```
 
-Gʀᴏᴏᴛ aims to be
-
-* Accessible. Gʀᴏᴏᴛ has **command line, friendly GUI and Python library** capabilities.
-* Understandable. Gʀᴏᴏᴛ follows a simple workflow with MVC architecture and **heavily documented source code**.
-* Free. Users are invited to call upon the library or modify the source code to suit their own needs.
-
 [](toc)
 
 Installation
 ------------
 
-Please make sure you have Python (3.6+) and Pɪᴩ installed first!
+### Prerequisites ###
+Groot runs under Python 3.6 and is installed using Pip.
+In addition to these programs, you will also need some phylogenetic tools to conduct the actual analysis.
+Please download the the following, install, **and confirm that they work** from the command line before continuing to install Groot.
 
-* Python: https://www.python.org/downloads/
-* Pip: https://pip.pypa.io/en/stable/installing/
+| Tool      | Purpose                | URL                                              |
+|-----------|------------------------|--------------------------------------------------|
+| Blast     | gene similarity        | https://blast.ncbi.nlm.nih.gov/Blast.cgi         |
+| Clann     | supertree inference    | http://mcinerneylab.com/software/clann/          |
+| Muscle    | gene alignment         | https://www.ebi.ac.uk/Tools/msa/muscle/          |
+| Paup      | phylogeny inference    | http://phylosolutions.com/paup-test/             |
+| Pip       | installation manager   | https://pip.pypa.io/en/stable/installing/        |
+| Python    | interpreter            | https://www.python.org/downloads/                |
+| Raxml     | phylogeny inference    | https://sco.h-its.org/exelixis/software.html     |
 
-_Warning: MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, you'll need to install Python 3.6 for Groot__   
+Note: You can substitute all of these for your own preferred tools, or specify the data manually, but this list comprises a good "starter package". 
 
+_Warning: For legacy reasons, MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, which was last updated in 2006. This isn't enough - you'll still need to install Python 3.6 to use Groot__
 
-Then download Gʀᴏᴏᴛ using Pip, i.e. from Bᴀꜱʜ:
+### System requirements ###
+
+Groot isn't very fussy, it will even work from your Android phone, but if you want to use the GUI you'll need to be using a supported OS and desktop (Windows, Mac and Ubuntu+Kde or Ubuntu+Gnome are all good).
+
+### Installing Groot ###
+
+When all is ready, download Gʀᴏᴏᴛ using Pip, i.e. from the Windows Console...
+
+```bash
+$   pip install groot
+```
+
+...or, from a Bash terminal...
 
 ```bash
 $   sudo pip install groot
 ```
 
-You should then be able to start Gʀᴏᴏᴛ in its _Command Line Interactive_ (CLI) mode:
+After the install completes, test that you can actually run Groot:
 
 ```bash
 $   groot
 ```
 
-_...or in _Graphical User Interface_ (GUI) mode:_
+If you see the Groot command prompt that's great, it works, but if you get a message like `groot not found` then Python probably doesn't have its PATH configured correctly.
+You might be able to start Groot using `python -m groot`, but it's probably best to consult the Python documentation at this time and fix the issue before continuing.
+Check out [this StackOverflow post](https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) as a starting point. 
+
+### Starting and stopping Groot ###
+
+You should be able to start Gʀᴏᴏᴛ in its _Command Line Interactive_ (CLI) mode straight from the command line:
+
+```bash
+$   groot
+```
+
+_...You can start Groot in _Graphical User Interface_ (GUI) mode by passing the `gui` argument:_
 
 ```bash
 $   groot gui
@@ -59,9 +89,27 @@ You can also use Gʀᴏᴏᴛ in your own Python applications:
 $   import groot
 ```
 
-For advanced functionality, please see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
+Or use Python's own interactive prompt (PYI):
 
-_**If the `groot` command does not start Gʀᴏᴏᴛ then you have not got Pʏᴛʜᴏɴ set up correctly**_
+```python
+$   groot pyi
+```
+
+To exit Groot's command line (CLI), press `CTRL+C`,  or use the exit command:
+
+```bash
+$   exit
+```
+
+To exit Python (PYI) you'll need to add brackets:
+
+```python
+$   exit()
+```
+
+To exit the GUI, you can just close the window :)
+
+For advanced functionality, please see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
 
 Tutorial
 --------
@@ -69,31 +117,35 @@ Tutorial
 ### Getting started ###
 
 Groot has a nice GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
-It's much easier to explain and we get to cover all the specifics.
+It's much easier to explain and we'll get to cover all the specific details.
 The workflow we'll be following looks like this:
 
-0. Load FASTA data       
-0. Load BLAST data       
-0. Make components
-0. Make alignments       
-0. Make trees            
-0. Make fusions          
-0. Candidate splits  
-0. Viable splits     
-0. Subsets               
-0. Subgraphs             
-0. Fuse                  
-0. Clean                 
+0. Load FASTA data
+0. Make similarity matrix
+0. Make major components
+0. Make minor components
+0. Make alignments
+0. Make trees
+0. Make fusions
+0. Candidate splits
+0. Viable splits
+0. Subsets
+0. Pregraphs
+0. Subgraphs
+0. Fuse
+0. Clean
 0. Check
 
-We'll assume you have Gʀᴏᴏᴛ installed and working, so start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
+_Note: The technical details of this workflow are already covered in the complementary [paper]() and we won't be repeat these in the tutorial - we'll only be discussing how to perform it._
+
+We'll assume you have Gʀᴏᴏᴛ installed and working as above, so start Gʀᴏᴏᴛ in CLI mode (if it isn't already):
 
 ```bash
 $   groot
     >>> Empty model>
 ```
 
-Once in Gʀᴏᴏᴛ, type `help` for help.
+Groot's CLI has a simple interface. Once Gʀᴏᴏᴛ has started, just type `help` for help.
 
 ```bash
 $  help
@@ -110,11 +162,14 @@ the `drop.` commands are used to go back a step,
 and the `print.` commands are used to display information.
 For instance, to create the alignments it's `create.alignments`,
 to view them it's `print.alignments`, and to delete them and go back a step, it's `drop.alignments`.
-Type `cmdlist` to see all the commands.
+
+As an aside, there are also `import.` commands, which can be used in lieu of the `create.` commands to import data which is already known, and `file.` commands used to load and save the model.
+
+Type `cmdlist` to see all the commands now.
 
 ### Introduction to the sample data ###
- 
-Gʀᴏᴏᴛ comes with a sample library, get started by seeing what's available:
+
+Gʀᴏᴏᴛ comes with a convenient sample library, get started by seeing what's available:
  
 ```bash
 $   file.sample
@@ -151,7 +206,7 @@ Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the tr
 
 ### Loading the sample ###
 
-The `sample` command can be used to load the sample files automatically, but for the sake of providing a tutorial, we will be importing the data manually.
+The `file.sample` command can be used to load the sample files automatically, but for the sake of providing a tutorial, we will be importing the data manually.
 For reference, the ways of getting Groot to do stuff with the minimal possible effort are listed in the table below.
 
 | Mode of operation | What it does            | How to get there         |
@@ -160,10 +215,10 @@ For reference, the ways of getting Groot to do stuff with the minimal possible e
 | GUI               | Shows you things        | Use the `gui` command    |
 | Sample loader     | Loads samples           | Use the `sample` command |
 
-Unless you can remember where Pip installed the files to earlier, you can find out where the sample is located by executing the following:
+Unless you can remember where Pip installed the files to earlier, you can find out where the sample data is located by executing the following command:
 
 ```bash
-$   sample triptych +q
+$   file.sample triptych +q
     
 #   INF import_directory "/blah/blah/blah/triptych"
 ```
@@ -171,7 +226,7 @@ $   sample triptych +q
 The `+q` bit of our input tells Gʀᴏᴏᴛ not to actually load the data, so we can do it ourselves.
 Groot works out what you mean most of the time, so `+q` is equivalent to `true`, `+query`, `query=true`, `q=1`, etc.
 The _import_directory_ bit of the output tells us where the sample lives.
-Write that down, and take note, your path will look different to mine.
+Write that down, and take note, your path will look different to mine!
 
 You can now load the files into Gʀᴏᴏᴛ:
 
@@ -180,7 +235,7 @@ $   import.blast /blah/blah/blah/triptych/triptych.blast
 $   import.fasta /blah/blah/blah/triptych/triptych.fasta 
 ```
 
-You should notice that at this point the prompt changes from _Empty model_ to _Unsaved model_.
+You should notice that at this point the prompt changes from _Empty model_ to _Unsaved model_. Good times.
 
 Unsaved model isn't very informative and serves as a reminder to _save our data_, so save our model with a more interesting name:
 
@@ -194,12 +249,12 @@ $   save tri
 
 We didn't specify a path, or an extension, so you'll notice Gʀᴏᴏᴛ has added them for us.
 Groot uses directory in your home folder to store its data.
-The directory is hidden by default to avoid bloating your home folder, but you can find out where it is (or change it!) using the `workspace` command. 
+The directory is hidden by default to avoid bloating your home folder, but Groot can remind you where it is (or change it!) if you use the `workspace` command. 
 
 Preparing your data
 -------------------
 
-Gʀᴏᴏᴛ follows a linear workflow, execute the `status` command to find out where we're at:
+The linear workflow presented earlier can be shown in groot by, executing the `status` or `print.status` command:
 
 ```bash
 $   status
@@ -230,8 +285,8 @@ $   make.components
     WRN There are components with just one sequence in them. Maybe you meant to use a tolerance higher than 0?
 ```
 
-While not always the case, here, we can see Gʀᴏᴏᴛ has identified a problem.
-We can confirm this manually:
+While not always the case, here, we can see Gʀᴏᴏᴛ has identified a problem. Well done Groot.
+We can confirm this manually too:
 
 ```bash
 $   print.components
@@ -262,9 +317,9 @@ $   print.components
 ```
 
 Our components are messed up; Gʀᴏᴏᴛ has found 16 components, which is excessive, and many of these only contain one sequence.
-Solve the problem by using a higher tolerance on the `make.components` to allow some differences between the BLAST regions.
+Solve the problem by using a higher tolerance on the `make.components` command in order to allow some differences between the BLAST regions.
 The default of zero will almost always be too low.
-Try the command again, but specify a higher tolerance.
+Try the command again, but specify a higher tolerance this time.
 
 ```bash
 $   make.components tolerance=10
@@ -273,7 +328,7 @@ $   make.components tolerance=10
     PRG  │ -Component detection                                                             │ DONE                                     │                         │ +00:00      ⏎
 ```
 
-No error this time.  let's see what we have:
+No error this time. let's see what we have:
 
 ```bash
 $   print.components
@@ -297,7 +352,9 @@ $   print.components
 ```
 
 At a glance it looks better.
-We can see each of the gene families (`A`, `B`, `C`, `D`, `E`) have been grouped into a component, but when you have arbitrary gene names things won't be so obvious, and that's where the GUI can be helpful.
+We can see each of the gene families (`A`, `B`, `C`, `D`, `E`) have been grouped into a component.
+
+_Reminder: When you have arbitrary gene names things won't be so obvious, and that's where the GUI can be helpful!_
  
 What next? Let's make a basic tree. For this we'll need the alignments.
 
@@ -305,93 +362,111 @@ What next? Let's make a basic tree. For this we'll need the alignments.
 $   make.alignments
 ```
 
-You can checkout your alignments by entering `print.alignments`:
+We didn't specify an algorithm so Groot will choose one for us (probably MUSCLE). When complete, you can checkout your alignments by entering `print.alignments`:
 
 ```bash
 $   print.alignments
 ```
 
-Everything looks okay, so invoke tree-generation:
+Everything looks okay, so invoke tree-generation. For the sake of this tutorial, we'll specify a Neighbour Joining tree, so we don't have to sit around all day.
 
 ```bash
-$   make.tree
+$   make.tree neighbor.joining
 ```
 
-Tree generation can take a while, and we probably don't want to do it again, so maker sure to save our model:
+In many circumstances tree generation can take a while, and you probably don't want to do it again if something goes wrong, so make sure to save our model:
 
 ```bash
 $   save
 
-#   ECO file.save
-    PRG  │ file_save
+#   PRG  │ file_save
     PRG  │ -Saving file
     INF Saved model: /Users/martinrusilowicz/.intermake-data/groot/sessions/tri.groot
 ```
 
-When all the trees are generated, we'll want to get a consensus.
-Groot uses its own internal consensus generator.
-We can zoom to the NRFG by using the `create.nrfg` command,  
-
-```bash
-$   make.consensus
-```
-
 This finally leaves us in a position to create the NRFG.
 
-Note that the above commands all execute external tools, by default Mᴜꜱᴄʟᴇ, Rᴀxᴍʟ and Pᴀᴜᴩ respectively, although all of these can be changed.
 
 Creating the NRFG
 -----------------
 
 We have a tree for each component now, but this isn't a graph, and the information in each tree probably conflicts.
-We can use "splits" to resolve the conflicts.
+
+Groot has two methods of resolving this problem.
+
+The first is by splitting and regrowing the tree, the second is by using peer reviewed tools such as CLANN. The first case can be useful in scrutinising your trees, but you almost certainly want to use the latter for your final NRFG.
+  
 A "split" defines a tree by what appears on the left and right of its edges.
-This provides a quick and easy method of generating a consensus between our trees.
 Generate the list of all the possible splits:
 
 ```bash
-$   make.splits
+$   create.splits
 ``` 
 
 And then find out which ones receive majority support in our trees:
 
 ```bash
-$   make.consensus
+$   create.consensus
 ```
 
-We set the split data aside for the moment and generate the gene "subsets", each subset is a portion of the original trees that is uncontaminated by a fusion event.
+You can use `print.consensus` to check out your results.
+
+Set the split data aside for the moment and generate the gene "subsets", each subset is a portion of the original trees that is uncontaminated by a fusion event.
 
 ```bash
-$   make.subsets
+$   create.subsets
 ```
 
-Now we can combine these subsets with our consensus splits to make subgraphs - graphs of each subset that use only splits supported by our majority consensus.
+Now we can combine these subsets with our consensus splits to make subgraphs - graphs of each subset that use only splits supported by our majority consensus. We'll use CLANN for this like we talked about earlier.
 
 ```bash
-$   make.subgraphs
+$   create.subgraphs clann
 ```  
 
 We can then create the NRFG by stitching these subgraphs back together.
 
 ```bash
-$   make.nrfg
+$   create.nrfg
 ```
 
-Good times. But the NRFG is not yet complete. Stitching probably resulted in some trailing ends, we need to trim these.
+Good good.
+But the NRFG is not yet complete.
+Stitching probably resulted in some trailing ends here and there, we need to trim these.
 
 ```bash
-$   make.clean
+$   create.clean
 ```
 
 Finally, we can check the NRFG for errors.
+If we have a graph with which to compare we could specify one here to see how things match up, but in most cases we won't, so just run:  
 
 ```bash
-$   make.checks
+$   create.checks
 ```
 
 And we're all done!
 
-Now you've done the tutorial, try using the GUI - it's a lot easier to check the workflow is progressing smoothly and you can view the trees properly!
+To print out your final graph:
+
+```bash
+$   print.tree nrfg.clean cyjs open
+```
+
+This says:
+* `print.tree` print the tree
+* called `nrfg.clean`
+* using Cytoscape.JS (`cyjs`)
+* and `open` the result using the default browser
+
+You can also use `print.report` to print out your final summary in much the same way.
+
+```
+$   print.report final.report open
+```
+
+We didn't specify anything to compare to and our graph, being constructed from the sample data, should't have any problems, so our report will be pretty short.
+
+Now you've done the tutorial, try using the GUI - it's a lot easier to check the workflow is progressing smoothly and you can view the trees and reports inline!
 
 
 Program architecture
@@ -400,7 +475,7 @@ Program architecture
 Gʀᴏᴏᴛ uses a simple MVC-like architecture:
 
 * The model:
-    * The dynamic model (`data/lego_model.py`):
+    * The dynamic model (`data`):
         * Sequences
         * Subsequences
         * Edges
@@ -411,20 +486,24 @@ Gʀᴏᴏᴛ uses a simple MVC-like architecture:
         * Alignment algorithms
         * Supertree algorithms
         * etc. 
-* The controller (`extensions/`)
-* The views (`extensions`):
-    * CLI (Iɴᴛᴇʀᴍᴀᴋᴇ: `command_line.py`)
-    * GUI (`frontends/gui/frm_main.py`)
+* The controller (`extensions`)
+* The view:
+    * CLI (Iɴᴛᴇʀᴍᴀᴋᴇ library)
+    * GUI (`frontends/gui`)
     
 Extending
 ---------
 
 You can incorporate your own extensions into Groot.
 
-### Algorithms
+### Creating the modules ###
 
-To register algorithms use:
+Algorithms should be written into a Python package or module.
+
+Inside your modules, register Groot algorithms using the `@xyz.register` decorators:
 ```python
+from groot import tree_algorithms
+
 @tree_algorithms.register()
 def my_algorithm( . . . )
     . . .
@@ -432,98 +511,64 @@ def my_algorithm( . . . )
 
 The `groot_ex` package contains the default set of algorithms, you can use this as a template for your own.
 
-
-### Commands
-
-To register new Groot commands.
+New Groot commands can also be registered using Intermake.
 ```python
+from intermake import command
+
 @command()
 def my_command( . . . ):
     . . .
 ```
 
-
-The groot core commands can be found in the main `groot` package, under the `extensions` subfolder.
+The groot core commands can be found in the main `groot` package, inside the `extensions` subfolder.
 See the Intermake documentation for more details.
 
-### Registering
+### Registering the modules ###
 
-To add your own algorithm package to groot use the `import` command, e.g. from the CLI:
+Once created, you need to register your package with Groot.
+From the BASH command line:
 
 ```
-import my_algorithms +persist
+groot import my_algorithms +persist
 ```
 
-You can also call this statement from Python, allowing your package to register itself with Groot.
-    
-
-Troubleshooting
----------------
-
-***Please see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section***
-
-### Screen goes black, images or windows disappear ###
-
-Go to `Windows` -> `Preferences` -> `View` and turn the MDI mode to `basic`.
+This says:
+* Start `groot`, `import` the module `my_algorithms` and `+persist` this setting for the next time I start Groot.
 
 
 Image credits
 -------------
 
-Freepik
-Smashicons
-Google
+Icons by:
+
+* Good Ware
+* Freepik
+* Maxim Basinski
+* Those Icons
+* Pixel perfect
+* Google
+* Smash Icons
+
+Available at [flaticon.com](http://www.flaticon.com).
+
 
 Installation from source
 ------------------------
 
-You will need to clone the following repositories using Git:
+Groot can be cloned using and installed in development mode:
 
 ```bash
-git clone https://www.bitbucket.org/mjr129/intermake.git
-git clone https://www.bitbucket.org/mjr129/mhelper.git
-git clone https://www.bitbucket.org/mjr129/editorium.git
-git clone https://www.bitbucket.org/mjr129/stringcoercion.git
 git clone https://www.bitbucket.org/mjr129/groot.git
-```
-
-_...or, if not using Git, download the source directly from Bitbucket, e.g. https://www.bitbucket.org/mjr129/intermake_
-
-Install the root of each repository in development mode via:
-
-```bash
+cd groot
 pip install -e .
 ```
 
-_...or, if not using Pip, add the repository root to your `PYTHONPATH` environment variable._
-
-You will also need to download and install the `requirements.txt` listed in each repository:
-
-```bash
-pip install -r requirements.txt 
-```
-
-_...or, if not using Pip, check the `requirements.txt` file and download and install the packages from their respective authors manually._
-
-For convenience, you can create an alias for Gʀᴏᴏᴛ by adding the following to your `~/.bash_profile` on Uɴɪx:
-
-```bash
-$   alias groot="python -m groot"
-```
-
-_...or, for Wɪɴᴅᴏᴡꜱ, create an executable `.bat` file on your Desktop:_
-
-```bash
-$   python -m groot %*
-```
-
-You should then be able to run the projects as normal.
+You will still require the other prerequisites!
 
 Terminology
 -----------
 
 List of terms used in Groot. 
-Legacy terms and aliases are listed on the right because some of these are still used in the Groot source code (if not shown to the user in the program).
 
 | Term          | Description                                                                                   |
 |---------------|-----------------------------------------------------------------------------------------------|
@@ -542,18 +587,18 @@ Legacy terms and aliases are listed on the right because some of these are still
 | Subsets       | The predecessors to the subgraphs - a set of genes free of fusion events                      |
 | Split         | An edge of a tree represented as the left and right leaf-sets                                 |
 
-* Data may be conventional or imputed, concrete or abstract, Groot doesn't care.
+* Data may be conventional or imputed, concrete or abstract, but Groot doesn't care.
 
 Data formats
 ------------
 
 Groot endeavours to use one, simple, popular, standard format for each data type.
-The following formats are supported:
+The following formats are thus used:
 
 * Sequences: FASTA
 * Similarities: BLAST format 6 TSV
 * Trees: Newick
-* Networks: CSV
+* Networks: CSV edge table
 * Scripts: Python
 * Internal data: Pickle
 
@@ -561,8 +606,10 @@ The Groot test suite
 --------------------
 
 Groot comes with the ability to generate random test cases.
-To create and run them, use `groot create.test n`, where `n` specifies the test case (denoted by the expected number of components).
-All tests trees should be recoverable by Groot using the default settings, with the exclusion of the specific instances of test case 4, noted below.
+
+To create and run tests, use `groot create.test n`, where `n` specifies the test case (denoted by the expected number of components).
+
+All tests trees should be recoverable (mutations permitting) by Groot using the default settings, with the exclusion of the specific instances of test case 4, noted below.
 
 ### Case 1: Single fusion ###
 ```
@@ -620,22 +667,35 @@ As the test cases are randomly generated, this may result in _a1=a2_ and/or _b1=
  E
 ```
  
+Troubleshooting
+---------------
 
-Handling the spaceship and the triangle
---------------------------------------
+***Please also see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section for technical issues ***
+
+### Screen goes black, images or windows disappear ###
+
+Groot has been coded for multiple platforms, however, one or more settings may need changing for your particular platform. 
+* In the GUI, go to `Windows` -> `Preferences` and change the following settings:
+    * Set the _MDI mode_ to **basic**.
+    * Set _OpenGL_ **off**
+    * Set _shared contexts_ **off**.
+    * Turn the inbuilt browser **off**
+* Restart GROOT
+
+### The spaceship and the triangle ###
 
 There are a couple of cases that Groot will suffer from.
 
-The first is the spaceship (Figure 1, below) which is a specific variant of Case 4 (above) in which A1=A2 and B1=B2.
-If two fusion events (C and D) occur at the same time, this isn't distinguishable from the normal case of one fusion event (X) that later diverges into two lineages (C and D) (Figure 2).
-However, if you know (or wish to pretend) that this is the case, you should specify the Groot components manually, rather than letting Groot infer them.
+The first is the spaceship (Figure 1, below) which is a specific variant of Case 4 (above) in which _A1=A2_ and _B1=B2_.
+If two fusion events (_C_ and _D_) occur at the same time, this isn't distinguishable from the normal case of one fusion event (_X_) that later diverges into two lineages (_C_ and _D_) (Figure 2).
+However, if you know (or wish to pretend) that this is the case, you can specify the Groot components manually, rather than letting Groot infer them.
 
-The second problematic case is the triangle (Figure 3), which is also a specific variant of Case 4 in which A1=A2 and B1≠B2.
+The second problematic case is the triangle (Figure 3), which is also a specific variant of Case 4 in which _A1=A2_ and _B1≠B2_.
 This scenario _initially_ looks like the spaceship (Figure 1).
-However, things become apparent once Groot runs down to the NRFG stage, since the fusion will be malformed (Figure 4), with 3 origins, one output ("CD") but only 2 input components (A, B).
+However, things become apparent once Groot runs down to the NRFG stage, since the fusion will be malformed (Figure 4), with 3 origins, one output (_CD_) but only 2 input components (_A_, _B_).
 At the present time, Groot doesn't remedy this situation automatically and you'll need to rectify the problem yourself.
-From your Figure-4-like result, write down or export the sequences in each of your lineages A, B, C and D.
-Then, go back to the component stage and specify your components manually: A, B, C and D.
+From your Figure-4-like result, write down or export the sequences in each of your lineages _A_, _B_, _C_ and _D_.
+Then, go back to the component stage and specify your components manually: _A_, _B_, _C_ and _D_.
 
 ```
 A───────┬────>

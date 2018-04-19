@@ -51,7 +51,7 @@ class AlgorithmCollection( Generic[T] ):
         return decorator
     
     
-    @property
+    
     def keys( self ):
         return self.algorithms.keys()
     
@@ -64,6 +64,9 @@ class AlgorithmCollection( Generic[T] ):
             raise ValueError( "There is no such {} algorithm as «{}».".format( self.name, item ) )
         
         return self.algorithms[item]
+    
+    def items( self ):
+        return self.algorithms.items() 
     
     
     def __iter__( self ):

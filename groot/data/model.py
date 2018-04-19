@@ -1,10 +1,9 @@
-from typing import List, FrozenSet, Sequence, Iterable, Iterator
+from typing import List, FrozenSet, Sequence, Iterable, Iterator, Dict, Tuple
 from intermake.engine.environment import MENV, IVisualisable, UiInfo, EColour
-from intermake_qt import resources as intermake_resources
 from mhelper import string_helper, file_helper as FileHelper, NotFoundError
 
 from groot.constants import LegoStage
-from groot.data.model_meta import ModelStatus, LegoViewOptions
+from groot.data.model_meta import ModelStatus
 from groot.data.model_interfaces import ESiteType
 from groot.data.model_core import FusionGraph, Subgraph, LegoReport, LegoFormation, LegoPregraph, LegoSplit, LegoSubset, LegoPoint, LegoSequence
 from groot.data.model_collections import LegoUserGraphCollection, LegoSequenceCollection, LegoEdgeCollection, LegoFusionEventCollection, LegoUserDomainCollection, LegoComponentCollection
@@ -22,27 +21,31 @@ class LegoModel( IVisualisable ):
         Creates a new model with no data
         Use the `import_*` functions to add data from a file.
         """
-        self.__incremental_id = 0
+        # Classic model data
         self.sequences = LegoSequenceCollection( self )
-        self.components = LegoComponentCollection( self )
         self.edges = LegoEdgeCollection( self )
-        self.comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
-        self.__seq_type = ESiteType.UNKNOWN
-        self.file_name = None
+        self.components = LegoComponentCollection( self )
         self.fusion_events = LegoFusionEventCollection()
-        self.ui_options = LegoViewOptions()
-        self.user_domains = LegoUserDomainCollection( self )
-        self.user_graphs = LegoUserGraphCollection( self )
-        self.user_reports: List[LegoReport] = []
         self.splits: FrozenSet[LegoSplit] = frozenset()
         self.consensus: FrozenSet[LegoSplit] = frozenset()
-        self.fusion_graph_unclean: FusionGraph = None
-        self.fusion_graph_clean: FusionGraph = None
-        self.report: LegoReport = None
         self.subsets: FrozenSet[LegoSubset] = frozenset()
         self.subgraphs: Sequence[Subgraph] = tuple()
         self.subgraphs_sources: Sequence[int] = tuple()
         self.subgraphs_destinations: Sequence[int] = tuple()
+        self.fusion_graph_unclean: FusionGraph = None
+        self.fusion_graph_clean: FusionGraph = None
+        self.report: LegoReport = None
+        
+        # Metadata
+        self.file_name = None
+        self.__seq_type = ESiteType.UNKNOWN
+        self.lego_domain_positions: Dict[Tuple[int, int], Tuple[int, int]] = { }
+        
+        # User-data
+        self.user_domains = LegoUserDomainCollection( self )
+        self.user_graphs = LegoUserGraphCollection( self )
+        self.user_reports: List[LegoReport] = []
+        self.user_comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
     
     
     def iter_pregraphs( self ) -> Iterable[LegoPregraph]:
@@ -75,18 +78,17 @@ class LegoModel( IVisualisable ):
                        type_name = "Model",
                        value = "{} sequences".format( len( self.sequences ) ),
                        colour = EColour.YELLOW,
-                       icon = intermake_resources.folder,
+                       icon = ":/intermake/folder.svg",
                        extra = { "documentation"         : self.__doc__,
                                  "graphs"                : list( self.iter_graphs() ),
         
                                  "sequences"             : self.sequences,
                                  "components"            : self.components,
                                  "edges"                 : self.edges,
-                                 "comments"              : self.comments,
+                                 "comments"              : self.user_comments,
                                  "site_type"             : self.site_type,
                                  "file_name"             : self.file_name,
                                  "fusion_events"         : self.fusion_events,
-                                 "ui_options"            : self.ui_options,
                                  "user_domains"          : self.user_domains,
                                  "user_graphs"           : self.user_graphs,
                                  "splits"                : self.splits,
@@ -151,14 +153,6 @@ class LegoModel( IVisualisable ):
         return s
     
     
-    def _get_incremental_id( self ) -> int:
-        """
-        Obtains a unique identifier.
-        """
-        self.__incremental_id += 1
-        return self.__incremental_id
-    
-    
     def _has_data( self ) -> bool:
         return bool( self.sequences )
     
@@ -175,7 +169,7 @@ class LegoModel( IVisualisable ):
         id = LegoSequence.read_legacy_accession( name )
         
         for x in self.sequences:
-            if x.id == id:
+            if x.index == id:
                 return x
         
         raise NotFoundError( "There is no sequence with the internal ID «{}».".format( id ) )

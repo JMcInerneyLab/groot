@@ -1,9 +1,9 @@
-from typing import Iterable, List, Set, Optional
-from mgraph import MNode, MGraph
+from typing import Iterable, List, Set, Optional, cast
+from mgraph import MNode, MGraph, analysing, importing, exporting
 from groot.data.model_interfaces import EPosition, ILegoNode
 from groot.data.model_core import LegoFormation, LegoSequence, LegoPoint
 from groot.data.model import LegoModel
-from mhelper import NotFoundError
+from mhelper import NotFoundError, ByRef
 
 
 def get_sequence_data( nodes: Iterable[MNode] ) -> Set[LegoSequence]:
@@ -101,3 +101,57 @@ def is_root( node: MNode ):
         return True
     
     return False
+
+def export_newick( graph: MGraph ):
+    """
+    Exports Newick into a format suitable for use with other programs.
+    
+    * We use legacy accessions to cope with programs still relying on the old PHYLIP format, which limits gene names
+    * We pull fusion clades into leaves to cope with programs that don't account for named clades
+    * We don't label the other clades
+    """
+    # Declade fusion nodes
+    nodes = analysing.realise_node_predicate_as_set( graph, is_fusion_like )
+    
+    for node in nodes:
+        node.add_child( node.data )
+        node.data = None
+    
+    # Ensure the root of the graph is not something weird
+    if not is_clade( graph.root ):
+        child = graph.root.child
+        assert is_clade( child )
+        child.make_root()
+    
+    # Write newick
+    return exporting.export_newick( graph,
+                                    fnode = lambda x: x.data.legacy_accession if x.data else "",
+                                    internal = False )
+
+
+def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None, reclade: bool = True ) -> MGraph:
+    """
+    Imports a newick string as an MGraph object.
+    
+    The format is expected to be the same as that produced by `export_newick`, but we make accommodations
+    for additional information programs might have added, such as clade names and branch lengths.
+    """
+    # Read newick
+    graph: MGraph = importing.import_newick( newick,
+                                             root_ref = root_ref )
+    
+    # Convert node names back to references
+    for node in graph.nodes:
+        node.data = import_leaf_reference( cast( str, node.data ),
+                                                      model,
+                                                      allow_empty = True )
+    
+    # Reclade fusion nodes
+    if reclade:
+        fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+        
+        for node in fusion_nodes:
+            node.parent.data = node.data
+            node.remove_node()
+    
+    return graph

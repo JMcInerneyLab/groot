@@ -3,7 +3,7 @@ import warnings
 from typing import Tuple, Optional, List, Iterable, FrozenSet, cast, Any, Set
 
 from groot.data.model_interfaces import EPosition, INamed, IHasFasta, INamedGraph, ILegoNode
-from groot.frontends.gui.forms.resources import resources as groot_resources
+from groot import resources as groot_resources
 from intermake.engine.environment import MENV
 from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable
 from intermake_qt.forms.designer.resource_files import resources as intermake_resources
@@ -12,6 +12,7 @@ from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array
 
 
 _LegoModel_ = "LegoModel"
+
 
 class LegoEdge( IHasFasta ):
     """
@@ -310,8 +311,8 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
     """
     Protein (or DNA) sequence
     
-    :attr id:           Internal ID. An arbitrary number guaranteed to be unique within the model.
-    :attr accession:    Database accession. Note that this can't look like an accession produced by the `legacy_accession` property.
+    :attr index:        Index within model.
+    :attr accession:    Database accession. Note that this can't look like an accession produced by any of the `legacy_accession` functions.
     :attr model:        Owning model.
     :attr site_array:   Site data. This can be `None` before the data is loaded in. The length must match `length`.
     :attr comments:     Comments on the sequence.
@@ -323,7 +324,7 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
     _LEGACY_FORMAT = "GrtS{}"
     
     
-    def __init__( self, model: _LegoModel_, accession: str, id: int ) -> None:
+    def __init__( self, model: _LegoModel_, accession: str, index: int ) -> None:
         """
         CONSTRUCTOR
         See class attributes for parameter descriptions.
@@ -331,13 +332,16 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
         if LegoSequence.is_legacy_accession( accession ):
             raise ValueError( "You have a sequence with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using accessions that only contain numbers prefixed by an 'S'.".format( accession, MENV.name ) )
         
-        self.id: int = id
+        self.index: int = index
         self.accession: str = accession  # Database accession (ID)
         self.model: _LegoModel_ = model
         self.site_array: str = None
-        self.comments: List[str] = []
         self.length = 1
         self.position = EPosition.NONE
+        
+    @property
+    def is_outgroup( self ):
+        return self.position == EPosition.OUTGROUP
     
     
     def on_get_name( self ):
@@ -389,7 +393,7 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
         We make an accession for compatibility with programs that still use Phylip format.
         We can't just use a number because some programs mistake this for a line count.
         """
-        return self._LEGACY_FORMAT.format( self.id )
+        return self._LEGACY_FORMAT.format( self.index )
     
     
     def get_totality( self ) -> LegoSubsequence:
@@ -408,7 +412,7 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
                        type_name = "Sequence",
                        value = "{} sites".format( self.length ),
                        colour = EColour.BLUE,
-                       icon = intermake_resources.folder,
+                       icon = groot_resources.black_gene,
                        extra = { "id"       : self.legacy_accession,
                                  "length"   : self.length,
                                  "accession": self.accession,
@@ -422,14 +426,6 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
         OVERRIDE 
         """
         return "G{}".format( self.accession or self.index )
-    
-    
-    @property
-    def index( self ) -> int:
-        """
-        Gets the index of this sequence within the model
-        """
-        return self.model.sequences.index( self )
     
     
     def __repr__( self ) -> str:
@@ -514,7 +510,7 @@ class LegoComponent( INamed, IVisualisable ):
     """
     
     
-    def __init__( self, model: _LegoModel_, index: int, major_sequences: Tuple[LegoSequence] ):
+    def __init__( self, model: _LegoModel_, index: int, major_sequences: Tuple[LegoSequence, ...] ):
         """
         CONSTRUCTOR
         See class attributes for parameter descriptions.
@@ -635,7 +631,7 @@ class LegoComponent( INamed, IVisualisable ):
                        type_name = "Component",
                        value = "{} sequences".format( array_helper.count( self.major_sequences ) ),
                        colour = EColour.RED,
-                       icon = intermake_resources.folder,
+                       icon = groot_resources.black_major,
                        extra = { "index"      : self.index,
                                  "major"      : self.major_sequences,
                                  "minor_s"    : self.minor_sequences,
@@ -688,6 +684,10 @@ class LegoComponent( INamed, IVisualisable ):
                     return subsequence
         
         raise NotFoundError( "Sequence «{}» not in component «{}».".format( sequence, self ) )
+    
+    
+    def has_overlap( self, d: LegoSubsequence ):
+        return any( d.has_overlap( ss ) for ss in self.minor_subsequences )
 
 
 class FusionGraph( INamedGraph ):
@@ -905,7 +905,7 @@ class LegoFusion( INamed, IVisualisable ):
     
     
     def on_get_name( self ):
-        return "F" + str( self.get_accid() )
+        return "F." + str( self.get_accid() )
     
     
     def __init__( self, index: int, component_a: LegoComponent, component_b: LegoComponent, intersections: Set[LegoComponent] ) -> None:
@@ -971,8 +971,7 @@ class LegoFormation( INamed, IVisualisable, ILegoNode ):
     
     
     def get_accid( self ) -> str:
-        return string_helper.format_array( self.pertinent_inner )
-        # return str( self.index )
+        return str( self.index )
     
     
     def __str__( self ):

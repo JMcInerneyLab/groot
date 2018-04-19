@@ -1,0 +1,1306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1432</width>
+    <height>1158</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>8</number>
+   </property>
+   <property name="topMargin">
+    <number>8</number>
+   </property>
+   <property name="rightMargin">
+    <number>8</number>
+   </property>
+   <property name="bottomMargin">
+    <number>8</number>
+   </property>
+   <item row="0" column="1">
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>7</number>
+     </property>
+     <widget class="QWidget" name="PAGE_BROWSER">
+      <property name="page_title" stdset="0">
+       <string>Hypertext browser</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Graph browser</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_2">
+         <property name="text">
+          <string>Choose how to view the graphs.
+Normally Groot will ask you, but you can select a default preference here.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_TREE_ASK">
+         <property name="text">
+          <string>Ask every time</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_TREE_INBUILT">
+         <property name="text">
+          <string>Only use the inbult browser</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_TREE_SYSTEM">
+         <property name="text">
+          <string>Only use the system browser</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_STARTUP">
+      <property name="page_title" stdset="0">
+       <string>Startup</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Startup</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_3">
+         <property name="text">
+          <string>Choose what to display when Groot starts.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_STARTUP_MESSAGE">
+         <property name="text">
+          <string>Show the startup message</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_STARTUP_WORKFLOW">
+         <property name="text">
+          <string>Show the workflow</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_STARTUP_SAMPLES">
+         <property name="text">
+          <string>Show the open file dialogue</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_STARTUP_NOTHING">
+         <property name="text">
+          <string>Don't show anything</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_MDIVIEW">
+      <property name="page_title" stdset="0">
+       <string>Document view</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>View</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_4">
+         <property name="text">
+          <string>Select how Groot's windows are displayed.
+Note that MDI and TDI may not be supported or work correctly on all platforms.
+Changes to this setting will only take effect when the GUI is restarted.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_WIN_MDI">
+         <property name="toolTip">
+          <string>Multiple Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+         </property>
+         <property name="text">
+          <string>MDI</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_WIN_TDI">
+         <property name="toolTip">
+          <string>Tabbed Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+         </property>
+         <property name="text">
+          <string>TDI</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_WIN_NORMAL">
+         <property name="toolTip">
+          <string>Display the windows normally.</string>
+         </property>
+         <property name="text">
+          <string>Basic</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>973</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_JAVASCRIPT">
+      <property name="page_title" stdset="0">
+       <string>Javascript</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Javascript</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_7">
+         <property name="text">
+          <string>Select the default Javascript library used to display graphs.
+If you don't select one then Groot's static display will be used (not recommended).</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_JS_VIS">
+         <property name="toolTip">
+          <string>Multiple Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+         </property>
+         <property name="text">
+          <string>Vis.js</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_JS_CY">
+         <property name="toolTip">
+          <string>Tabbed Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+         </property>
+         <property name="text">
+          <string>Cytoscape.js</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="RAD_JS_NONE">
+         <property name="toolTip">
+          <string>Tabbed Document Interface.
+Some platforms may not support this mode or may display the windows incorrectly.</string>
+         </property>
+         <property name="text">
+          <string>None</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>989</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_TOOLBAR">
+      <property name="page_title" stdset="0">
+       <string>Toolbars</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Toolbar</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_6">
+         <property name="text">
+          <string>Select what toolbars are displayed.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_FILE">
+         <property name="text">
+          <string>File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_VIS">
+         <property name="text">
+          <string>Visualisers</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHKTOOL_WORKFLOW">
+         <property name="text">
+          <string>Workflow</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>1002</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_MISCELLANEOUS">
+      <property name="page_title" stdset="0">
+       <string>Miscellaneous</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Micellaneous</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_OPENGL">
+         <property name="text">
+          <string>OpenGL</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_SHARE_CONTEXTS">
+         <property name="text">
+          <string>Share contexts</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BTN_CLEAR_RECENT">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>192</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>192</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Clear recent files history</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBL_VISJS_WARNING_5">
+         <property name="text">
+          <string>Intermake handles algorithm call and response.
+Settings such as whether to keep windows open after running an algorithm can be found here.
+You can also explore the Groot model through Intermake.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>Intermake</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BTN_INTERMAKE">
+         <property name="minimumSize">
+          <size>
+           <width>192</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>192</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Intermake configuration</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>897</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_LEGO_VIEW">
+      <property name="page_title" stdset="0">
+       <string>Lego viewing</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Positions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Components</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="1">
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>907</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Piano rolls</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Gene names</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QFrame" name="horizontalFrame_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_PIANO_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_PIANO_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_PIANO_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>When selected</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QFrame" name="horizontalFrame_4">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_POS_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_POS_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_POS_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>When selected</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QFrame" name="horizontalFrame_9">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_COMPONENTS_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_COMPONENTS_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_COMPONENTS_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>When selected</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QFrame" name="horizontalFrame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_NAME_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_NAME_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_NAME_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>When selected</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Lego Diagram Viewing</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="QLabel" name="label_24">
+         <property name="text">
+          <string>Select what's visible on the diagrams.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_LEGO_EDIT">
+      <property name="page_title" stdset="0">
+       <string>Lego editing</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Movement</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QFrame" name="horizontalFrame_5">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_XSNAP_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_XSNAP_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_XSNAP_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Without ᴄᴛʀʟ</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Y-snap</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>X-snap</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="6" column="1">
+        <widget class="QFrame" name="horizontalFrame_6">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_YSNAP_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_YSNAP_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_YSNAP_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Without ᴀʟᴛ</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QFrame" name="horizontalFrame_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>8</number>
+          </property>
+          <property name="topMargin">
+           <number>8</number>
+          </property>
+          <property name="rightMargin">
+           <number>8</number>
+          </property>
+          <property name="bottomMargin">
+           <number>8</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="RAD_MOVE_YES">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Always</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_MOVE_NO">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="RAD_MOVE_IND">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Double click toggles</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="QLabel" name="label_25">
+         <property name="text">
+          <string>Select how you'll edit your diagrams.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Lego Diagram Editing</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QTreeWidget" name="LST_PAGES">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+     <property name="itemsExpandable">
+      <bool>false</bool>
+     </property>
+     <attribute name="headerVisible">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

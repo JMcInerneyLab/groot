@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1016</width>
+    <height>604</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/**
+    PURPOSE:
+        This is the default style-sheet used by all Intermake dialogues.
+        It needs to be processed by intermake_gui.py before it can be used. 
+        It can be retrieved in processed form by the `intermake_gui.default_style_sheet()` function.
+
+    USAGE:    
+        You can replace this stylesheet with your own.
+        If you blank the contents of this stylesheet, the OSs default controls will be used.
+        If you delete this stylesheet, the program will crash.
+        
+    EXTENSIONS:
+        Normally not permitted in Qt, the following values are read through Intermake.
+            * #DEFINE X Y                    - replaces all text `X` with `Y`
+            * #WHEN X Y Z                    - only executes the following lines if the current
+                                               section is any of `X` `Y` or `Z`.
+                                               The section is specified when the user selects a
+                                               stylesheet.
+            * `QApplication.style`           - one of the Qt styles
+            * `QApplication.small_icon_size` - the menu icon size, permitted only if `style` is set
+            * `QMdiArea.background`          - colour of the Mdi area
+
+    DETAILS:
+        Follow standard Qt stylesheet guidelines.
+        
+        The `:root` section defines constants that may be used elsewhere. These constants are
+        substituted during the the processing stage and the `:root` section is removed.
+        
+        Intermake controls may have a string property named &quot;theme&quot; assigned to to certain widgets.
+        This specifies that a unique appearance for the widget is intended:
+        
+        WIDGET        | THEME             | APPEARANCE (GUIDE)            | USAGE (GUIDE)
+        --------------+-------------------+-------------------------------+-------------------------------
+        QLabel        | heading           | border, big, bold             | section titles 
+        QLabel        | subheading        | border, big, bold             | section titles 
+        QTextEdit     | console           | monospaced, black background  | code, console output
+        QPushButton   | completed         |                               |
+        QPushButton   | cancel            | red                           | abort button
+        QFrame        | header            | border                        | section titles
+        QToolButton   | listbutton        | condensed                     | buttons in lists
+        QLabel        | helpbox           | tooltip background            | help labels
+        QLabel        | icon              | background suitable for image | label showing an icon
+        QLabel        | warning           | yellow background, red text   | warning messages     
+        QMdiArea      | empty             | darker                        | when MDI area has no windows
+*/
+
+
+
+QToolButton[style=&quot;listbutton&quot;]
+{
+    background   : #40C0FF;
+    border-style : outset;
+    border-width : 2px;
+    border-color : transparent;
+}
+
+QToolButton[style=&quot;listbutton&quot;]::hover
+{
+    background   : #B0D5E8;
+    border-color : blue;
+}
+
+QToolButton[style=&quot;listbutton&quot;]::pressed
+{
+    background   : #0040C0;
+    border-style : inset;
+}
+
+QLabel[style=&quot;icon&quot;]
+{
+    background    : #EEEEEE;
+    border-radius : 8px;
+}
+
+QFrame[style=&quot;title&quot;]
+{
+    margin-top     : 16px;
+    margin-bottom  : 4px;
+    margin-left    : 0px;
+    margin-right   : 0px;
+    border-radius  : 0px;
+    border-bottom  : 2px solid silver;
+    border-left    : none;
+    border-right   : none;
+    border-top     : none;
+    padding-top    : 2px;
+    padding-bottom : 2px;
+    padding-left   : -4px;
+    padding-right  : 0px;
+    color          : black;
+    font-size      : 18px;
+}
+
+QLabel[style=&quot;title&quot;], QFrame[style=&quot;title&quot;]
+{
+    background    : #EEEEEE;
+    border-radius : 4px;
+    margin        : 2px;
+    padding       : 2px;
+    color         : black;
+    font-size     : 18px;
+}
+
+QLabel[style=&quot;title-embeded&quot;]
+{
+    background : #EEEEEE;
+    color      : black;
+    font-size  : 18px;
+}
+
+
+
+
+QLabel[style=&quot;helpbox&quot;]
+{
+    background    : transparent;
+    color         : steelblue;
+    padding       : 2px;
+    border-radius : 4px;
+}
+
+QLabel[style=&quot;subheading&quot;]
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+QLabel[style=&quot;heading&quot;], QPushButton[style=&quot;heading&quot;]
+{
+    font-weight: bold;
+    border-bottom  : 1px solid #404040;
+    border-left    : none;
+    border-right   : none;
+    border-top     : none;
+    color: #404040;
+}
+
+
+QTextEdit[style=&quot;console&quot;]
+{
+    font-family: &quot;Consolas&quot;, monospace;
+    background : black;
+    color      : white;
+}
+
+QTextEdit[style=&quot;monospaced&quot;]
+{
+    font-family: &quot;Consolas&quot;, monospace;
+}
+
+QPushButton[style=&quot;completed&quot;]
+{
+    background    : #00C080;
+    border-color  : #00C080; 
+}
+
+QPushButton[style=&quot;cancel&quot;]
+{
+    background    : #C00000;
+    color         : white;
+    padding       : 8px;
+    border-color  : white;
+    border-width  : 1px;
+    border-radius : 8px;
+}
+
+QMdiArea[style=&quot;empty&quot;]
+{
+    background : #7DA3ED;
+}
+
+QLabel[style=&quot;warning&quot;]
+{
+    background       : #FFFFD0;
+    padding          : 8px;
+    border-radius    : 8px;
+    image            : url(&quot;:/warning.svg&quot;);
+    image-position   : left;
+    qproperty-indent : 24;
+}
+
+QToolButton[style=&quot;dropdown&quot;]
+{
+    qproperty-toolButtonStyle : ToolButtonTextBesideIcon;
+    qproperty-icon            : url(:/dropdown.svg);
+}
+
+QToolButton[style=&quot;refresh&quot;]
+{
+    qproperty-toolButtonStyle : ToolButtonTextBesideIcon;
+    qproperty-icon            : url(:/refresh.svg);
+}
+</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Groot Wizard</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_WRN_ACTIVE">
+     <property name="text">
+      <string>The wizard is already active. You can control it from the &lt;a href=&quot;action:view_workflow&quot;&gt;workflow&lt;/a&gt; dialogue.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="LBL_WRN_MODEL">
+     <property name="text">
+      <string>You already have an active model. Start a &lt;a href=&quot;action:new_model&quot;&gt;new model&lt;/a&gt; before beginning the wizard.</string>
+     </property>
+     <property name="style" stdset="0">
+      <string>warning</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="currentIndex">
+      <number>5</number>
+     </property>
+     <widget class="QWidget" name="PAGE_INTRO">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="LBL_HELP_TITLE">
+         <property name="text">
+          <string>The wizard performs the complete Groot workflow at once. If you'd like to play by yourself, or change advanced settings, consider using the &lt;a href=&quot;action:view_workflow&quot;&gt;workflow&lt;/a&gt; instead.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_NAME">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>History</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="label_12">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Already have a set of preferred settings? Select them here.</string>
+           </property>
+           <property name="style" stdset="0">
+            <string>helpbox</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="BTN_RECENT">
+           <property name="text">
+            <string>Load</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="style" stdset="0">
+            <string>dropdown</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="BTN_SAVE">
+           <property name="text">
+            <string>Save</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Name</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Give your session a name.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="TXT_FILENAME"/>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_SAVE">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Save to disk throughout the analysis</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_DATA">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Data</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Specify at least one FASTA file and a corresponding BLAST file.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="2" column="1">
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="BTN_REMOVE_FILE">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="BTN_ADD_FILE">
+           <property name="text">
+            <string>Add</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="BTN_SAMPLES">
+           <property name="text">
+            <string>Sample</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="style" stdset="0">
+            <string>dropdown</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" rowspan="4">
+          <widget class="QTreeWidget" name="LST_FILES">
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string notr="true">1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_METHODS">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Methods and parameters</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Choose your tools.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="TXT_OUTGROUPS"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Outgroups</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_20">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Component tolerance</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="SPN_COMPONENT_TOLERANCE">
+           <property name="minimumSize">
+            <size>
+             <width>128</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_26">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Supertree algorithm</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="CMB_SUPERTREE_METHOD">
+           <property name="minimumSize">
+            <size>
+             <width>128</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Alignment algorithm</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="CMB_ALIGNMENT_METHOD">
+           <property name="minimumSize">
+            <size>
+             <width>128</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Tree algorithm</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="CMB_TREE_METHOD">
+           <property name="minimumSize">
+            <size>
+             <width>128</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_PAUSE">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_25">
+         <property name="text">
+          <string>Pause to review</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>The wizard can pause part-way for you to look at how things are progressing.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_DATA">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Data import</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_COMPONENTS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Components</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_ALIGNMENTS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Alignments</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_TREES">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Trees</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_FUSIONS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Fusions</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_SPLITS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Splits</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_CONSENSUS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Consensus</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_SUBSETS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Subsets</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_PREGRAPHS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Pregraphs</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_MINIGRAPHS">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Minigraphs</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_RAW_NRFG">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Raw NRFG</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_CLEANED_NRFG">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Cleaned NRFG</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CHK_PAUSE_CHECKED_NRFG">
+         <property name="minimumSize">
+          <size>
+           <width>128</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Checked NRFG</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="PAGE_READY">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QLabel" name="label_24">
+         <property name="text">
+          <string>Power on</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_14">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>When you're ready, click begin. The wizard will start paused and you can come back to this screen to view the current settings at any time.</string>
+         </property>
+         <property name="style" stdset="0">
+          <string>helpbox</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="SPC_ERROR" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background: silver</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="BTN_CANCEL">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_BACK">
+       <property name="text">
+        <string>Back</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_NEXT">
+       <property name="text">
+        <string>Next</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_OK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

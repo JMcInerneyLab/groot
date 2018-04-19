@@ -3,11 +3,11 @@ import time
 from os import path
 from typing import List
 from intermake import MENV, ConsoleHost, VisualisablePath
-from mhelper import MEnum, array_helper, file_helper, exception_helper
+from mhelper import MEnum, array_helper, file_helper, exception_helper, TTristate
 
 from groot import constants
 from groot.data.model import LegoModel
-from groot.constants import EFormat
+from groot.constants import EFormat, EMode
 
 
 __model: LegoModel = None
@@ -121,7 +121,24 @@ class RecentFile:
 
 class GlobalOptions:
     """
-    :attr recent_files: Files recently accessed.
+    :attr recent_files:             Files recently accessed.
+    :attr browse_mode:              Web browser status.
+    :attr startup_mode:             GUI startup window.
+    :attr window_mode:              GUI MDI mode.
+    :attr tool_file:                Toolbar visible: File
+    :attr tool_visualisers:         Toolbar visible: Visualisers 
+    :attr tool_workflow:            Toolbar visible: Workflow 
+    :attr gui_tree_view:            Preferred method of viewing trees in GUI.
+    :attr opengl:                   Use OpenGL rendering. Faster but may cause problems on some devices.
+    :attr share_opengl:             Share OpenGL contexts. Uses less memory but may cause problems on some devices.
+    :attr lego_y_snap:              Lego GUI setting - snap to Y axis.
+    :attr lego_x_snap:              Lego GUI setting - snap to X axis.
+    :attr lego_move_enabled:        Lego GUI setting - permit domain movement using mouse.
+    :attr lego_view_piano_roll:     Lego GUI setting - display gene piano rolls 
+    :attr lego_view_names:          Lego GUI setting - display gene names
+    :attr lego_view_positions:      Lego GUI setting - display domain start and end positions
+    :attr lego_view_components:     Lego GUI setting - display domain components
+    :attr lego_mode:                Lego GUI setting - smallest selectable unit  
     """
     
     
@@ -133,7 +150,17 @@ class GlobalOptions:
         self.tool_file = True
         self.tool_visualisers = True
         self.tool_workflow = True
-        self.gui_tree_view = EFormat.CYJS 
+        self.gui_tree_view = EFormat.CYJS
+        self.opengl = True
+        self.share_opengl = True
+        self.lego_y_snap: TTristate = None
+        self.lego_x_snap: TTristate = None
+        self.lego_move_enabled: TTristate = None
+        self.lego_view_piano_roll: TTristate = None
+        self.lego_view_names: TTristate = True
+        self.lego_view_positions: TTristate = None
+        self.lego_view_components: TTristate = None
+        self.lego_mode = EMode.SEQUENCE
 
 
 __global_options = None

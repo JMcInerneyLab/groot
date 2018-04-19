@@ -3,10 +3,10 @@ The `.data` submodule contains the "Lego Model" (the dynamic data the user insta
 and its static dependencies (interfaces, enumerations, error classes, etc.).  
 """
 
-from groot.data.model import \
+from .model import \
     LegoModel
 
-from groot.data.model_core import \
+from .model_core import \
     LegoComponent, \
     LegoReport, \
     LegoEdge, \
@@ -24,7 +24,7 @@ from groot.data.model_core import \
     FixedUserGraph, \
     UserGraph
 
-from groot.data.model_interfaces import \
+from .model_interfaces import \
     ILegoNode, \
     EPosition, \
     ESiteType, \
@@ -32,8 +32,10 @@ from groot.data.model_interfaces import \
     INamed, \
     INamedGraph
 
-from groot.data.exceptions import \
+from .exceptions import \
     FastaError, \
     InUseError, \
     AlreadyError, \
     NotReadyError
+
+from . import global_view
