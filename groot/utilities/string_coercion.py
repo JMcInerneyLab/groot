@@ -13,7 +13,7 @@ def setup():
     from stringcoercion import CoercionError
     
     
-    class MGraphCoercer( stringcoercion.Coercer ):
+    class MGraphCoercer( stringcoercion.AbstractCoercer ):
         """
         **Graphs and trees** are referenced by one of the following:
             * Graph in model  : The name of a graph in the current model (you can get a list of graph names via `cd /graphs ; ls`)
@@ -87,7 +87,7 @@ def setup():
             return UserGraph( r ) if name_graph else r
     
     
-    class MSequenceCoercer( stringcoercion.Coercer ):
+    class MSequenceCoercer( stringcoercion.AbstractCoercer ):
         """
         **Sequences** are referenced by their _accession_ or _internal ID_.
         """
@@ -116,7 +116,7 @@ def setup():
             return sequence
     
     
-    class MSubsequenceCoercer( stringcoercion.Coercer ):
+    class MSubsequenceCoercer( stringcoercion.AbstractCoercer ):
         """
         **Domains** are referenced _in the form_: `X[Y:Z]` where `X` is the sequence, and `Y` and `Z` are the range of the domain (inclusive and 1 based).
         """
@@ -154,7 +154,7 @@ def setup():
             return LegoSubsequence( sequence, start, end )
     
     
-    class MComponentCoercer( stringcoercion.Coercer ):
+    class MComponentCoercer( stringcoercion.AbstractCoercer ):
         """
         **Components** are referenced by:
             * `xxx` where `xxx` is the _name_ of the component

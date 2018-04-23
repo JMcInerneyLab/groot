@@ -8,7 +8,7 @@ Groot initialisation logic and API exports.
 
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.45"
+__version__ = "0.0.0.46"
 
 #
 # Initialise Groot

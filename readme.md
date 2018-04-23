@@ -65,9 +65,18 @@ After the install completes, test that you can actually run Groot:
 $   groot
 ```
 
+#### Troubleshooting: Groot not found ####
 If you see the Groot command prompt that's great, it works, but if you get a message like `groot not found` then Python probably doesn't have its PATH configured correctly.
 You might be able to start Groot using `python -m groot`, but it's probably best to consult the Python documentation at this time and fix the issue before continuing.
-Check out [this StackOverflow post](https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) as a starting point. 
+
+You probably need to add the Python binaries to your path, using a command something like:
+
+```bash
+export PATH=$PATH:/opt/local/Library/Frameworks/Python.framework/Versions/3.6/bin
+```
+
+Check out [this StackOverflow post](https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) as a starting point.
+ 
 
 ### Starting and stopping Groot ###
 

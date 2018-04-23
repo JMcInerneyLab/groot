@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/Users/martinrusilowicz/work/apps/groot/groot/frontends/gui/forms/designer/frm_view_options_designer.ui'
+# Form implementation generated from reading ui file '/Users/martinrusilowicz/work/apps/groot/groot_gui/forms/designer/frm_view_options_designer.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -543,6 +543,8 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.LST_PAGES.sizePolicy().hasHeightForWidth())
         self.LST_PAGES.setSizePolicy(sizePolicy)
+        self.LST_PAGES.setRootIsDecorated(False)
+        self.LST_PAGES.setItemsExpandable(False)
         self.LST_PAGES.setObjectName("LST_PAGES")
         self.LST_PAGES.headerItem().setText(0, "1")
         self.LST_PAGES.header().setVisible(False)
