@@ -102,10 +102,7 @@ class GuiActions:
         if args is None:
             args = ()
         
-        arguments: Optional[FnArgValueCollection] = FrmArguments.request( self.window, plugin, *args, **kwargs )
-        
-        if arguments is not None:
-            plugin.run( **arguments.tokwargs() )  # --> self.plugin_completed
+        FrmArguments.request( self.window, plugin, *args, **kwargs ) # --> self.plugin_completed
     
     
     def show_status_message( self, text: str ):
