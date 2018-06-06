@@ -1,16 +1,17 @@
 from intermake import MCMD, command
 from mgraph import MGraph, MNode
-from mhelper import Logger, SwitchError, string_helper, FnInspect
+from mhelper import Logger, SwitchError, string_helper, FunctionInspector
 from typing import Callable, Iterable, Optional, Sequence, Union
 
 import groot.utilities.external_runner
-from groot import algorithms
+from groot import constants
 from groot.constants import STAGES, EChanges
-from groot.data import INamedGraph, LegoFormation, LegoModel, LegoPoint, LegoPregraph, LegoSequence, LegoSubset, Subgraph, global_view
+from groot.data import INamedGraph, LegoFormation, LegoPoint, LegoPregraph, LegoSequence, LegoSubset, Subgraph, global_view
 from groot.utilities import AlgorithmCollection, lego_graph
 
 
 LOG = Logger( "possible_graphs", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 DAlgorithm = Callable[[Union[str, LegoSubset]], Union[str, MGraph]]
 """
@@ -31,7 +32,7 @@ Uses Pep-484 to indicate which input is required, otherwise the default will be 
 supertree_algorithms = AlgorithmCollection[DAlgorithm]( "Supertree" )
 
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_supertrees( algorithm: str ) -> None:
     """
     Creates the supertrees/subgraphs for the model.
@@ -80,7 +81,7 @@ def create_supertrees( algorithm: str ) -> None:
     return EChanges.MODEL_DATA
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_supertrees() -> EChanges:
     """
     Removes data from the model.
@@ -95,7 +96,7 @@ def drop_supertrees() -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command( names = ["print_supertrees", "supertrees"] )
+@command( names = ["print_supertrees", "supertrees"], folder = constants.F_PRINT )
 def print_supertrees() -> EChanges:
     """
     Prints the names of the NRFG subgraphs (you'll need to use `print_trees` to print the actual trees).
@@ -120,7 +121,7 @@ def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph
     """
     # Get our algorithm
     algo = supertree_algorithms[algorithm]
-    ins = FnInspect( algo )
+    ins = FunctionInspector( algo )
     
     # We allow two kinds of algorithm
     # - Python - take a `LegoSubset` instance

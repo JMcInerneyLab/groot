@@ -10,8 +10,9 @@ from groot.utilities import lego_graph
 _TABLE = '<table border=1 style="border-collapse: collapse;">'
 _END_TABLE = "</table>"
 
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_checked(  ):
     """
     Checks the NRFG.
@@ -90,7 +91,7 @@ def create_checked(  ):
     model.report = LegoReport( "NRFG report", "\n".join( r ) )
     return EChanges.MODEL_DATA
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_checked( ):
     """
     Removes the check-NRFG report from the model.

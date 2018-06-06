@@ -1,9 +1,9 @@
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu, QToolTip, QMessageBox
 from typing import Optional
-from intermake import Plugin, VisualisablePath
+from intermake import AbstractCommand, VisualisablePath
 from intermake_qt import FrmArguments
-from mhelper import SwitchError, FnArgValueCollection
+from mhelper import SwitchError, ArgValueCollection
 from mhelper_qt import qt_gui_helper, menu_helper
 import groot
 
@@ -51,7 +51,7 @@ class GuiActions:
         
         if isinstance( visualiser.action, type ) and issubclass( visualiser.action, FrmBase ):
             self.frm_main.show_form( visualiser.action )
-        elif isinstance( visualiser.action, Plugin ):
+        elif isinstance( visualiser.action, AbstractCommand ):
             self.request( visualiser.action, *args )
         else:
             visualiser.action( self )
@@ -98,7 +98,7 @@ class GuiActions:
         groot.file_save( file_name )
     
     
-    def request( self, plugin: Plugin, *args, **kwargs ):
+    def request( self, plugin: AbstractCommand, *args, **kwargs ):
         if args is None:
             args = ()
         

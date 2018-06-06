@@ -1,3 +1,4 @@
+from groot import constants
 from intermake import command
 from mgraph import MGraph
 from mhelper import Logger, array_helper, string_helper
@@ -8,9 +9,9 @@ from groot.utilities import lego_graph
 
 
 __LOG = Logger( "nrfg.sew", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_fused():
     """
     Creates the NRFG (uncleaned).
@@ -75,7 +76,7 @@ def create_fused():
     return EChanges.MODEL_DATA
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_fused( ):
     """
     Removes data from the model.

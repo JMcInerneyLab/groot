@@ -1,13 +1,16 @@
 from PyQt5.QtWidgets import QWidget, QMessageBox, QCheckBox, QGroupBox, QTreeWidgetItem
 from groot_gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
-from groot.constants import EFormat
+from groot.constants import EFormat, BROWSE_MODE
 from groot.data import global_view
-from groot.data.global_view import EBrowseMode, EStartupMode, GlobalOptions, EWindowMode
+from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
 from groot_gui.forms.frm_base import FrmBase
 from intermake import common_commands
 from intermake_qt.forms.frm_arguments import FrmArguments
 from mhelper_qt import exqtSlot
+
+
+
 
 
 class FrmViewOptions( FrmBase ):
@@ -93,6 +96,11 @@ class FrmViewOptions( FrmBase ):
         
         # Global options
         global_options: GlobalOptions = global_view.options()
+        from groot_gui import LegoGuiHost
+        host_options = LegoGuiHost.get_settings()
+        
+        if not isinstance( host_options.enable_browser, int ):
+            host_options.enable_browser = BROWSE_MODE.ASK if host_options.enable_browser else BROWSE_MODE.SYSTEM
         
         self.__map_check( write, global_options, "tool_file", self.ui.CHKTOOL_FILE, self.actions.frm_main.ui.FRA_FILE )
         self.__map_check( write, global_options, "tool_visualisers", self.ui.CHKTOOL_VIS, self.actions.frm_main.ui.FRA_VISUALISERS )
@@ -100,9 +108,9 @@ class FrmViewOptions( FrmBase ):
         self.__map_check( write, global_options, "opengl", self.ui.CHK_OPENGL, self.actions.frm_main.ui.FRA_WORKFLOW )
         self.__map_check( write, global_options, "share_opengl", self.ui.CHK_SHARE_CONTEXTS, self.actions.frm_main.ui.FRA_WORKFLOW )
         
-        self.__map( write, global_options, "browse_mode", { EBrowseMode.ASK    : self.ui.RAD_TREE_ASK,
-                                                            EBrowseMode.INBUILT: self.ui.RAD_TREE_INBUILT,
-                                                            EBrowseMode.SYSTEM : self.ui.RAD_TREE_SYSTEM } )
+        self.__map( write, host_options, "enable_browser", { BROWSE_MODE.ASK    : self.ui.RAD_TREE_ASK,
+                                                             BROWSE_MODE.INBUILT: self.ui.RAD_TREE_INBUILT,
+                                                             BROWSE_MODE.SYSTEM : self.ui.RAD_TREE_SYSTEM } )
         
         self.__map( write, global_options, "startup_mode", { EStartupMode.STARTUP : self.ui.RAD_STARTUP_MESSAGE,
                                                              EStartupMode.NOTHING : self.ui.RAD_STARTUP_NOTHING,
@@ -187,4 +195,4 @@ class FrmViewOptions( FrmBase ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, common_commands.LOCAL_DATA_PLUGIN )
+        FrmArguments.request( self, common_commands.cmd_local )

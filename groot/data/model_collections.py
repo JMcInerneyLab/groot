@@ -11,9 +11,9 @@ class LegoEdgeCollection:
     """
     The collection of edges, held by the model.
     
-    :attr __model:          Owning model.
-    :attr __edges:          Edge list
-    :attr __by_sequence:    Lookup table, sequence to edge list.
+    :ivar __model:          Owning model.
+    :ivar __edges:          Edge list
+    :ivar __by_sequence:    Lookup table, sequence to edge list.
     """
     
     
@@ -192,6 +192,14 @@ class LegoSequenceCollection:
             r.append( s.to_fasta() )
         
         return "\n".join( r )
+    
+    
+    def __getitem__( self, item ):
+        for s in self.__sequences:
+            if s.accession == item:
+                return s
+        
+        raise NotFoundError( "No sequence with the accession «{}» exists.".format( item ) )
     
     
     def __bool__( self ):

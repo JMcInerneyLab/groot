@@ -4,6 +4,8 @@ Algorithms for user-domains
 Used for display, nothing to do with the model.
 """
 from typing import Callable
+
+from groot import constants
 from intermake import MCMD, Theme, command
 from mhelper import ansi, string_helper
 
@@ -13,13 +15,14 @@ from groot.utilities import cli_view_utils
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
 
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 DAlgorithm = Callable[[LegoSequence, int], str]
 """A delegate for a function that takes a sequence and an arbitrary parameter, and produces an list of domains."""
 
 domain_algorithms = AlgorithmCollection[DAlgorithm]( "Domain" )
 
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_domains( algorithm: str, param: int = 0 ):
     """
     Creates the domains.
@@ -46,7 +49,7 @@ def create_domains( algorithm: str, param: int = 0 ):
     return EChanges.DOMAINS
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_domains():
     """
     Removes the user-domains from the model.
@@ -55,7 +58,7 @@ def drop_domains():
     model.user_domains.clear()
 
 
-@command( names = ["print_domains", "domains"] )
+@command( names = ["print_domains", "domains"], folder=constants.F_PRINT )
 def print_domains( domain: str = "", parameter: int = 0 ) -> EChanges:
     """
     Prints the genes (highlighting components).

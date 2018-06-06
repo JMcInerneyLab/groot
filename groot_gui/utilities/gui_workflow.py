@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable, Dict, Iterator, Sequence, Union
 
 from PyQt5.QtWidgets import QWidget
@@ -5,18 +6,21 @@ from PyQt5.QtWidgets import QWidget
 from groot_gui.forms.resources import resources
 
 from groot.constants import EIntent, LegoStage, STAGES
-from intermake import Plugin
+from intermake import AbstractCommand, BasicCommand
 from mhelper import array_helper
 
 
 TWorkflows = Union[LegoStage, Sequence[LegoStage]]
-TAction = Union["FrmBase", QWidget, Plugin, Callable[[], None]]
+TAction = Union["FrmBase", QWidget, AbstractCommand, Callable[[], None]]
 
 
 class LegoVisualiser:
     
     
     def __init__( self, name: str, action: TAction, *, view: TWorkflows = (), create: TWorkflows = (), drop: TWorkflows = (), icon = None, key: str = None ):
+        if inspect.isfunction( action ):
+            action = BasicCommand.retrieve( action, action )
+        
         self.name = name
         self.action = action
         self.intents: Dict[EIntent, Sequence[LegoStage]] = { }
@@ -39,9 +43,10 @@ class LegoVisualiser:
             return self.action.__name__ in FrmMain.INSTANCE.mdi
         else:
             return False
-        
+    
+    
     @staticmethod
-    def for_stage(stage:LegoStage, intent:EIntent):
+    def for_stage( stage: LegoStage, intent: EIntent ):
         for visualiser in VISUALISERS:
             if stage in visualiser.intents[intent]:
                 yield visualiser

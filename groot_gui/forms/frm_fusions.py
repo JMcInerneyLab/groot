@@ -34,7 +34,7 @@ class FrmFusions( FrmBase ):
         
         for fusion in model.fusion_events:
             fusion_item = QTreeWidgetItem()
-            fusion_item.setIcon( self.headers["name"], fusion.visualisable_info().icon() )
+            fusion_item.setIcon( self.headers["name"], fusion.get_vis_info().icon() )
             fusion_item.setText( self.headers["name"], "{}".format( fusion ) )
             fusion_item.setText( self.headers["index"], "{}".format( fusion.index ) )
             fusion_item.setText( self.headers["left"], "{}".format( fusion.component_a ) )
@@ -74,11 +74,11 @@ class FrmFusions( FrmBase ):
             element_item = QTreeWidgetItem()
             
             if isinstance( element, IVisualisable ):
-                element_item.setIcon( self.headers["name"], element.visualisable_info().icon.icon() )
+                element_item.setIcon( self.headers["name"], element.get_vis_info().icon.icon() )
             
             element_item.setText( self.headers["name"], str( element ) )
             array_item.addChild( element_item )
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         self.update_list()

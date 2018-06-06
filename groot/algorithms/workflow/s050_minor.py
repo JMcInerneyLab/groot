@@ -6,6 +6,8 @@ The only one publicly exposed is `detect`, so start there.
 import warnings
 from collections import defaultdict
 from typing import Dict, Optional, Set, Tuple, List
+
+from groot import constants
 from intermake import MCMD, Table, command
 from mhelper import Logger, array_helper, string_helper
 
@@ -14,9 +16,9 @@ from groot.data import LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSub
 
 
 LOG_MINOR = Logger( "comp.minor", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_minor( tol: int ) -> EChanges:
     """
     Finds the subsequence components, here termed the "minor" elements.
@@ -159,7 +161,7 @@ def create_minor( tol: int ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_minor() -> EChanges:
     """
     Drops minor component information from model.
@@ -173,7 +175,7 @@ def drop_minor() -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command()
+@command(folder = constants.F_SET)
 def set_minor( component: LegoComponent, subsequences: List[LegoSubsequence] ) -> EChanges:
     """
     Sets the minor subsequences of the component.
@@ -192,7 +194,7 @@ def set_minor( component: LegoComponent, subsequences: List[LegoSubsequence] ) -
     return EChanges.COMPONENTS
 
 
-@command( names = ["print_minor", "print_interlinks", "interlinks"] )
+@command( names = ["print_minor", "print_interlinks", "interlinks"], folder=constants.F_PRINT )
 def print_minor( component: Optional[LegoComponent] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.

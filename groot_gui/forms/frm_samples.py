@@ -123,7 +123,7 @@ class FrmSamples( FrmBase ):
         self.actions.by_url( sender.toolTip() )
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         if self.actions.frm_main.completed_plugin in (groot.file_save, groot.file_load, groot.file_new, groot.file_sample, groot.file_recent, groot.file_load_last):
             self.actions.close_window()
             return

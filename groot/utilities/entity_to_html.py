@@ -43,7 +43,7 @@ def render( item, model: LegoModel ):
 
 def render_visualisable( html: HTML, item: IVisualisable ):
     html.append( "<h3>Data table</h3>" )
-    vi = VisualisablePath.from_visualisable_temporary( item ).info()
+    vi = VisualisablePath.from_visualisable_temporary( item )
     
     html.append( "<table>" )
     for i, x in enumerate( vi.iter_children() ):
@@ -52,7 +52,7 @@ def render_visualisable( html: HTML, item: IVisualisable ):
         html.append( str( x.key ) )
         html.append( "</td>" )
         html.append( '<td style="background:{}">'.format( "#E0FFE0" if (i % 2 == 0) else "#D0FFD0" ) )
-        v = x.get_raw_value()
+        v = x.value
         if array_helper.is_simple_iterable( v ):
             text2 = string_helper.format_array( v )
         else:

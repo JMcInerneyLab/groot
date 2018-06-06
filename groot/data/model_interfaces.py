@@ -8,10 +8,10 @@ class EPosition( MEnum ):
     """
     Node positions.
     
-    :data NONE:     No specific position
-    :data ROOT:     Node is a root.
+    :cvar NONE:     No specific position
+    :cvar ROOT:     Node is a root.
                     Many software and algorithms only allow named taxa on leaves so this isn't recommended and may be removed.
-    :data OUTGROUP: Node is an outgroup.
+    :cvar OUTGROUP: Node is an outgroup.
     """
     NONE = 0
     ROOT = 1
@@ -55,12 +55,12 @@ class ESiteType( MEnum ):
     """
     Type of sites.
     
-    :data UNKNOWN:  Unknown site type.
+    :cvar UNKNOWN:  Unknown site type.
                     Placeholder only until the correct value is identified.
                     Not usually a valid option. 
-    :data PROTEIN:  For peptide sequences "IVLFCMAGTSWYPHEQDNKR"
-    :data DNA:      For DNA nucleotide sequences "ATCG"
-    :data RNA:      For RNA nucleotide sequences "AUCG".
+    :cvar PROTEIN:  For peptide sequences "IVLFCMAGTSWYPHEQDNKR"
+    :cvar DNA:      For DNA nucleotide sequences "ATCG"
+    :cvar RNA:      For RNA nucleotide sequences "AUCG".
                     For completeness only.
                     Custom/extension algorithms are not expected to support this.
                     Please convert to DNA first!

@@ -31,7 +31,7 @@ class FrmWorkflow( FrmBase ):
         self._refresh_labels()
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         self._refresh_labels()
     
     

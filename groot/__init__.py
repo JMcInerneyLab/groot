@@ -13,7 +13,7 @@ __version__ = "0.0.0.46"
 #
 # Initialise Groot
 #
-import groot.init_intermake as _
+from groot.application import GROOT_APP
 
 #
 # Export API
@@ -25,10 +25,8 @@ from groot import constants
 
 
 from groot.algorithms.gimmicks.compare import create_comparison, compare_graphs
-from groot.algorithms.gimmicks.help import print_help, algorithm_help
 from groot.algorithms.gimmicks.miscellaneous import query_quartet, composite_search_fix, print_file
 from groot.algorithms.gimmicks.status import print_status
-from groot.algorithms.gimmicks.tests import list_tests, reload_test, create_test, run_test
 from groot.algorithms.gimmicks.usergraphs import import_graph, drop_graph
 from groot.algorithms.gimmicks.wizard import Wizard, create_wizard, drop_wizard, continue_wizard, create_components, drop_components, import_file, import_directory
 

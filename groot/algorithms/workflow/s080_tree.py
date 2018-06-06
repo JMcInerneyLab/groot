@@ -3,18 +3,19 @@ from mgraph import MGraph
 from mhelper import Filename, MOptional, SwitchError, io_helper, string_helper
 from typing import Callable, List, Optional
 
-from groot import algorithms, constants
+from groot import constants
 from groot.constants import EFormat, EChanges
 from groot.data import EPosition, ESiteType, INamedGraph, LegoComponent, LegoModel, LegoSequence, global_view
 from groot.utilities import AlgorithmCollection, cli_view_utils, external_runner, graph_viewing, lego_graph
 
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 DAlgorithm = Callable[[LegoModel, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
 
 tree_algorithms = AlgorithmCollection[DAlgorithm]( "Tree" )
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_trees( algorithm: Optional[str], components: Optional[List[LegoComponent]] = None  ) -> None:
     """
     Creates a tree from the component.
@@ -55,7 +56,7 @@ def create_trees( algorithm: Optional[str], components: Optional[List[LegoCompon
     
     return EChanges.COMP_DATA
 
-@command()
+@command(folder = constants.F_SET)
 def set_tree( component: LegoComponent, newick: str ) -> EChanges:
     """
     Sets a component tree manually.
@@ -71,11 +72,11 @@ def set_tree( component: LegoComponent, newick: str ) -> EChanges:
     component.tree_unrooted = lego_graph.import_newick( newick, component.model )
     component.tree = component.tree_unrooted.copy()
     component.tree_newick = newick
-    algorithms.s080_tree.reposition_all( global_view.current_model(), component )
+    reposition_all( global_view.current_model(), component )
     
     return EChanges.COMP_DATA
     
-@command( names = ["drop_tree", "drop_trees"] )
+@command( names = ["drop_tree", "drop_trees"], folder = constants.F_DROP )
 def drop_tree( components: Optional[List[LegoComponent]] = None ) -> bool:
     """
     Removes component tree(s).
@@ -99,7 +100,7 @@ def drop_tree( components: Optional[List[LegoComponent]] = None ) -> bool:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"] )
+@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"], folder=constants.F_PRINT )
 def print_trees( graph: Optional[INamedGraph] = None,
                  format: EFormat = EFormat.ASCII,
                  file: MOptional[Filename] = None,

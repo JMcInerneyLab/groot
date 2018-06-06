@@ -1,4 +1,4 @@
-from groot import LegoComponent
+from groot import LegoComponent, constants
 from intermake import MCMD, command
 from mgraph import MGraph, Split, exporting
 from mhelper import Logger
@@ -10,8 +10,9 @@ from groot.utilities import lego_graph
 
 
 __LOG_SPLITS = Logger( "nrfg.splits", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_splits(  ):
     """
     Creates the candidate splits.
@@ -76,6 +77,7 @@ def create_splits(  ):
     
     return EChanges.MODEL_DATA
     
+@command(folder = constants.F_DROP)
 def drop_splits( ):
     """
     Removes data from the model.
@@ -92,7 +94,7 @@ def drop_splits( ):
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_splits", "splits"] )
+@command( names = ["print_splits", "splits"], folder=constants.F_PRINT )
 def print_splits( component: Optional[LegoComponent] = None ) -> EChanges:
     """
     Prints NRFG candidate splits.

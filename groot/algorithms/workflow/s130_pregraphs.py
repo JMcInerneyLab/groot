@@ -1,3 +1,4 @@
+from groot import constants
 from intermake import MCMD, command
 from mgraph import analysing
 from mhelper import ComponentFinder, Logger, LogicError, string_helper
@@ -9,9 +10,9 @@ from groot.utilities import lego_graph
 
 
 LOG = Logger( "pregraphs", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_pregraphs():
     """
     Creates the pregraphs.
@@ -28,7 +29,7 @@ def create_pregraphs():
     return EChanges.MODEL_DATA
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_pregraphs():
     """
     Removes data from the model.
@@ -40,7 +41,7 @@ def drop_pregraphs():
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_pregraphs", "pregraphs"] )
+@command( names = ["print_pregraphs", "pregraphs"], folder = constants.F_PRINT )
 def print_pregraphs() -> EChanges:
     """
     Prints the names of the NRFG subgraphs (you'll need to use `print_trees` to print the actual trees).

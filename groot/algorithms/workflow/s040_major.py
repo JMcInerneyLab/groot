@@ -4,6 +4,8 @@ Components algorithms.
 The only one publicly exposed is `detect`, so start there.
 """
 from typing import List, Optional
+
+from groot import constants
 from intermake import MCMD, Table, cli_helper, command
 from mhelper import ComponentFinder, Logger, string_helper
 
@@ -14,9 +16,9 @@ from groot.data import LegoComponent, LegoSequence, global_view
 LOG_MAJOR = Logger( "comp.major", False )
 LOG_MAJOR_V = Logger( "comp.major.v", False )
 LOG_GRAPH = Logger( "comp.graph", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     """
     Detects model components.
@@ -36,7 +38,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     
     :param debug:       Assert the creation.
     :param tol:         Tolerance value
-    :returns:           Nothing, the components are written to :attr:`model.components`.
+    :returns:           Nothing, the components are written to :ivar:`model.components`.
     """
     model = global_view.current_model()
     model.get_status( STAGES.MAJOR_3 ).assert_create()
@@ -126,11 +128,11 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_major( components: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Drops all components from the model.
-    The components are removed from :attr:`model.components`.
+    The components are removed from :ivar:`model.components`.
     
     :param components: Components to drop. If `None` then all components are dropped. 
     """
@@ -150,7 +152,7 @@ def drop_major( components: Optional[List[LegoComponent]] = None ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command()
+@command(folder = constants.F_SET)
 def set_major( sequences: List[LegoSequence] ):
     """
     Creates a major component (manually). 
@@ -171,7 +173,7 @@ def set_major( sequences: List[LegoSequence] ):
     return EChanges.COMPONENTS
 
 
-@command( names = ["print_major", "major", "print_components", "components"] )
+@command( names = ["print_major", "major", "print_components", "components"], folder=constants.F_PRINT )
 def print_major( verbose: bool = False ) -> EChanges:
     """
     Prints the major components.

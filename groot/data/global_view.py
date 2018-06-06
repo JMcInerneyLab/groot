@@ -2,7 +2,9 @@ import os
 import time
 from os import path
 from typing import List
-from intermake import MENV, ConsoleHost, VisualisablePath
+
+
+from intermake import MCMD, ConsoleHost, VisualisablePath
 from mhelper import MEnum, array_helper, file_helper, exception_helper, TTristate
 
 from groot import constants
@@ -21,14 +23,14 @@ def current_model() -> LegoModel:
 
 
 def set_model( model: LegoModel ):
+    from groot.application import GROOT_APP
     exception_helper.assert_type( "model", model, LegoModel )
     global __model
     __model = model
-    MENV.configure( using = constants.APP_NAME,
-                    root = model )
+    GROOT_APP.root = model
     
-    if isinstance( MENV.host, ConsoleHost ):
-        MENV.host.browser_path = VisualisablePath.get_root()
+    if isinstance( MCMD.host, ConsoleHost ):
+        MCMD.host.browser_path = VisualisablePath.get_root()
     
     return __model
 
@@ -62,14 +64,14 @@ def get_workspace_files() -> List[str]:
     """
     r = []
     
-    for file in os.listdir( path.join( MENV.local_data.get_workspace(), "sessions" ) ):
+    for file in os.listdir( path.join( MCMD.environment.local_data.get_workspace(), "sessions" ) ):
         if file.lower().endswith( constants.BINARY_EXTENSION ):
             r.append( file )
     
     return r
 
 def get_test_data_folder(name:str=None):
-    sdf = MENV.local_data.local_folder("test_cases")
+    sdf = MCMD.environment.local_data.local_folder("test_cases")
     
     if not name:
         return sdf
@@ -84,7 +86,7 @@ def get_sample_data_folder( name: str = None ):
     PRIVATE
     Obtains the sample data folder
     """
-    sdf = MENV.local_data.local_folder("sample_data")
+    sdf = MCMD.environment.local_data.local_folder("sample_data")
     
     if not name:
         return sdf
@@ -95,10 +97,6 @@ def get_sample_data_folder( name: str = None ):
     return path.join( sdf, name )
 
 
-class EBrowseMode( MEnum ):
-    ASK = 0
-    SYSTEM = 1
-    INBUILT = 2
 
 
 class EStartupMode( MEnum ):
@@ -121,30 +119,28 @@ class RecentFile:
 
 class GlobalOptions:
     """
-    :attr recent_files:             Files recently accessed.
-    :attr browse_mode:              Web browser status.
-    :attr startup_mode:             GUI startup window.
-    :attr window_mode:              GUI MDI mode.
-    :attr tool_file:                Toolbar visible: File
-    :attr tool_visualisers:         Toolbar visible: Visualisers 
-    :attr tool_workflow:            Toolbar visible: Workflow 
-    :attr gui_tree_view:            Preferred method of viewing trees in GUI.
-    :attr opengl:                   Use OpenGL rendering. Faster but may cause problems on some devices.
-    :attr share_opengl:             Share OpenGL contexts. Uses less memory but may cause problems on some devices.
-    :attr lego_y_snap:              Lego GUI setting - snap to Y axis.
-    :attr lego_x_snap:              Lego GUI setting - snap to X axis.
-    :attr lego_move_enabled:        Lego GUI setting - permit domain movement using mouse.
-    :attr lego_view_piano_roll:     Lego GUI setting - display gene piano rolls 
-    :attr lego_view_names:          Lego GUI setting - display gene names
-    :attr lego_view_positions:      Lego GUI setting - display domain start and end positions
-    :attr lego_view_components:     Lego GUI setting - display domain components
-    :attr lego_mode:                Lego GUI setting - smallest selectable unit  
+    :ivar recent_files:             Files recently accessed.
+    :ivar startup_mode:             GUI startup window.
+    :ivar window_mode:              GUI MDI mode.
+    :ivar tool_file:                Toolbar visible: File
+    :ivar tool_visualisers:         Toolbar visible: Visualisers 
+    :ivar tool_workflow:            Toolbar visible: Workflow 
+    :ivar gui_tree_view:            Preferred method of viewing trees in GUI.
+    :ivar opengl:                   Use OpenGL rendering. Faster but may cause problems on some devices.
+    :ivar share_opengl:             Share OpenGL contexts. Uses less memory but may cause problems on some devices.
+    :ivar lego_y_snap:              Lego GUI setting - snap to Y axis.
+    :ivar lego_x_snap:              Lego GUI setting - snap to X axis.
+    :ivar lego_move_enabled:        Lego GUI setting - permit domain movement using mouse.
+    :ivar lego_view_piano_roll:     Lego GUI setting - display gene piano rolls 
+    :ivar lego_view_names:          Lego GUI setting - display gene names
+    :ivar lego_view_positions:      Lego GUI setting - display domain start and end positions
+    :ivar lego_view_components:     Lego GUI setting - display domain components
+    :ivar lego_mode:                Lego GUI setting - smallest selectable unit  
     """
     
     
     def __init__( self ):
         self.recent_files: List[RecentFile] = []
-        self.browse_mode = EBrowseMode.ASK
         self.startup_mode = EStartupMode.STARTUP
         self.window_mode = EWindowMode.BASIC
         self.tool_file = True
@@ -170,7 +166,7 @@ def options() -> GlobalOptions:
     global __global_options
     
     if __global_options is None:
-        __global_options = MENV.local_data.store.bind( "lego-options", GlobalOptions() )
+        __global_options = MCMD.environment.local_data.store.bind( "lego-options", GlobalOptions() )
     
     return __global_options
 
@@ -198,7 +194,7 @@ def remember_file( file_name: str ) -> None:
 
 
 def save_global_options():
-    MENV.local_data.store.commit( "lego-options" )
+    MCMD.environment.local_data.store.commit( "lego-options" )
 
 
 new_model()

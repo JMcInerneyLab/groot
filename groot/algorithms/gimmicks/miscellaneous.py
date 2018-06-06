@@ -1,17 +1,18 @@
+from groot import constants
 from groot.algorithms import workflow
-from groot.data import global_view
-from groot.data.model_interfaces import ESiteType, IHasFasta, INamedGraph
 from groot.constants import EChanges
+from groot.data import global_view
+from groot.data.model_interfaces import ESiteType, INamedGraph
 from groot.utilities import cli_view_utils
-from intermake import EThread, MCMD, MENV, command, common_commands, visibilities
+from intermake import MCMD, command, common_commands, visibilities
 from mgraph import Quartet, analysing
 from mhelper import EFileMode, Filename, bio_helper, file_helper, io_helper
 
 
 _VIS = visibilities.GUI & visibilities.ADVANCED
 
-__mcmd_folder_name__ = "Gimmicks"
 __EXT_FASTA = ".fasta"
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
 
 
 @command( visibility = visibilities.ADVANCED )
@@ -119,7 +120,7 @@ def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFile
     MCMD.progress( "{} BLASTs".format( count ) )
 
 
-@command( visibility = visibilities.ADVANCED )
+@command( visibility = visibilities.ADVANCED, folder = constants.F_PRINT )
 def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -> EChanges:
     """
     Prints a FASTA file in colour
@@ -159,7 +160,7 @@ def __review( review, msg, fns, *, retry = True ):
         elif switch == "retry":
             return False
         elif switch == "pause":
-            common_commands.start_cli()
+            common_commands.cmd_start_cli()
         elif switch == "abort":
             raise ValueError( "User cancelled." )
 

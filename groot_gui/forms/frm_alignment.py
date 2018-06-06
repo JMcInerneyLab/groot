@@ -9,7 +9,7 @@ from groot_gui.forms.frm_base import FrmSelectingToolbar
 from groot_gui.utilities.gui_view_support import LookupTable
 from groot_gui.utilities.gui_view_utils import ESelect
 from mhelper import bio_helper
-from mhelper_qt import exqtSlot, qt_colour_helper
+from mhelper_qt import qt_colour_helper
 
 
 COL_WIDTH = 16
@@ -199,13 +199,10 @@ class FrmAlignment( FrmSelectingToolbar ):
         self.ui.LBL_ERROR.setVisible( False )
         self.bind_to_label( self.ui.LBL_SELECTION_WARNING )
         self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.HAS_FASTA )
-        
         self.update_view()
-        self.ui.CHK_ACCESSIONS.toggled[bool].connect( self.update_view )
-        self.ui.CHK_ALIGNED.toggled[bool].connect( self.update_view )
     
     
-    def update_view( self, _ = None ):
+    def update_view( self ):
         model = self.get_model()
         selection = self.get_selection()
         fasta = []
@@ -235,8 +232,6 @@ class FrmAlignment( FrmSelectingToolbar ):
         self.ui.SCR_MAIN.setEnabled( not error )
         self.ui.LBL_POSITION_START.setEnabled( not error )
         self.ui.LBL_POSITION_END.setEnabled( not error )
-        self.ui.BTN_START.setEnabled( not error )
-        self.ui.BTN_END.setEnabled( not error )
         
         if not error:
             win_width = (self.seq_view.rect().width() // COL_WIDTH) - NUM_RESERVED_COLS
@@ -261,22 +256,3 @@ class FrmAlignment( FrmSelectingToolbar ):
     
     def repaint_view( self ):
         self.seq_view.update()
-    
-    
-    @exqtSlot()
-    def on_BTN_START_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.ui.SCR_MAIN.setValue( 0 )
-    
-    
-    @exqtSlot()
-    def on_BTN_END_clicked( self ) -> None:
-        """
-        Signal handler:
-        """
-        self.ui.SCR_MAIN.setValue( self.ui.SCR_MAIN.maximum() )
-    
-    
-    

@@ -1,16 +1,21 @@
 import sys
 from os import path
 from typing import Optional
+
+from groot.algorithms.gimmicks import wizard
 from intermake import MCMD, MENV, Theme, command
 from mhelper import EFileMode, Filename, MOptional, file_helper, io_helper
 
-from groot import algorithms, constants
+from groot import constants
 from groot.data import global_view
 from groot.data.model import LegoModel
 from groot.constants import EChanges
 
 
-@command( names = ["file_new", "new"] )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+
+
+@command( names = ["file_new", "new"], folder = constants.F_FILE )
 def file_new() -> EChanges:
     """
     Starts a new model
@@ -21,7 +26,7 @@ def file_new() -> EChanges:
     return EChanges.MODEL_OBJECT
 
 
-@command( names = ["file_save", "save"] )
+@command( names = ["file_save", "save"], folder = constants.F_FILE )
 def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROOT]] = None ) -> EChanges:
     """
     Saves the model
@@ -52,7 +57,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROO
     return EChanges.FILE_NAME
 
 
-@command( names = ["file_load", "load"] )
+@command( names = ["file_load", "load"], folder = constants.F_FILE )
 def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Loads the model from a file
@@ -77,7 +82,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     return EChanges.MODEL_OBJECT
 
 
-@command( names = ["file_sample", "sample", "samples"] )
+@command( names = ["file_sample", "sample", "samples"], folder = constants.F_FILE )
 def file_sample( name: Optional[str] = None, query: bool = False, load: bool = False ) -> EChanges:
     """
     Lists the available samples, or loads the specified sample.
@@ -98,7 +103,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
         else:
             MCMD.print( "Sample data: «{}».".format( file_name ) )
         
-        return algorithms.s999_wizard.import_directory( file_name, filter = (algorithms.s999_wizard.EImportFilter.DATA | algorithms.s999_wizard.EImportFilter.SCRIPT) if not load else algorithms.s999_wizard.EImportFilter.DATA, query = query )
+        return wizard.import_directory( file_name, filter = (wizard.EImportFilter.DATA | wizard.EImportFilter.SCRIPT) if not load else wizard.EImportFilter.DATA, query = query )
     else:
         for sample_dir in global_view.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
@@ -108,7 +113,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
         return EChanges.NONE
 
 
-@command( names = ("file_load_last", "last") )
+@command( names = ("file_load_last", "last"), folder = constants.F_FILE )
 def file_load_last():
     """
     Loads the last file from the recent list.
@@ -119,7 +124,7 @@ def file_load_last():
     file_load( global_view.options().recent_files[-1] )
 
 
-@command( names = ["file_recent", "recent"] )
+@command( names = ["file_recent", "recent"], folder = constants.F_FILE )
 def file_recent():
     """
     Prints the contents of the `sessions` folder

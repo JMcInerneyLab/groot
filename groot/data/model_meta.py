@@ -48,10 +48,6 @@ class _ComponentAsGraph( INamedGraph ):
         self.unrooted = unrooted
     
     
-    def visualisable_info( self ):
-        x = self.component.visualisable_info()
-        x.name = str( self )
-        return x
     
     
     def to_fasta( self ):
@@ -64,7 +60,7 @@ class _ComponentAsGraph( INamedGraph ):
 
 class ModelStatus:
     def __init__( self, model: _LegoModel_, stage: LegoStage ):
-        assert isinstance( stage, LegoStage )
+        assert isinstance( stage, LegoStage ), stage
         self.model: _LegoModel_ = model
         self.stage: LegoStage = stage
     
@@ -153,7 +149,7 @@ class ModelStatus:
     @property
     def is_hot( self ):
         """
-        A stage is hot if it's not already complete but is ready to go (i.e. the preceding stage is complete).
+        A stage is hot if it's not already complete but is ready to go (i.e. the preceding stage(s) are complete).
         If the stage is flagged `hot` it's assumed the stage is always ready to go.
         If the stage is flagged `cold` then it's never hot (i.e. it is assumed to be an optional part of the workflow).
         """
@@ -163,12 +159,14 @@ class ModelStatus:
         if self.stage.cold:
             return False
         
-        if self.stage.hot or self.stage.requires is None:
+        if self.stage.hot or not self.stage.requires:
             return True
         
-        pre = self.model.get_status( self.stage.requires )
+        for req in self.stage.requires:
+            if self.model.get_status( req ).is_not_complete:
+                return False
         
-        return pre.is_complete
+        return True
     
     
     def get_elements( self ):

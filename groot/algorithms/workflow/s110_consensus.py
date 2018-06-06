@@ -1,3 +1,4 @@
+from groot import constants
 from intermake import MCMD, command
 from mhelper import Logger, LogicError, ansi_helper, string_helper
 from typing import Set
@@ -7,8 +8,9 @@ from groot.data import LegoSplit, global_view
 
 
 __LOG_EVIDENCE = Logger( "nrfg.evidence", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
+@command(folder = constants.F_CREATE)
 def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     """
     Filters the candidate splits.
@@ -96,6 +98,7 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     return EChanges.MODEL_DATA
 
 
+@command(folder = constants.F_DROP)
 def drop_consensus():
     """
     Removes data from the model.
@@ -108,7 +111,7 @@ def drop_consensus():
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_consensus", "consensus"] )
+@command( names = ["print_consensus", "consensus"], folder=constants.F_PRINT )
 def print_consensus() -> EChanges:
     """
     Prints NRFG viable splits.

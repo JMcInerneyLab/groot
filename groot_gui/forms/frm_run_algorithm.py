@@ -6,7 +6,7 @@ from typing import Tuple
 from groot_gui.forms.frm_base import FrmBase
 import groot
 from groot import constants
-from intermake.engine.plugin import Plugin
+from intermake.engine.abstract_command import AbstractCommand
 from mhelper_qt import exceptToGui, exqtSlot
 
 
@@ -16,7 +16,7 @@ class FrmRunAlgorithm( FrmBase ):
                   parent: QWidget,
                   title_text: str,
                   algorithms: AlgorithmCollection,
-                  plugin: Plugin ):
+                  plugin: AbstractCommand ):
         """
         CONSTRUCTOR
         """
@@ -26,7 +26,7 @@ class FrmRunAlgorithm( FrmBase ):
         self.ui.LBL_TITLE.setText( "Create " + title_text.lower() )
         self.radios = []
         self.algorithms = algorithms
-        self.plugin: Plugin = plugin
+        self.command: AbstractCommand = plugin
         
         self.__layout = QVBoxLayout()
         self.ui.FRA_MAIN.setLayout( self.__layout )
@@ -55,8 +55,8 @@ class FrmRunAlgorithm( FrmBase ):
         self.update_labels()
     
     
-    def on_plugin_completed( self ):
-        if self.actions.frm_main.completed_plugin is self.plugin:
+    def on_command_completed( self ):
+        if self.actions.frm_main.completed_plugin is self.command:
             self.actions.close_window()
         else:
             self.update_labels()
@@ -95,7 +95,7 @@ class FrmRunAlgorithm( FrmBase ):
     
     
     def run_algorithm( self, key: str ):
-        self.plugin.run( key )
+        self.command.given( window = self ).run( key )
     
     
     @exqtSlot()
@@ -163,6 +163,7 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
                           groot.alignment_algorithms,
                           groot.create_alignments )
 
+
 class FrmCreateSubgraphs( FrmRunAlgorithm ):
     def query_ready( self ):
         model = self.get_model()
@@ -186,13 +187,13 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
                           groot.supertree_algorithms,
                           groot.create_supertrees )
 
+
 class FrmCreateDomains( FrmRunAlgorithm ):
     def query_ready( self ):
         model = self.get_model()
         
         if model.get_status( constants.STAGES._DATA_0 ).is_none:
             return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
-        
         
         return True, ""
     

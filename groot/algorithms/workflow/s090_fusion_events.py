@@ -16,9 +16,9 @@ from groot.utilities import lego_graph
 
 __LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_fusions() -> EChanges:
     """
     Finds the fusion points in the model.
@@ -47,7 +47,7 @@ def create_fusions() -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_fusions() -> EChanges:
     """
     Removes all fusion points from the model.
@@ -85,7 +85,7 @@ def drop_fusions() -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_fusions", "fusions"] )
+@command( names = ["print_fusions", "fusions"], folder=constants.F_PRINT )
 def print_fusions() -> EChanges:
     """
     Prints model fusions.

@@ -1,16 +1,18 @@
 from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set, cast, Any
+
+from groot import constants
 from intermake import MCMD, command
 from mhelper import Logger, string_helper
 
 from groot.constants import STAGES, EChanges
-from groot.data import ILegoNode, LegoFusion, LegoModel, LegoPoint, LegoSequence, LegoSubset, global_view
+from groot.data import ILegoNode, LegoFusion, LegoPoint, LegoSequence, LegoSubset, global_view
 
 
 __LOG = Logger( "nrfg.find", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_DROP)
 def drop_subsets():
     """
     Removes data from the model.
@@ -23,8 +25,8 @@ def drop_subsets():
     return EChanges.COMP_DATA
 
 
-@command()
-def create_subsets( model: LegoModel, no_super: bool = True ):
+@command(folder = constants.F_CREATE)
+def create_subsets( no_super: bool = True ):
     """
     Creates leaf subsets.
     
@@ -45,11 +47,12 @@ def create_subsets( model: LegoModel, no_super: bool = True ):
     In this stage we collect "gene_sets", representing the set of sequences in each minigraph.
     We also make a dictionary of "gene_set_to_fusion", representing which fusion points are matched to each "gene set".
     
-    :param model:       Model to operate upon
     :param no_super:    Drop supersets from the trees. You want this.
                         Turn if off to see the supersets in the final graph (your NRFG will therefore be a disjoint union of multiple possibilities!).
     :return:            The set of gene sets
     """
+    
+    model = global_view.current_model()
     
     # Check we are good to go
     model.get_status( STAGES.SUBSETS_10 ).assert_create()
@@ -122,7 +125,7 @@ def create_subsets( model: LegoModel, no_super: bool = True ):
     return EChanges.MODEL_DATA
 
 
-@command( names = ["print_subsets", "subsets"] )
+@command( names = ["print_subsets", "subsets"], folder=constants.F_PRINT )
 def print_subsets() -> EChanges:
     """
     Prints NRFG subsets.

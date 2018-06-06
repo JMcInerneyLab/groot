@@ -12,15 +12,15 @@ from groot.constants import STAGES, EChanges
 from intermake import MCMD, command
 from mhelper import Logger, bio_helper
 
-from groot import LegoSequence, LegoModel
+from groot import LegoSequence, LegoModel, constants
 from groot.data import IHasFasta, global_view
 from groot.utilities import cli_view_utils
 
 
 LOG = Logger( "import" )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-
-@command()
+@command(folder = constants.F_IMPORT)
 def import_sequences( file_name: str ) -> EChanges:
     """
     Imports a FASTA file into your model.
@@ -60,7 +60,7 @@ def import_sequences( file_name: str ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command()
+@command(folder = constants.F_SET)
 def set_sequences( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
     """
     Adds a new sequence to the model
@@ -86,7 +86,7 @@ def set_sequences( accessions: List[str], sites: Optional[List[str]] ) -> EChang
     return EChanges.MODEL_ENTITIES
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_sequences( sequences: List[LegoSequence] ):
     """
     Removes one or more sequences from the model.
@@ -100,7 +100,7 @@ def drop_sequences( sequences: List[LegoSequence] ):
         sequence.model.sequences.remove( sequence )
 
 
-@command()
+@command(folder = constants.F_PRINT)
 def print_sequences( find: Optional[str] = None, targets: Optional[List[IHasFasta]] = None ) -> EChanges:
     """
     List sequences or presents their FASTA data.

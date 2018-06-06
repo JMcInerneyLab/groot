@@ -38,7 +38,7 @@ class FrmWizard( FrmBase ):
         self.bind_to_label( self.ui.LBL_HELP_TITLE )
         self.bind_to_label( self.ui.LBL_WRN_ACTIVE )
         self.bind_to_label( self.ui.LBL_WRN_MODEL )
-        self.on_plugin_completed()
+        self.on_command_completed()
         self.ui.stackedWidget.setCurrentIndex( 0 )
         self.ui.stackedWidget.currentChanged.connect( self.on_current_changed )
         self.on_current_changed( 0 )
@@ -127,7 +127,7 @@ class FrmWizard( FrmBase ):
         self.ui.stackedWidget.setCurrentIndex( self.ui.stackedWidget.currentIndex() + 1 )
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         w = groot.Wizard.get_active()
         m = groot.current_model()
         

@@ -760,7 +760,7 @@ class LegoView_Model:
     """
     Manages the view of the model.
     
-    Holds all of the other views and creates the :attr:`scene` (:class:`QGraphicsScene`).
+    Holds all of the other views and creates the :ivar:`scene` (:class:`QGraphicsScene`).
     """
     
     

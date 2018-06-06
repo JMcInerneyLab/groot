@@ -12,14 +12,14 @@ from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
 from groot_gui.forms.frm_base import FrmBase
 from groot.constants import EChanges
 from groot_gui.utilities import gui_workflow
-from intermake import Result
-from intermake_qt import IGuiPluginHostWindow, intermake_gui, resources
+from intermake import AsyncResult
+from intermake_qt import IGuiHostMainWindow, intermake_gui, resources
 from intermake.engine.environment import MENV, MCMD
 from mhelper import SwitchError
 from mhelper_qt import exceptToGui, exqtSlot, menu_helper, qt_gui_helper
 
 
-class FrmMain( QMainWindow, IGuiPluginHostWindow ):
+class FrmMain( QMainWindow, IGuiHostMainWindow ):
     """
     Main window
     """
@@ -56,6 +56,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         
         if global_options.window_mode == EWindowMode.TDI:
             self.ui.MDI_AREA.setViewMode( QMdiArea.TabbedView )
+            self.ui.MDI_AREA.setDocumentMode( True )
         
         from groot_gui.utilities.gui_menu import GuiMenu
         self.menu_handler = GuiMenu( self )
@@ -82,8 +83,8 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
     
     
     def update_title( self ):
-        self.setWindowTitle( MENV.name + " - " + MENV.root.visualisable_info().name )
-        self.ui.LBL_FILENAME.setText( MENV.root.visualisable_info().name )
+        self.setWindowTitle( MENV.name + " - " + str( MENV.root ) )
+        self.ui.LBL_FILENAME.setText( str( MENV.root ) )
     
     
     def on_selection_changed( self ):
@@ -91,7 +92,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
             form.selection_changed()
     
     
-    def plugin_completed( self, result: Result ) -> None:
+    def command_completed( self, result: AsyncResult ) -> None:
         self.update_title()
         self.menu_handler.gui_actions.dismiss_startup_screen()
         self.menu_handler.update_buttons()
@@ -104,10 +105,10 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
             self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.title )
             self.ui.BTN_STATUS.setIcon( resources.success.icon() )
             self.completed_changes = result.result
-            self.completed_plugin = result.plugin
+            self.completed_plugin = result.command
             for form in self.iter_forms():
                 print( form )
-                form.on_plugin_completed()
+                form.on_command_completed()
             self.completed_changes = None
             self.completed_plugin = None
         else:
@@ -179,7 +180,7 @@ class FrmMain( QMainWindow, IGuiPluginHostWindow ):
         from intermake_qt import FrmTreeView
         
         FrmTreeView.request( parent = self,
-                             root = MCMD.host.last_results,
+                             root = MCMD.host.result_history,
                              message = "Results",
                              flat = True )
     

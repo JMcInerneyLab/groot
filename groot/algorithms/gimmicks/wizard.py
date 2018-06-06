@@ -1,20 +1,23 @@
-from intermake import MCMD, MENV, Plugin, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities
+from intermake import MCMD, AbstractCommand, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities
 from mhelper import EFileMode, Filename, MFlags, file_helper, string_helper
 from typing import List, Optional, cast
 
-from groot import LegoModel
+from groot import LegoModel, constants
 from groot.algorithms import workflow
 from groot.constants import EFormat, LegoStage, STAGES, EChanges
 from groot.data import global_view
+
+
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
 
 
 class EImportFilter( MFlags ):
     """
     Mask on importing files.
     
-    :data DATA: Data files (`.fasta`, `.blast`, `.composites`)
-    :data MODE: Model files (`.groot`)
-    :data SCRIPT: Scripts (`.imk`)
+    :cvar DATA: Data files (`.fasta`, `.blast`, `.composites`)
+    :cvar MODEL: Model files (`.groot`)
+    :cvar SCRIPT: Scripts (`.imk`)
     """
     DATA: "EImportFilter" = 1 << 0
     MODEL: "EImportFilter" = 1 << 1
@@ -131,10 +134,10 @@ class Wizard:
         MCMD.progress( "Use the following commands to review:" )
         for command in commands:
             MCMD.progress( "* {}{}{}".format( Theme.COMMAND_NAME,
-                                              cast( Plugin, command ).display_name,
+                                              cast( AbstractCommand, command ).display_name,
                                               Theme.RESET ) )
         MCMD.progress( "Use the {}{}{} command to continue the wizard.".format( Theme.COMMAND_NAME,
-                                                                                cast( Plugin, continue_wizard ).display_name,
+                                                                                cast( AbstractCommand, continue_wizard ).display_name,
                                                                                 Theme.RESET ) )
         self.is_paused = True
     
@@ -143,7 +146,7 @@ class Wizard:
         title = "WIZARD: " + str( title )
         title = " ".join( title.upper() )
         # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
-        MCMD.progress( string_helper.centre_align( " " + title + " ", MENV.host.console_width, Theme.C.SHADE ) )
+        MCMD.progress( string_helper.centre_align( " " + title + " ", MCMD.host.console_width, Theme.C.SHADE ) )
         # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
     
     
@@ -258,7 +261,10 @@ class Wizard:
     def __fn6_make_trees( self ):
         self.__line( STAGES.TREES_6 )
         
-        self.__result |= workflow.s055_outgroups.set_outgroups( self.outgroups )
+        model = global_view.current_model()
+        ogs = [model.sequences[x] for x in self.outgroups]
+        
+        self.__result |= workflow.s055_outgroups.set_outgroups( ogs )
         
         self.__result |= workflow.s080_tree.create_trees( self.tree )
         
@@ -347,7 +353,7 @@ class Wizard:
                 __fn16_view_nrfg]
 
 
-@command()
+@command( folder = constants.F_CREATE )
 def create_wizard( new: Optional[bool] = None,
                    name: Optional[str] = None,
                    imports: Optional[List[str]] = None,
@@ -546,7 +552,7 @@ def continue_wizard() -> EChanges:
     return Wizard.get_active().step()
 
 
-@command( visibility = visibilities.ADVANCED, names = ["stop"] )
+@command( visibility = visibilities.ADVANCED, names = ["stop"], folder = constants.F_DROP )
 def drop_wizard() -> EChanges:
     """
     Stops a wizard.
@@ -562,7 +568,7 @@ def question( *args ):
     return MCMD.question( *args )
 
 
-@command()
+@command( folder = constants.F_CREATE )
 def create_components( tol: int = 0 ):
     """
     Executes `create_major` then `create_minor`.
@@ -572,7 +578,7 @@ def create_components( tol: int = 0 ):
             workflow.s050_minor.create_minor( tol ))
 
 
-@command()
+@command( folder = constants.F_DROP )
 def drop_components() -> EChanges:
     """
     Removes all the components from the model.
@@ -584,8 +590,11 @@ def drop_components() -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command()
-def import_file( file_name: Filename[EFileMode.READ], skip_bad_extensions: bool, filter: EImportFilter, query: bool ) -> EChanges:
+@command( folder = constants.F_IMPORT )
+def import_file( file_name: Filename[EFileMode.READ],
+                 skip_bad_extensions: bool = False,
+                 filter: EImportFilter = EImportFilter.DATA,
+                 query: bool = False ) -> EChanges:
     """
     Imports a file.
     _How_ the file is imported is determined by its extension.
@@ -602,7 +611,6 @@ def import_file( file_name: Filename[EFileMode.READ], skip_bad_extensions: bool,
     :param query:                   When set the kind of the file is printed to `MCMD` and the file is not imported. 
     :return:                        Nothing is returned, the file data is incorporated into the model and messages are sent via `MCMD`.
     """
-    model: LegoModel = global_view.current_model()
     ext = file_helper.get_extension( file_name ).lower()
     
     if filter.DATA:
@@ -614,7 +622,7 @@ def import_file( file_name: Filename[EFileMode.READ], skip_bad_extensions: bool,
                 return EChanges.INFORMATION
         elif ext in (".fasta", ".fa", ".faa"):
             if not query:
-                return workflow.s020_sequences.import_sequences( model, file_name )
+                return workflow.s020_sequences.import_sequences( file_name )
             else:
                 MCMD.print( "FASTA: «{}».".format( file_name ) )
                 return EChanges.INFORMATION
@@ -623,7 +631,7 @@ def import_file( file_name: Filename[EFileMode.READ], skip_bad_extensions: bool,
         if ext == ".imk":
             if not query:
                 MCMD.progress( "Run script «{}».".format( file_name ) )
-                common_commands.source( file_name )
+                common_commands.cmd_source( file_name )
                 return EChanges.MODEL_OBJECT
             else:
                 MCMD.print( "Script: «{}».".format( file_name ) )
@@ -643,7 +651,7 @@ def import_file( file_name: Filename[EFileMode.READ], skip_bad_extensions: bool,
     raise ValueError( "Cannot import the file '{}' because I don't recognise the extension '{}'.".format( file_name, ext ) )
 
 
-@command()
+@command( folder = constants.F_IMPORT )
 def import_directory( directory: str, query: bool = False, filter: EImportFilter = (EImportFilter.DATA | EImportFilter.SCRIPT), reset: bool = True ) -> EChanges:
     """
     Imports all importable files from a specified directory
@@ -674,7 +682,7 @@ def import_directory( directory: str, query: bool = False, filter: EImportFilter
         return EChanges.NONE
     
     if reset:
-        if MENV.host.is_cli:
+        if MCMD.host.is_cli:
             console_explorer.re_cd( VisualisablePath.get_root() )
         
         return EChanges.MODEL_OBJECT

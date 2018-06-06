@@ -110,6 +110,8 @@ class GuiMenu:
     
     
     def add_workflow( self, stage: LegoStage ):
+        assert isinstance(stage, LegoStage), stage
+        
         path = ["Workflow", stage.name]
         mnu = self.add_menu( path, headline = stage.headline )
         
@@ -135,7 +137,7 @@ class GuiMenu:
         model = self.gui_actions.get_model()
         
         for stage, button, path in self.workflow_buttons:
-            assert isinstance( stage, LegoStage )
+            assert isinstance( stage, LegoStage ), stage
             assert isinstance( button, QAbstractButton )
             
             if model.get_status( stage ).is_complete:

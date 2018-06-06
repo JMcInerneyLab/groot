@@ -1,5 +1,7 @@
 import itertools
 from typing import Iterable, List, Set
+
+from groot import constants
 from intermake import MCMD, command
 from mgraph import AbstractQuartet, MNode, QuartetCollection, QuartetComparison, analysing
 from mhelper import SwitchError, ansi, array_helper, string_helper
@@ -8,8 +10,9 @@ from groot.data import INamedGraph, LegoModel, LegoReport, LegoSequence, global_
 from groot.constants import EChanges
 from groot.utilities import lego_graph
 
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
 
-@command()
+@command(folder=constants.F_CREATE)
 def create_comparison( left: INamedGraph, right: INamedGraph ) -> EChanges:
     """
     Compares two graphs.

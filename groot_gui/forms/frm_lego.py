@@ -220,7 +220,7 @@ class FrmLego( FrmSelectingToolbar ):
         self.update_view()
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         self.update_view( self.actions.frm_main.completed_changes )
     
     

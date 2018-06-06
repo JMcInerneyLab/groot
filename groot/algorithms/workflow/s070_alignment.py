@@ -1,5 +1,7 @@
 from typing import Callable, List, Optional
-from intermake import MCMD, MENV, Theme, command
+
+from groot import constants
+from intermake import MCMD, Theme, command
 from mhelper import io_helper, string_helper
 
 from groot.data import LegoComponent, LegoModel, global_view
@@ -7,14 +9,14 @@ from groot.constants import EChanges
 from groot.utilities import cli_view_utils, external_runner
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
-
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 DAlgorithm = Callable[[LegoModel, str], str]
 """A delegate for a function that takes a model and unaligned FASTA data, and produces an aligned result, in FASTA format."""
 
 alignment_algorithms = AlgorithmCollection[DAlgorithm]( "Alignment" )
 
 
-@command()
+@command(folder = constants.F_CREATE)
 def create_alignments( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Aligns the component. If no component is specified, aligns all components.
@@ -42,7 +44,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     return EChanges.COMP_DATA
 
 
-@command()
+@command(folder = constants.F_SET)
 def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
     """
     Sets a component tree manually.
@@ -58,7 +60,7 @@ def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command()
+@command(folder = constants.F_DROP)
 def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChanges:
     """
     Removes the alignment data from the component. If no component is specified, drops all alignments.
@@ -76,7 +78,7 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_alignments", "alignments"] )
+@command( names = ["print_alignments", "alignments"], folder=constants.F_PRINT )
 def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
     """
     Prints the alignment for a component.
@@ -89,7 +91,7 @@ def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n 
     m = global_view.current_model()
     
     if not n:
-        n = MENV.host.console_width - 5
+        n = MCMD.host.console_width - 5
     
     r = []
     

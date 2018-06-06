@@ -16,7 +16,7 @@ class FrmDebug( FrmBase ):
         self.setWindowTitle( "Debug" )
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         self.add( "COMPLETED" )
     
     

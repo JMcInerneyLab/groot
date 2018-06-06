@@ -7,14 +7,16 @@ Despite the name, FrmWebtree does everything report (HTML) based.
 from os import path
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QGridLayout
+
+from groot_gui import LegoGuiHost
+from groot_gui.forms.frm_view_options import BROWSE_MODE
 from mhelper import OpeningWriter, SwitchError, file_helper, string_helper
 from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 from intermake import MENV, constants as im_constants
 
 import groot
 from groot import LegoModel, LegoSequence
-from groot.data import global_view, EPosition
-from groot.data.global_view import EBrowseMode
+from groot.data import EPosition
 from groot_gui.forms.designer import frm_webtree_designer
 from groot_gui.forms.frm_base import FrmSelectingToolbar
 from groot_gui.utilities.gui_view_utils import ESelect
@@ -42,16 +44,16 @@ class FrmWebtree( FrmSelectingToolbar ):
         self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.ALL )
         
         # Enable our browser?
-        switch = global_view.options().browse_mode
+        switch = LegoGuiHost.get_settings().enable_browser
         
-        if switch == EBrowseMode.ASK:
+        if switch == BROWSE_MODE.ASK:
             pass
-        elif switch == EBrowseMode.INBUILT:
+        elif switch == BROWSE_MODE.INBUILT:
             self.enable_inbuilt_browser()
-        elif switch == EBrowseMode.SYSTEM:
+        elif switch == BROWSE_MODE.SYSTEM:
             self.ui.BTN_BROWSE_HERE.setVisible( False )
         else:
-            raise SwitchError( "FrmWebtree.__init__.switch", switch )
+            raise SwitchError( "LegoGuiHost.get_settings().enable_browser", switch )
         
         # Show the selection
         self.update_page()
@@ -88,7 +90,7 @@ class FrmWebtree( FrmSelectingToolbar ):
         """
         Signal handler:
         """
-        with OpeningWriter() as ow:
+        with OpeningWriter( extension = ".html" ) as ow:
             ow.write( self.html )
     
     

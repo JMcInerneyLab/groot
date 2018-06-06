@@ -1,10 +1,13 @@
-from intermake import command, MCMD, MENV, Theme
+from groot import constants
+from intermake import command, MCMD, Theme
 
 from groot.constants import STAGES, EChanges
 from groot.data import global_view
 
 
-@command( names = ["print_status", "status"], highlight = True )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+
+@command( names = ["print_status", "status"], highlight = True, folder = constants.F_PRINT )
 def print_status() -> EChanges:
     """
     Prints the status of the model. 
@@ -32,7 +35,7 @@ def print_status() -> EChanges:
                 r.append( Theme.STATUS_NO + str( status ) + Theme.RESET )
             
             if status.is_hot:
-                r.append( " - Consider running " + Theme.COMMAND_NAME + "create_" + MENV.host.translate_name( stage.name ) + Theme.RESET )
+                r.append( " - Consider running " + Theme.COMMAND_NAME + "create_" + MCMD.host.translate_name( stage.name ) + Theme.RESET )
         
         r.append( "\n" )
     

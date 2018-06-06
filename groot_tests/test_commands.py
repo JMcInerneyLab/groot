@@ -2,14 +2,20 @@ import os
 import shutil
 import uuid
 from os import path
+
+from groot.algorithms.gimmicks import wizard, compare
+from groot.algorithms.workflow import s010_file, s080_tree, s070_alignment
 from intermake import MCMD, MENV, Theme, command, subprocess_helper, visibilities
 from mgraph import exporting, importing
 from mhelper import SwitchError, file_helper, io_helper
 
-from groot import algorithms
+from groot import constants
 from groot.constants import EFormat, EChanges
 from groot.data import global_view, LegoSequence, UserGraph, FixedUserGraph
 from groot.utilities import lego_graph
+
+
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_TESTS
 
 
 @command( visibility = visibilities.TEST )
@@ -38,7 +44,7 @@ def reload_test( name: str ) -> EChanges:
     if not path.isfile( results_saved_file ):
         raise ValueError( "Cannot load test because it has not yet been run." )
     
-    return algorithms.s010_file.file_load( results_saved_file )
+    return s010_file.file_load( results_saved_file )
 
 
 @command( visibility = visibilities.TEST )
@@ -134,29 +140,29 @@ def run_test( name: str,
     shutil.copy( test_tree_file, results_original_file )
     
     # Create settings
-    walkthrough = algorithms.s999_wizard.Wizard( new = False,
-                                                 name = path.join( results_folder, test_name + ".groot" ),
-                                                 imports = global_view.get_sample_contents( test_case_folder ),
-                                                 pause_import = False,
-                                                 pause_components = False,
-                                                 pause_align = False,
-                                                 pause_tree = False,
-                                                 pause_fusion = False,
-                                                 pause_splits = False,
-                                                 pause_consensus = False,
-                                                 pause_subset = False,
-                                                 pause_pregraphs = False,
-                                                 pause_minigraph = False,
-                                                 pause_sew = False,
-                                                 pause_clean = False,
-                                                 pause_check = False,
-                                                 tolerance = wiz_tol,
-                                                 outgroups = wiz_og,
-                                                 alignment = "",
-                                                 tree = "neighbor_joining",
-                                                 view = False,
-                                                 save = False,
-                                                 supertree = "clann" )
+    walkthrough = wizard.Wizard( new = False,
+                                 name = path.join( results_folder, test_name + ".groot" ),
+                                 imports = global_view.get_sample_contents( test_case_folder ),
+                                 pause_import = False,
+                                 pause_components = False,
+                                 pause_align = False,
+                                 pause_tree = False,
+                                 pause_fusion = False,
+                                 pause_splits = False,
+                                 pause_consensus = False,
+                                 pause_subset = False,
+                                 pause_pregraphs = False,
+                                 pause_minigraph = False,
+                                 pause_sew = False,
+                                 pause_clean = False,
+                                 pause_check = False,
+                                 tolerance = wiz_tol,
+                                 outgroups = wiz_og,
+                                 alignment = "",
+                                 tree = "neighbor_joining",
+                                 view = False,
+                                 save = False,
+                                 supertree = "clann" )
     
     try:
         # Execute
@@ -172,7 +178,7 @@ def run_test( name: str,
         global_view.current_model().user_graphs.append( FixedUserGraph( test_tree_file_data.graph, "original_graph" ) )
     finally:
         # Save the final model
-        algorithms.s010_file.file_save( results_saved_file )
+        s010_file.file_save( results_saved_file )
     
     # Write the results
     model = global_view.current_model()
@@ -182,22 +188,22 @@ def run_test( name: str,
                                                            delimiter = "\t" ) )
     
     if view:
-        algorithms.s080_tree.print_trees( test_tree_file_data, format = EFormat._HTML, file = "open" )
-        algorithms.s080_tree.print_trees( model.fusion_graph_unclean, format = EFormat._HTML, file = "open" )
-        algorithms.s080_tree.print_trees( model.fusion_graph_clean, format = EFormat._HTML, file = "open" )
+        s080_tree.print_trees( test_tree_file_data, format = EFormat._HTML, file = "open" )
+        s080_tree.print_trees( model.fusion_graph_unclean, format = EFormat._HTML, file = "open" )
+        s080_tree.print_trees( model.fusion_graph_clean, format = EFormat._HTML, file = "open" )
         
         for component in model.components:
-            algorithms.s080_tree.print_trees( component.named_tree_unrooted, format = EFormat._HTML, file = "open" )
-            algorithms.s080_tree.print_trees( component.named_tree, format = EFormat._HTML, file = "open" )
+            s080_tree.print_trees( component.named_tree_unrooted, format = EFormat._HTML, file = "open" )
+            s080_tree.print_trees( component.named_tree, format = EFormat._HTML, file = "open" )
     
     # Save extra data
-    algorithms.s070_alignment.print_alignments( file = results_saved_alignments )
-    algorithms.s080_tree.print_trees( model.fusion_graph_clean, format = EFormat.TSV, file = results_edges_file )
+    s070_alignment.print_alignments( file = results_saved_alignments )
+    s080_tree.print_trees( model.fusion_graph_clean, format = EFormat.TSV, file = results_edges_file )
     
     # Read original graph
     new_newicks = []
     
-    differences = algorithms.s999_compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
+    differences = compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
     
     # Write results
     file_helper.write_all_text( results_newick_file, new_newicks, newline = True )
@@ -208,7 +214,7 @@ def run_test( name: str,
     
     # Add the report to the model
     global_view.current_model().user_reports.append( differences )
-    algorithms.s010_file.file_save( results_saved_file )
+    s010_file.file_save( results_saved_file )
     
     MCMD.progress( "The test has completed, see «{}».".format( results_compare_file ) )
     return EChanges.MODEL_OBJECT

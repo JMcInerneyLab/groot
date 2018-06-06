@@ -1,5 +1,5 @@
 from typing import List, FrozenSet, Sequence, Iterable, Iterator, Dict, Tuple
-from intermake.engine.environment import MENV, IVisualisable, UiInfo, EColour
+from intermake.engine.environment import MCMD, IVisualisable, UiInfo
 from mhelper import string_helper, file_helper as FileHelper, NotFoundError
 
 from groot.constants import LegoStage
@@ -72,38 +72,31 @@ class LegoModel( IVisualisable ):
         return any( x.tree for x in self.components )
     
     
-    def visualisable_info( self ) -> UiInfo:
-        return UiInfo( name = self.name,
-                       doc = str( self.__doc__ ),
-                       type_name = "Model",
-                       value = "{} sequences".format( len( self.sequences ) ),
-                       colour = EColour.YELLOW,
-                       icon = ":/intermake/folder.svg",
-                       extra = { "documentation"         : self.__doc__,
-                                 "graphs"                : list( self.iter_graphs() ),
-        
-                                 "sequences"             : self.sequences,
-                                 "components"            : self.components,
-                                 "edges"                 : self.edges,
-                                 "comments"              : self.user_comments,
-                                 "site_type"             : self.site_type,
-                                 "file_name"             : self.file_name,
-                                 "fusion_events"         : self.fusion_events,
-                                 "user_domains"          : self.user_domains,
-                                 "user_graphs"           : self.user_graphs,
-                                 "splits"                : self.splits,
-                                 "consensus"             : self.consensus,
-                                 "fusion_graph_unclean"  : self.fusion_graph_unclean,
-                                 "fusion_graph_clean"    : self.fusion_graph_clean,
-                                 "report"                : self.report,
-                                 "subsets"               : self.subsets,
-                                 "pregraphs"             : self.iter_pregraphs(),
-                                 "subgraphs"             : self.subgraphs,
-                                 "subgraphs_sources"     : self.subgraphs_sources,
-                                 "subgraphs_destinations": self.subgraphs_destinations,
-        
-                                 "results"               : MENV.host.last_results,
-                                 "plugins"               : MENV.plugins.plugins() } )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        u.text = "{} sequences".format( len( self.sequences ) )
+        u.hint = u.Hints.FOLDER
+        u.contents += { "graphs"                : list( self.iter_graphs() ),
+                        "sequences"             : self.sequences,
+                        "components"            : self.components,
+                        "edges"                 : self.edges,
+                        "comments"              : self.user_comments,
+                        "site_type"             : self.site_type,
+                        "file_name"             : self.file_name,
+                        "fusion_events"         : self.fusion_events,
+                        "user_domains"          : self.user_domains,
+                        "user_graphs"           : self.user_graphs,
+                        "splits"                : self.splits,
+                        "consensus"             : self.consensus,
+                        "fusion_graph_unclean"  : self.fusion_graph_unclean,
+                        "fusion_graph_clean"    : self.fusion_graph_clean,
+                        "report"                : self.report,
+                        "subsets"               : self.subsets,
+                        "pregraphs"             : self.iter_pregraphs(),
+                        "subgraphs"             : self.subgraphs,
+                        "subgraphs_sources"     : self.subgraphs_sources,
+                        "subgraphs_destinations": self.subgraphs_destinations,
+                        "results"               : MCMD.host.result_history,
+                        "commands"              : MCMD.environment.commands.get_root_folder() }
     
     
     def __str__( self ):

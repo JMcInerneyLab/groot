@@ -1,17 +1,18 @@
 from groot.constants import STAGES, EChanges
 from groot.data import EPosition, FusionGraph, LegoFormation, LegoPoint, LegoSequence, global_view
 from groot.utilities import lego_graph
+from groot import constants
 from intermake import command
 from mgraph import MGraph, MNode, analysing
 from mhelper import Logger, LoopDetector, SwitchError
 
 
 LOG = Logger( "clean", False )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 
 
-
-@command()
+@command(folder = constants.F_CREATE)
 def create_cleaned( ):
     """
     Cleans the NRFG.
@@ -30,7 +31,7 @@ def create_cleaned( ):
     model.fusion_graph_clean = FusionGraph( nrfg, True )
     return EChanges.MODEL_DATA
     
-@command()
+@command(folder = constants.F_DROP)
 def drop_cleaned( ):
     """
     Removes data from the model.

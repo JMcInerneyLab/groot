@@ -171,15 +171,15 @@ class EFormat( MEnum ):
     Note some output formats only work for DAGs (trees).
     File extensions are listed, which control how the file is opened if the `open` file specifier is passed to the export functions.
     
-    :data NEWICK      : Newick format. DAG only. (.NWK)
-    :data ASCII       : Simple ASCII diagram. (.TXT)
-    :data ETE_GUI     : Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete. DAG only. (No output file)
-    :data ETE_ASCII   : ASCII, provided by Ete. Requires Ete. DAG only. (.TXT)
-    :data CSV         : Excel-type CSV with headers, suitable for Gephi. (.CSV)
-    :data VISJS       : Vis JS (.HTML)
-    :data TSV         : Tab separated value (.TSV)
-    :data SVG         : HTML formatted SVG graphic (.HTML)
-    :data CYJS        : Cytoscape JS (.HTML)
+    :cvar NEWICK      : Newick format. DAG only. (.NWK)
+    :cvar ASCII       : Simple ASCII diagram. (.TXT)
+    :cvar ETE_GUI     : Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete. DAG only. (No output file)
+    :cvar ETE_ASCII   : ASCII, provided by Ete. Requires Ete. DAG only. (.TXT)
+    :cvar CSV         : Excel-type CSV with headers, suitable for Gephi. (.CSV)
+    :cvar VISJS       : Vis JS (.HTML)
+    :cvar TSV         : Tab separated value (.TSV)
+    :cvar SVG         : HTML formatted SVG graphic (.HTML)
+    :cvar CYJS        : Cytoscape JS (.HTML)
     """
     NEWICK = 1
     ASCII = 2
@@ -228,7 +228,15 @@ COMPONENT_PREFIX = "c:"
 EXT_GROOT = ".groot"
 EXT_FASTA = ".fasta"
 EXT_BLAST = ".blast"
-
+MCMD_FOLDER_NAME = "GROOT"
+MCMD_FOLDER_NAME_EXTRA = "GROOT-EXTRA"
+MCMD_FOLDER_NAME_TESTS = "GROOT-TESTS"
+F_CREATE = "GROOT-CREATE"
+F_DROP = "GROOT-DROP"
+F_PRINT = "GROOT-PRINT"
+F_SET = "GROOT-SET"
+F_IMPORT="GROOT-IMPORT"
+F_FILE = "GROOT-FILE"
 
 class EChanges( MFlags ):
     """
@@ -237,14 +245,14 @@ class EChanges( MFlags ):
     When the GUI receives an EChanges object, it updates the pertinent data.
     The CLI does nothing with the object.
     
-    :data MODEL_OBJECT:     The model object itself has changed.
+    :cvar MODEL_OBJECT:     The model object itself has changed.
                             Implies FILE_NAME, MODEL_ENTITIES
-    :data FILE_NAME:        The filename of the model has changed and/or the recent files list.
-    :data MODEL_ENTITIES:   The entities within the model have changed.
-    :data COMPONENTS:       The components within the model have changed.
-    :data COMP_DATA:        Meta-data (e.g. trees) on the components have changed
-    :data MODEL_DATA:       Meta-data (e.g. the NRFG) on the model has changed
-    :data INFORMATION:      The text printed during the command's execution is of primary concern to the user.
+    :cvar FILE_NAME:        The filename of the model has changed and/or the recent files list.
+    :cvar MODEL_ENTITIES:   The entities within the model have changed.
+    :cvar COMPONENTS:       The components within the model have changed.
+    :cvar COMP_DATA:        Meta-data (e.g. trees) on the components have changed
+    :cvar MODEL_DATA:       Meta-data (e.g. the NRFG) on the model has changed
+    :cvar INFORMATION:      The text printed during the command's execution is of primary concern to the user.
     """
     __no_flags_name__ = "NONE"
     
@@ -256,3 +264,9 @@ class EChanges( MFlags ):
     MODEL_DATA = 1 << 5
     INFORMATION = 1 << 6
     DOMAINS = 1 << 7
+
+
+class BROWSE_MODE:
+    SYSTEM = 0
+    ASK = 1
+    INBUILT = 2

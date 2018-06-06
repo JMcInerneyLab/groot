@@ -12,13 +12,14 @@ from groot.algorithms.workflow.s020_sequences import _make_sequence
 from intermake import MCMD, command
 from mhelper import EFileMode, Filename, Logger
 
-from groot import LegoEdge
+from groot import LegoEdge, constants
 from groot.constants import EXT_BLAST, STAGES, EChanges
 from groot.data import LegoModel, LegoSubsequence, global_view
 from groot.utilities import AlgorithmCollection, external_runner
 
 
 LOG = Logger( "import/blast" )
+__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 DAlgorithm = Callable[[str], str]
 """
@@ -35,7 +36,7 @@ Output:
 similarity_algorithms = AlgorithmCollection[DAlgorithm]( "Similarity" )
 
 
-@command()
+@command( folder = constants.F_CREATE )
 def create_similarity( algorithm: str, evalue: float = None, length: int = None ):
     """
     Create and imports similarity matrix created using the specified algorithm.
@@ -56,7 +57,7 @@ def create_similarity( algorithm: str, evalue: float = None, length: int = None 
     __import_blast_format_6( evalue, output, "untitled_blast_data", length, model, True )
 
 
-@command()
+@command( folder = constants.F_SET )
 def set_similarity( left: LegoSubsequence, right: LegoSubsequence ) -> EChanges:
     """
     Adds a new edge to the model.
@@ -72,7 +73,7 @@ def set_similarity( left: LegoSubsequence, right: LegoSubsequence ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command()
+@command( folder = constants.F_IMPORT )
 def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
     """
     Imports a similarity matrix.
@@ -94,7 +95,7 @@ def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: O
     return EChanges.MODEL_ENTITIES
 
 
-@command()
+@command( folder = constants.F_DROP )
 def drop_similarity( edges: Optional[List[LegoEdge]] = None ):
     """
     Detaches the specified edges from the specified subsequences.
@@ -112,7 +113,7 @@ def drop_similarity( edges: Optional[List[LegoEdge]] = None ):
         model.edges = []
 
 
-@command( names = ["print_similarity", "similarity"] )
+@command( names = ["print_similarity", "similarity"], folder = constants.F_PRINT )
 def print_similarity( find: str = "" ) -> EChanges:
     """
     Prints model edges.
@@ -178,8 +179,8 @@ def __import_blast_format_6( evalue, file, file_title, length, model, obtain_onl
             
             assert query_length > 0 and subject_length > 0
             
-            query_s = _make_sequence( model, query_accession, obtain_only, 0, line, True )
-            subject_s = _make_sequence( model, subject_accession, obtain_only, 0, line, True )
+            query_s = _make_sequence( model, query_accession, obtain_only, 0, True )
+            subject_s = _make_sequence( model, subject_accession, obtain_only, 0, True )
             
             if query_s and subject_s and query_s is not subject_s:
                 query = LegoSubsequence( query_s, query_start, query_end )

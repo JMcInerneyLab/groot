@@ -12,7 +12,7 @@ class AlgorithmCollection( Generic[T] ):
     Holds a collection of algorithms.
     
     :generic T: Type of argument (delegate)
-    :data ALL:  All algorithm collections
+    :cvar ALL:  All algorithm collections
     """
     ALL = []
     

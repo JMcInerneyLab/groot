@@ -5,8 +5,7 @@ from typing import Tuple, Optional, List, Iterable, FrozenSet, cast, Any, Set
 from groot.data.model_interfaces import EPosition, INamed, IHasFasta, INamedGraph, ILegoNode
 from groot import resources as groot_resources
 from intermake.engine.environment import MENV
-from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable
-from intermake_qt.forms.designer.resource_files import resources as intermake_resources
+from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable, UiHint
 from mgraph import MGraph, Split
 from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate
 
@@ -41,19 +40,6 @@ class LegoEdge( IHasFasta ):
         fasta.append( self.right.site_array or ";MISSING" )
         fasta.append( "" )
         return "\n".join( fasta )
-    
-    
-    def visualisable_info( self ) -> UiInfo:
-        """
-        OVERRIDE
-        """
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       type_name = "Edge",
-                       value = "",
-                       colour = EColour.CYAN,
-                       icon = intermake_resources.folder,
-                       extra_named = (self.left, self.right) )
     
     
     def __contains__( self, item: "LegoSequence" ) -> bool:
@@ -221,21 +207,18 @@ class LegoSubsequence( IHasFasta, IVisualisable ):
         return LegoSubsequence( self.sequence, start, end )
     
     
-    def visualisable_info( self ) -> UiInfo:
+    def on_get_vis_info( self, u: UiInfo ) -> None:
         """
         OVERRIDE 
         """
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       type_name = "Subsequence",
-                       value = "{} sites".format( self.length ),
-                       colour = EColour.RED,
-                       icon = intermake_resources.folder,
-                       extra = { "sequence": self.sequence,
-                                 "start"   : self.start,
-                                 "end"     : self.end,
-                                 "length"  : self.length,
-                                 "sites"   : self.site_array } )
+        super().on_get_vis_info( u )
+        u.hint = u.Hints.FOLDER
+        u.text = "{} sites".format( self.length )
+        u.properties += { "sequence": self.sequence,
+                          "start"   : self.start,
+                          "end"     : self.end,
+                          "length"  : self.length,
+                          "sites"   : self.site_array }
     
     
     @staticmethod
@@ -311,12 +294,11 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
     """
     Protein (or DNA) sequence
     
-    :attr index:        Index within model.
-    :attr accession:    Database accession. Note that this can't look like an accession produced by any of the `legacy_accession` functions.
-    :attr model:        Owning model.
-    :attr site_array:   Site data. This can be `None` before the data is loaded in. The length must match `length`.
-    :attr comments:     Comments on the sequence.
-    :attr length:       Length of the sequence. This must match `site_array`, it that is set.
+    :ivar index:        Index within model.
+    :ivar accession:    Database accession. Note that this can't look like an accession produced by any of the `legacy_accession` functions.
+    :ivar model:        Owning model.
+    :ivar site_array:   Site data. This can be `None` before the data is loaded in. The length must match `length`.
+    :ivar length:       Length of the sequence. This must match `site_array`, it that is set.
     """
     
     # Formats for finding and creating legacy accessions
@@ -338,7 +320,8 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
         self.site_array: str = None
         self.length = 1
         self.position = EPosition.NONE
-        
+    
+    
     @property
     def is_outgroup( self ):
         return self.position == EPosition.OUTGROUP
@@ -403,22 +386,19 @@ class LegoSequence( ILegoNode, IHasFasta, IVisualisable, INamed ):
         return LegoSubsequence( self, 1, self.length )
     
     
-    def visualisable_info( self ) -> UiInfo:
+    def on_get_vis_info( self, u: UiInfo ) -> None:
         """
         OVERRIDE 
         """
-        return UiInfo( name = self.accession,
-                       doc = "",
-                       type_name = "Sequence",
-                       value = "{} sites".format( self.length ),
-                       colour = EColour.BLUE,
-                       icon = groot_resources.black_gene,
-                       extra = { "id"       : self.legacy_accession,
-                                 "length"   : self.length,
-                                 "accession": self.accession,
-                                 "position" : self.position,
-                                 "num_sites": len( self.site_array ) if self.site_array else "?",
-                                 "sites"    : self.site_array } )
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.BLUE, icon = groot_resources.black_gene )
+        u.value = "{} sites".format( self.length )
+        u.properties += { "id"       : self.legacy_accession,
+                          "length"   : self.length,
+                          "accession": self.accession,
+                          "position" : self.position,
+                          "num_sites": len( self.site_array ) if self.site_array else "?",
+                          "sites"    : self.site_array }
     
     
     def __str__( self ) -> str:
@@ -491,21 +471,21 @@ class LegoComponent( INamed, IVisualisable ):
     """
     Stores information about a component of the (:class:`LegoModel`).
     
-    :attr model:                      Back-reference to model
-    :attr index:                      Index of component within model
-    :attr major_sequences:            Major sequences of this component.
-                                      i.e. sequences only containing domains in :attr:`minor_subsequences`
-    :attr tree:                       Tree generated for this component.
+    :ivar model:                      Back-reference to model
+    :ivar index:                      Index of component within model
+    :ivar major_sequences:            Major sequences of this component.
+                                      i.e. sequences only containing domains in :ivar:`minor_subsequences`
+    :ivar tree:                       Tree generated for this component.
                                       * `None` before it has been calculated.
-    :attr alignment:                  Alignment generated for this component, in FASTA format, with sequences
+    :ivar alignment:                  Alignment generated for this component, in FASTA format, with sequences
                                       referenced by IID "legacy format" (not accession).
                                       * `None` before it has been calculated.
-    :attr minor_subsequences:         Minor subsequences of this component.
+    :ivar minor_subsequences:         Minor subsequences of this component.
                                       i.e. all domains in this component.
                                       * `None` before it has been calculated.
-    :attr splits:                     Splits of the component tree.
+    :ivar splits:                     Splits of the component tree.
                                       * `None` before it has been calculated.
-    :attr leaves:                     Leaves used in `splits`.
+    :ivar leaves:                     Leaves used in `splits`.
                                       * `None` before it has been calculated.       
     """
     
@@ -623,24 +603,22 @@ class LegoComponent( INamed, IVisualisable ):
             return self.alignment
     
     
-    def visualisable_info( self ) -> UiInfo:
+    def on_get_vis_info( self, u: UiInfo ) -> None:
         """
         OVERRIDE
         """
-        return UiInfo( name = str( self ),
-                       type_name = "Component",
-                       value = "{} sequences".format( array_helper.count( self.major_sequences ) ),
-                       colour = EColour.RED,
-                       icon = groot_resources.black_major,
-                       extra = { "index"      : self.index,
-                                 "major"      : self.major_sequences,
-                                 "minor_s"    : self.minor_sequences,
-                                 "minor_ss"   : self.minor_subsequences,
-                                 "alignment"  : self.alignment,
-                                 "tree"       : self.tree,
-                                 "tree_newick": self.tree_newick,
-                                 "incoming"   : self.incoming_components(),
-                                 "outgoing"   : self.outgoing_components() } )
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.RED, icon = groot_resources.black_major )
+        u.value = "{} sequences".format( array_helper.count( self.major_sequences ) )
+        u.properties += { "index"      : self.index,
+                          "major"      : self.major_sequences,
+                          "minor_s"    : self.minor_sequences,
+                          "minor_ss"   : self.minor_subsequences,
+                          "alignment"  : self.alignment,
+                          "tree"       : self.tree,
+                          "tree_newick": self.tree_newick,
+                          "incoming"   : self.incoming_components(),
+                          "outgoing"   : self.outgoing_components() }
     
     
     def __str__( self ) -> str:
@@ -733,12 +711,6 @@ class Subgraph( INamedGraph ):
     
     def __str__( self ):
         return "subgraph_{}".format( self.__subset.get_accid() )
-    
-    
-    def visualisable_info( self ):
-        return UiInfo( name = str( self ),
-                       value = str( self.graph ),
-                       extra = { "algorithm": self.__algorithm } )
 
 
 class LegoSplit( INamed, IVisualisable ):
@@ -764,20 +736,16 @@ class LegoSplit( INamed, IVisualisable ):
         return self.name
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       type_name = "Split",
-                       value = self.split.to_string(),
-                       colour = EColour.CYAN,
-                       icon = groot_resources.black_split,
-                       extra = { "inside"          : self.split.inside,
-                                 "outside"         : self.split.outside,
-                                 "components"      : self.components,
-                                 "evidence_for"    : self.evidence_for,
-                                 "evidence_against": self.evidence_against,
-                                 "evidence_unused" : self.evidence_unused,
-                                 } )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.CYAN, icon = groot_resources.black_split )
+        u.text = self.split.to_string()
+        u.properties += { "inside"          : self.split.inside,
+                          "outside"         : self.split.outside,
+                          "components"      : self.components,
+                          "evidence_for"    : self.evidence_for,
+                          "evidence_against": self.evidence_against,
+                          "evidence_unused" : self.evidence_unused }
     
     
     def __eq__( self, other ):
@@ -824,13 +792,10 @@ class LegoReport( INamed, IVisualisable ):
         return self.name
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = self.title,
-                       doc = "",
-                       type_name = "Report",
-                       value = "(HTML report)",
-                       colour = EColour.GREEN,
-                       icon = groot_resources.black_check )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.GREEN, icon = groot_resources.black_check )
+        u.text = "(HTML report)"
 
 
 class LegoSubset( IVisualisable ):
@@ -866,42 +831,33 @@ class LegoSubset( IVisualisable ):
         return string_helper.format_array( self.contents )
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       type_name = "Subset",
-                       value = self.get_details(),
-                       colour = EColour.CYAN,
-                       icon = groot_resources.black_subset,
-                       extra_indexed = self.contents )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.CYAN, icon = groot_resources.black_subset )
+        u.contents += lambda: self.contents
 
 
 class LegoFusion( INamed, IVisualisable ):
     """
     Describes a fusion event
     
-    :data component_a:          First component
-    :data component_b:          Second component
-    :data products:             Generated component (root)
-    :data future_products:      Generated component (all possibilities)
-    :data point_a:              The name of the node on the first component which the fusion occurs
-    :data point_b:              The name of the node on the second component which the fusion occurs
+    :ivar component_a:          First component
+    :ivar component_b:          Second component
+    :ivar products:             Generated component (root)
+    :ivar future_products:      Generated component (all possibilities)
     """
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       type_name = "Fusion",
-                       value = self.long_name,
-                       colour = EColour.RED,
-                       icon = groot_resources.black_fusion,
-                       extra = { "index"          : self.index,
-                                 "component_a"    : self.component_a,
-                                 "component_b"    : self.component_b,
-                                 "products"       : self.products,
-                                 "future_products": self.future_products,
-                                 "formations"     : self.formations } )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.RED, icon = groot_resources.black_fusion )
+        u.text = self.long_name
+        u.properties += { "index"          : self.index,
+                          "component_a"    : self.component_a,
+                          "component_b"    : self.component_b,
+                          "products"       : self.products,
+                          "future_products": self.future_products,
+                          "formations"     : self.formations }
     
     
     def on_get_name( self ):
@@ -958,16 +914,15 @@ class LegoFormation( INamed, IVisualisable, ILegoNode ):
         self.index = index
     
     
-    def visualisable_info( self ) -> UiInfo:
-        return UiInfo( name = str( self ),
-                       type_name = "Formation",
-                       value = "{} points".format( len( self.points ) ),
-                       extra = {
-                           "component"      : self.component,
-                           "sequences"      : self.sequences,
-                           "pertinent_inner": self.pertinent_inner,
-                           "index"          : self.index,
-                           "points"         : self.points } )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.text = "{} points".format( len( self.points ) )
+        u.properties += {
+            "component"      : self.component,
+            "sequences"      : self.sequences,
+            "pertinent_inner": self.pertinent_inner,
+            "index"          : self.index,
+            "points"         : self.points }
     
     
     def get_accid( self ) -> str:
@@ -1009,11 +964,11 @@ class LegoPoint( INamed, ILegoNode, IVisualisable ):
     """
     Point of fusion.
     
-    :attr pertinent_outer:      The `outer_sequences` which are actually part of the formed component. (using `get_pertinent_outer` also includes `self`).
-    :attr formation:            See `__init__`.
-    :attr point_component:      See `__init__`.
-    :attr outer_sequences:      See `__init__`.
-    :attr index:                See `__init__`.
+    :ivar pertinent_outer:      The `outer_sequences` which are actually part of the formed component. (using `get_pertinent_outer` also includes `self`).
+    :ivar formation:            See `__init__`.
+    :ivar point_component:      See `__init__`.
+    :ivar outer_sequences:      See `__init__`.
+    :ivar index:                See `__init__`.
     """
     
     
@@ -1093,17 +1048,14 @@ class LegoPoint( INamed, ILegoNode, IVisualisable ):
         return bool( cls._LEGACY_IDENTIFIER.match( name ) )
     
     
-    def visualisable_info( self ):
-        return UiInfo( name = str( self ),
-                       doc = "",
-                       value = "{} sequences".format( len( self.formation.sequences ) ),
-                       colour = EColour.MAGENTA,
-                       icon = groot_resources.black_fusion,
-                       type_name = "Point",
-                       extra = {
-                           "outer_sequences": self.outer_sequences,
-                           "pertinent_outer": self.pertinent_outer,
-                           "index"          : self.index } )
+    def on_get_vis_info( self, u: UiInfo ) -> None:
+        super().on_get_vis_info( u )
+        u.hint = UiHint( colour = EColour.MAGENTA, icon = groot_resources.black_fusion )
+        u.text = "{} sequences".format( len( self.formation.sequences ) )
+        u.properties += {
+            "outer_sequences": self.outer_sequences,
+            "pertinent_outer": self.pertinent_outer,
+            "index"          : self.index }
     
     
     @property

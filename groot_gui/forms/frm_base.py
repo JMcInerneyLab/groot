@@ -23,7 +23,7 @@ class FrmBase( QDialog ):
         self.actions: GuiActions = GuiActions( self.frm_main, self )
     
     
-    def on_plugin_completed( self ):
+    def on_command_completed( self ):
         self.on_refresh_data()
     
     
@@ -57,7 +57,7 @@ class FrmBase( QDialog ):
     
     
     def show_menu( self, *args ):
-        return menu_helper.show( self.sender(), *args )
+        return menu_helper.show( self, *args )
     
     
     def show_form( self, form_class ):

@@ -1,4 +1,4 @@
-from intermake import MENV, MCMD, visibilities, Theme, command, help_command
+from intermake import MENV, MCMD, visibilities, Theme, command
 from mgraph import NodeStyle
 
 from groot.utilities import AlgorithmCollection
@@ -12,16 +12,17 @@ def cmd_groot():
     MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )
 
 
-@help_command()
-def print_help() -> str:
+def __print_help() -> str:
     """
     Help on tree-node formatting.
     """
     return str( NodeStyle.replace_placeholders.__doc__ )
 
 
-@help_command( names = ["algorithm_help", "print_algorithms", "algorithms"] )
-def algorithm_help():
+MENV.help.add( "Tree node formatting", __print_help )
+
+
+def __algorithm_help():
     """
     Prints available algorithms.
     """
@@ -39,3 +40,6 @@ def algorithm_help():
         r.append( "" )
     
     return "\n".join( r )
+
+
+MENV.help.add( "Algorithms", __algorithm_help )
