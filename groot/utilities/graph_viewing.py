@@ -5,7 +5,7 @@ from mhelper import SwitchError
 from colorama import Fore
 
 from groot.constants import EFormat
-from groot.data import LegoModel, INamedGraph
+from groot.data import Model, INamedGraph
 from groot.utilities import lego_graph
 
 
@@ -14,7 +14,7 @@ END_SPECIAL = "]"
 END_SKIP = "|"
 
 
-def create( format_str: Optional[str], graph: INamedGraph, model: LegoModel, format: EFormat ) -> str:
+def create( format_str: Optional[str], graph: INamedGraph, model: Model, format: EFormat ) -> str:
     """
     Converts a graph or set of graphs to its string representation. 
     :param format_str:   String describing how the nodes are formatted. See `specify_graph_help` for details.
@@ -69,18 +69,18 @@ def create( format_str: Optional[str], graph: INamedGraph, model: LegoModel, for
     return "\n".join( text )
 
 
-def __ete_tree_to_ascii( target: MGraph, model: LegoModel, fnode: UNodeToFormat ):
+def __ete_tree_to_ascii( target: MGraph, model: Model, fnode: UNodeToFormat ):
     ascii = __ete_tree_from_newick( exporting.export_newick( target, fnode = fnode ) ).get_ascii( show_internal = True )
     
-    for sequence in model.sequences:
-        component = model.components.find_component_for_major_sequence( sequence )
+    for sequence in model.genes:
+        component = model.components.find_component_for_major_gene( sequence )
         colour = Theme.PROGRESSION_FORE[component.index % Theme.PROGRESSION_COUNT]
         ascii = ascii.replace( sequence.accession, colour + sequence.accession + Fore.RESET )
     
     return ascii
 
 
-def __ete_show_tree( target: MGraph, model: LegoModel, fnode: UNodeToFormat ):
+def __ete_show_tree( target: MGraph, model: Model, fnode: UNodeToFormat ):
     tree__ = __ete_tree_from_newick( exporting.export_newick( target, fnode = fnode ) )
     colours = ["#C00000", "#00C000", "#C0C000", "#0000C0", "#C000C0", "#00C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFC0"]
     
@@ -88,8 +88,8 @@ def __ete_show_tree( target: MGraph, model: LegoModel, fnode: UNodeToFormat ):
         n.img_style["fgcolor"] = "#000000"
     
     for node in tree__:
-        sequence = model.find_sequence_by_accession( node.name )
-        component = model.components.find_component_for_major_sequence( sequence )
+        sequence = model.genes[node.name]
+        component = model.components.find_component_for_major_gene( sequence )
         node.img_style["fgcolor"] = colours[component % len( colours )]
     
     tree__.show()

@@ -1,19 +1,63 @@
+from mhelper import NotFoundError
+
+
 def setup():
-    from typing import Optional
-    
+    """
+    Sets up the `stringcoercion` library for use with Groot.
+    `stringcoercion` is used by `intermake` to convert text (e.g. `"123"`) entered in the CLI into Python values (e.g. `123`).
+    """
+    from typing import Iterable, cast, Type
     import re
-    
     from os import path
+    import stringcoercion as sc
+    import mgraph
+    import mhelper
     
-    import stringcoercion
-    from groot import constants
-    from groot.data import global_view, LegoComponent, INamedGraph, UserGraph, LegoSubsequence, LegoSequence
-    from mgraph import MGraph, importing
-    from mhelper import string_helper, file_helper
-    from stringcoercion import CoercionError
+    from groot.data import global_view, Component, INamedGraph, UserGraph, Domain, Gene
+    from groot.utilities import AbstractAlgorithm, AlgorithmCollection
     
     
-    class MGraphCoercer( stringcoercion.AbstractCoercer ):
+    class AlgorithmCoercer( sc.AbstractCoercer ):
+        """
+        Algorithms are referenced in the CLI by names, with parameters specified using semicolons.
+        
+        * "x;y;...;z" where:
+            * "x" is the algorithm name
+            * "y" and "z" are parameters (_if_ required).
+        """
+        
+        
+        def on_get_priority( self, info: sc.CoercionInfo ) -> int:
+            return info.annotation.is_directly_below( AbstractAlgorithm )
+        
+        
+        def on_coerce( self, info: sc.CoercionInfo ) -> AbstractAlgorithm:
+            type_ = cast( Type[AbstractAlgorithm], info.annotation.value )
+            col: AlgorithmCollection = type_.get_owner()
+            
+            elements = info.source.split( ";" )
+            
+            algo_name = elements.pop( 0 )
+            
+            try:
+                function = col.get_function( algo_name )
+            except NotFoundError as ex:
+                raise sc.CoercionError( str( ex ) ) from ex
+            
+            args = mhelper.FunctionInspector( function ).args
+            arg_values = { }
+            
+            for index in range( len( args ) ):
+                if index < col.num_expected_args:
+                    pass
+                else:
+                    arg = args.by_index( index )
+                    arg_values[arg.name] = info.collection.coerce( elements.pop( 0 ), arg.annotation.value )
+            
+            return type_( algo_name, **arg_values )
+    
+    
+    class MGraphCoercer( sc.AbstractEnumCoercer ):
         """
         **Graphs and trees** are referenced by one of the following:
             * Graph in model  : The name of a graph in the current model (you can get a list of graph names via `cd /graphs ; ls`)
@@ -26,14 +70,41 @@ def setup():
         """
         
         
-        def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return self.PRIORITY.HIGH if (info.annotation.is_directly_below( INamedGraph ) or info.annotation.is_directly_below( MGraph )) else False
+        def on_get_priority( self, info: sc.CoercionInfo ):
+            return self.PRIORITY.HIGH if (info.annotation.is_directly_below( INamedGraph ) or info.annotation.is_directly_below( mgraph.MGraph )) else False
         
         
-        def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
+        def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
+            return global_view.current_model().iter_graphs()
+        
+        
+        def on_get_option_name( self, value ):
+            if isinstance( value, INamedGraph ):
+                return value.name
+            elif isinstance( value, str ):
+                return value
+            else:
+                raise mhelper.exception_helper.type_error( "value", value, (INamedGraph, str) )
+        
+        
+        def on_get_accepts_user_options( self ) -> bool:
+            return True
+        
+        
+        def on_convert_option( self, info: sc.CoercionInfo, option: object ) -> object:
+            if not isinstance( option, INamedGraph ):
+                raise ValueError( "Return should be `INamedGraph` but I've got a `{}`".format( repr( option ) ) )
+            
+            if info.annotation.is_directly_below( INamedGraph ):
+                return option
+            else:
+                return option.graph
+        
+        
+        def on_convert_user_option( self, info: sc.CoercionInfo ) -> object:
             txt = info.source
             prefixes = "newick", "compact", "csv", "tsv", "file", "file-newick", "file-compact", "file-csv", "file-tsv"
-            prefix = None
+            prefix, filename = txt.split( ":", 1 )
             is_file = None
             
             for prefix_ in prefixes:
@@ -50,11 +121,9 @@ def setup():
                     
                     break
             
-            name_graph = info.annotation.is_directly_below( INamedGraph )
-            
             if is_file is True or (is_file is None and path.isfile( txt )):
                 if prefix is None:
-                    ext = file_helper.get_extension( txt )
+                    ext = mhelper.file_helper.get_extension( txt )
                     if ext in (".nwk", ".new", ".newick"):
                         prefix = "newick"
                     elif ext == ".tsv":
@@ -64,59 +133,42 @@ def setup():
                     elif ext == ".csv":
                         prefix = "csv"
                 
-                txt = file_helper.read_all_text( txt )
-            
-            model = global_view.current_model()
-            
-            for named_graph in model.iter_graphs():
-                if named_graph.name == txt:
-                    return named_graph if name_graph else named_graph.graph
+                txt = mhelper.file_helper.read_all_text( txt )
             
             if prefix == "compact" or (prefix is None and "|" in txt):
-                r = importing.import_compact( txt )
+                r = mgraph.importing.import_compact( txt )
             elif prefix in ("csv", "tsv") or (prefix is None and "\n" in txt):
                 if prefix == "tsv" or (prefix is None and "\t" in txt):
-                    r = importing.import_edgelist( txt, delimiter = "\t" )
+                    r = mgraph.importing.import_edgelist( txt, delimiter = "\t" )
                 else:
                     assert prefix is None or prefix == "csv"
-                    r = importing.import_edgelist( txt )
+                    r = mgraph.importing.import_edgelist( txt )
             else:
                 assert prefix is None or prefix == "newick"
-                r = importing.import_newick( txt )
+                r = mgraph.importing.import_newick( txt )
             
-            return UserGraph( r ) if name_graph else r
+            return self.on_convert_option( info, UserGraph( r ) )
     
     
-    class MSequenceCoercer( stringcoercion.AbstractCoercer ):
+    class GeneCoercer( sc.AbstractEnumCoercer ):
         """
         **Sequences** are referenced by their _accession_ or _internal ID_.
         """
         
         
-        def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return info.annotation.is_directly_below( LegoSequence )
+        def on_get_priority( self, info: sc.CoercionInfo ):
+            return info.annotation.is_directly_below( Gene )
         
         
-        def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
-            model = global_view.current_model()
-            
-            try:
-                sequence = model.find_sequence_by_accession( info.source )
-            except LookupError:
-                try:
-                    sequence = model.find_sequence_by_legacy_accession( info.source )
-                except ValueError:
-                    sequence = None
-                except LookupError:
-                    sequence = None
-            
-            if sequence is None:
-                raise stringcoercion.CoercionError( "«{}» is neither a valid sequence accession nor internal ID.".format( info.source ) )
-            
-            return sequence
+        def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
+            return global_view.current_model().genes
+        
+        
+        def on_get_option_names( self, value: Gene ) -> Iterable[str]:
+            return value.name, value.display_name, value.index
     
     
-    class MSubsequenceCoercer( stringcoercion.AbstractCoercer ):
+    class DomainCoercer( sc.AbstractEnumCoercer ):
         """
         **Domains** are referenced _in the form_: `X[Y:Z]` where `X` is the sequence, and `Y` and `Z` are the range of the domain (inclusive and 1 based).
         """
@@ -124,37 +176,41 @@ def setup():
         RX1 = re.compile( r"^(.+)\[([0-9]+):([0-9]+)\]$" )
         
         
-        def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return info.annotation.is_directly_below( LegoSubsequence )
+        def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
+            return global_view.current_model().user_domains
         
         
-        def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
+        def on_get_priority( self, info: sc.CoercionInfo ):
+            return info.annotation.is_directly_below( Domain )
+        
+        
+        def on_convert_user_option( self, info: sc.CoercionInfo ) -> object:
             m = self.RX1.match( info.source )
             
             if m is None:
-                raise stringcoercion.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]`.".format( info.source ) )
+                raise sc.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]`.".format( info.source ) )
             
             str_sequence, str_start, str_end = m.groups()
             
             try:
-                sequence = info.collection.coerce( LegoSequence, str_sequence )
-            except CoercionError as ex:
-                raise stringcoercion.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because X («{}») is not a sequence.".format( info.source, str_start ) ) from ex
+                sequence = info.collection.coerce( Gene, str_sequence )
+            except sc.CoercionError as ex:
+                raise sc.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because X («{}») is not a sequence.".format( info.source, str_start ) ) from ex
             
             try:
                 start = int( str_start )
             except ValueError as ex:
-                raise stringcoercion.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because Y («{}») is not a integer.".format( info.source, str_start ) ) from ex
+                raise sc.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because Y («{}») is not a integer.".format( info.source, str_start ) ) from ex
             
             try:
                 end = int( str_end )
             except ValueError as ex:
-                raise stringcoercion.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because Z («{}») is not a integer.".format( info.source, str_start ) ) from ex
+                raise sc.CoercionError( "«{}» is not a valid subsequence of the form `X[Y:Z]` because Z («{}») is not a integer.".format( info.source, str_start ) ) from ex
             
-            return LegoSubsequence( sequence, start, end )
+            return Domain( sequence, start, end )
     
     
-    class MComponentCoercer( stringcoercion.AbstractCoercer ):
+    class ComponentCoercer( sc.AbstractEnumCoercer ):
         """
         **Components** are referenced by:
             * `xxx` where `xxx` is the _name_ of the component
@@ -162,28 +218,20 @@ def setup():
         """
         
         
-        def can_handle( self, info: stringcoercion.CoercionInfo ):
-            return info.annotation.is_directly_below( LegoComponent )
+        def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
+            return global_view.current_model().components
         
         
-        def coerce( self, info: stringcoercion.CoercionInfo ) -> Optional[object]:
-            model = global_view.current_model()
-            
-            if info.source.lower().startswith( constants.COMPONENT_PREFIX ):
-                try:
-                    return model.components[string_helper.to_int( info.source[2:] )]
-                except:
-                    pass
-            
-            try:
-                model.components.find_component_by_name( info.source )
-            except:
-                pass
-            
-            raise stringcoercion.CoercionError( "«{}» is neither a valid component index nor name.".format( info.source ) )
+        def on_get_priority( self, info: sc.CoercionInfo ):
+            return info.annotation.is_directly_below( Component )
+        
+        
+        def on_get_option_names( self, value: Component ) -> Iterable[str]:
+            return value, value.name, value.index
     
     
-    stringcoercion.register( MSequenceCoercer() )
-    stringcoercion.register( MGraphCoercer() )
-    stringcoercion.register( MComponentCoercer() )
-    stringcoercion.register( MSubsequenceCoercer() )
+    sc.register( GeneCoercer() )
+    sc.register( MGraphCoercer() )
+    sc.register( ComponentCoercer() )
+    sc.register( DomainCoercer() )
+    sc.register( AlgorithmCoercer() )

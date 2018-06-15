@@ -6,7 +6,7 @@ from intermake import IVisualisable, VisualisablePath
 from mhelper import array_helper, string_helper
 from mhelper_qt import qt_gui_helper
 
-from groot.data import LegoModel, IHasFasta, INamedGraph, LegoReport, global_view
+from groot.data import Model, IHasFasta, INamedGraph, Report, global_view
 from groot.utilities import cli_view_utils, graph_viewing
 
 
@@ -14,9 +14,9 @@ HTML = List[str]
 _ANSI_SCHEME = qt_gui_helper.ansi_scheme_light( family = 'monospace' )
 
 
-def render( item, model: LegoModel ):
+def render( item, model: Model ):
     # A report (with HTML)
-    if isinstance( item, LegoReport ):
+    if isinstance( item, Report ):
         return item.html
     
     html = []
@@ -66,7 +66,7 @@ def render_visualisable( html: HTML, item: IVisualisable ):
     html.append( "</table>" )
 
 
-def render_tree( html: HTML, item: INamedGraph, model: LegoModel ):
+def render_tree( html: HTML, item: INamedGraph, model: Model ):
     if not isinstance( item, INamedGraph ) or item.graph is None:
         return
     
@@ -82,7 +82,7 @@ def render_tree( html: HTML, item: INamedGraph, model: LegoModel ):
     html.append( visjs )
 
 
-def render_fasta( html: HTML, item: IHasFasta, model: LegoModel ):
+def render_fasta( html: HTML, item: IHasFasta, model: Model ):
     if not isinstance( item, IHasFasta ):
         return
     

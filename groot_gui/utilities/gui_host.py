@@ -10,8 +10,6 @@ class LegoGuiHost( BrowserHost ):
         if global_view.options().share_opengl:
             QCoreApplication.setAttribute( Qt.AA_ShareOpenGLContexts )
         
-        from groot_gui.utilities import gui_workflow
-        gui_workflow.init()
         super().on_run_host( args )
     
     

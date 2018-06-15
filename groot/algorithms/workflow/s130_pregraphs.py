@@ -5,7 +5,7 @@ from mhelper import ComponentFinder, Logger, LogicError, string_helper
 from typing import List
 
 from groot.constants import STAGES, EChanges
-from groot.data import ILegoNode, LegoPregraph, LegoSubset, global_view
+from groot.data import INode, Pregraph, Subset, global_view
 from groot.utilities import lego_graph
 
 
@@ -37,7 +37,10 @@ def drop_pregraphs():
     model = global_view.current_model()
     model.get_status( STAGES.PREGRAPHS_11 ).assert_drop()
     
-    model.pregraphs = tuple()
+    for subset in model.subsets:
+        assert isinstance(subset, Subset)
+        subset.pregraphs = None
+        
     return EChanges.COMP_DATA
 
 
@@ -56,7 +59,7 @@ def print_pregraphs() -> EChanges:
     return EChanges.INFORMATION
 
 
-def __subset_to_possible_graphs( subset: LegoSubset ):
+def __subset_to_possible_graphs( subset: Subset ):
     """
     Converts a subset of genes into the possible graphs representing these genes (1 graph per component).
     
@@ -71,7 +74,7 @@ def __subset_to_possible_graphs( subset: LegoSubset ):
         This also causes problems at the supertree stage.
         We address this issue by swapping them out these out for clades.
     """
-    graphs: List[LegoPregraph] = []
+    graphs: List[Pregraph] = []
     
     LOG( "{} :::: {}", subset, subset.contents )
     
@@ -107,19 +110,19 @@ def __subset_to_possible_graphs( subset: LegoSubset ):
             raise LogicError( "Graph of subset has multiple roots: {}".format( string_helper.format_array( graph.nodes.roots ) ) )
         
         if graph.nodes:
-            graphs.append( LegoPregraph( graph, subset, component ) )
+            graphs.append( Pregraph( graph, subset, component ) )
     
     subset.pregraphs = tuple( graphs )
 
 
-def __assert_recreatable( subset: LegoSubset ):
+def __assert_recreatable( subset: Subset ):
     # This is a lengthy assertion, but a good one
     # - we check to make sure the trees we have created share at least
     #   1 node in common each, otherwise we can't recreate the NRFG.
     cf = ComponentFinder()
     for graph in subset.pregraphs:
         for node in graph.graph:
-            if isinstance( node.data, ILegoNode ):
+            if isinstance( node.data, INode ):
                 cf.join( graph.graph, node.data )
     tab = cf.tabulate()
     if len( tab ) != 1:

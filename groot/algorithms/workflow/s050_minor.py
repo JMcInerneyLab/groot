@@ -12,7 +12,7 @@ from intermake import MCMD, Table, command
 from mhelper import Logger, array_helper, string_helper
 
 from groot.constants import STAGES, EChanges
-from groot.data import LegoComponent, LegoEdge, LegoModel, LegoSequence, LegoSubsequence, global_view
+from groot.data import Component, Edge, Model, Gene, Domain, global_view
 
 
 LOG_MINOR = Logger( "comp.minor", False )
@@ -44,20 +44,20 @@ def create_minor( tol: int ) -> EChanges:
     # We complete an `entry_dict`
     # - this is a dict, for components v components, of their longest spanning edges
     #
-    entry_dict: Dict[LegoComponent, Dict[LegoComponent, LegoEdge]] = defaultdict( dict )
+    entry_dict: Dict[Component, Dict[Component, Edge]] = defaultdict( dict )
     
     # Iterate the components
     for comp in model.components:
         LOG_MINOR( "~~~~~ {} ~~~~~", comp )
-        comp.minor_subsequences = []
+        comp.minor_domains = []
         
         # Iterate the major sequences
-        for sequence in comp.major_sequences:
+        for sequence in comp.major_genes:
             # Add the origin-al sequence
-            comp.minor_subsequences.append( LegoSubsequence( sequence, 1, sequence.length ) )
+            comp.minor_domains.append( Domain( sequence, 1, sequence.length ) )
             
             # Iterate the edges of that sequence
-            for edge in model.edges.find_sequence( sequence ):
+            for edge in model.edges.find_gene( sequence ):
                 same_side, oppo_side = edge.sides( sequence )
                 
                 # Discard edges with a mismatch < tolerance
@@ -67,7 +67,7 @@ def create_minor( tol: int ) -> EChanges:
                 
                 LOG_MINOR( "ATTEMPTING: {}", edge )
                 
-                oppo_comp = model.components.find_component_for_major_sequence( oppo_side.sequence )
+                oppo_comp = model.components.find_component_for_major_gene( oppo_side.gene )
                 
                 if oppo_comp != comp:
                     # We have found an entry from `comp` into `oppo_comp`
@@ -98,25 +98,25 @@ def create_minor( tol: int ) -> EChanges:
     # We need to use BLAST to work out the relationship between the genes.
     #
     for comp, oppo_dict in entry_dict.items():
-        assert isinstance( comp, LegoComponent )
+        assert isinstance( comp, Component )
         
         for oppo_comp, edge in oppo_dict.items():
             # `comp` enters `oppo_comp` via `edge`
-            assert isinstance( oppo_comp, LegoComponent )
-            assert isinstance( edge, LegoEdge )
+            assert isinstance( oppo_comp, Component )
+            assert isinstance( edge, Edge )
             
             same_side, oppo_side = edge.sides( comp )
             
             # Grab the entry point
-            comp.minor_subsequences.append( oppo_side )
+            comp.minor_domains.append( oppo_side )
             
             # Now iterate over the rest of the `other_component`
-            to_do = set( oppo_comp.major_sequences )
+            to_do = set( oppo_comp.major_genes )
             done = set()
             
             # We have added the entry point already
-            to_do.remove( oppo_side.sequence )
-            done.add( oppo_side.sequence )
+            to_do.remove( oppo_side.gene )
+            done.add( oppo_side.gene )
             
             LOG_MINOR( "flw. FOR {}".format( edge ) )
             LOG_MINOR( "flw. ENTRY POINT IS {}".format( oppo_side ) )
@@ -125,15 +125,15 @@ def create_minor( tol: int ) -> EChanges:
                 # First we need to find an edge between something in the "done" set and something in the "to_do" set.
                 # If multiple relationships are present, we use the largest one.
                 edge, src_dom, dst_dom = __find_largest_relationship( model, done, to_do )
-                to_do.remove( dst_dom.sequence )
-                done.add( dst_dom.sequence )
+                to_do.remove( dst_dom.gene )
+                done.add( dst_dom.gene )
                 
                 LOG_MINOR( "flw. FOLLOWING {}", edge )
                 LOG_MINOR( "flw. -- SRC {} {}", src_dom.start, src_dom.end )
                 LOG_MINOR( "flw. -- DST {} {}", dst_dom.start, dst_dom.end )
                 
                 # Now we have our relationship, we can use it to calculate the offset within the component
-                src_comp_dom = comp.get_minor_subsequence_by_sequence( src_dom.sequence )
+                src_comp_dom = comp.get_minor_domain_by_gene( src_dom.gene )
                 LOG_MINOR( "flw. -- SRC-OWN {} {}", src_comp_dom.start, src_comp_dom.end )
                 
                 if src_comp_dom.start < src_dom.start - tol or src_comp_dom.end > src_dom.end + tol:
@@ -151,12 +151,12 @@ def create_minor( tol: int ) -> EChanges:
                 LOG_MINOR( "flw. -- DESTINATION {} {}", offset_start, offset_end )
                 
                 # Fix any small discrepancies
-                destination_end, destination_start = __fit_to_range( dst_dom.sequence.length, destination_start, destination_end, tol )
+                destination_end, destination_start = __fit_to_range( dst_dom.gene.length, destination_start, destination_end, tol )
                 
-                subsequence_list = LegoSubsequence( dst_dom.sequence, destination_start, destination_end )
+                subsequence_list = Domain( dst_dom.gene, destination_start, destination_end )
                 
                 LOG_MINOR( "flw. -- SHIFTED {} {}", offset_start, offset_end )
-                comp.minor_subsequences.append( subsequence_list )
+                comp.minor_domains.append( subsequence_list )
     
     return EChanges.COMPONENTS
 
@@ -170,13 +170,13 @@ def drop_minor() -> EChanges:
     model.get_status( STAGES.MINOR_3 ).assert_drop()
     
     for comp in model.components:
-        comp.minor_subsequences = None
+        comp.minor_domains = None
     
     return EChanges.COMPONENTS
 
 
 @command(folder = constants.F_SET)
-def set_minor( component: LegoComponent, subsequences: List[LegoSubsequence] ) -> EChanges:
+def set_minor( component: Component, subsequences: List[Domain] ) -> EChanges:
     """
     Sets the minor subsequences of the component.
     
@@ -186,16 +186,16 @@ def set_minor( component: LegoComponent, subsequences: List[LegoSubsequence] ) -
     model = global_view.current_model()
     model.get_status( STAGES.MINOR_3 ).assert_set()
     
-    if component.minor_subsequences:
-        raise ValueError( "minor_subsequences for this component «{}» already exist.".format( component ) )
+    if component.minor_domains:
+        raise ValueError( "minor_domains for this component «{}» already exist.".format( component ) )
     
-    component.minor_subsequences = tuple( subsequences )
+    component.minor_domains = tuple( subsequences )
     
     return EChanges.COMPONENTS
 
 
 @command( names = ["print_minor", "print_interlinks", "interlinks"], folder=constants.F_PRINT )
-def print_minor( component: Optional[LegoComponent] = None, verbose: bool = False ) -> EChanges:
+def print_minor( component: Optional[Component] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.
     
@@ -231,16 +231,16 @@ def print_minor( component: Optional[LegoComponent] = None, verbose: bool = Fals
         message.add_row( "component", "origins", "destinations" )
         message.add_hline()
         
-        for major in model.components:
-            assert isinstance( major, LegoComponent )
+        for comp in model.components:
+            assert isinstance( comp, Component )
             
-            if component is not None and component is not major:
+            if component is not None and component is not comp:
                 continue
             
-            major_seq = string_helper.format_array( major.major_sequences, join = "\n" )
-            minor_seq = string_helper.format_array( major.minor_subsequences, join = "\n" )
+            major_genes = string_helper.format_array( comp.major_genes, join = "\n" )
+            minor_domains = string_helper.format_array( comp.minor_domains, join = "\n" )
             
-            message.add_row( major, major_seq, minor_seq )
+            message.add_row( comp, major_genes, minor_domains )
         
         MCMD.print( message.to_string() )
     
@@ -256,46 +256,46 @@ def print_minor( component: Optional[LegoComponent] = None, verbose: bool = Fals
     message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
     message.add_hline()
     
-    for major in model.components:
-        if component is not None and component is not major:
+    for comp in model.components:
+        if component is not None and component is not comp:
             continue
         
-        major_sequences = list( major.major_sequences )
+        major_genes = list( comp.major_genes )
         
         for minor in model.components:
-            if major is minor:
+            if comp is minor:
                 continue
             
             start = 0
             end = 0
             failed = False
             
-            for sequence in major_sequences:
+            for sequence in major_genes:
                 # subsequences that are in major sequence is a major sequence of major and are a minor subsequence of minor
-                subsequences = [x for x in minor.minor_subsequences if x.sequence is sequence]
+                subsequences = [x for x in minor.minor_domains if x.sequence is sequence]
                 
                 if subsequences:
                     start += subsequences[0].start
                     end += subsequences[-1].end
                     
                     if component is not None:
-                        message.add_row( minor, major, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
+                        message.add_row( minor, comp, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
                 else:
                     failed = True
             
             if failed:
                 continue
             
-            start /= len( major_sequences )
-            end /= len( major_sequences )
+            start /= len( major_genes )
+            end /= len( major_genes )
             
-            message.add_row( minor, major, "AVG*{}".format( len( major_sequences ) ), round( average_lengths[major] ), round( start ), round( end ), round( end - start ) )
+            message.add_row( minor, comp, "AVG*{}".format( len( major_genes ) ), round( average_lengths[comp] ), round( start ), round( end ), round( end - start ) )
     
     MCMD.print( message.to_string() )
     return EChanges.INFORMATION
 
 
-def __get_average_component_lengths( model: LegoModel ):
+def __get_average_component_lengths( model: Model ):
     """
     Obtains a dictionary detailing the average lengths of the sequences in each component.
     :return: Dictionary:
@@ -305,12 +305,12 @@ def __get_average_component_lengths( model: LegoModel ):
     average_lengths = { }
     
     for component in model.components:
-        average_lengths[component] = array_helper.average( [x.length for x in component.major_sequences] )
+        average_lengths[component] = array_helper.average( [x.length for x in component.major_genes] )
     
     return average_lengths
 
 
-def __find_largest_relationship( model: LegoModel, done: Set[LegoSequence], to_do: Set[LegoSequence] ) -> Tuple[LegoEdge, LegoSubsequence, LegoSubsequence]:
+def __find_largest_relationship( model: Model, done: Set[Gene], to_do: Set[Gene] ) -> Tuple[Edge, Domain, Domain]:
     """
     In the `done` set we search for the widest edge to the `to_do` set.
     
@@ -327,10 +327,10 @@ def __find_largest_relationship( model: LegoModel, done: Set[LegoSequence], to_d
     candidate_length = 0
     
     for sequence in done:
-        for edge in model.edges.find_sequence( sequence ):
+        for edge in model.edges.find_gene( sequence ):
             ori, op = edge.sides( sequence )
             
-            if op.sequence in to_do:
+            if op.gene in to_do:
                 if op.length > candidate_length:
                     candidate = edge, ori, op
                     candidate_length = op.length

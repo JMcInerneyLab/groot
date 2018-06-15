@@ -2,7 +2,7 @@ from intermake import command
 from mgraph import analysing
 
 from groot import constants
-from groot.data import LegoReport, global_view
+from groot.data import Report, global_view
 from groot.constants import EChanges
 from groot.utilities import lego_graph
 
@@ -88,7 +88,7 @@ def create_checked(  ):
     
     r.append( "</body></html>" )
     
-    model.report = LegoReport( "NRFG report", "\n".join( r ) )
+    model.report = Report( "NRFG report", "\n".join( r ) )
     return EChanges.MODEL_DATA
 
 @command(folder = constants.F_DROP)

@@ -93,7 +93,7 @@ class FrmWizard( FrmBase ):
         
         walkthrough.make_active()
         
-        self.actions.launch( gui_workflow.VISUALISERS.VIEW_WORKFLOW )
+        self.actions.launch( gui_workflow.get_visualisers().VIEW_WORKFLOW )
         self.close()
     
     

@@ -1,5 +1,6 @@
 import itertools
-from typing import Callable, Iterable, Iterator, Tuple
+from typing import Callable, Iterable, Iterator, Tuple, cast
+
 from mhelper import MEnum, ResourceIcon, SwitchError, MFlags
 
 
@@ -9,23 +10,19 @@ class EIntent( MEnum ):
     DROP = 3
 
 
-class EMode( MEnum ):
-    SEQUENCE = 0
-    SUBSEQUENCE = 1
-    COMPONENT = 2
+_Model_ = "Model"
 
 
-_LegoModel_ = "LegoModel"
-
-
-class LegoStage:
+class Stage:
     def __init__( self, name: str,
                   icon: ResourceIcon,
                   headline: Callable[[], str],
-                  requires: Tuple["LegoStage", ...],
-                  status: Callable[[_LegoModel_], Iterable[bool]],
+                  requires: Tuple["Stage", ...],
+                  status: Callable[[_Model_], Iterable[bool]],
                   hot = False,
                   cold = False ):
+        assert isinstance( requires, tuple )
+        
         self.name = name
         self.icon = icon
         self.headline = headline
@@ -33,128 +30,136 @@ class LegoStage:
         self.status = status
         self.hot = hot
         self.cold = cold
-        self.index = len( LegoStageCollection.INSTANCE )
+        self.index = len( StageCollection.INSTANCE )
     
     
     def __str__( self ):
         return self.name
 
 
-class LegoStageCollection:
+def M( m: object ) -> _Model_:
+    """
+    Pass-through type-hint: casts `m` to a `Model`.
+    """
+    from groot.data.model import Model
+    return cast( Model, m )
+
+
+class StageCollection:
     INSTANCE = None
     
     
     def __init__( self ):
-        LegoStageCollection.INSTANCE = self
+        StageCollection.INSTANCE = self
         from groot import resources
         
-        self._FILE_0 = LegoStage( "File",
-                                  status = lambda m: m.file_name,
-                                  headline = lambda m: m.file_name,
-                                  icon = resources.black_file,
-                                  requires = () )
-        self._DATA_0 = LegoStage( "Data",
-                                  icon = resources.black_gene,
-                                  status = lambda m: itertools.chain( (bool( m.edges ),), (bool( x.site_array ) for x in m.sequences) ),
-                                  headline = lambda m: "{} of {} sequences with site data. {} edges".format( m.sequences.num_fasta, m.sequences.__len__(), m.edges.__len__() ),
-                                  requires = () )
-        self.FASTA_1 = LegoStage( "Fasta",
-                                  icon = resources.black_gene,
-                                  headline = lambda m: "{} of {} sequences with site data".format( m.sequences.num_fasta, m.sequences.__len__() ),
-                                  requires = (),
-                                  status = lambda m: [bool( x.site_array ) for x in m.sequences] )
-        self.BLAST_2 = LegoStage( "Blast",
-                                  icon = resources.black_edge,
-                                  status = lambda m: (bool( m.edges ),),
-                                  headline = lambda m: "{} edges".format( m.edges.__len__() ),
-                                  requires = () )
-        self.MAJOR_3 = LegoStage( "Major",
-                                  icon = resources.black_major,
-                                  status = lambda m: (m.components.has_major_sequence_got_component( x ) for x in m.sequences),
-                                  headline = lambda m: "{} sequences assigned to {} components".format( sum( 1 for x in m.sequences if m.components.has_major_sequence_got_component( x ) ), m.components.count ),
-                                  requires = (self.FASTA_1,) )
-        self.MINOR_3 = LegoStage( "Minor",
-                                  icon = resources.black_minor,
-                                  status = lambda m: (bool( x.minor_subsequences ) for x in m.components),
-                                  headline = lambda m: "{} minor sequences".format( sum( len( x.minor_subsequences ) for x in m.components ) ),
-                                  requires = (self.MAJOR_3,) )
-        self.DOMAINS_4 = LegoStage( "Domains",
-                                    icon = resources.black_domain,
-                                    status = lambda m: (bool( m.user_domains ),),
-                                    headline = lambda m: "{} domains".format( len( m.user_domains ) ),
-                                    requires = (self.FASTA_1,) )
-        self.ALIGNMENTS_5 = LegoStage( "Alignments",
-                                       icon = resources.black_alignment,
-                                       status = lambda m: (bool( x.alignment ) for x in m.components),
-                                       headline = lambda m: "{} of {} components aligned".format( m.components.num_aligned, m.components.count ),
-                                       requires = (self.MINOR_3,) )
-        self.OUTGROUPS_5b = LegoStage( "Outgroups",
-                                       icon = resources.black_outgroup,
-                                       status = lambda m: (any( x.is_positioned for x in m.sequences ),),
-                                       headline = lambda m: "{} outgroups".format( sum( x.is_positioned for x in m.sequences ) ),
-                                       requires = (self._DATA_0,) )
-        self.TREES_6 = LegoStage( "Trees",
-                                  icon = resources.black_tree,
-                                  status = lambda m: (bool( x.tree ) for x in m.components),
-                                  headline = lambda m: "{} of {} components have a tree".format( m.components.num_trees, m.components.count ),
-                                  requires = (self.ALIGNMENTS_5,) )
-        self.FUSIONS_7 = LegoStage( "Fusions",
-                                    icon = resources.black_fusion,
-                                    status = lambda m: (bool( m.fusion_events ),),
-                                    headline = lambda m: "{} fusion events and {} fusion points".format( m.fusion_events.__len__(), m.fusion_events.num_points ) if m.fusion_events else "(None)",
-                                    requires = (self.TREES_6,) )
+        self._FILE_0 = Stage( "File",
+                              status = lambda m: M( m ).file_name,
+                              headline = lambda m: M( m ).file_name,
+                              icon = resources.black_file,
+                              requires = () )
+        self._DATA_0 = Stage( "Data",
+                              icon = resources.black_gene,
+                              status = lambda m: itertools.chain( (bool( M( m ).edges ),), (bool( x.site_array ) for x in M( m ).genes) ),
+                              headline = lambda m: "{} of {} sequences with site data. {} edges".format( M( m ).genes.num_fasta, M( m ).genes.__len__(), M( m ).edges.__len__() ),
+                              requires = () )
+        self.FASTA_1 = Stage( "Fasta",
+                              icon = resources.black_gene,
+                              headline = lambda m: "{} of {} sequences with site data".format( M( m ).genes.num_fasta, M( m ).genes.__len__() ),
+                              requires = (),
+                              status = lambda m: [bool( x.site_array ) for x in M( m ).genes] )
+        self.BLAST_2 = Stage( "Blast",
+                              icon = resources.black_edge,
+                              status = lambda m: (bool( M( m ).edges ),),
+                              headline = lambda m: "{} edges".format( M( m ).edges.__len__() ),
+                              requires = () )
+        self.MAJOR_3 = Stage( "Major",
+                              icon = resources.black_major,
+                              status = lambda m: (M( m ).components.has_major_gene_got_component( x ) for x in M( m ).genes),
+                              headline = lambda m: "{} sequences assigned to {} components".format( sum( 1 for x in M( m ).genes if M( m ).components.has_major_gene_got_component( x ) ), M( m ).components.count ),
+                              requires = (self.FASTA_1,) )
+        self.MINOR_3 = Stage( "Minor",
+                              icon = resources.black_minor,
+                              status = lambda m: (bool( x.minor_domains ) for x in M( m ).components),
+                              headline = lambda m: "{} minor sequences".format( sum( (len( x.minor_domains ) if x.minor_domains else 0) for x in M( m ).components ) ),
+                              requires = (self.MAJOR_3,) )
+        self.DOMAINS_4 = Stage( "Domains",
+                                icon = resources.black_domain,
+                                status = lambda m: (bool( M( m ).user_domains ),),
+                                headline = lambda m: "{} domains".format( len( M( m ).user_domains ) ),
+                                requires = (self.FASTA_1,) )
+        self.ALIGNMENTS_5 = Stage( "Alignments",
+                                   icon = resources.black_alignment,
+                                   status = lambda m: (bool( x.alignment ) for x in M( m ).components),
+                                   headline = lambda m: "{} of {} components aligned".format( M( m ).components.num_aligned, M( m ).components.count ),
+                                   requires = (self.MINOR_3,) )
+        self.OUTGROUPS_5b = Stage( "Outgroups",
+                                   icon = resources.black_outgroup,
+                                   status = lambda m: (any( x.is_positioned for x in M( m ).genes ),),
+                                   headline = lambda m: "{} outgroups".format( sum( x.is_positioned for x in M( m ).genes ) ),
+                                   requires = (self._DATA_0,) )
+        self.TREES_6 = Stage( "Trees",
+                              icon = resources.black_tree,
+                              status = lambda m: (bool( x.tree ) for x in M( m ).components),
+                              headline = lambda m: "{} of {} components have a tree".format( M( m ).components.num_trees, M( m ).components.count ),
+                              requires = (self.ALIGNMENTS_5,) )
+        self.FUSIONS_7 = Stage( "Fusions",
+                                icon = resources.black_fusion,
+                                status = lambda m: (bool( M( m ).fusions ),),
+                                headline = lambda m: "{} fusion events and {} fusion points".format( M( m ).fusions.__len__(), M( m ).fusions.num_points ) if M( m ).fusions else "(None)",
+                                requires = (self.TREES_6,) )
         
-        self._POINTS_7b = LegoStage( "Points",
-                                     icon = resources.black_fusion,
-                                     status = lambda m: (bool( m.fusion_events ),),
-                                     headline = lambda m: "",
-                                     requires = (self.TREES_6,) )
-        self.SPLITS_8 = LegoStage( "Splits",
-                                   status = lambda m: (bool( m.splits ),),
-                                   icon = resources.black_split,
-                                   headline = lambda m: "{} splits".format( m.splits.__len__() ) if m.splits else "(None)",
-                                   requires = (self.FUSIONS_7,) )
-        self.CONSENSUS_9 = LegoStage( "Consensus",
-                                      icon = resources.black_consensus,
-                                      status = lambda m: (bool( m.consensus ),),
-                                      headline = lambda m: "{} of {} splits are viable".format( m.consensus.__len__(), m.splits.__len__() ) if m.consensus else "(None)",
-                                      requires = (self.SPLITS_8,) )
-        self.SUBSETS_10 = LegoStage( "Subsets",
-                                     status = lambda m: (bool( m.subsets ),),
-                                     icon = resources.black_subset,
-                                     headline = lambda m: "{} subsets".format( m.subsets.__len__() ) if m.subsets else "(None)",
-                                     requires = (self.CONSENSUS_9,) )
-        self.PREGRAPHS_11 = LegoStage( "Pregraphs",
-                                       status = lambda m: (bool( x.pregraphs ) for x in m.subsets),
-                                       icon = resources.black_pregraph,
-                                       headline = lambda m: "{} pregraphs".format( sum( len( x.pregraphs ) for x in m.subsets ) ),
-                                       requires = (self.SUBSETS_10,) )
-        self.SUBGRAPHS_11 = LegoStage( "Subgraphs",
-                                       status = lambda m: (bool( m.subgraphs ),),
-                                       icon = resources.black_subgraph,
-                                       headline = lambda m: "{} of {} subsets have a graph".format( m.subgraphs.__len__(), m.subsets.__len__() ) if m.subgraphs else "(None)",
-                                       requires = (self.PREGRAPHS_11,) )
-        self.FUSED_12 = LegoStage( "Fused",
-                                   status = lambda m: (bool( m.fusion_graph_unclean ),),
-                                   icon = resources.black_nrfg,
-                                   headline = lambda m: "Subgraphs fused" if m.fusion_graph_unclean else "(None)",
-                                   requires = (self.SUBGRAPHS_11,) )
-        self.CLEANED_13 = LegoStage( "Cleaned",
-                                     icon = resources.black_clean,
-                                     status = lambda m: (bool( m.fusion_graph_clean ),),
-                                     headline = lambda m: "NRFG clean" if m.fusion_graph_clean else "(None)",
-                                     requires = (self.FUSED_12,) )
-        self.CHECKED_14 = LegoStage( "Checked",
-                                     icon = resources.black_check,
-                                     status = lambda m: (bool( m.report ),),
-                                     headline = lambda m: "NRFG checked" if m.report else "(None)",
-                                     requires = (self.CLEANED_13,) )
+        self._POINTS_7b = Stage( "Points",
+                                 icon = resources.black_fusion,
+                                 status = lambda m: (bool( M( m ).fusions ),),
+                                 headline = lambda m: "",
+                                 requires = (self.TREES_6,) )
+        self.SPLITS_8 = Stage( "Splits",
+                               status = lambda m: (bool( M( m ).splits ),),
+                               icon = resources.black_split,
+                               headline = lambda m: "{} splits".format( M( m ).splits.__len__() ) if M( m ).splits else "(None)",
+                               requires = (self.FUSIONS_7,) )
+        self.CONSENSUS_9 = Stage( "Consensus",
+                                  icon = resources.black_consensus,
+                                  status = lambda m: (bool( M( m ).consensus ),),
+                                  headline = lambda m: "{} of {} splits are viable".format( M( m ).consensus.__len__(), M( m ).splits.__len__() ) if M( m ).consensus else "(None)",
+                                  requires = (self.SPLITS_8,) )
+        self.SUBSETS_10 = Stage( "Subsets",
+                                 status = lambda m: (bool( M( m ).subsets ),),
+                                 icon = resources.black_subset,
+                                 headline = lambda m: "{} subsets".format( M( m ).subsets.__len__() ) if M( m ).subsets else "(None)",
+                                 requires = (self.CONSENSUS_9,) )
+        self.PREGRAPHS_11 = Stage( "Pregraphs",
+                                   status = lambda m: (bool( x.pregraphs ) for x in M( m ).subsets),
+                                   icon = resources.black_pregraph,
+                                   headline = lambda m: "{} pregraphs".format( sum( (len( x.pregraphs ) if x.pregraphs else 0) for x in M( m ).subsets ) ),
+                                   requires = (self.SUBSETS_10,) )
+        self.SUBGRAPHS_11 = Stage( "Subgraphs",
+                                   status = lambda m: (bool( M( m ).subgraphs ),),
+                                   icon = resources.black_subgraph,
+                                   headline = lambda m: "{} of {} subsets have a graph".format( M( m ).subgraphs.__len__(), M( m ).subsets.__len__() ) if M( m ).subgraphs else "(None)",
+                                   requires = (self.PREGRAPHS_11,) )
+        self.FUSED_12 = Stage( "Fused",
+                               status = lambda m: (bool( M( m ).fusion_graph_unclean ),),
+                               icon = resources.black_nrfg,
+                               headline = lambda m: "Subgraphs fused" if M( m ).fusion_graph_unclean else "(None)",
+                               requires = (self.SUBGRAPHS_11,) )
+        self.CLEANED_13 = Stage( "Cleaned",
+                                 icon = resources.black_clean,
+                                 status = lambda m: (bool( M( m ).fusion_graph_clean ),),
+                                 headline = lambda m: "NRFG clean" if M( m ).fusion_graph_clean else "(None)",
+                                 requires = (self.FUSED_12,) )
+        self.CHECKED_14 = Stage( "Checked",
+                                 icon = resources.black_check,
+                                 status = lambda m: (bool( M( m ).report ),),
+                                 headline = lambda m: "NRFG checked" if M( m ).report else "(None)",
+                                 requires = (self.CLEANED_13,) )
     
     
-    def __iter__( self ) -> Iterator[LegoStage]:
+    def __iter__( self ) -> Iterator[Stage]:
         for k, v in self.__dict__.items():
             if not k.startswith( "_" ):
-                if isinstance( v, LegoStage ):
+                if isinstance( v, Stage ):
                     yield v
     
     
@@ -162,7 +167,7 @@ class LegoStageCollection:
         return sum( 1 for _ in iter( self ) )
 
 
-STAGES = LegoStageCollection()
+STAGES = StageCollection()
 
 
 class EFormat( MEnum ):
@@ -235,8 +240,9 @@ F_CREATE = "GROOT-CREATE"
 F_DROP = "GROOT-DROP"
 F_PRINT = "GROOT-PRINT"
 F_SET = "GROOT-SET"
-F_IMPORT="GROOT-IMPORT"
+F_IMPORT = "GROOT-IMPORT"
 F_FILE = "GROOT-FILE"
+
 
 class EChanges( MFlags ):
     """

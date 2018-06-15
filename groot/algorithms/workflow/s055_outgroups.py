@@ -1,14 +1,14 @@
 from typing import List, Optional
 from intermake import MCMD, command
 
-from groot import LegoSequence, constants
+from groot import Gene, constants
 from groot.data import EPosition, global_view
 from groot.constants import EChanges
 
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 @command(folder = constants.F_SET)
-def set_outgroups( genes: List[LegoSequence], position: Optional[bool] = None ) -> EChanges:
+def set_outgroups( genes: List[Gene], position: Optional[bool] = None ) -> EChanges:
     """
     Defines or displays the position of a gene in the graph.
     If trees have been generated already they will be re-rooted.
@@ -22,7 +22,7 @@ def set_outgroups( genes: List[LegoSequence], position: Optional[bool] = None ) 
     """
     model = global_view.current_model()
     if position is None:
-        for gene in model.sequences:
+        for gene in model.genes:
             if gene in genes:
                 gene.position = EPosition.OUTGROUP
             else:
@@ -40,6 +40,6 @@ def print_outgroups():
     """
     model = global_view.current_model()
     
-    for gene in model.sequences:
+    for gene in model.genes:
         if gene.position != EPosition.NONE:
             MCMD.print( str( gene ) )

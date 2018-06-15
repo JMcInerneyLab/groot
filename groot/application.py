@@ -9,13 +9,13 @@ from intermake.hosts.base import ERunMode
 
 def __create_lego_gui_host():
     import groot_gui
-    return groot_gui.LegoGuiHost
+    return groot_gui.LegoGuiHost()
 
 
 GROOT_APP = intermake.Environment( name = constants.APP_NAME,
                                    abv_name = "groot",
                                    version = "0.0.0.40" )
-GROOT_APP.host_provider[ERunMode.GUI] = __create_lego_gui_host()
+GROOT_APP.host_provider[ERunMode.GUI] = __create_lego_gui_host
 
 from groot.utilities import string_coercion
 

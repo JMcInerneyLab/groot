@@ -9,39 +9,36 @@ from groot import constants
 from intermake import MCMD, Theme, command
 from mhelper import ansi, string_helper
 
-from groot.data import LegoSequence, global_view
+from groot.data import Gene, global_view
 from groot.constants import EChanges
 from groot.utilities import cli_view_utils
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
 
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
-DAlgorithm = Callable[[LegoSequence, int], str]
+DAlgorithm = Callable[[Gene], str]
 """A delegate for a function that takes a sequence and an arbitrary parameter, and produces an list of domains."""
 
-domain_algorithms = AlgorithmCollection[DAlgorithm]( "Domain" )
+domain_algorithms = AlgorithmCollection( DAlgorithm, "Domain" )
 
 
-@command(folder = constants.F_CREATE)
-def create_domains( algorithm: str, param: int = 0 ):
+@command( folder = constants.F_CREATE )
+def create_domains( algorithm: domain_algorithms.Algorithm ):
     """
     Creates the domains.
     Existing domains are always replaced.
     Domains are only used for viewing and have no bearing on the actual calculations.
     
     :param algorithm:   Mode of domain generation. See `algorithm_help`.
-    :param param:       Parameter for mode. 
     """
     model = global_view.current_model()
-    if not model.sequences:
+    if not model.genes:
         raise ValueError( "Cannot generate domains because there are no sequences." )
     
     model.user_domains.clear()
     
-    fn = domain_algorithms[algorithm]
-    
-    for sequence in model.sequences:
-        for domain in fn( sequence, param ):
+    for sequence in model.genes:
+        for domain in algorithm( sequence ):
             model.user_domains.add( domain )
     
     MCMD.progress( "Domains created, there are now {} domains.".format( len( model.user_domains ) ) )
@@ -49,7 +46,7 @@ def create_domains( algorithm: str, param: int = 0 ):
     return EChanges.DOMAINS
 
 
-@command(folder = constants.F_DROP)
+@command( folder = constants.F_DROP )
 def drop_domains():
     """
     Removes the user-domains from the model.
@@ -58,22 +55,21 @@ def drop_domains():
     model.user_domains.clear()
 
 
-@command( names = ["print_domains", "domains"], folder=constants.F_PRINT )
-def print_domains( domain: str = "", parameter: int = 0 ) -> EChanges:
+@command( names = ["print_domains", "domains"], folder = constants.F_PRINT )
+def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
     """
     Prints the genes (highlighting components).
     Note: Use :func:`print_fasta` or :func:`print_alignments` to show the actual sites.
     
-    :param domain:      How to break up the sequences. See `algorithm_help`.
-    :param parameter:   Parameter on `domain`. 
+    :param algorithm:      How to break up the sequences. See `algorithm_help`.
     """
     
     model = global_view.current_model()
-    longest = max( x.length for x in model.sequences )
+    longest = max( x.length for x in model.genes )
     r = []
     
-    for sequence in model.sequences:
-        minor_components = model.components.find_components_for_minor_sequence( sequence )
+    for sequence in model.genes:
+        minor_components = model.components.find_components_for_minor_gene( sequence )
         
         if not minor_components:
             minor_components = [None]
@@ -89,10 +85,10 @@ def print_domains( domain: str = "", parameter: int = 0 ) -> EChanges:
             else:
                 r.append( "Ø " )
             
-            subsequences = __list_userdomains( sequence, domain, parameter )
+            subsequences = __list_userdomains( sequence, algorithm )
             
             for subsequence in subsequences:
-                components = model.components.find_components_for_minor_subsequence( subsequence )
+                components = model.components.find_components_for_minor_domain( subsequence )
                 
                 if component in components:
                     colour = cli_view_utils.component_to_ansi_back( component )
@@ -117,6 +113,5 @@ def print_domains( domain: str = "", parameter: int = 0 ) -> EChanges:
     return EChanges.INFORMATION
 
 
-def __list_userdomains( sequence: LegoSequence, algorithm: str, param: int ):
-    fn = domain_algorithms[algorithm]
-    return fn( sequence, param )
+def __list_userdomains( sequence: Gene, algorithm: domain_algorithms.Algorithm ):
+    return algorithm( sequence )

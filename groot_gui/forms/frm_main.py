@@ -16,7 +16,7 @@ from intermake import AsyncResult
 from intermake_qt import IGuiHostMainWindow, intermake_gui, resources
 from intermake.engine.environment import MENV, MCMD
 from mhelper import SwitchError
-from mhelper_qt import exceptToGui, exqtSlot, menu_helper, qt_gui_helper
+from mhelper_qt import exceptToGui, exqtSlot, menu_helper
 
 
 class FrmMain( QMainWindow, IGuiHostMainWindow ):
@@ -66,11 +66,11 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         
         if global_view.current_model().get_status( constants.STAGES._DATA_0 ).is_none:
             if view == EStartupMode.STARTUP:
-                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_STARTUP )
+                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_STARTUP )
             elif view == EStartupMode.WORKFLOW:
-                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_WORKFLOW )
+                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_WORKFLOW )
             elif view == EStartupMode.SAMPLES:
-                self.menu_handler.gui_actions.launch( gui_workflow.VISUALISERS.VIEW_OPEN_FILE )
+                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_OPEN_FILE )
             elif view == EStartupMode.NOTHING:
                 pass
             else:
@@ -100,14 +100,12 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         if result.is_error:
             self.ui.LBL_STATUS.setText( "OPERATION FAILED TO COMPLETE: " + result.title )
             self.ui.BTN_STATUS.setIcon( resources.failure.icon() )
-            qt_gui_helper.show_exception( self, "The operation did not complete.", result.exception )
         elif result.is_success and isinstance( result.result, EChanges ):
             self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.title )
             self.ui.BTN_STATUS.setIcon( resources.success.icon() )
             self.completed_changes = result.result
             self.completed_plugin = result.command
             for form in self.iter_forms():
-                print( form )
                 form.on_command_completed()
             self.completed_changes = None
             self.completed_plugin = None
@@ -151,7 +149,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
             form.close()
     
     
-    def show_form( self, form_class ):
+    def show_form( self, form_class, *args ):
         self.menu_handler.gui_actions.dismiss_startup_screen()
         
         if form_class.__name__ in self.mdi:
@@ -168,6 +166,10 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
             form.setWindowFlag( Qt.Tool, True )
         
         form.show()
+        
+        if isinstance(form, FrmBase):
+            form.on_apply_request(*args)
+            
         self.mdi[form_class.__name__] = form
         self.ui.MDI_AREA.setBackground( self.COLOUR_NOT_EMPTY )
     

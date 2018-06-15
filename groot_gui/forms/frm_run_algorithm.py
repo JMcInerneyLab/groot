@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QWidget
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 from groot_gui.forms.designer import frm_run_algorithm_designer
-from typing import Tuple
+from typing import Tuple, Callable
 
 from groot_gui.forms.frm_base import FrmBase
 import groot
-from groot import constants
-from intermake.engine.abstract_command import AbstractCommand
+import editorium
+import intermake
+from mhelper import FunctionInspector, ArgValueCollection, NOT_PROVIDED
 from mhelper_qt import exceptToGui, exqtSlot
 
 
@@ -16,17 +17,18 @@ class FrmRunAlgorithm( FrmBase ):
                   parent: QWidget,
                   title_text: str,
                   algorithms: AlgorithmCollection,
-                  plugin: AbstractCommand ):
+                  plugin: intermake.AbstractCommand ):
         """
         CONSTRUCTOR
         """
         super().__init__( parent )
         self.ui = frm_run_algorithm_designer.Ui_Dialog( self )
         self.setWindowTitle( title_text )
+        self.editorium = editorium.EditoriumGrid( self.ui.FRA_PARAMETERS )
         self.ui.LBL_TITLE.setText( "Create " + title_text.lower() )
         self.radios = []
         self.algorithms = algorithms
-        self.command: AbstractCommand = plugin
+        self.command: intermake.AbstractCommand = plugin
         
         self.__layout = QVBoxLayout()
         self.ui.FRA_MAIN.setLayout( self.__layout )
@@ -40,6 +42,17 @@ class FrmRunAlgorithm( FrmBase ):
         self.ui.LBL_HELP.setVisible( False )
         self.allow_proceed = False
         self.update_labels()
+    
+    
+    def on_apply_request( self, *args ):
+        if len(args) ==1:
+            algo: groot.AbstractAlgorithm = args[0]
+
+            for cb in self.radios:
+                assert isinstance( cb, QRadioButton )
+                if cb.toolTip() == algo.name:
+                    cb.setChecked( True )
+                    return
     
     
     def add_radio( self, name ):
@@ -56,46 +69,52 @@ class FrmRunAlgorithm( FrmBase ):
     
     
     def on_command_completed( self ):
-        if self.actions.frm_main.completed_plugin is self.command:
-            self.actions.close_window()
-        else:
-            self.update_labels()
+        self.update_labels()
     
     
     def update_labels( self ):
-        ready, message = self.query_ready()
-        function = None
+        # Ask derived class if we are ready
+        ready, message = self.on_query_ready()
         
-        for rad in self.radios:
-            assert isinstance( rad, QRadioButton )
-            
-            if rad.isChecked():
-                function = self.algorithms[rad.toolTip()]
-            
-            rad.setEnabled( ready )
+        # Get our algorithm name
+        algo_name = self.__get_selected_algorithm_name( default = None )
+        algo_fn: Callable = self.algorithms.get_function( algo_name )
         
-        if function is None:
+        if algo_fn is None:
             ready = False
         
-        self.ui.LBL_HELP.setVisible( function is not None )
+        # Show some help
+        self.ui.LBL_HELP.setVisible( algo_fn is not None )
         
-        if function is not None:
-            doc = function.__doc__ if hasattr( function, "__doc__" ) else "This algorithm has not been documented."
+        if algo_fn is not None:
+            doc = algo_fn.__doc__ if hasattr( algo_fn, "__doc__" ) else "This algorithm has not been documented."
             self.ui.LBL_HELP.setText( doc )
         
+        # Show the requirements warning?
         self.ui.LBL_WARN_REQUIREMENTS.setText( message )
         self.ui.LBL_WARN_REQUIREMENTS.setVisible( bool( message ) )
+        
+        # Enable the OK button
         self.ui.BTN_OK.setEnabled( ready )
+        
+        # Populate the arguments list
+        self.editorium.target = ArgValueCollection( x for x in FunctionInspector( algo_fn ).args if x.index >= self.algorithms.num_expected_args ) if algo_fn is not None else None
+        self.editorium.recreate()
         
         self.actions.adjust_window_size()
     
     
-    def query_ready( self ) -> Tuple[bool, str]:
+    def on_query_ready( self ) -> Tuple[bool, str]:
         raise NotImplementedError( "abstract" )
     
     
-    def run_algorithm( self, key: str ):
-        self.command.given( window = self ).run( key )
+    def run_algorithm( self, algorithm: groot.AbstractAlgorithm ):
+        self.actions.run( self.command, algorithm ).listen( self.run_algorithm_completed )
+    
+    
+    def run_algorithm_completed( self, result: intermake.AsyncResult ):
+        if result.is_success:
+            self.actions.close_window()
     
     
     @exqtSlot()
@@ -103,27 +122,38 @@ class FrmRunAlgorithm( FrmBase ):
         """
         Signal handler:
         """
-        algo = None
+        algo_name = self.__get_selected_algorithm_name()
         
+        self.editorium.commit()
+        avc: ArgValueCollection = self.editorium.target
+        
+        algorithm: groot.AbstractAlgorithm = self.algorithms.get_algorithm( algo_name, **avc.tokwargs() )
+        self.run_algorithm( algorithm )
+    
+    
+    def __get_selected_algorithm_name( self, default = NOT_PROVIDED ) -> str:
         for rad in self.radios:
             assert isinstance( rad, QRadioButton )
             if rad.isChecked():
-                algo = rad.toolTip()
+                return rad.toolTip()
         
-        self.run_algorithm( algo )
+        if default is NOT_PROVIDED:
+            raise ValueError( "No algorithm selected." )
+        else:
+            return default
 
 
 class FrmCreateTrees( FrmRunAlgorithm ):
-    def query_ready( self ):
+    def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES.TREES_6 ).is_complete:
+        if model.get_status( groot.constants.STAGES.TREES_6 ).is_complete:
             return False, '<html><body>Trees already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body></html>'
         
-        if model.get_status( constants.STAGES.ALIGNMENTS_5 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.ALIGNMENTS_5 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body></html>'
         
-        if model.get_status( constants.STAGES.OUTGROUPS_5b ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.OUTGROUPS_5b ).is_not_complete:
             return True, '<html><body>You do not have any <a href="action:view_entities">outgroups</a> set, your trees will be unrooted!</body></html>'
         
         return True, ""
@@ -141,13 +171,13 @@ class FrmCreateTrees( FrmRunAlgorithm ):
 
 
 class FrmCreateAlignment( FrmRunAlgorithm ):
-    def query_ready( self ):
+    def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES.ALIGNMENTS_5 ).is_complete:
+        if model.get_status( groot.constants.STAGES.ALIGNMENTS_5 ).is_complete:
             return False, '<html><body>Alignments already exist, you can <a href="action:view_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body></html>'
         
-        if model.get_status( constants.STAGES.MINOR_3 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.MINOR_3 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_major">create the components</a> before creating the alignments.</body></html>'
         
         return True, ""
@@ -165,13 +195,13 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
 
 
 class FrmCreateSubgraphs( FrmRunAlgorithm ):
-    def query_ready( self ):
+    def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES.SUBGRAPHS_11 ).is_complete:
+        if model.get_status( groot.constants.STAGES.SUBGRAPHS_11 ).is_complete:
             return False, '<html><body>Subgraphs already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_subgraphs">remove them</a> or proceed to <a href="action:create_fused">creating the fused graph</a>.</body></html>'
         
-        if model.get_status( constants.STAGES.SUBSETS_10 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.SUBSETS_10 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_subsets">create the components</a> before creating the subgraphs.</body></html>'
         
         return True, ""
@@ -189,10 +219,10 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
 
 
 class FrmCreateDomains( FrmRunAlgorithm ):
-    def query_ready( self ):
+    def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( constants.STAGES._DATA_0 ).is_none:
+        if model.get_status( groot.constants.STAGES._DATA_0 ).is_none:
             return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
         
         return True, ""

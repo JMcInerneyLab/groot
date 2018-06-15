@@ -8,7 +8,7 @@ from mhelper import EFileMode, Filename, MOptional, file_helper, io_helper
 
 from groot import constants
 from groot.data import global_view
-from groot.data.model import LegoModel
+from groot.data.model import Model
 from groot.constants import EChanges
 
 
@@ -69,7 +69,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     file_name = __fix_path( file_name )
     
     try:
-        model: LegoModel = io_helper.load_binary( file_name, type_ = LegoModel )
+        model: Model = io_helper.load_binary( file_name, type_ = Model )
     except Exception as ex:
         raise ValueError( "Failed to load the model «{}». Either this is not a Groot model or this model was saved using a different version of Groot.".format( file_name ) ) from ex
     
@@ -121,7 +121,7 @@ def file_load_last():
     if not global_view.options().recent_files:
         raise ValueError( "Cannot load the last session because there are no recent sessions." )
     
-    file_load( global_view.options().recent_files[-1] )
+    file_load( global_view.options().recent_files[-1].file_name )
 
 
 @command( names = ["file_recent", "recent"], folder = constants.F_FILE )

@@ -4,7 +4,7 @@ from mhelper import Logger, LogicError, ansi_helper, string_helper
 from typing import Set
 
 from groot.constants import STAGES, EChanges
-from groot.data import LegoSplit, global_view
+from groot.data import Split, global_view
 
 
 __LOG_EVIDENCE = Logger( "nrfg.evidence", False )
@@ -36,10 +36,10 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     model.get_status( STAGES.CONSENSUS_9 ).assert_create()
     
     __LOG_EVIDENCE( "BEGIN EVIDENCE ({} splits)".format( len( model.splits ) ) )
-    viable_splits: Set[LegoSplit] = set()
+    viable_splits: Set[Split] = set()
     
     for split in model.splits:
-        assert isinstance( split, LegoSplit ), split
+        assert isinstance( split, Split ), split
         
         if split.split.is_empty:
             __LOG_EVIDENCE( "SPLIT IS EMPTY: {}".format( split ) )

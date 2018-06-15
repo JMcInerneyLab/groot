@@ -6,79 +6,81 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1071</width>
-    <height>864</height>
+    <width>1263</width>
+    <height>1034</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="spacing">
-    <number>8</number>
-   </property>
+  <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
-    <number>8</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
-    <number>8</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>8</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>8</number>
+    <number>0</number>
    </property>
-   <item>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="1">
     <widget class="QFrame" name="FRA_TOOLBAR">
-     <property name="frameShape">
-      <enum>QFrame::Panel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_23">
-      <property name="spacing">
-       <number>8</number>
-      </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
       <property name="leftMargin">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
-       <number>1</number>
+       <number>0</number>
       </property>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_COMPONENT">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QLabel" name="label_2">
+        <property name="styleSheet">
+         <string notr="true">border: 0px solid black;
+border-bottom: 1px solid black;</string>
+        </property>
+        <property name="text">
+         <string>Selection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_FIND">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Select domains adjacent to those currently selected</string>
         </property>
         <property name="statusTip">
          <string>Remove edge</string>
         </property>
         <property name="text">
-         <string>Component</string>
+         <string>Find</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/black_major.svg</normaloff>:/groot/black_major.svg</iconset>
+          <normaloff>:/groot/find.svg</normaloff>:/groot/find.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -86,43 +88,37 @@
           <height>32</height>
          </size>
         </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
-        </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_SEQUENCE">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QToolButton" name="BTN_SELECT">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Select domains adjacent to those currently selected</string>
         </property>
         <property name="statusTip">
          <string>Remove edge</string>
         </property>
         <property name="text">
-         <string>Sequence</string>
+         <string>Select</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/black_gene.svg</normaloff>:/groot/black_gene.svg</iconset>
+          <normaloff>:/groot/select.svg</normaloff>:/groot/select.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -130,43 +126,34 @@
           <height>32</height>
          </size>
         </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
-        </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_SEL_DOMAIN">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QToolButton" name="BTN_DOMAINS">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="statusTip">
-         <string>Remove edge</string>
+         <string>Align the selected domains</string>
         </property>
         <property name="text">
-         <string>Domain</string>
+         <string>Domains</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/black_subgraph.svg</normaloff>:/groot/black_subgraph.svg</iconset>
+          <normaloff>:/groot/domain.svg</normaloff>:/groot/domain.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -174,11 +161,40 @@
           <height>32</height>
          </size>
         </property>
-        <property name="checkable">
-         <bool>true</bool>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
-        <property name="autoExclusive">
-         <bool>true</bool>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_COLOUR">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Colour the selected domains</string>
+        </property>
+        <property name="text">
+         <string>Colour</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/colour.svg</normaloff>:/groot/colour.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
         </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonTextUnderIcon</enum>
@@ -186,28 +202,137 @@
        </widget>
       </item>
       <item>
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QToolButton" name="BTN_ALIGN">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Align the selected domains</string>
+        </property>
+        <property name="text">
+         <string>Position</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/align.svg</normaloff>:/groot/align.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="styleSheet">
+         <string notr="true">border: 0px solid black;
+border-bottom: 1px solid black;</string>
+        </property>
+        <property name="text">
+         <string>View</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_LEGEND">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Shows the colour legend</string>
+        </property>
+        <property name="text">
+         <string>Legend</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/legend.svg</normaloff>:/groot/legend.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_OPTIONS">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Show the view options dialogue</string>
+        </property>
+        <property name="text">
+         <string>Options</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/settings.svg</normaloff>:/groot/settings.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QToolButton" name="BTN_REFRESH">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to edge edit mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Refresh the view to reflect any changes in the model</string>
         </property>
         <property name="statusTip">
          <string>Remove edge</string>
@@ -231,60 +356,39 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_MOVE">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QLabel" name="label_4">
+        <property name="styleSheet">
+         <string notr="true">border: 0px solid black;
+border-bottom: 1px solid black;</string>
         </property>
         <property name="text">
-         <string>Move</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/move.svg</normaloff>:/groot/move.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>32</width>
-          <height>32</height>
-         </size>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
+         <string>Model</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_ALIGN">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QToolButton" name="BTN_SHOW_EDIT">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Shows or hides the edit options</string>
+        </property>
         <property name="text">
-         <string>Align</string>
+         <string>Edit</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/align.svg</normaloff>:/groot/align.svg</iconset>
+          <normaloff>:/groot/maximize.svg</normaloff>:/groot/maximize.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -298,25 +402,28 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_OPTIONS">
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
+       <widget class="QToolButton" name="BTN_DELETE_GENE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="maximumSize">
          <size>
           <width>64</width>
-          <height>64</height>
+          <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Deletes the selected gene(s)</string>
+        </property>
         <property name="text">
-         <string>Options</string>
+         <string>Delete</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/settings.svg</normaloff>:/groot/settings.svg</iconset>
+          <normaloff>:/groot/remove.svg</normaloff>:/groot/remove.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -328,11 +435,129 @@
          <enum>Qt::ToolButtonTextUnderIcon</enum>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_OUTGROUP_GENE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Sets the selected gene(s) as the outgroup(s)</string>
+        </property>
+        <property name="text">
+         <string>Outgroup</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/outgroup.svg</normaloff>:/groot/outgroup.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_RENAME_GENE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Renames the selected gene</string>
+        </property>
+        <property name="text">
+         <string>Rename</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/save_as.svg</normaloff>:/groot/save_as.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_COMPONENT_GENE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Make a component with the selected gene(s) as its major elements.</string>
+        </property>
+        <property name="text">
+         <string>Component</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/import_.svg</normaloff>:/groot/import_.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
    </item>
-   <item>
+   <item row="0" column="0">
     <widget class="QFrame" name="FRA_MAIN">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -348,20 +573,204 @@
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QLabel" name="LBL_NO_DOMAINS">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You have no &lt;a href=&quot;action:view_domains&quot;&gt;domains&lt;/a&gt; defined, all genes will be shown as one domain.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="style" stdset="0">
-      <string>warning</string>
-     </property>
+   <item row="1" column="0">
+    <widget class="QFrame" name="frame">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>4</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>0</number>
+      </property>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="BTN_S_DOMAINS_">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">text-align: left;</string>
+        </property>
+        <property name="text">
+         <string>Domains</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QPushButton" name="BTN_S_COMPS_">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">text-align: left;</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="BTN_S_GENES_">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">text-align: left;</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="LBL_DOMAIN">
+        <property name="styleSheet">
+         <string notr="true">font-size: 8px;
+font-weight: bold;
+text-transform: uppercase;</string>
+        </property>
+        <property name="text">
+         <string>Domain</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="LBL_GENE">
+        <property name="styleSheet">
+         <string notr="true">font-size: 8px;
+font-weight: bold;
+text-transform: uppercase;</string>
+        </property>
+        <property name="text">
+         <string>Gene</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QLabel" name="LBL_COMPONENT">
+        <property name="styleSheet">
+         <string notr="true">font-size: 8px;
+font-weight: bold;
+text-transform: uppercase;</string>
+        </property>
+        <property name="text">
+         <string>Component</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6">
+       <widget class="QLabel" name="LBL_COMPONENT_2">
+        <property name="styleSheet">
+         <string notr="true">font-size: 8px;
+font-weight: bold;
+text-transform: uppercase;</string>
+        </property>
+        <property name="text">
+         <string>Minor comp.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QPushButton" name="BTN_S_MINCOMPS_">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">text-align: left;</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QLabel" name="LBL_EDGE">
+        <property name="styleSheet">
+         <string notr="true">font-size: 8px;
+font-weight: bold;
+text-transform: uppercase;</string>
+        </property>
+        <property name="text">
+         <string>Edge</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QPushButton" name="BTN_S_EDGES_">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">text-align: left;</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+  <include location="../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
   <include location="../resources/resources.qrc"/>
  </resources>
  <connections/>

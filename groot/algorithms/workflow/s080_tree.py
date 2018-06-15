@@ -5,18 +5,18 @@ from typing import Callable, List, Optional
 
 from groot import constants
 from groot.constants import EFormat, EChanges
-from groot.data import EPosition, ESiteType, INamedGraph, LegoComponent, LegoModel, LegoSequence, global_view
+from groot.data import EPosition, ESiteType, INamedGraph, Component, Model, Gene, global_view
 from groot.utilities import AlgorithmCollection, cli_view_utils, external_runner, graph_viewing, lego_graph
 
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-DAlgorithm = Callable[[LegoModel, str], str]
+DAlgorithm = Callable[[Model, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
 
-tree_algorithms = AlgorithmCollection[DAlgorithm]( "Tree" )
+tree_algorithms = AlgorithmCollection( DAlgorithm, "Tree" )
 
 @command(folder = constants.F_CREATE)
-def create_trees( algorithm: Optional[str], components: Optional[List[LegoComponent]] = None  ) -> None:
+def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[List[Component]] = None ) -> None:
     """
     Creates a tree from the component.
     Requisites: `create_alignments`
@@ -45,7 +45,7 @@ def create_trees( algorithm: Optional[str], components: Optional[List[LegoCompon
             raise SwitchError( "component.model.site_type", component.model.site_type )
         
         # Read the result
-        newick = external_runner.run_in_temporary( tree_algorithms[algorithm], site_type, component.alignment )
+        newick = external_runner.run_in_temporary( algorithm, site_type, component.alignment )
         component.tree_unrooted = lego_graph.import_newick( newick, component.model )
         component.tree = component.tree_unrooted.copy()
         component.tree_newick = newick
@@ -57,7 +57,7 @@ def create_trees( algorithm: Optional[str], components: Optional[List[LegoCompon
     return EChanges.COMP_DATA
 
 @command(folder = constants.F_SET)
-def set_tree( component: LegoComponent, newick: str ) -> EChanges:
+def set_tree( component: Component, newick: str ) -> EChanges:
     """
     Sets a component tree manually.
     Note that if you have roots/outgroups set your tree may be automatically re-rooted to remain consistent with these settings.
@@ -77,7 +77,7 @@ def set_tree( component: LegoComponent, newick: str ) -> EChanges:
     return EChanges.COMP_DATA
     
 @command( names = ["drop_tree", "drop_trees"], folder = constants.F_DROP )
-def drop_tree( components: Optional[List[LegoComponent]] = None ) -> bool:
+def drop_tree( components: Optional[List[Component]] = None ) -> bool:
     """
     Removes component tree(s).
     
@@ -140,11 +140,11 @@ def print_trees( graph: Optional[INamedGraph] = None,
 
 
 
-def reposition_all( model: LegoModel, component: Optional[LegoComponent] = None ) -> List[LegoComponent]:
+def reposition_all( model: Model, component: Optional[Component] = None ) -> List[Component]:
     """
     Repositions a component tree based on node.position data.
     """
-    if model.fusion_events:
+    if model.fusions:
         raise ValueError( "Cannot reposition trees because they already have assigned fusion events. Maybe you meant to drop the fusion events first?" )
     
     components = [component] if component is not None else model.components
@@ -166,7 +166,7 @@ def reposition_tree( tree: MGraph ) -> bool:
     """
     for node in tree:
         d = node.data
-        if isinstance( d, LegoSequence ):
+        if isinstance( d, Gene ):
             if d.position == EPosition.OUTGROUP:
                 node.make_outgroup()
                 return True

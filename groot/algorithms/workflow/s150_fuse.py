@@ -4,7 +4,7 @@ from mgraph import MGraph
 from mhelper import Logger, array_helper, string_helper
 
 from groot.constants import STAGES, EChanges
-from groot.data import FusionGraph, LegoFormation, global_view
+from groot.data import FusionGraph, Formation, global_view
 from groot.utilities import lego_graph
 
 
@@ -35,8 +35,8 @@ def create_fused():
     fusion_nodes = lego_graph.get_fusion_formation_nodes( nrfg )
     
     for an, bn in array_helper.square_comparison( fusion_nodes ):
-        a: LegoFormation = an.data
-        b: LegoFormation = bn.data
+        a: Formation = an.data
+        b: Formation = bn.data
         
         assert an.uid in model.subgraphs_sources or an.uid in model.subgraphs_destinations
         assert bn.uid in model.subgraphs_sources or bn.uid in model.subgraphs_destinations
@@ -44,8 +44,8 @@ def create_fused():
         a_is_source = an.uid in model.subgraphs_sources
         b_is_source = bn.uid in model.subgraphs_sources
         
-        assert isinstance( a, LegoFormation )
-        assert isinstance( b, LegoFormation )
+        assert isinstance( a, Formation )
+        assert isinstance( b, Formation )
         
         __LOG( "-----------------------------------" )
         __LOG( "COMPARING THE NEXT TWO FUSION NODES" )
@@ -88,7 +88,7 @@ def drop_fused( ):
     return EChanges.MODEL_DATA
 
 
-def __str_long( formation: LegoFormation ):
+def __str_long( formation: Formation ):
     return "¨EVENT {} FORMING {}¨".format( formation.event,
                                            __format_elements( formation.pertinent_inner ) )
 

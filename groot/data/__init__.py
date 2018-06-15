@@ -2,30 +2,29 @@
 The `.data` submodule contains the "Lego Model" (the dynamic data the user instantiates),
 and its static dependencies (interfaces, enumerations, error classes, etc.).  
 """
-
 from .model import \
-    LegoModel
+    Model
 
 from .model_core import \
-    LegoComponent, \
-    LegoReport, \
-    LegoEdge, \
-    LegoSequence, \
-    LegoFusion, \
-    LegoFormation, \
-    LegoPoint, \
-    LegoPregraph, \
-    LegoSubset, \
-    LegoSubsequence, \
-    LegoUserDomain, \
-    LegoSplit, \
+    Component, \
+    Report, \
+    Edge, \
+    Gene, \
+    Fusion, \
+    Formation, \
+    Point, \
+    Pregraph, \
+    Subset, \
+    Domain, \
+    UserDomain, \
+    Split, \
     Subgraph, \
     FusionGraph, \
     FixedUserGraph, \
     UserGraph
 
 from .model_interfaces import \
-    ILegoNode, \
+    INode, \
     EPosition, \
     ESiteType, \
     IHasFasta, \
@@ -39,3 +38,7 @@ from .exceptions import \
     NotReadyError
 
 from . import global_view
+
+from .global_view import current_model, GlobalOptions
+
+

@@ -6,7 +6,7 @@ from intermake import MCMD, command
 from mgraph import AbstractQuartet, MNode, QuartetCollection, QuartetComparison, analysing
 from mhelper import SwitchError, ansi, array_helper, string_helper
 
-from groot.data import INamedGraph, LegoModel, LegoReport, LegoSequence, global_view
+from groot.data import INamedGraph, Model, Report, Gene, global_view
 from groot.constants import EChanges
 from groot.utilities import lego_graph
 
@@ -28,7 +28,7 @@ def create_comparison( left: INamedGraph, right: INamedGraph ) -> EChanges:
 
 
 def compare_graphs( calc_graph_: INamedGraph,
-                    orig_graph_: INamedGraph ) -> LegoReport:
+                    orig_graph_: INamedGraph ) -> Report:
     """
     Compares graphs using quartets.
     
@@ -92,7 +92,7 @@ def compare_graphs( calc_graph_: INamedGraph,
     
     differences.append( "</body></html>" )
     
-    return LegoReport( "{} -vs- {}".format( orig_graph_.name, calc_graph_.name ), "\n".join( res ) )
+    return Report( "{} -vs- {}".format( orig_graph_.name, calc_graph_.name ), "\n".join( res ) )
 
 
 def __list_comp( comparison, t, res, c, o ):
@@ -180,8 +180,8 @@ def __append_ev( out_list: List[str],
 
 
 class __NodeFilter:
-    def __init__( self, model: LegoModel, accessions: Iterable[str] ):
-        self.sequences = [model.find_sequence_by_accession( accession ) for accession in accessions]
+    def __init__( self, model: Model, accessions: Iterable[str] ):
+        self.sequences = [model.genes[ accession ] for accession in accessions]
     
     
     def format( self, node: MNode ):
@@ -193,7 +193,7 @@ class __NodeFilter:
             t = str( d )
         
         if d in self.sequences:
-            assert isinstance( d, LegoSequence )
+            assert isinstance( d, Gene )
             return ansi.FORE_GREEN + t + ansi.RESET
         
         for rel in node.relations:
@@ -204,7 +204,7 @@ class __NodeFilter:
     
     
     def query( self, node: MNode ):
-        if isinstance( node.data, LegoSequence ):
+        if isinstance( node.data, Gene ):
             return node.data in self.sequences
         
         for rel in node.relations:
@@ -212,7 +212,7 @@ class __NodeFilter:
                 return True
         
         for rel in node.relations:
-            if isinstance( rel.data, LegoSequence ) and rel.data not in self.sequences:
+            if isinstance( rel.data, Gene ) and rel.data not in self.sequences:
                 return False
         
         return True

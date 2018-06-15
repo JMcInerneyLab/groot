@@ -89,6 +89,8 @@ class FrmViewOptions( FrmBase ):
     
     
     def map( self, write ):
+        from groot_gui import LegoGuiHost
+        
         if self.ignore_map:
             return
         
@@ -96,17 +98,20 @@ class FrmViewOptions( FrmBase ):
         
         # Global options
         global_options: GlobalOptions = global_view.options()
-        from groot_gui import LegoGuiHost
         host_options = LegoGuiHost.get_settings()
         
         if not isinstance( host_options.enable_browser, int ):
             host_options.enable_browser = BROWSE_MODE.ASK if host_options.enable_browser else BROWSE_MODE.SYSTEM
         
         self.__map_check( write, global_options, "tool_file", self.ui.CHKTOOL_FILE, self.actions.frm_main.ui.FRA_FILE )
+        
         self.__map_check( write, global_options, "tool_visualisers", self.ui.CHKTOOL_VIS, self.actions.frm_main.ui.FRA_VISUALISERS )
+        
         self.__map_check( write, global_options, "tool_workflow", self.ui.CHKTOOL_WORKFLOW, self.actions.frm_main.ui.FRA_WORKFLOW )
-        self.__map_check( write, global_options, "opengl", self.ui.CHK_OPENGL, self.actions.frm_main.ui.FRA_WORKFLOW )
-        self.__map_check( write, global_options, "share_opengl", self.ui.CHK_SHARE_CONTEXTS, self.actions.frm_main.ui.FRA_WORKFLOW )
+        
+        self.__map_check( write, global_options, "opengl", self.ui.CHK_OPENGL )
+        
+        self.__map_check( write, global_options, "share_opengl", self.ui.CHK_SHARE_CONTEXTS )
         
         self.__map( write, host_options, "enable_browser", { BROWSE_MODE.ASK    : self.ui.RAD_TREE_ASK,
                                                              BROWSE_MODE.INBUILT: self.ui.RAD_TREE_INBUILT,
@@ -156,12 +161,12 @@ class FrmViewOptions( FrmBase ):
         self.ignore_map = False
     
     
-    def __map_check( self, write, target, field, checkbox: QCheckBox, tool: QGroupBox ):
+    def __map_check( self, write, target, field, checkbox: QCheckBox, tool_box: QGroupBox = None ):
         if write:
             setattr( target, field, checkbox.isChecked() )
             
-            if tool:
-                tool.setVisible( checkbox.isChecked() )
+            if tool_box:
+                tool_box.setVisible( checkbox.isChecked() )
         
         else:
             checkbox.setChecked( getattr( target, field ) )

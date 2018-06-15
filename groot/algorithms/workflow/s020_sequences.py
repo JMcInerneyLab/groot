@@ -5,14 +5,15 @@ Generally just FASTA is imported here, but we also have the generic `import_file
 and `import_directory`, as well as some miscellaneous imports such as Composite
 Search and Newick imports, that don't belong anywhere else. 
 """
-from typing import List, Optional
+import warnings
+from typing import List, Optional, Set
 import re
 
 from groot.constants import STAGES, EChanges
 from intermake import MCMD, command
 from mhelper import Logger, bio_helper
 
-from groot import LegoSequence, LegoModel, constants
+from groot import Gene, Model, constants
 from groot.data import IHasFasta, global_view
 from groot.utilities import cli_view_utils
 
@@ -20,8 +21,9 @@ from groot.utilities import cli_view_utils
 LOG = Logger( "import" )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command(folder = constants.F_IMPORT)
-def import_sequences( file_name: str ) -> EChanges:
+
+@command( folder = constants.F_IMPORT )
+def import_genes( file_name: str ) -> EChanges:
     """
     Imports a FASTA file into your model.
     If data already exists in the model, only sequence data matching sequences already in the model is loaded.
@@ -40,7 +42,7 @@ def import_sequences( file_name: str ) -> EChanges:
         idle_counter = 10000
         
         for name, sequence_data in bio_helper.parse_fasta( file = file_name ):
-            sequence = _make_sequence( model, str( name ), obtain_only, len( sequence_data ), True )
+            sequence = _make_gene( model, str( name ), obtain_only, len( sequence_data ), True )
             
             if sequence:
                 LOG( "FASTA UPDATES {} WITH ARRAY OF LENGTH {}".format( sequence, len( sequence_data ) ) )
@@ -60,8 +62,42 @@ def import_sequences( file_name: str ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command(folder = constants.F_SET)
-def set_sequences( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
+@command()
+def import_gene_names( file: str ):
+    """
+    Maps the gene accessions to new ones.
+    :param file:    Path to a CSV file with two columns: old names, new names.
+    """
+    model = global_view.current_model()
+    
+    with open( file ) as in_:
+        for row in in_:
+            if "," in row:
+                accession, name = row.split( ",", 1 )
+                accession = accession.strip()
+                name = name.strip()
+                gene = model.genes.get( accession )
+                
+                if gene is None:
+                    warnings.warn( "No such gene: {}".format( accession ), UserWarning )
+                    continue
+                
+                gene.display_name = name
+
+
+@command()
+def set_gene_name( gene: Gene, new_name: str ) -> EChanges:
+    """
+    Changes the display name of the gene (_not_ the accession).
+    :param gene:        Gene to set the name of 
+    :param new_name:    New name of the gene. If set to an empty string the accession will be used as the name. 
+    """
+    gene.display_name = new_name
+    return EChanges.MODEL_DATA
+
+
+@command( folder = constants.F_SET )
+def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
     """
     Adds a new sequence to the model
     
@@ -74,7 +110,7 @@ def set_sequences( accessions: List[str], sites: Optional[List[str]] ) -> EChang
     model.get_status( STAGES.FASTA_1 ).assert_set()
     
     for i, accession in enumerate( accessions ):
-        sequence = __add_new_sequence( model, accession )
+        sequence = __add_new_gene( model, accession )
         
         if sites:
             site = sites[i]
@@ -86,22 +122,66 @@ def set_sequences( accessions: List[str], sites: Optional[List[str]] ) -> EChang
     return EChanges.MODEL_ENTITIES
 
 
-@command(folder = constants.F_DROP)
-def drop_sequences( sequences: List[LegoSequence] ):
+@command( folder = constants.F_DROP )
+def drop_genes( genes: List[Gene] ) -> EChanges:
     """
     Removes one or more sequences from the model.
     
-    :param sequences:    One or more sequences to drop.
+    It is safe to use this function up to and including the `create_major` stage.
+    
+    References to this gene(s) will be removed from any extant edges or components.
+    
+    :param genes:    One or more genes to drop.
     """
+    # Get the model
     model = global_view.current_model()
+    
+    # Delete the previous MAJOR components
+    has_major = model.get_status( STAGES.MAJOR_3 )
+    
+    if has_major:
+        from . import s040_major
+        
+        old_comps: List[Set[Gene]] = list( set( component.major_genes ) for component in model.components )
+        s040_major.drop_major( None )  # = drop all!
+    else:
+        old_comps = None
+    
+    # Drop the edges 
+    to_drop = set()
+    
+    for edge in model.edges:
+        if edge.left.gene in genes or edge.right.gene in genes:
+            to_drop.add( edge )
+    
+    from . import s030_similarity
+    s030_similarity.drop_similarity( list( to_drop ) )
+    
+    # Assert the drop (this should pass now we have removed the components and edges!)
     model.get_status( STAGES.FASTA_1 ).assert_drop()
     
-    for sequence in sequences:
-        sequence.model.sequences.remove( sequence )
+    # Drop the genes
+    for gene in genes:
+        assert isinstance( gene, Gene ), gene
+        gene.display_name = "DROPPED"
+        gene.model.genes.remove( gene )
+    
+    # Create new components
+    if has_major:
+        for comp in old_comps:
+            for gene in genes:
+                if gene in comp:
+                    comp.remove( gene )
+            
+            if comp:
+                from . import s040_major
+                s040_major.set_major( list( comp ) )
+    
+    return EChanges.MODEL_ENTITIES
 
 
-@command(folder = constants.F_PRINT)
-def print_sequences( find: Optional[str] = None, targets: Optional[List[IHasFasta]] = None ) -> EChanges:
+@command( folder = constants.F_PRINT )
+def print_genes( find: Optional[str] = None, targets: Optional[List[IHasFasta]] = None ) -> EChanges:
     """
     List sequences or presents their FASTA data.
     If no parameters are specified the accessions of all current sequences are listed.
@@ -117,19 +197,19 @@ def print_sequences( find: Optional[str] = None, targets: Optional[List[IHasFast
     if find is not None:
         model = global_view.current_model()
         
-        sequences = []
+        genes = []
         rx = re.compile( find, re.IGNORECASE )
-        for s in model.sequences:
+        for s in model.genes:
             if rx.search( s.accession ):
-                sequences.append( s )
+                genes.append( s )
         
-        if not sequences:
-            MCMD.print( "No matching sequences." )
+        if not genes:
+            MCMD.print( "No matching genes." )
         else:
-            for sequence in sequences:
-                MCMD.print( sequence )
+            for gene in genes:
+                MCMD.print( gene )
             
-            MCMD.print( "Found {} sequences.".format( len( sequences ) ) )
+            MCMD.print( "Found {} genes.".format( len( genes ) ) )
         
         return EChanges.INFORMATION
     elif targets is not None:
@@ -142,11 +222,11 @@ def print_sequences( find: Optional[str] = None, targets: Optional[List[IHasFast
     return EChanges.INFORMATION
 
 
-def _make_sequence( model: LegoModel,
-                    accession: str,
-                    obtain_only: bool,
-                    initial_length: int,
-                    retrieve: bool ) -> LegoSequence:
+def _make_gene( model: Model,
+                accession: str,
+                obtain_only: bool,
+                initial_length: int,
+                retrieve: bool ) -> Gene:
     """
     Creates the specified sequence, or returns it if it already exists.
     """
@@ -155,21 +235,18 @@ def _make_sequence( model: LegoModel,
     if "|" in accession:
         accession = accession.split( "|" )[3]
     
-    if "." in accession:
-        accession = accession.split( ".", 1 )[0]
-    
     accession = accession.strip()
     
-    result: LegoSequence = None
+    result: Gene = None
     
     if retrieve:
-        for sequence in model.sequences:
+        for sequence in model.genes:
             if sequence.accession == accession:
                 result = sequence
     
     if result is None and not obtain_only:
-        result = LegoSequence( model, accession, len( model.sequences ) )
-        model.sequences.add( result )
+        result = Gene( model, accession, len( model.genes ) )
+        model.genes.add( result )
     
     if result is not None:
         result._ensure_length( initial_length )
@@ -177,8 +254,8 @@ def _make_sequence( model: LegoModel,
     return result
 
 
-def __add_new_sequence( model: LegoModel, accession: str ) -> LegoSequence:
+def __add_new_gene( model: Model, accession: str ) -> Gene:
     """
     Creates a new sequence
     """
-    return _make_sequence( model, accession, False, 0, False )
+    return _make_gene( model, accession, False, 0, False )

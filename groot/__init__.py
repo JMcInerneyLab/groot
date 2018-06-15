@@ -18,11 +18,40 @@ from groot.application import GROOT_APP
 #
 # Export API
 #
-from groot.data import *
-from groot.data.global_view import current_model
-from groot.utilities import AlgorithmCollection
-from groot import constants
+from groot.data import Model, \
+    Component, \
+    Report, \
+    Edge, \
+    Gene, \
+    Fusion, \
+    Formation, \
+    Point, \
+    Pregraph, \
+    Subset, \
+    Domain, \
+    UserDomain, \
+    Split, \
+    Subgraph, \
+    FusionGraph, \
+    FixedUserGraph, \
+    UserGraph, \
+    INode, \
+    EPosition, \
+    ESiteType, \
+    IHasFasta, \
+    INamed, \
+    INamedGraph, \
+    FastaError, \
+    InUseError, \
+    AlreadyError, \
+    NotReadyError,\
+    global_view, \
+    GlobalOptions, \
+    current_model
 
+from groot.utilities import AlgorithmCollection, AbstractAlgorithm
+from groot import constants
+from groot.constants import STAGES, Stage, EChanges
 
 from groot.algorithms.gimmicks.compare import create_comparison, compare_graphs
 from groot.algorithms.gimmicks.miscellaneous import query_quartet, composite_search_fix, print_file
@@ -31,7 +60,7 @@ from groot.algorithms.gimmicks.usergraphs import import_graph, drop_graph
 from groot.algorithms.gimmicks.wizard import Wizard, create_wizard, drop_wizard, continue_wizard, create_components, drop_components, import_file, import_directory
 
 from groot.algorithms.workflow.s010_file import file_load, file_load_last, file_new, file_save, file_sample, file_recent
-from groot.algorithms.workflow.s020_sequences import drop_sequences, set_sequences, import_sequences
+from groot.algorithms.workflow.s020_sequences import drop_genes, set_genes, import_genes, set_gene_name
 from groot.algorithms.workflow.s030_similarity import create_similarity, drop_similarity, set_similarity, import_similarity, print_similarity
 from groot.algorithms.workflow.s040_major import create_major, drop_major, set_major, print_major
 from groot.algorithms.workflow.s050_minor import create_minor, drop_minor, print_minor

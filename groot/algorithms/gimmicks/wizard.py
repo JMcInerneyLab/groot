@@ -2,9 +2,9 @@ from intermake import MCMD, AbstractCommand, Theme, VisualisablePath, command, c
 from mhelper import EFileMode, Filename, MFlags, file_helper, string_helper
 from typing import List, Optional, cast
 
-from groot import LegoModel, constants
+from groot import Model, constants
 from groot.algorithms import workflow
-from groot.constants import EFormat, LegoStage, STAGES, EChanges
+from groot.constants import EFormat, Stage, STAGES, EChanges
 from groot.data import global_view
 
 
@@ -128,7 +128,7 @@ class Wizard:
         return "\n".join( r )
     
     
-    def __pause( self, title: LegoStage, commands: tuple ) -> None:
+    def __pause( self, title: Stage, commands: tuple ) -> None:
         self.pause_reason = title
         MCMD.progress( "Walkthrough has paused after {}{}{} due to user request.".format( Theme.BOLD, title, Theme.RESET ) )
         MCMD.progress( "Use the following commands to review:" )
@@ -262,7 +262,7 @@ class Wizard:
         self.__line( STAGES.TREES_6 )
         
         model = global_view.current_model()
-        ogs = [model.sequences[x] for x in self.outgroups]
+        ogs = [model.genes[x] for x in self.outgroups]
         
         self.__result |= workflow.s055_outgroups.set_outgroups( ogs )
         
@@ -285,7 +285,7 @@ class Wizard:
         self.__result |= workflow.s040_major.create_major( self.tolerance )
         
         if self.pause_components:
-            self.__pause( STAGES.MAJOR_3, (workflow.s020_sequences.print_sequences, workflow.s040_major.print_major) )
+            self.__pause( STAGES.MAJOR_3, (workflow.s020_sequences.print_genes, workflow.s040_major.print_major) )
     
     
     def __fn4_make_minor( self ):
@@ -293,7 +293,7 @@ class Wizard:
         self.__result |= workflow.s050_minor.create_minor( self.tolerance )
         
         if self.pause_components:
-            self.__pause( STAGES.MINOR_3, (workflow.s020_sequences.print_sequences, workflow.s050_minor.print_minor) )
+            self.__pause( STAGES.MINOR_3, (workflow.s020_sequences.print_genes, workflow.s050_minor.print_minor) )
     
     
     def __fn4b_make_domains( self ):
@@ -307,7 +307,7 @@ class Wizard:
             self.__result |= import_file( import_ )
         
         if self.pause_import:
-            self.__pause( STAGES._DATA_0, (workflow.s020_sequences.print_sequences,) )
+            self.__pause( STAGES._DATA_0, (workflow.s020_sequences.print_genes,) )
     
     
     def __save_model( self ):
@@ -622,7 +622,7 @@ def import_file( file_name: Filename[EFileMode.READ],
                 return EChanges.INFORMATION
         elif ext in (".fasta", ".fa", ".faa"):
             if not query:
-                return workflow.s020_sequences.import_sequences( file_name )
+                return workflow.s020_sequences.import_genes( file_name )
             else:
                 MCMD.print( "FASTA: «{}».".format( file_name ) )
                 return EChanges.INFORMATION

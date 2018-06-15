@@ -4,20 +4,20 @@ from groot import constants
 from intermake import MCMD, Theme, command
 from mhelper import io_helper, string_helper
 
-from groot.data import LegoComponent, LegoModel, global_view
+from groot.data import Component, Model, global_view
 from groot.constants import EChanges
 from groot.utilities import cli_view_utils, external_runner
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
-DAlgorithm = Callable[[LegoModel, str], str]
+DAlgorithm = Callable[[Model, str], str]
 """A delegate for a function that takes a model and unaligned FASTA data, and produces an aligned result, in FASTA format."""
 
-alignment_algorithms = AlgorithmCollection[DAlgorithm]( "Alignment" )
+alignment_algorithms = AlgorithmCollection( DAlgorithm, "Alignment" )
 
 
 @command(folder = constants.F_CREATE)
-def create_alignments( algorithm: Optional[str] = None, component: Optional[List[LegoComponent]] = None ) -> EChanges:
+def create_alignments( algorithm: alignment_algorithms.Algorithm, component: Optional[List[Component]] = None ) -> EChanges:
     """
     Aligns the component. If no component is specified, aligns all components.
     
@@ -28,7 +28,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     """
     model = global_view.current_model()
     
-    if not all( x.site_array for x in model.sequences ):
+    if not all( x.site_array for x in model.genes ):
         raise ValueError( "Refusing to make alignments because there is no site data. Did you mean to load the site data (FASTA) first?" )
     
     to_do = cli_view_utils.get_component_list( component )
@@ -36,7 +36,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
     
     for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
         fasta = component_.get_unaligned_legacy_fasta()
-        component_.alignment = external_runner.run_in_temporary( alignment_algorithms[algorithm], component_.model, fasta )
+        component_.alignment = external_runner.run_in_temporary( algorithm, component_.model, fasta )
     
     after = sum( x.alignment is not None for x in model.components )
     MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
@@ -45,7 +45,7 @@ def create_alignments( algorithm: Optional[str] = None, component: Optional[List
 
 
 @command(folder = constants.F_SET)
-def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
+def set_alignment( component: Component, alignment: str ) -> EChanges:
     """
     Sets a component tree manually.
     
@@ -61,7 +61,7 @@ def set_alignment( component: LegoComponent, alignment: str ) -> EChanges:
 
 
 @command(folder = constants.F_DROP)
-def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChanges:
+def drop_alignment( component: Optional[List[Component]] = None ) -> EChanges:
     """
     Removes the alignment data from the component. If no component is specified, drops all alignments.
     :param component: Component to drop the alignment for, or `None` for all.
@@ -79,7 +79,7 @@ def drop_alignment( component: Optional[List[LegoComponent]] = None ) -> EChange
 
 
 @command( names = ["print_alignments", "alignments"], folder=constants.F_PRINT )
-def print_alignments( component: Optional[List[LegoComponent]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
+def print_alignments( component: Optional[List[Component]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
     """
     Prints the alignment for a component.
     :param file:        File to write to. See `file_write_help`. If this is empty then colours and headings are also printed. 

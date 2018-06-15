@@ -1,7 +1,5 @@
 from PyQt5.QtWidgets import QGridLayout, QLabel, QLineEdit, QMenu, QToolButton, QWidget
-from groot.algorithms.gimmicks.wizard import Wizard
-from groot.constants import LegoStage, STAGES
-from groot.data import global_view
+import groot
 from groot_gui.utilities import gui_workflow
 from groot_gui.forms.designer import frm_workflow_designer
 from groot_gui.forms.frm_base import FrmBase
@@ -25,7 +23,7 @@ class FrmWorkflow( FrmBase ):
         
         self.map = []
         
-        for row, stage in enumerate( STAGES ):
+        for row, stage in enumerate( groot.STAGES ):
             self.add( self.ui.LAY_MAIN, stage, row )
         
         self._refresh_labels()
@@ -37,7 +35,7 @@ class FrmWorkflow( FrmBase ):
     
     def _refresh_labels( self ):
         # Wizard
-        wt = Wizard.get_active()
+        wt = groot.Wizard.get_active()
         
         if wt is not None and wt.is_paused:
             self.ui.FRA_PAUSED.setVisible( True )
@@ -46,7 +44,7 @@ class FrmWorkflow( FrmBase ):
             self.ui.FRA_PAUSED.setVisible( False )
         
         # Others
-        m = global_view.current_model()
+        m = groot.current_model()
         
         for stage, indicator, label, box, btn in self.map:
             status = m.get_status( stage )
@@ -63,7 +61,7 @@ class FrmWorkflow( FrmBase ):
             box.setText( str( status ) )
     
     
-    def add( self, layout: QGridLayout, stage: LegoStage, row ):
+    def add( self, layout: QGridLayout, stage: groot.Stage, row ):
         indicator = QWidget()
         indicator.setMinimumWidth( 4 )
         indicator.setMaximumWidth( 4 )
@@ -79,7 +77,7 @@ class FrmWorkflow( FrmBase ):
         layout.addWidget( box, row, 2 )
         
         btn = QToolButton()
-        btn.setText( "﻿▼" )
+        btn.setText( "▼" )
         btn.clicked[bool].connect( self.__on_btn_clicked )
         layout.addWidget( btn, row, 3 )
         
@@ -112,4 +110,4 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.actions.launch( gui_workflow.VISUALISERS.ACT_WIZARD_NEXT )
+        self.actions.launch( gui_workflow.get_visualisers().ACT_WIZARD_NEXT )

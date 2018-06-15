@@ -5,6 +5,7 @@
         <file>align_adjacent.svg</file>
         <file>align_left.svg</file>
         <file>bbsrc_logo.png</file>
+        <file>between.svg</file>
         <file>black_alignment.svg</file>
         <file>black_check.svg</file>
         <file>black_clean.svg</file>
@@ -23,13 +24,20 @@
         <file>black_subgraph.svg</file>
         <file>black_subset.svg</file>
         <file>black_tree.svg</file>
+        <file>choose.svg</file>
+        <file>colour.svg</file>
         <file>create.svg</file>
         <file>database.svg</file>
         <file>database_monochrome.svg</file>
         <file>dismiss.svg</file>
         <file>domain.svg</file>
         <file>empty.svg</file>
+        <file>encompass_left.svg</file>
+        <file>encompass_right.svg</file>
+        <file>expand_left.svg</file>
+        <file>expand_right.svg</file>
         <file>external.svg</file>
+        <file>find.svg</file>
         <file>fusion.svg</file>
         <file>green_alignment.svg</file>
         <file>green_check.svg</file>
@@ -55,6 +63,8 @@
         <file>import-file.svg</file>
         <file>import_.svg</file>
         <file>internal.svg</file>
+        <file>invert.svg</file>
+        <file>legend.svg</file>
         <file>lego.svg</file>
         <file>manchester_logo.png</file>
         <file>maximize.svg</file>
@@ -65,6 +75,7 @@
         <file>open-file.svg</file>
         <file>open.svg</file>
         <file>outgroup.svg</file>
+        <file>outside.svg</file>
         <file>red_alignment.svg</file>
         <file>red_check.svg</file>
         <file>red_clean.svg</file>
@@ -90,6 +101,8 @@
         <file>save_as.svg</file>
         <file>select.svg</file>
         <file>settings.svg</file>
+        <file>shift_left.svg</file>
+        <file>shift_right.svg</file>
         <file>split.svg</file>
         <file>text.svg</file>
         <file>tree.svg</file>

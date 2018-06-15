@@ -11,7 +11,7 @@ from mhelper import SwitchError, file_helper, io_helper
 
 from groot import constants
 from groot.constants import EFormat, EChanges
-from groot.data import global_view, LegoSequence, UserGraph, FixedUserGraph
+from groot.data import global_view, Gene, UserGraph, FixedUserGraph
 from groot.utilities import lego_graph
 
 
@@ -184,7 +184,7 @@ def run_test( name: str,
     model = global_view.current_model()
     file_helper.write_all_text( results_nrfg_file,
                                 exporting.export_edgelist( model.fusion_graph_clean.graph,
-                                                           fnode = lambda x: x.data.accession if isinstance( x.data, LegoSequence ) else "CL{}".format( x.get_session_id() ),
+                                                           fnode = lambda x: x.data.accession if isinstance( x.data, Gene ) else "CL{}".format( x.get_session_id() ),
                                                            delimiter = "\t" ) )
     
     if view:

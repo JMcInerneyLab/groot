@@ -1,30 +1,30 @@
 from typing import List, Dict, Iterator, Iterable
-from mhelper import array_helper, NotFoundError, exception_helper
+from mhelper import array_helper, NotFoundError, exception_helper, NOT_PROVIDED
 
-from groot.data.model_core import LegoSubsequence, FixedUserGraph, LegoEdge, LegoSequence, LegoComponent, LegoUserDomain, LegoFusion
-
-
-_LegoModel_ = "LegoModel"
+from groot.data.model_core import Domain, FixedUserGraph, Edge, Gene, Component, UserDomain, Fusion, Point, Formation
 
 
-class LegoEdgeCollection:
+_Model_ = "Model"
+
+
+class EdgeCollection:
     """
     The collection of edges, held by the model.
     
     :ivar __model:          Owning model.
     :ivar __edges:          Edge list
-    :ivar __by_sequence:    Lookup table, sequence to edge list.
+    :ivar __by_gene:    Lookup table, gene to edge list.
     """
     
     
-    def __init__( self, model: _LegoModel_ ):
+    def __init__( self, model: _Model_ ):
         """
         CONSTRUCTOR
         See class attributes for parameter descriptions. 
         """
         self.__model = model
-        self.__edges: List[LegoEdge] = []
-        self.__by_sequence: Dict[LegoSequence, List[LegoEdge]] = { }
+        self.__edges: List[Edge] = []
+        self.__by_gene: Dict[Gene, List[Edge]] = { }
     
     
     def __bool__( self ):
@@ -43,26 +43,41 @@ class LegoEdgeCollection:
         return "{} edges".format( len( self ) )
     
     
-    def find_sequence( self, sequence: LegoSequence ) -> List[LegoEdge]:
-        return self.__by_sequence.get( sequence, [] )
+    def find_gene( self, gene: Gene ) -> List[Edge]:
+        return self.__by_gene.get( gene, [] )
     
     
-    def add( self, edge: LegoEdge ):
+    def iter_touching( self, domains: Iterable[Domain] ) -> Iterator[Edge]:
+        """
+        Yields all `Edge`s that overlap the specified `domains`. 
+        """
+        if not domains:
+            return
+        
+        for edge in self.__edges:
+            for domain in domains:
+                if not edge.left.has_overlap( domain ) and not edge.right.has_overlap( domain ):
+                    break
+            else:
+                yield edge
+    
+    
+    def add( self, edge: Edge ):
         self.__edges.append( edge )
-        array_helper.add_to_listdict( self.__by_sequence, edge.left.sequence, edge )
-        array_helper.add_to_listdict( self.__by_sequence, edge.right.sequence, edge )
+        array_helper.add_to_listdict( self.__by_gene, edge.left.gene, edge )
+        array_helper.add_to_listdict( self.__by_gene, edge.right.gene, edge )
     
     
-    def remove( self, edge: LegoEdge ):
+    def remove( self, edge: Edge ):
         self.__edges.remove( edge )
-        array_helper.remove_from_listdict( self.__by_sequence, edge.left.sequence, edge )
-        array_helper.remove_from_listdict( self.__by_sequence, edge.right.sequence, edge )
+        array_helper.remove_from_listdict( self.__by_gene, edge.left.gene, edge )
+        array_helper.remove_from_listdict( self.__by_gene, edge.right.gene, edge )
 
 
-class LegoComponentCollection:
-    def __init__( self, model: _LegoModel_ ):
+class ComponentCollection:
+    def __init__( self, model: _Model_ ):
         self.__model = model
-        self.__components: List[LegoComponent] = []
+        self.__components: List[Component] = []
     
     
     @property
@@ -84,12 +99,12 @@ class LegoComponentCollection:
         return bool( self.__components )
     
     
-    def add( self, component: LegoComponent ):
-        assert isinstance( component, LegoComponent ), component
+    def add( self, component: Component ):
+        assert isinstance( component, Component ), component
         self.__components.append( component )
     
     
-    def remove( self, component: LegoComponent ):
+    def remove( self, component: Component ):
         self.__components.remove( component )
     
     
@@ -106,47 +121,53 @@ class LegoComponentCollection:
         return len( self.__components ) == 0
     
     
-    def find_components_for_minor_subsequence( self, subsequence: LegoSubsequence ) -> List[LegoComponent]:
+    def find_components_for_minor_domain( self, domain: Domain ) -> List[Component]:
         r = []
         
         for component in self:
-            for minor_subsequence in component.minor_subsequences:
-                if minor_subsequence.has_overlap( subsequence ):
-                    r.append( component )
-                    break
+            if component.minor_domains is not None:
+                for minor_domain in component.minor_domains:
+                    if minor_domain.has_overlap( domain ):
+                        r.append( component )
+                        break
         
         return r
     
     
-    def find_components_for_minor_sequence( self, sequence: LegoSequence ) -> List[LegoComponent]:
+    def find_components_for_minor_gene( self, gene: Gene ) -> List[Component]:
         r = []
         
         for component in self:
-            for minor_subsequence in component.minor_subsequences:
-                if minor_subsequence.sequence is sequence:
-                    r.append( component )
-                    break
+            if component.minor_domains:
+                for minor_domain in component.minor_domains:
+                    if minor_domain.gene is gene:
+                        r.append( component )
+                        break
         
         return r
     
     
-    def has_major_sequence_got_component( self, sequence: LegoSequence ) -> bool:
+    def has_major_gene_got_component( self, gene: Gene ) -> bool:
         try:
-            self.find_component_for_major_sequence( sequence )
+            self.find_component_for_major_gene( gene )
             return True
         except NotFoundError:
             return False
     
     
-    def find_component_for_major_sequence( self, sequence: LegoSequence ) -> LegoComponent:
+    def find_component_for_major_gene( self, gene: Gene, *, default: object = NOT_PROVIDED ) -> Component:
         for component in self.__components:
-            if sequence in component.major_sequences:
+            if gene in component.major_genes:
                 return component
         
-        raise NotFoundError( "Sequence «{}» does not have a component.".format( sequence ) )
+        if default is not NOT_PROVIDED:
+            # noinspection PyTypeChecker
+            return default
+        
+        raise NotFoundError( "Gene «{}» does not have a component.".format( gene ) )
     
     
-    def find_component_by_name( self, name: str ) -> LegoComponent:
+    def find_component_by_name( self, name: str ) -> Component:
         for component in self.__components:
             if str( component ) == name:
                 return component
@@ -154,15 +175,15 @@ class LegoComponentCollection:
         raise NotFoundError( "Cannot find the component with the name «{}».".format( name ) )
     
     
-    def has_sequence( self, sequence: LegoSequence ) -> bool:
+    def has_gene( self, gene: Gene ) -> bool:
         try:
-            self.find_component_for_major_sequence( sequence )
+            self.find_component_for_major_gene( gene )
             return True
         except NotFoundError:
             return False
     
     
-    def __iter__( self ) -> Iterator[LegoComponent]:
+    def __iter__( self ) -> Iterator[Component]:
         return iter( self.__components )
     
     
@@ -174,10 +195,14 @@ class LegoComponentCollection:
         self.__components.clear()
 
 
-class LegoSequenceCollection:
-    def __init__( self, model: _LegoModel_ ):
+class GeneCollection:
+    def __init__( self, model: _Model_ ):
         self.__model = model
-        self.__sequences: List[LegoSequence] = []
+        self.__genes: List[Gene] = []
+    
+    
+    def remove( self, gene: Gene ):
+        self.__genes.remove( gene )
     
     
     @property
@@ -194,60 +219,83 @@ class LegoSequenceCollection:
         return "\n".join( r )
     
     
-    def __getitem__( self, item ):
-        for s in self.__sequences:
-            if s.accession == item:
+    def by_legacy_accession( self, name: str ) -> Gene:
+        id = Gene.read_legacy_accession( name )
+        
+        for x in self:
+            if x.index == id:
+                return x
+        
+        raise NotFoundError( "There is no gene with the internal ID «{}».".format( id ) )
+    
+    
+    def __getitem__( self, accession: str ):
+        r = self.get( accession )
+        
+        if r is None:
+            raise NotFoundError( "No gene with the accession «{}» exists.".format( accession ) )
+        
+        return r
+    
+    
+    def get( self, accession: str ):
+        for s in self.__genes:
+            if s.accession == accession:
                 return s
         
-        raise NotFoundError( "No sequence with the accession «{}» exists.".format( item ) )
+        return None
     
     
     def __bool__( self ):
-        return bool( self.__sequences )
+        return bool( self.__genes )
     
     
     def __len__( self ):
-        return len( self.__sequences )
+        return len( self.__genes )
     
     
-    def __iter__( self ) -> Iterator[LegoSequence]:
-        return iter( self.__sequences )
+    def __iter__( self ) -> Iterator[Gene]:
+        return iter( self.__genes )
     
     
     def __str__( self ):
-        return "{} sequences".format( len( self ) )
+        return "{} genes".format( len( self ) )
     
     
-    def add( self, sequence: LegoSequence ):
-        if any( x.accession == sequence.accession for x in self.__sequences ):
-            raise ValueError( "Cannot add a sequence «{}» to the model because its accession is already in use.".format( sequence ) )
+    def add( self, gene: Gene ):
+        if any( x.accession == gene.accession for x in self.__genes ):
+            raise ValueError( "Cannot add a gene «{}» to the model because its accession is already in use.".format( gene ) )
         
-        array_helper.ordered_insert( self.__sequences, sequence, lambda x: x.accession )
+        array_helper.ordered_insert( self.__genes, gene, lambda x: x.accession )
     
     
-    def index( self, sequence: LegoSequence ):
-        return self.__sequences.index( sequence )
+    def index( self, gene: Gene ):
+        return self.__genes.index( gene )
 
 
-class LegoUserDomainCollection:
-    def __init__( self, model: _LegoModel_ ):
+class UserDomainCollection:
+    def __init__( self, model: _Model_ ):
         self.__model = model
-        self.__user_domains: List[LegoUserDomain] = []
-        self.__by_sequence: Dict[LegoSequence, List[LegoUserDomain]] = { }
+        self.__user_domains: List[UserDomain] = []
+        self.__by_gene: Dict[Gene, List[UserDomain]] = { }
     
     
-    def add( self, domain: LegoUserDomain ):
+    def add( self, domain: UserDomain ):
         self.__user_domains.append( domain )
         
-        if domain.sequence not in self.__by_sequence:
-            self.__by_sequence[domain.sequence] = []
+        if domain.gene not in self.__by_gene:
+            self.__by_gene[domain.gene] = []
         
-        self.__by_sequence[domain.sequence].append( domain )
+        self.__by_gene[domain.gene].append( domain )
+    
+    
+    def __str__( self ):
+        return "{} domains".format( len( self ) )
     
     
     def clear( self ):
         self.__user_domains.clear()
-        self.__by_sequence.clear()
+        self.__by_gene.clear()
     
     
     def __bool__( self ):
@@ -258,25 +306,25 @@ class LegoUserDomainCollection:
         return len( self.__user_domains )
     
     
-    def __iter__( self ) -> Iterator[LegoUserDomain]:
+    def __iter__( self ) -> Iterator[UserDomain]:
         return iter( self.__user_domains )
     
     
-    def by_sequence( self, sequence: LegoSequence ) -> Iterable[LegoUserDomain]:
-        list = self.__by_sequence.get( sequence )
+    def by_gene( self, gene: Gene ) -> Iterable[UserDomain]:
+        list = self.__by_gene.get( gene )
         
         if list is None:
-            return [LegoUserDomain( sequence, 1, sequence.length )]
+            return [UserDomain( gene, 1, gene.length )]
         else:
             return list
 
 
-class LegoFusionEventCollection:
+class FusionCollection:
     def __init__( self ):
-        self.events: List[LegoFusion] = []
+        self.events: List[Fusion] = []
     
     
-    def add( self, item: LegoFusion ):
+    def add( self, item: Fusion ):
         self.events.append( item )
     
     
@@ -299,10 +347,36 @@ class LegoFusionEventCollection:
     @property
     def num_points( self ):
         return sum( sum( y.points.__len__() for y in x.formations ) for x in self )
+    
+    
+    def find_point_by_legacy_accession( self, name: str ) -> Point:
+        i_event, i_formation, i_point = Point.read_legacy_accession( name )
+        
+        for event in self:
+            if event.index == i_event:
+                for formation in event.formations:
+                    if formation.index == i_formation:
+                        for point in formation.points:
+                            if point.index == i_point:
+                                return point
+        
+        raise NotFoundError( "There is no fusion point with the internal ID «{}».".format( id ) )
+    
+    
+    def find_formation_by_legacy_accession( self, name: str ) -> Formation:
+        i_event, i_formation = Formation.read_legacy_accession( name )
+        
+        for event in self:
+            if event.index == i_event:
+                for formation in event.formations:
+                    if formation.index == i_formation:
+                        return formation
+        
+        raise NotFoundError( "There is no fusion formation with the internal ID «{}».".format( id ) )
 
 
-class LegoUserGraphCollection:
-    def __init__( self, model: _LegoModel_ ):
+class UserGraphCollection:
+    def __init__( self, model: _Model_ ):
         self.__model = model
         self.__contents = []
     
@@ -327,3 +401,7 @@ class LegoUserGraphCollection:
     
     def __iter__( self ):
         return iter( self.__contents )
+    
+    
+    def __str__( self ):
+        return "{} graphs".format( len( self ) )

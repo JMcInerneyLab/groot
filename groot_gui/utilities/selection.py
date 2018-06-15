@@ -1,14 +1,10 @@
-"""
-Collection of miscellany for dealing with the GUI in GROOT.
-"""
-
-from typing import FrozenSet, Iterable, List, Optional, Callable
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QWheelEvent
-from PyQt5.QtWidgets import QAction, QGraphicsView, QMenu, QAbstractButton
+from typing import Iterable, FrozenSet, Optional, List, Callable, Union
+from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QAbstractButton, QMenu, QAction
 from mhelper import MFlags, array_helper, string_helper, ResourceIcon
 
-from groot.data import global_view, LegoModel, LegoEdge, LegoUserDomain, LegoSequence, LegoComponent, LegoSplit, LegoFusion
+import groot
+
 from groot_gui.forms.resources import resources
 
 
@@ -38,6 +34,7 @@ class ESelect( MFlags ):
     HAS_FASTA = EX_SEQUENCES | EX_DOMAINS | EX_EDGES | EX_ALIGNMENTS
     HAS_GRAPH = EX_TREES_ROOTED | EX_TREES_UNROOTED | EX_SUBGRAPHS | EX_NRFGS | EX_USERGRAPHS
     IS_SPLIT = EX_SPLITS | EX_CONSENSUS
+    IS_NORMAL = EX_SEQUENCES | EX_DOMAINS | EX_EDGES | EX_COMPONENTS | EX_ALIGNMENTS | EX_TREES_ROOTED | EX_TREES_UNROOTED | EX_FUSIONS | EX_POINTS | EX_SPLITS | EX_CONSENSUS | EX_SUBSETS | EX_SUBGRAPHS | EX_NRFGS | EX_CHECKED | EX_USERGRAPHS | EX_USER_REPORTS
 
 
 class LegoSelection:
@@ -55,12 +52,12 @@ class LegoSelection:
             items = frozenset( items )
         
         self.items: FrozenSet[object] = items
-        self.sequences = frozenset( x for x in self.items if isinstance( x, LegoSequence ) )
-        self.user_domains = frozenset( x for x in self.items if isinstance( x, LegoUserDomain ) )
-        self.components = frozenset( x for x in self.items if isinstance( x, LegoComponent ) )
-        self.edges = frozenset( x for x in self.items if isinstance( x, LegoEdge ) )
-        self.fusions = frozenset( x for x in self.items if isinstance( x, LegoFusion ) )
-        self.splits = frozenset( x for x in self.items if isinstance( x, LegoSplit ) )
+        self.sequences = frozenset( x for x in self.items if isinstance( x, groot.Gene ) )
+        self.user_domains = frozenset( x for x in self.items if isinstance( x, groot.UserDomain ) )
+        self.components = frozenset( x for x in self.items if isinstance( x, groot.Component ) )
+        self.edges = frozenset( x for x in self.items if isinstance( x, groot.Edge ) )
+        self.fusions = frozenset( x for x in self.items if isinstance( x, groot.Fusion ) )
+        self.splits = frozenset( x for x in self.items if isinstance( x, groot.Split ) )
     
     
     def __bool__( self ):
@@ -111,38 +108,6 @@ class LegoSelection:
         return string_helper.format_array( r, final = " and " )
 
 
-class InteractiveGraphicsView( QGraphicsView ):
-    """
-    Subclasses QGraphicsView to provide mouse zooming. 
-    """
-    
-    
-    def wheelEvent( self, event: QWheelEvent ):
-        """
-        Zoom in or out of the view.
-        """
-        if event.modifiers() & Qt.ControlModifier or event.modifiers() & Qt.MetaModifier:
-            zoomInFactor = 1.25
-            zoomOutFactor = 1 / zoomInFactor
-            
-            # Save the scene pos
-            oldPos = self.mapToScene( event.pos() )
-            
-            # Zoom
-            if event.angleDelta().y() > 0:
-                zoomFactor = zoomInFactor
-            else:
-                zoomFactor = zoomOutFactor
-            self.scale( zoomFactor, zoomFactor )
-            
-            # Get the new position
-            newPos = self.mapToScene( event.pos() )
-            
-            # Move scene to old position
-            delta = newPos - oldPos
-            self.translate( delta.x(), delta.y() )
-
-
 class SelectionManipulator:
     """
     Manipulates a selection.
@@ -150,31 +115,31 @@ class SelectionManipulator:
     """
     
     
-    def select_left( self, model: LegoModel, selection: LegoSelection ) -> LegoSelection:
+    def select_left( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
         select = set()
         
         for domain1 in model.user_domains:
             for domain2 in selection.user_domains:
-                if domain1.sequence is domain2.sequence and domain1.start <= domain2.start:
+                if domain1.sequence is domain2.gene and domain1.start <= domain2.start:
                     select.add( domain1 )
                     break
         
         return LegoSelection( select )
     
     
-    def select_right( self, model: LegoModel, selection: LegoSelection ) -> LegoSelection:
+    def select_right( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
         select = set()
         
         for domain1 in model.user_domains:
             for domain2 in selection.user_domains:
-                if domain1.sequence is domain2.sequence and domain1.start <= domain2.start:
+                if domain1.sequence is domain2.gene and domain1.start <= domain2.start:
                     select.add( domain1 )
                     break
         
         return LegoSelection( select )
     
     
-    def select_direct_connections( self, model: LegoModel, selection: LegoSelection ) -> LegoSelection:
+    def select_direct_connections( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
         edges = set()
         
         for domain in selection.user_domains:
@@ -191,32 +156,38 @@ class SelectionManipulator:
         return LegoSelection( select )
     
     
-    def select_all( self, model: LegoModel, _: LegoSelection ) -> LegoSelection:
+    def select_all( self, model: groot.Model, _: LegoSelection ) -> LegoSelection:
         """
         Selects everything.
         """
         return LegoSelection( model.user_domains )
 
 
-def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESelect.ALL ) -> Optional[LegoSelection]:
+_GuiActions_ = "groot_gui.utilities.gui_menu.GuiActions"
+
+
+def show_selection_menu( control: QAbstractButton,
+                         default: Union[_GuiActions_, LegoSelection, None],
+                         mode: ESelect = ESelect.ALL,
+                         ) -> Optional[LegoSelection]:
     """
     Shows the selection menu.
     
     :param control:     Button to drop the menu down from. 
-    :param actions:     One of:
+    :param default:     One of:
                         * A GuiActions object. The default selection will be retrieved from this object, and any new selection will be committed to it.
                         * A LegoSelection object. The default selection will be this.
                         * None. There will be no default selection.
     :param mode:        Display mode.
     :return:            The selection made. This will have already been committed to `actions` if `actions` is a `GuiActions` object. 
     """
-    model = global_view.current_model()
+    model = groot.global_view.current_model()
     
     from groot_gui.utilities.gui_menu import GuiActions
-    if isinstance( actions, GuiActions ):
-        selection = actions.get_selection()
-    elif isinstance( actions, LegoSelection ):
-        selection = actions
+    if isinstance( default, GuiActions ):
+        selection = default.get_selection()
+    elif isinstance( default, LegoSelection ):
+        selection = default
     else:
         selection = LegoSelection()
     
@@ -226,7 +197,7 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     root.setTitle( "Make selection" )
     
     # Meta
-    if model.sequences:
+    if model.genes:
         relational = QMenu()
         relational.setTitle( "Relational" )
         OPTION_1 = "Select all"
@@ -241,10 +212,10 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
         _add_submenu( "(Selection)", mode & ESelect.EX_SPECIAL, alive, OPTIONS, root, selection, None )
     
     # Sequences
-    _add_submenu( "1. Genes", mode & ESelect.EX_SEQUENCES, alive, model.sequences, root, selection, resources.black_gene )
+    _add_submenu( "1. Genes", mode & ESelect.EX_SEQUENCES, alive, model.genes, root, selection, resources.black_gene )
     
     # Edges
-    _add_submenu( "2. Edges", mode & ESelect.EX_EDGES, alive, model.sequences, root, selection, resources.black_edge, ex = [LegoSequence.iter_edges] )
+    _add_submenu( "2. Edges", mode & ESelect.EX_EDGES, alive, model.genes, root, selection, resources.black_edge, ex = [groot.Gene.iter_edges] )
     
     # Components
     _add_submenu( "3. Components", mode & ESelect.EX_COMPONENTS, alive, model.components, root, selection, resources.black_major )
@@ -253,7 +224,7 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     _add_submenu( "3b. Component FASTA (unaligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_unaligned_fasta for x in model.components), root, selection, resources.black_alignment )
     
     # Domains
-    _add_submenu( "4. Domains", mode & ESelect.EX_DOMAINS, alive, model.sequences, root, selection, resources.black_domain, ex = [LegoSequence.iter_userdomains] )
+    _add_submenu( "4. Domains", mode & ESelect.EX_DOMAINS, alive, model.genes, root, selection, resources.black_domain, ex = [groot.Gene.iter_userdomains] )
     
     # Components - FASTA (aligned)
     _add_submenu( "5. Component FASTA (aligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_aligned_fasta for x in model.components), root, selection, resources.black_alignment )
@@ -265,15 +236,15 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     _add_submenu( "6b. Component trees (unrooted)", mode & ESelect.EX_TREES_UNROOTED, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
     
     # Fusions
-    _add_submenu( "7a. Fusion events", mode & ESelect.EX_FUSIONS, alive, model.fusion_events, root, selection, resources.black_fusion )
+    _add_submenu( "7a. Fusion events", mode & ESelect.EX_FUSIONS, alive, model.fusions, root, selection, resources.black_fusion )
     
     # Fusion formations
-    _add_submenu( "7b. Fusion formations", mode & ESelect.EX_POINTS, alive, model.fusion_events, root, selection, resources.black_fusion, ex = [lambda x: x.formations] )
+    _add_submenu( "7b. Fusion formations", mode & ESelect.EX_POINTS, alive, model.fusions, root, selection, resources.black_fusion, ex = [lambda x: x.formations] )
     
     # Fusion points
-    _add_submenu( "7c. Fusion points", mode & ESelect.EX_POINTS, alive, model.fusion_events, root, selection, resources.black_fusion, ex = [lambda x: x.formations, lambda x: x.points] )
+    _add_submenu( "7c. Fusion points", mode & ESelect.EX_POINTS, alive, model.fusions, root, selection, resources.black_fusion, ex = [lambda x: x.formations, lambda x: x.points] )
     
-    #  Splits
+    #  Splits
     _add_submenu( "8. Splits", mode & ESelect.EX_SPLITS, alive, model.splits, root, selection, resources.black_split, it = True )
     
     # Consensus
@@ -326,8 +297,8 @@ def show_selection_menu( control: QAbstractButton, actions, mode: ESelect = ESel
     if tag is not None:
         r = LegoSelection( frozenset( { tag } ) )
         
-        if actions is not None:
-            actions.set_selection( r )
+        if default is not None:
+            default.set_selection( r )
         
         return r
     else:

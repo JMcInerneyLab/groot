@@ -4,7 +4,7 @@ from typing import Optional, List
 from intermake import Theme
 from mhelper import ansi, bio_helper
 
-from groot.data import global_view, LegoModel, LegoSequence, LegoComponent, ESiteType
+from groot.data import global_view, Model, Gene, Component, ESiteType
 
 
 PROTEIN_COLOUR_TABLE = { "G": ansi.FORE_WHITE, "A": ansi.FORE_WHITE, "V": ansi.FORE_WHITE, "L": ansi.FORE_WHITE, "I": ansi.FORE_WHITE,
@@ -21,19 +21,19 @@ DNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "T": ansi.FORE_RED, "C": ansi.FORE_G
 RNA_COLOUR_TABLE = { "A": ansi.FORE_YELLOW, "U": ansi.FORE_RED, "C": ansi.FORE_GREEN, "G": ansi.FORE_BRIGHT_BLUE, "-": ansi.FORE_BRIGHT_BLACK }
 
 
-def component_to_ansi( component: LegoComponent ) -> str:
+def component_to_ansi( component: Component ) -> str:
     return component_to_ansi_fore( component ) + str( component ) + ansi.RESET
 
 
-def component_to_ansi_fore( component: LegoComponent ):
+def component_to_ansi_fore( component: Component ):
     return Theme.PROGRESSION_FORE[component.index % len( Theme.PROGRESSION_FORE )]
 
 
-def component_to_ansi_back( component: LegoComponent ):
+def component_to_ansi_back( component: Component ):
     return Theme.PROGRESSION_BACK[component.index % len( Theme.PROGRESSION_BACK )]
 
 
-def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model: LegoModel = None, x = 1, n = 99999 ):
+def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model: Model = None, x = 1, n = 99999 ):
     table = __table_from_type( site_type )
     
     result = []
@@ -47,8 +47,8 @@ def colour_fasta_ansi( array: str, site_type: Optional[ESiteType] = None, model:
             result.append( "\n" )
         
         if model is not None:
-            if LegoSequence.is_legacy_accession( name ):
-                name = model.find_sequence_by_legacy_accession( name ).accession
+            if Gene.is_legacy_accession( name ):
+                name = model.genes.by_legacy_accession( name ).accession
         
         result.append( ansi.BACK_BRIGHT_BLACK + name.ljust( 20 ) + ansi.BACK_RESET + "\n" )
         
@@ -84,7 +84,7 @@ def __table_from_type( st ):
     return table
 
 
-def get_component_list( component: Optional[List[LegoComponent]] ):
+def get_component_list( component: Optional[List[Component]] ):
     if component is not None:
         to_do = component
     else:

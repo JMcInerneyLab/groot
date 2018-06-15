@@ -8,23 +8,23 @@ from intermake import MCMD, ConsoleHost, VisualisablePath
 from mhelper import MEnum, array_helper, file_helper, exception_helper, TTristate
 
 from groot import constants
-from groot.data.model import LegoModel
-from groot.constants import EFormat, EMode
+from groot.data.model import Model
+from groot.constants import EFormat
 
 
-__model: LegoModel = None
+__model: Model = None
 
 
-def current_model() -> LegoModel:
+def current_model() -> Model:
     if __model is None:
         new_model()
     
     return __model
 
 
-def set_model( model: LegoModel ):
+def set_model( model: Model ):
     from groot.application import GROOT_APP
-    exception_helper.assert_type( "model", model, LegoModel )
+    exception_helper.assert_type( "model", model, Model )
     global __model
     __model = model
     GROOT_APP.root = model
@@ -36,7 +36,7 @@ def set_model( model: LegoModel ):
 
 
 def new_model():
-    set_model( LegoModel() )
+    set_model( Model() )
 
 
 def get_sample_contents( name: str ) -> List[str]:
@@ -134,8 +134,7 @@ class GlobalOptions:
     :ivar lego_view_piano_roll:     Lego GUI setting - display gene piano rolls 
     :ivar lego_view_names:          Lego GUI setting - display gene names
     :ivar lego_view_positions:      Lego GUI setting - display domain start and end positions
-    :ivar lego_view_components:     Lego GUI setting - display domain components
-    :ivar lego_mode:                Lego GUI setting - smallest selectable unit  
+    :ivar lego_view_components:     Lego GUI setting - display domain components  
     """
     
     
@@ -156,7 +155,6 @@ class GlobalOptions:
         self.lego_view_names: TTristate = True
         self.lego_view_positions: TTristate = None
         self.lego_view_components: TTristate = None
-        self.lego_mode = EMode.SEQUENCE
 
 
 __global_options = None

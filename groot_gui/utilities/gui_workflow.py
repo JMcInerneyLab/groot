@@ -5,12 +5,12 @@ from PyQt5.QtWidgets import QWidget
 
 from groot_gui.forms.resources import resources
 
-from groot.constants import EIntent, LegoStage, STAGES
+from groot.constants import EIntent, Stage, STAGES
 from intermake import AbstractCommand, BasicCommand
 from mhelper import array_helper
 
 
-TWorkflows = Union[LegoStage, Sequence[LegoStage]]
+TWorkflows = Union[Stage, Sequence[Stage]]
 TAction = Union["FrmBase", QWidget, AbstractCommand, Callable[[], None]]
 
 
@@ -23,7 +23,7 @@ class LegoVisualiser:
         
         self.name = name
         self.action = action
-        self.intents: Dict[EIntent, Sequence[LegoStage]] = { }
+        self.intents: Dict[EIntent, Sequence[Stage]] = { }
         self.intents[EIntent.VIEW] = array_helper.as_sequence( view )
         self.intents[EIntent.CREATE] = array_helper.as_sequence( create )
         self.intents[EIntent.DROP] = array_helper.as_sequence( drop )
@@ -46,8 +46,8 @@ class LegoVisualiser:
     
     
     @staticmethod
-    def for_stage( stage: LegoStage, intent: EIntent ):
-        for visualiser in VISUALISERS:
+    def iter_from_stage( stage: Stage, intent: EIntent ) -> Iterator["LegoVisualiser"]:
+        for visualiser in get_visualisers():
             if stage in visualiser.intents[intent]:
                 yield visualiser
 
@@ -172,11 +172,12 @@ class LegoVisualiserCollection:
         raise KeyError( key )
 
 
-VISUALISERS: LegoVisualiserCollection = None
+__visualisers: LegoVisualiserCollection = None
 
 
-def init():
-    global VISUALISERS
-    
-    if VISUALISERS is None:
-        VISUALISERS = LegoVisualiserCollection()
+def get_visualisers():
+    global __visualisers
+    if __visualisers is None:
+        __visualisers = LegoVisualiserCollection()
+    return __visualisers
+

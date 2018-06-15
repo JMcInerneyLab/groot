@@ -15,11 +15,11 @@ from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 from intermake import MENV, constants as im_constants
 
 import groot
-from groot import LegoModel, LegoSequence
+from groot import Model, Gene
 from groot.data import EPosition
 from groot_gui.forms.designer import frm_webtree_designer
 from groot_gui.forms.frm_base import FrmSelectingToolbar
-from groot_gui.utilities.gui_view_utils import ESelect
+from groot_gui.utilities.selection import ESelect
 from groot.utilities import entity_to_html
 
 
@@ -62,11 +62,11 @@ class FrmWebtree( FrmSelectingToolbar ):
     def update_page( self ):
         selection = self.get_selection()
         s = selection.single
-        model: LegoModel = self.get_model()
+        model: Model = self.get_model()
         self.html = entity_to_html.render( s, model ) if s else ""
         self.__update_browser()
         
-        if isinstance( s, LegoSequence ):
+        if isinstance( s, Gene ):
             self.ui.BTN_OUTGROUP.setEnabled( True )
             self.ui.BTN_OUTGROUP.setChecked( s.position == EPosition.OUTGROUP )
         else:
@@ -113,7 +113,7 @@ class FrmWebtree( FrmSelectingToolbar ):
         selection = self.get_selection()
         s = selection.single
         
-        if isinstance( s, LegoSequence ):
+        if isinstance( s, Gene ):
             # We'll get a callback when the plugin completes so we don't need to confirm the button's status
             groot.set_outgroups( [s], not s.is_outgroup )
     

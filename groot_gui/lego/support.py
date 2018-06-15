@@ -1,5 +1,7 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt5.QtGui import QBrush, QColor, QPen, QWheelEvent
+from PyQt5.QtWidgets import QGraphicsView
+
 from groot import ESiteType
 
 from mhelper import array_helper
@@ -10,9 +12,41 @@ _DARK_TEXT = QPen( QColor( 0, 0, 0 ) )
 _LIGHT_TEXT = QPen( QColor( 255, 255, 255 ) )
 
 
+class InteractiveGraphicsView( QGraphicsView ):
+    """
+    Subclasses QGraphicsView to provide mouse zooming. 
+    """
+    
+    
+    def wheelEvent( self, event: QWheelEvent ):
+        """
+        Zoom in or out of the view.
+        """
+        if event.modifiers() & Qt.ControlModifier or event.modifiers() & Qt.MetaModifier:
+            zoomInFactor = 1.25
+            zoomOutFactor = 1 / zoomInFactor
+            
+            # Save the scene pos
+            oldPos = self.mapToScene( event.pos() )
+            
+            # Zoom
+            if event.angleDelta().y() > 0:
+                zoomFactor = zoomInFactor
+            else:
+                zoomFactor = zoomOutFactor
+            self.scale( zoomFactor, zoomFactor )
+            
+            # Get the new position
+            newPos = self.mapToScene( event.pos() )
+            
+            # Move scene to old position
+            delta = newPos - oldPos
+            self.translate( delta.x(), delta.y() )
+
+
 class ColourBlock:
     """
-    Represents a colour on a subsequence.
+    Represents a colour on a domain.
     """
     
     
@@ -77,7 +111,7 @@ class DRAWING:
     # Pens and brushes
     PIANO_ROLL_SELECTED_BACKGROUND = QBrush( QColor( 0, 0, 0 ) )
     PIANO_ROLL_UNSELECTED_BACKGROUND = QBrush( QColor( 0, 0, 0, alpha = 128 ) )
-    SEQUENCE_DEFAULT_FG = QPen( QColor( 255, 255, 0 ) )
+    GENE_DEFAULT_FG = QPen( QColor( 255, 255, 0 ) )
     SELECTION_EDGE_LINE = QPen( QColor( 0, 0, 255 ) )
     SELECTION_EDGE_LINE.setWidth( 2 )
     EDGE_LINE = QPen( QColor( 128, 128, 128 ) )
@@ -115,9 +149,10 @@ class DRAWING:
     ERROR_COLOUR = ColourBlock( Colours.RED )
     
     # Z-values
-    Z_SEQUENCE = 1
+    Z_GENE = 1
     Z_EDGES = 2
     Z_FOCUS = 3
+
 
 class LookupTable:
     def __init__( self, type_: ESiteType ):
@@ -142,5 +177,5 @@ class LookupTable:
             print( "Warning: Cannot create the lookup table because I don't know the letter type. Defaulting to `protein`." )
         
         self.count = len( self.letter_order_table )
-        self.sequence_height = max( self.letter_size * (self.count + 2), 32 )
-        self.sequence_ysep = self.sequence_height
+        self.gene_height = max( self.letter_size * (self.count + 2), 16 )
+        self.gene_ysep = self.gene_height

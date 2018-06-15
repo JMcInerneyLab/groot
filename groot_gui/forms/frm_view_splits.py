@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
 from groot_gui.forms.designer import frm_view_splits_designer
 
-from groot import LegoSplit
+from groot import Split
 from groot_gui.forms.frm_base import FrmSelectingToolbar
-from groot_gui.utilities.gui_view_utils import ESelect
+from groot_gui.utilities.selection import ESelect
 from mhelper import string_helper
 from mhelper_qt import exceptToGui, exqtSlot, tree_helper
 
@@ -28,13 +28,13 @@ class FrmViewSplits( FrmSelectingToolbar ):
     
     
     def __on_widget_itemSelectionChanged( self ):
-        data: LegoSplit = tree_helper.get_selected_data( self.ui.LST_MAIN )
+        data: Split = tree_helper.get_selected_data( self.ui.LST_MAIN )
         
         r = []
         
         model = self.get_model()
         
-        evt = set( model.sequences ).union( model.fusion_points )
+        evt = set( model.genes ).union( model.fusion_points )
         
         for s in sorted( evt, key = str ):
             if data is None:
@@ -82,7 +82,7 @@ class FrmViewSplits( FrmSelectingToolbar ):
         return " ∧ ".join( r )
     
     
-    def check_filter( self, split: LegoSplit ):
+    def check_filter( self, split: Split ):
         sel = self.get_selection()
         
         if sel.components:
@@ -125,7 +125,7 @@ class FrmViewSplits( FrmSelectingToolbar ):
             
             accepted += 1
             
-            assert isinstance( split, LegoSplit )
+            assert isinstance( split, Split )
             item = QTreeWidgetItem()
             
             col = tree_helper.get_or_create_column( tvw, "Inside" )

@@ -3,27 +3,16 @@ MVC architecture.
 
 Classes that manage the view of the model.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, FrozenSet, Iterator, List, Optional, Tuple, Set
 
-from PyQt5.QtCore import QPointF, QRect, QRectF, Qt
+from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QPoint
 from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter, QPolygonF
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
-from groot.data import global_view
-from groot.data.global_view import GlobalOptions
 
-from groot.data.model_interfaces import EPosition
-from groot.data.model_core import LegoSubsequence
-from groot import LegoModel, LegoUserDomain, LegoSequence, LegoComponent
-from groot_gui.utilities.gui_view_support import ColourBlock, DRAWING, LookupTable
-from mhelper import array_helper, misc_helper, override, MEnum
+import groot as gr
+from groot_gui.lego.support import ColourBlock, DRAWING, LookupTable
+from mhelper import MEnum, array_helper, misc_helper, override, Event
 from mhelper_qt import Pens, qt_colour_helper
-
-
-_LegoViewInfo_Edge_ = "LegoViewInfo_Edge"
-_LegoView_AllEdges_ = "LegoView_AllEdges"
-_LegoViewSequence_ = "LegoView_Sequence"
-_LegoView_Subsequence_ = "LegoView_UserDomain"
-_LegoViewModel_ = "LegoView_Model"
 
 
 class ESMode( MEnum ):
@@ -32,45 +21,72 @@ class ESMode( MEnum ):
     DOMAIN = 3
 
 
-class LegoViewInfo_Side:
-    def __init__( self, userdomain_views: List["LegoView_UserDomain"] ) -> None:
-        self.userdomain_views: List[LegoView_UserDomain] = userdomain_views
+class SideView:
+    def __init__( self, model_view: "ModelView", domain: gr.Domain ) -> None:
+        self.model_view = model_view
+        self.domain = domain
+        self.domain_views: List[DomainView] = []
+        
+        for domain_, domain_view in model_view.domain_views.items():
+            if domain_.has_overlap( domain ):
+                self.domain_views.append( domain_view )
+        
+        self.domain_views.sort( key = lambda domain_view: domain_view.domain.start )
+        self.first_domain_view = self.domain_views[0]
+        self.last_domain_view = self.domain_views[-1]
     
     
     def get_y( self ):
-        return self.userdomain_views[0].window_rect().top()
+        return self.domain_views[0].window_rect().top()
     
     
     def average_colour( self ):
-        return qt_colour_helper.average_colour( list( x.colour.colour for x in self.userdomain_views ) )
+        return qt_colour_helper.average_colour( list( x.colour.colour for x in self.domain_views ) )
     
     
     def extract_points( self, backwards ):
         results = []
         
         if not backwards:
-            for x in sorted( self.userdomain_views, key = lambda z: z.window_rect().left() ):
+            for x in sorted( self.domain_views, key = lambda z: z.window_rect().left() ):
                 r: QRect = x.window_rect()
-                results.append( r.bottomLeft() )
-                results.append( r.bottomRight() )
+                
+                if x is self.first_domain_view:
+                    results.append( QPoint( x.get_x_for_site( self.domain.start ), r.bottom() ) )
+                else:
+                    results.append( r.bottomLeft() )
+                
+                if x is self.last_domain_view:
+                    results.append( QPoint( x.get_x_for_site( self.domain.end ), r.bottom() ) )
+                else:
+                    results.append( r.bottomRight() )
         else:
-            for x in sorted( self.userdomain_views, key = lambda z: -z.window_rect().left() ):
+            for x in sorted( self.domain_views, key = lambda z: -z.window_rect().left() ):
                 r: QRect = x.window_rect()
-                results.append( r.topRight() )
-                results.append( r.topLeft() )
+                
+                if x is self.last_domain_view:
+                    results.append( QPoint( x.get_x_for_site( self.domain.end ), r.top() ) )
+                else:
+                    results.append( r.topRight() )
+                
+                if x is self.first_domain_view:
+                    results.append( QPoint( x.get_x_for_site( self.domain.start ), r.top() ) )
+                else:
+                    results.append( r.topLeft() )
         
         return results
     
     
     def top( self ):
-        return self.userdomain_views[0].window_rect().top()
+        return self.domain_views[0].window_rect().top()
     
     
-    @staticmethod
-    def paint_to( painter: QPainter,
-                  upper: "LegoViewInfo_Side",
-                  lower: "LegoViewInfo_Side",
-                  is_highlighted: bool ) -> None:
+    def paint_to( self,
+                  painter: QPainter,
+                  lower: "SideView",
+                  is_component_style: bool ) -> None:
+        upper: SideView = self
+        
         if not upper or not lower:
             return
         
@@ -96,101 +112,108 @@ class LegoViewInfo_Side:
         gradient.setColorAt( 0, upper_colour )
         gradient.setColorAt( 1, lower_colour )
         
-        if is_highlighted:
+        if is_component_style:
             painter.setBrush( QBrush( gradient ) )
             painter.setPen( Qt.NoPen )
         else:
-            painter.setBrush( Qt.NoBrush )
+            painter.setBrush( QBrush( gradient ) )
             painter.setPen( DRAWING.EDGE_LINE )
         
         painter.drawPolygon( QPolygonF( upper_points + lower_points + [upper_points[0]] ) )
 
 
-class LegoView_Component:
+class ComponentView:
     """
-    View of a component
+    View of a component.
+    
+    This paints a simplified view of the edges between its domains.
     """
     
     
-    def __init__( self, owner: _LegoView_AllEdges_, component: LegoComponent ) -> None:
-        # Collect the pertinent domain views
-        domain_views: List[LegoView_UserDomain] = []
-        
-        for domain_view in owner.view_model.userdomain_views.values():
-            for subsequence in component.minor_subsequences:
-                if domain_view.domain.has_overlap( subsequence ):
-                    domain_views.append( domain_view )
-                    break
-        
-        self.owner: LegoView_AllEdges = owner
+    def __init__( self, owner: "OverlayView", component: gr.Component ) -> None:
+        self.owner: OverlayView = owner
+        self.model_view: ModelView = self.owner.view_model
         self.component = component
-        self.colour = ColourBlock( owner.next_colour() )
+        self.sides: List[SideView] = []
         
-        # We have our "subsequence views", convert these to sides (1 side per gene)
-        model = self.owner.view_model.model
-        self.sides = []
-        
-        for sequence in model.sequences:
-            p = []
-            
-            for domain_view in domain_views:
-                if domain_view.domain.sequence is sequence:
-                    p.append( domain_view )
-            
-            if p:
-                self.sides.append( LegoViewInfo_Side( sorted( p, key = lambda x: x.domain.start ) ) )
+        if component.minor_domains:
+            for domain in component.minor_domains:
+                self.sides.append( SideView( self.model_view, domain ) )
+    
+    
+    def iter_domain_views( self ):
+        for x in self.sides:
+            yield from x.domain_views
     
     
     def paint_component( self, painter: QPainter ) -> None:
         """
         Paint edge group
         """
+        if len( self.model_view.selection ) != 1:
+            return
+        
+        if not any( x.is_selected for x in self.iter_domain_views() ):
+            return
+        
         sides = sorted( self.sides, key = lambda x: x.get_y() )
         
         for a, b in array_helper.lagged_iterate( sides ):
-            LegoViewInfo_Side.paint_to( painter, a, b, True )
+            a.paint_to( painter, b, True )
 
 
-class LegoView_UserDomain( QGraphicsItem ):
+class DomainView( QGraphicsItem ):
+    """
+    The basic and only interactive unit of the view.
+    Paints a domain.
+    
+    We have an `is_selected` variable.
+    This is independent and used in lieu of either Qt's selection or the selection on the groot form.   
+    """
+    
+    
     def __init__( self,
-                  userdomain: LegoUserDomain,
-                  owner_view: _LegoViewSequence_,
+                  domain: gr.UserDomain,
+                  gene_view: "GeneView",
                   positional_index: int,
-                  precursor: Optional[_LegoView_Subsequence_] ) -> None:
+                  precursor: Optional["DomainView"] ) -> None:
         """
         CONSTRUCTOR
         
-        :param userdomain:             Subsequences to view 
-        :param owner_view:              Owning view 
-        :param positional_index:        Index of subsequence within sequence 
-        :param precursor:               Previous subsequence, or None 
+        :param domain:             Domain to view 
+        :param gene_view:              Owning view 
+        :param positional_index:        Index of domain within gene 
+        :param precursor:               Previous domain, or None 
         """
-        assert isinstance( userdomain, LegoUserDomain )
+        assert isinstance( domain, gr.UserDomain )
         
         #
         # SUPER
         #
         super().__init__()
-        self.setZValue( DRAWING.Z_SEQUENCE )
+        self.setZValue( DRAWING.Z_GENE )
         
         #
         # FIELDS
         #
-        self.owner_sequence_view = owner_view
-        self.sibling_next: LegoView_UserDomain = None
-        self.sibling_previous: LegoView_UserDomain = precursor
-        self.domain: LegoUserDomain = userdomain
+        self.gene_view = gene_view
+        self.model_view = gene_view.model_view
+        self.sibling_next: DomainView = None
+        self.sibling_previous: DomainView = precursor
+        self.domain: gr.UserDomain = domain
         self.mousedown_original_pos: QPointF = None
         self.mousemove_label: str = None
         self.mousemove_snapline: Tuple[int, int] = None
         self.mousedown_move_all = False
         self.index = positional_index
+        self.is_selected = False
+        self.colour = DRAWING.DEFAULT_COLOUR
         
         #
         # POSITION
         #
-        table = owner_view.owner_model_view.lookup_table
-        self.rect = QRectF( 0, 0, userdomain.length * table.letter_size, table.sequence_height )
+        table = gene_view.model_view.lookup_table
+        self.rect = QRectF( 0, 0, domain.length * table.letter_size, table.gene_height )
         
         self.load_state()
         
@@ -203,95 +226,73 @@ class LegoView_UserDomain( QGraphicsItem ):
         #
         # COMPONENTS
         #
-        self.components: List[LegoComponent] = self.owner_model_view.model.components.find_components_for_minor_subsequence( self.domain )
+        self.components: List[gr.Component] = self.model_view.model.components.find_components_for_minor_domain( self.domain )
     
     
-    def is_in_global_selection( self ):
-        selection = self.owner_model_view.form.actions.get_selection()
-        return self.domain in selection
-    
-    
-    @property
-    def colour( self ) -> ColourBlock:
-        """
-        Subsequence colour.
-        """
-        
-        if self.components:
-            colour = None
-            
-            for component in self.components:
-                try:
-                    view = self.owner_model_view.find_component_view( component )
-                except KeyError:
-                    return DRAWING.ERROR_COLOUR
-                except AttributeError:
-                    return DRAWING.ERROR_COLOUR
-                
-                if colour is None:
-                    colour = ColourBlock( view.colour.colour )
-                else:
-                    assert isinstance( colour, ColourBlock )
-                    colour = colour.blend( view.colour.colour, 0.5 )
-            
-            assert colour is not None
-            return colour
-        else:
-            return DRAWING.DEFAULT_COLOUR
+    def get_x_for_site( self, site ):
+        offset = site - self.domain.start
+        offset *= self.model_view.lookup_table.letter_size
+        return self.x() + offset
     
     
     @property
-    def owner_model_view( self ) -> "LegoView_Model":
-        return self.owner_sequence_view.owner_model_view
+    def options( self ) -> gr.GlobalOptions:
+        return gr.global_view.options()
     
     
     @property
-    def options( self ) -> GlobalOptions:
-        return global_view.options()
-    
-    
-    @property
-    def model( self ) -> LegoModel:
-        return self.owner_model_view.model
+    def model( self ) -> gr.Model:
+        return self.model_view.model
     
     
     def load_state( self ):
         """
-        Loads the state (position) of this domain view from the options.
+        Loads the state (position and colour) of this domain view from the options.
         If there is no saved state, the default is applied.
         """
-        position = self.model.lego_domain_positions.get( (self.domain.sequence.index, self.domain.start) )
+        ac = (self.domain.gene.index, self.domain.start)
+        position = self.model.lego_domain_positions.get( ac )
         
-        if position is None:
+        if not isinstance( position, dict ):
             self.reset_state()
-        else:
-            self.setPos( position[0], position[1] )
+            return
+        
+        x = position.get( "x", 0 )
+        y = position.get( "y", 0 )
+        c = position.get( "c", DRAWING.DEFAULT_COLOUR.colour.name() )
+        
+        self.setPos( x, y )
+        self.colour = ColourBlock( QColor( c ) )
     
     
     def save_state( self ):
         """
         Saves the state (position) of this domain view to the options.
         """
-        self.model.lego_domain_positions[(self.domain.sequence.index, self.domain.start)] = self.pos().x(), self.pos().y()
+        ac = (self.domain.gene.index, self.domain.start)
+        self.model.lego_domain_positions[ac] = { "x": self.pos().x(),
+                                                 "y": self.pos().y(),
+                                                 "c": self.colour.colour.name() }
     
     
     def reset_state( self ):
         """
-        Resets the state (position) of this domain view to the default.
+        Resets the state (position and colour) of this domain view to the default.
         The reset state is automatically saved to the options.
         """
-        table = self.owner_sequence_view.owner_model_view.lookup_table
+        table = self.gene_view.model_view.lookup_table
         precursor = self.sibling_previous
-        subsequence = self.domain
+        domain = self.domain
         
         if precursor:
             x = precursor.window_rect().right()
             y = precursor.window_rect().top()
         else:
-            x = subsequence.start * table.letter_size
-            y = subsequence.sequence.index * (table.sequence_ysep + table.sequence_height)
+            x = domain.start * table.letter_size
+            y = domain.gene.index * (table.gene_ysep + table.gene_height)
         
         self.setPos( x, y )
+        self.colour = DRAWING.DEFAULT_COLOUR
         self.save_state()
     
     
@@ -303,17 +304,17 @@ class LegoView_UserDomain( QGraphicsItem ):
     @override
     def paint( self, painter: QPainter, *args, **kwargs ):
         """
-        Paint the subsequence
+        Paint the domains
         """
         r = self.rect
         painter.setBrush( self.colour.brush )
         painter.setPen( self.colour.pen )
         painter.drawRect( r )
         
-        is_selected = self.is_in_global_selection()
+        is_selected = self.is_selected
         
         # Movement is allowed if we have enabled it
-        move_enabled = misc_helper.coalesce( self.options.lego_move_enabled, self.owner_sequence_view.owner_model_view.user_move_enabled )
+        move_enabled = misc_helper.coalesce( self.options.lego_move_enabled, self.gene_view.model_view.user_move_enabled )
         
         # Draw the piano roll unless we're moving
         if self.options.lego_view_piano_roll is False or move_enabled:
@@ -327,7 +328,7 @@ class LegoView_UserDomain( QGraphicsItem ):
         draw_sel_bars = is_selected and not draw_piano_roll
         
         # Selection bars
-        # (A blue box inside the sequence box)
+        # (A blue box inside the gene box)
         if draw_sel_bars:
             MARGIN = 4
             painter.setBrush( 0 )
@@ -358,7 +359,7 @@ class LegoView_UserDomain( QGraphicsItem ):
         # Piano roll
         # (A piano roll for genes)
         if draw_piano_roll:
-            lookup_table = self.owner_model_view.lookup_table
+            lookup_table = self.model_view.lookup_table
             letter_size = lookup_table.letter_size
             painter.setPen( Qt.NoPen )
             painter.setBrush( DRAWING.PIANO_ROLL_SELECTED_BACKGROUND if is_selected else DRAWING.PIANO_ROLL_UNSELECTED_BACKGROUND )
@@ -378,7 +379,7 @@ class LegoView_UserDomain( QGraphicsItem ):
                     pos = lookup_table.letter_order_table.get( c )
                     
                     if pos is not None:
-                        painter.setPen( lookup_table.letter_colour_table.get( c, DRAWING.SEQUENCE_DEFAULT_FG ) )
+                        painter.setPen( lookup_table.letter_colour_table.get( c, DRAWING.GENE_DEFAULT_FG ) )
                         painter.drawEllipse( i * letter_size, pos * letter_size + OFFSET_X, letter_size, letter_size )
         
         # Snap-lines, when moving
@@ -402,8 +403,7 @@ class LegoView_UserDomain( QGraphicsItem ):
             painter.setPen( DRAWING.TEXT_LINE )
             painter.drawText( QPointF( self.rect.left() + DRAWING.TEXT_MARGIN, self.rect.top() - DRAWING.TEXT_MARGIN ), self.mousemove_label )  # Mouse position
         
-           
-        if not move_enabled: 
+        if not move_enabled:
             # Positions (when not in move mode)
             if misc_helper.coalesce( self.options.lego_view_positions, is_selected ):
                 # Draw position
@@ -417,13 +417,13 @@ class LegoView_UserDomain( QGraphicsItem ):
             
             # Domains (when not in move mode)
             if misc_helper.coalesce( self.options.lego_view_components, is_selected ):
-                    # Draw component name
-                    painter.setPen( DRAWING.COMPONENT_PEN )
-                    painter.setBrush( 0 )
-                    text = "".join( str( x ) for x in self.components )
-                    x = (self.rect.left() + self.rect.right()) / 2 - QFontMetrics( painter.font() ).width( text ) / 2
-                    y = self.rect.top() - DRAWING.TEXT_MARGIN
-                    painter.drawText( QPointF( x, y ), text )
+                # Draw component name
+                painter.setPen( DRAWING.COMPONENT_PEN )
+                painter.setBrush( 0 )
+                text = "".join( str( x ) for x in self.components )
+                x = (self.rect.left() + self.rect.right()) / 2 - QFontMetrics( painter.font() ).width( text ) / 2
+                y = self.rect.top() - DRAWING.TEXT_MARGIN
+                painter.drawText( QPointF( x, y ), text )
     
     
     def __draw_position( self, is_selected ):
@@ -452,13 +452,13 @@ class LegoView_UserDomain( QGraphicsItem ):
     def mousePressEvent( self, m: QGraphicsSceneMouseEvent ):
         """
         OVERRIDE
-        Mouse press on subsequence view
-        i.e. Use clicks a subsequence
+        Mouse press on domain view
+        i.e. Use clicks a domain
         """
         if m.buttons() & Qt.LeftButton:
             # Remember the initial position items in case we drag stuff
             # - do this for all items because it's still possible for the selection to change post-mouse-down
-            for item in self.owner_sequence_view.userdomain_views.values():
+            for item in self.gene_view.domain_views.values():
                 item.mousedown_original_pos = item.pos()
             
             # If ctrl or meta is down, add to the selection 
@@ -467,11 +467,11 @@ class LegoView_UserDomain( QGraphicsItem ):
             else:
                 toggle = False
             
-            if self.is_in_global_selection():
+            if self.is_selected:
                 # If we are selected stop, this confuses with dragging from a design perspective
                 return
             
-            self.owner_model_view.form.handle_domain_clicked( self.domain, toggle )
+            self.model_view.handle_domain_clicked( self.domain, toggle )
     
     
     def mouseDoubleClickEvent( self, m: QGraphicsSceneMouseEvent ):
@@ -480,10 +480,9 @@ class LegoView_UserDomain( QGraphicsItem ):
         Double click
         Just toggles "move enabled" 
         """
-        self.owner_model_view.user_move_enabled = not self.owner_model_view.user_move_enabled
-        self.owner_model_view.form.ui.BTN_MOVE.setChecked( self.owner_model_view.user_move_enabled )
-        self.owner_model_view.scene.setBackgroundBrush( QBrush( QColor( 255, 255, 0 ) ) )
-        self.owner_model_view.scene.update()
+        self.model_view.user_move_enabled = not self.model_view.user_move_enabled
+        self.model_view.scene.setBackgroundBrush( QBrush( QColor( 255, 255, 0 ) ) )
+        self.model_view.scene.update()
     
     
     def focusInEvent( self, QFocusEvent ):
@@ -491,22 +490,22 @@ class LegoView_UserDomain( QGraphicsItem ):
     
     
     def focusOutEvent( self, QFocusEvent ):
-        self.setZValue( DRAWING.Z_SEQUENCE )
+        self.setZValue( DRAWING.Z_GENE )
     
     
     def snaps( self ):
-        for sequence_view in self.owner_sequence_view.owner_model_view.sequence_views.values():
-            for subsequence_view in sequence_view.userdomain_views.values():
-                if subsequence_view is not self:
-                    left_snap = subsequence_view.scenePos().x()
-                    right_snap = subsequence_view.scenePos().x() + subsequence_view.boundingRect().width()
-                    yield left_snap, "Start of {}[{}]".format( subsequence_view.domain.sequence.accession, subsequence_view.domain.start ), subsequence_view.scenePos().y()
-                    yield right_snap, "End of {}[{}]".format( subsequence_view.domain.sequence.accession, subsequence_view.domain.end ), subsequence_view.scenePos().y()
+        for gene_view in self.gene_view.model_view.gene_views.values():
+            for domain_view in gene_view.domain_views.values():
+                if domain_view is not self:
+                    left_snap = domain_view.scenePos().x()
+                    right_snap = domain_view.scenePos().x() + domain_view.boundingRect().width()
+                    yield left_snap, "Start of {}[{}]".format( domain_view.domain.gene, domain_view.domain.start ), domain_view.scenePos().y()
+                    yield right_snap, "End of {}[{}]".format( domain_view.domain.gene, domain_view.domain.end ), domain_view.scenePos().y()
     
     
     def mouseMoveEvent( self, m: QGraphicsSceneMouseEvent ) -> None:
         if m.buttons() & Qt.LeftButton:
-            if not misc_helper.coalesce( self.options.lego_move_enabled, self.owner_model_view.user_move_enabled ) or self.mousedown_original_pos is None:
+            if not misc_helper.coalesce( self.options.lego_move_enabled, self.model_view.user_move_enabled ) or self.mousedown_original_pos is None:
                 return
             
             new_pos: QPointF = self.mousedown_original_pos + (m.scenePos() - m.buttonDownScenePos( Qt.LeftButton ))
@@ -548,14 +547,14 @@ class LegoView_UserDomain( QGraphicsItem ):
             delta_x = new_x - self.mousedown_original_pos.x()
             delta_y = new_y - self.mousedown_original_pos.y()
             
-            selected_items = self.owner_model_view.get_selected_userdomain_views()
+            selected_items = self.model_view.get_selected_userdomain_views()
             
             for selected_item in selected_items:
                 if selected_item is not self and selected_item.mousedown_original_pos is not None:
                     selected_item.setPos( selected_item.mousedown_original_pos.x() + delta_x, selected_item.mousedown_original_pos.y() + delta_y )
                     selected_item.save_state()
             
-            self.owner_model_view.edges_view.update()
+            self.model_view.overlay_view.update()
     
     
     def mouseReleaseEvent( self, m: QGraphicsSceneMouseEvent ):
@@ -569,66 +568,91 @@ class LegoView_UserDomain( QGraphicsItem ):
         return "<<View of '{}' at ({},{})>>".format( self.domain, self.window_rect().left(), self.window_rect().top() )
 
 
-class LegoView_Sequence:
+class GeneView:
     """
-    Views a sequence
+    Views a gene
     """
     
     
-    def __init__( self, owner_model_view: _LegoViewModel_, sequence: LegoSequence ) -> None:
+    def __init__( self, owner_model_view: "ModelView", gene: gr.Gene ) -> None:
         """
         :param owner_model_view: Owning view
-        :param sequence: The sequence we are viewing
+        :param gene: The gene we are viewing
         """
         
-        self.owner_model_view = owner_model_view
-        self.sequence = sequence
-        self.userdomain_views: Dict[LegoUserDomain, LegoView_UserDomain] = { }
+        self.model_view = owner_model_view
+        self.gene = gene
+        self.domain_views: Dict[gr.UserDomain, DomainView] = { }
         self._recreate()
     
     
     def get_sorted_userdomain_views( self ):
-        return sorted( self.userdomain_views.values(), key = lambda y: y.domain.start )
+        return sorted( self.domain_views.values(), key = lambda y: y.domain.start )
     
     
     def _recreate( self ):
         # Remove existing items
-        for x in self.userdomain_views:
-            self.owner_model_view.scene.removeItem( x )
+        for x in self.domain_views:
+            self.model_view.scene.removeItem( x )
         
-        self.userdomain_views.clear()
+        self.domain_views.clear()
         
         # Add new items
-        previous_subsequence = None
+        previous_domain = None
         
-        userdomains_ = self.owner_model_view.model.user_domains.by_sequence( self.sequence )
+        userdomains_ = self.model_view.model.user_domains.by_gene( self.gene )
         
         for userdomain in userdomains_:
-            subsequence_view = LegoView_UserDomain( userdomain, self, len( self.userdomain_views ), previous_subsequence )
-            self.userdomain_views[userdomain] = subsequence_view
-            self.owner_model_view.scene.addItem( subsequence_view )
-            previous_subsequence = subsequence_view
+            domain_view = DomainView( userdomain, self, len( self.domain_views ), previous_domain )
+            self.domain_views[userdomain] = domain_view
+            self.model_view.scene.addItem( domain_view )
+            previous_domain = domain_view
     
     
     def paint_name( self, painter: QPainter ):
-        if not misc_helper.coalesce( global_view.options().lego_view_names, any( x.is_in_global_selection() for x in self.userdomain_views.values() ) ):
+        if not misc_helper.coalesce( gr.global_view.options().lego_view_names, any( x.is_selected for x in self.domain_views.values() ) ):
             return
         
-        leftmost_subsequence = sorted( self.userdomain_views.values(), key = lambda xx: xx.pos().x() )[0]
-        text = self.sequence.accession
+        leftmost_domain = sorted( self.domain_views.values(), key = lambda xx: xx.pos().x() )[0]
+        text = str( self.gene )
         
-        if self.sequence.position == EPosition.OUTGROUP:
+        if self.gene.position == gr.EPosition.OUTGROUP:
             text = "←" + text
-        if self.sequence.position == EPosition.ROOT:
+        if self.gene.position == gr.EPosition.ROOT:
             text = "↑" + text
         
-        r = leftmost_subsequence.window_rect()
+        r = leftmost_domain.window_rect()
         x = r.left() - DRAWING.TEXT_MARGIN - QFontMetrics( painter.font() ).width( text )
         y = r.top() + r.height() / 2
         painter.drawText( QPointF( x, y ), text )
 
 
-class LegoViewInfo_Interlink:
+class EdgeView:
+    def __init__( self, owner_view: "OverlayView", edge: gr.Edge ):
+        self.owner_view = owner_view
+        self.model_view = owner_view.view_model
+        self.edge = edge
+        
+        self.left_view = SideView( self.model_view, edge.left )
+        self.right_view = SideView( self.model_view, edge.right )
+    
+    
+    def iter_domain_views( self ):
+        yield from self.left_view.domain_views
+        yield from self.right_view.domain_views
+    
+    
+    def paint_edge( self, painter: QPainter ):
+        if self.edge not in self.model_view.selected_edges:
+            return
+        
+        if self.left_view.get_y() < self.right_view.get_y():
+            self.left_view.paint_to( painter, self.right_view, False )
+        else:
+            self.right_view.paint_to( painter, self.left_view, False )
+
+
+class InterlinkView:
     """
                      ⤹ This bit!
     ┌──────────┬┄┄┄┬──────────┐
@@ -637,7 +661,7 @@ class LegoViewInfo_Interlink:
     """
     
     
-    def __init__( self, owner_view: "LegoView_AllEdges", left: LegoView_UserDomain, right: LegoView_UserDomain ) -> None:
+    def __init__( self, owner_view: "OverlayView", left: DomainView, right: DomainView ) -> None:
         self.owner_view = owner_view
         self.left = left
         self.right = right
@@ -670,11 +694,11 @@ class LegoViewInfo_Interlink:
             painter.drawPolygon( QPolygonF( points ) )
 
 
-class LegoView_AllEdges( QGraphicsItem ):
+class OverlayView( QGraphicsItem ):
     """
     This is a "global" view which manages all of the line things:
         * edge views.
-        * empty legos (subsequence-subsequence)
+        * interlinks (domain-domain)
         * components
     
     It is actually a single graphics item drawn over the top of everything else.
@@ -682,30 +706,34 @@ class LegoView_AllEdges( QGraphicsItem ):
     """
     
     
-    def __init__( self, view_model: "LegoView_Model" ) -> None:
+    def __init__( self, view_model: "ModelView" ) -> None:
         super().__init__()
         self.setZValue( DRAWING.Z_EDGES )
-        self.__next_colour = -1
         self.view_model = view_model
-        self.component_views: Dict[LegoComponent, LegoView_Component] = { }
-        self.interlink_views: Dict[LegoSubsequence, LegoViewInfo_Interlink] = { }
+        self.component_views: Dict[gr.Component, ComponentView] = { }
+        self.interlink_views: Dict[gr.Domain, InterlinkView] = { }
+        self.edge_views: Dict[gr.Edge, EdgeView] = { }
+        
+        # Create the edge views
+        for edge in view_model.model.edges:
+            self.edge_views[edge] = EdgeView( self, edge )
         
         # Create the component views
         for component in view_model.model.components:
-            self.component_views[component] = LegoView_Component( self, component )
+            self.component_views[component] = ComponentView( self, component )
         
         # Create our interlink views
-        for sequence_view in view_model.sequence_views.values():
-            for left, right in array_helper.lagged_iterate( sequence_view.userdomain_views.values() ):
-                self.interlink_views[left] = LegoViewInfo_Interlink( self, left, right )
+        for gene_view in view_model.gene_views.values():
+            for left, right in array_helper.lagged_iterate( gene_view.domain_views.values() ):
+                self.interlink_views[left] = InterlinkView( self, left, right )
         
         # Our bounds encompass the totality of the model
         # - find this!
         self.rect = QRectF( 0, 0, 0, 0 )
         
-        for sequence_view in view_model.sequence_views.values():
-            for subsequence_view in sequence_view.userdomain_views.values():
-                r = subsequence_view.window_rect()
+        for gene_view in view_model.gene_views.values():
+            for domain_view in gene_view.domain_views.values():
+                r = domain_view.window_rect()
                 
                 if r.left() < self.rect.left():
                     self.rect.setLeft( r.left() )
@@ -726,15 +754,6 @@ class LegoView_AllEdges( QGraphicsItem ):
         self.rect.setRight( self.rect.right() + MARGIN )
     
     
-    def next_colour( self ) -> QColor:
-        self.__next_colour += 1
-        
-        if self.__next_colour >= len( DRAWING.COMPONENT_COLOURS ):
-            self.__next_colour = 0
-        
-        return DRAWING.COMPONENT_COLOURS[self.__next_colour]
-    
-    
     def boundingRect( self ):
         return self.rect
     
@@ -743,6 +762,10 @@ class LegoView_AllEdges( QGraphicsItem ):
         """
         Paint all edges
         """
+        # Draw all the edges
+        for edge_view in self.edge_views.values():
+            edge_view.paint_edge( painter )
+        
         # Draw all the components
         for component in self.component_views.values():
             component.paint_component( painter )
@@ -752,11 +775,11 @@ class LegoView_AllEdges( QGraphicsItem ):
             interlink.paint_interlink( painter )
         
         # Draw all the names
-        for sequence in self.view_model.sequence_views.values():
-            sequence.paint_name( painter )
+        for gene_view in self.view_model.gene_views.values():
+            gene_view.paint_name( painter )
 
 
-class LegoView_Model:
+class ModelView:
     """
     Manages the view of the model.
     
@@ -767,22 +790,68 @@ class LegoView_Model:
     class CustomGraphicsScene( QGraphicsScene ):
         def __init__( self, parent ):
             super().__init__()
-            self.parent: LegoView_Model = parent
+            self.parent: ModelView = parent
         
         
         def mousePressEvent( self, e: QGraphicsSceneMouseEvent ) -> None:
             super().mousePressEvent( e )
             p: QPointF = e.pos()
             
-            for dv in self.parent.userdomain_views.values():
-                r = dv.window_rect()
+            for domain_view in self.parent.domain_views.values():
+                r = domain_view.rect
                 if r.left() <= p.x() <= r.right() and r.top() <= p.y() <= r.bottom():
                     return
             
-            self.parent.form.handle_domain_clicked( None, False )
+            self.parent.handle_domain_clicked( None, False )
     
     
-    def __init__( self, form, view: QGraphicsView, model: LegoModel ) -> None:
+    def handle_domain_clicked( self, domain: Optional[gr.UserDomain], toggle ):
+        if domain is None:
+            select = frozenset()
+        elif toggle:
+            if domain in self.selection:
+                # Deactivate
+                select = self.selection - { domain }
+            else:
+                # Activate
+                select = self.selection.union( { domain } )
+        else:
+            select = frozenset( { domain } )
+        
+        # Whenever we change the selection disable movement
+        self.user_move_enabled = False
+        self.selection = select
+        self.scene.update()
+    
+    
+    @property
+    def selection( self ) -> FrozenSet[gr.UserDomain]:
+        return self.__selection
+    
+    
+    @property
+    def all( self ) -> FrozenSet[gr.UserDomain]:
+        return frozenset( self.domain_views.keys() )
+    
+    
+    @selection.setter
+    def selection( self, value: FrozenSet[gr.UserDomain] ):
+        assert isinstance( value, frozenset ), value
+        
+        for domain in self.__selection:
+            self.domain_views[domain].is_selected = False
+        
+        self.__selection = value
+        
+        for domain in self.__selection:
+            self.domain_views[domain].is_selected = True
+        
+        self.selected_edges = set( self.model.edges.iter_touching( self.__selection ) )
+        
+        self.on_selection_changed( value )
+    
+    
+    def __init__( self, form, view: QGraphicsView, model: gr.Model ) -> None:
         """
         CONSTRUCTOR 
         :param view:                    To where we draw the view
@@ -793,38 +862,46 @@ class LegoView_Model:
         self.form: FrmLego = form
         self.lookup_table = LookupTable( model.site_type )
         self.view: QGraphicsView = view
-        self.model: LegoModel = model
+        self.model: gr.Model = model
         self.scene = self.CustomGraphicsScene( self )
-        self.sequence_views: Dict[LegoSequence, LegoView_Sequence] = { }
-        self.userdomain_views: Dict[LegoUserDomain, LegoView_UserDomain] = { }
-        self.edges_view: LegoView_AllEdges = None
+        self.gene_views: Dict[gr.Gene, GeneView] = { }
+        self.domain_views: Dict[gr.UserDomain, DomainView] = { }
+        self.selected_edges: Set[gr.Edge] = set()
+        self.overlay_view: OverlayView = None
         self.user_move_enabled = False
-        self._selections = 0
+        self.__selection: FrozenSet[gr.UserDomain] = frozenset()
+        self.legend: Dict[frozenset, ColourBlock] = { }
+        self.on_selection_changed = Event()
         
-        # Create the sequence and domain views
-        for sequence in self.model.sequences:
-            item = LegoView_Sequence( self, sequence )
-            self.sequence_views[sequence] = item
-            self.userdomain_views.update( item.userdomain_views )
+        # Create the gene and domain views
+        for gene in self.model.genes:
+            item = GeneView( self, gene )
+            self.gene_views[gene] = item
+            self.domain_views.update( item.domain_views )
         
         # Create the edges view
-        self.edges_view = LegoView_AllEdges( self )
-        self.scene.addItem( self.edges_view )
+        self.overlay_view = OverlayView( self )
+        self.scene.addItem( self.overlay_view )
     
     
-    def find_userdomain_views_for_subsequence( self, target: LegoSubsequence ):
-        for sequence_view in self.sequence_views.values():  # todo: this is terribly inefficient
-            if sequence_view.sequence is not target.sequence:
+    def find_userdomain_views_for_domain( self, domain: gr.Domain ) -> Iterator[DomainView]:
+        for gene_view in self.gene_views.values():  # todo: this is terribly inefficient
+            if gene_view.gene is not domain.gene:
                 continue
             
-            for domain_view in sequence_view.userdomain_views.values():
-                if domain_view.domain.has_overlap( target ):
+            for domain_view in gene_view.domain_views.values():
+                if domain_view.domain.has_overlap( domain ):
                     yield domain_view
     
     
-    def find_component_view( self, component: LegoComponent ) -> LegoView_Component:
-        return self.edges_view.component_views[component]
-
-
+    def find_component_view( self, component: gr.Component ) -> ComponentView:
+        return self.overlay_view.component_views[component]
+    
+    
     def get_selected_userdomain_views( self ):
-        return (x for x in self.userdomain_views.values() if x.is_in_global_selection())
+        return (x for x in self.domain_views.values() if x.is_selected)
+    
+    
+    def save_all_states( self ):
+        for domain_view in self.domain_views.values():
+            domain_view.save_state()

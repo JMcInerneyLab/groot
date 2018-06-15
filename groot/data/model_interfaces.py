@@ -18,14 +18,14 @@ class EPosition( MEnum ):
     OUTGROUP = 2
 
 
-class ILegoNode:
+class INode:
     """
     Things that can be data on graph nodes.
     """
     pass
 
 
-class INamed:
+class INamed:   # TODO: This is unused, add it into the derived classes and remove it
     @property
     def name( self ):
         return self.on_get_name()

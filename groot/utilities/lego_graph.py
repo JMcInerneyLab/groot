@@ -1,17 +1,17 @@
 from typing import Iterable, List, Set, Optional, cast
 from mgraph import MNode, MGraph, analysing, importing, exporting
-from groot.data.model_interfaces import EPosition, ILegoNode
-from groot.data.model_core import LegoFormation, LegoSequence, LegoPoint
-from groot.data.model import LegoModel
+from groot.data.model_interfaces import EPosition, INode
+from groot.data.model_core import Formation, Gene, Point
+from groot.data.model import Model
 from mhelper import NotFoundError, ByRef
 
 
-def get_sequence_data( nodes: Iterable[MNode] ) -> Set[LegoSequence]:
-    return set( node.data for node in nodes if isinstance( node.data, LegoSequence ) )
+def get_sequence_data( nodes: Iterable[MNode] ) -> Set[Gene]:
+    return set( node.data for node in nodes if isinstance( node.data, Gene ) )
 
 
-def get_fusion_data( nodes: Iterable[MNode] ) -> Set[LegoPoint]:
-    return set( node.data for node in nodes if isinstance( node.data, LegoPoint ) )
+def get_fusion_data( nodes: Iterable[MNode] ) -> Set[Point]:
+    return set( node.data for node in nodes if isinstance( node.data, Point ) )
 
 
 def get_fusion_point_nodes( nodes: Iterable[MNode] ) -> List[MNode]:
@@ -31,42 +31,44 @@ def is_fusion_like( node: MNode ) -> bool:
 
 
 def is_formation( node: MNode ) -> bool:
-    return isinstance( node.data, LegoFormation )
+    return isinstance( node.data, Formation )
 
 
 def is_fusion_point( node: MNode ) -> bool:
-    return isinstance( node.data, LegoPoint )
+    return isinstance( node.data, Point )
 
 
 def is_sequence_node( node: MNode ) -> bool:
-    return isinstance( node.data, LegoSequence )
+    return isinstance( node.data, Gene )
 
 
 def is_lego_node( node: MNode ) -> bool:
-    return isinstance( node.data, ILegoNode )
+    return isinstance( node.data, INode )
 
 
-def get_ileaf_data( params: Iterable[MNode] ) -> Set[ILegoNode]:
-    return set( x.data for x in params if isinstance( x.data, ILegoNode ) )
+def get_ileaf_data( params: Iterable[MNode] ) -> Set[INode]:
+    return set( x.data for x in params if isinstance( x.data, INode ) )
 
 
-def rectify_nodes( graph: MGraph, model: LegoModel ):
+def rectify_nodes( graph: MGraph, model: Model ):
     for node in graph:
         if isinstance( node.data, str ):
             node.data = import_leaf_reference( node.data, model, skip_missing = True )
 
 
-def import_leaf_reference( name: str, model: LegoModel, *, allow_empty: bool = False, skip_missing: bool = False ) -> Optional[ILegoNode]:
+def import_leaf_reference( name: str, model: Model, *, allow_empty: bool = False, skip_missing: bool = False ) -> Optional[INode]:
     """
     Converts a sequence name to a sequence reference.
     
-    :param name:        Name, either:
-                            i.  The accession
-                            ii. The ID, of the form `"S[0-9]+"`
-    :param model:       The model to find the sequence in 
-    :param allow_empty: Allow `None` or `""` to denote a missing sequence, `None`.
-    :param skip_missing: Allow missing accessions to be skipped. 
-    :return:            The sequence, or `None` if `allow_empty` is set.
+    :param name:            Name, either:
+                                * A gene accession, denoting that gene
+                                * A gene legacy accession, denoting that gene
+                                * A fusion identifier
+                                * If `allow_empty` then: `None`, `"root"`, or `"clade*"`, denoting a clade of no particular significance
+    :param model:           The model to find the sequence in 
+    :param allow_empty:     Allow `None` or `""` to denote a missing sequence, `None`.
+    :param skip_missing:    Allow missing accessions to be skipped. 
+    :return:                The gene, fusion, or `None` if permitted.
     """
     if skip_missing:
         allow_empty = True
@@ -79,14 +81,14 @@ def import_leaf_reference( name: str, model: LegoModel, *, allow_empty: bool = F
     try:
         if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
             return None
-        elif LegoSequence.is_legacy_accession( name ):
-            return model.find_sequence_by_legacy_accession( name )
-        elif LegoPoint.is_legacy_accession( name ):
-            return model.find_fusion_point_by_legacy_accession( name )
-        elif LegoFormation.is_legacy_accession( name ):
-            return model.find_fusion_formation_by_legacy_accession( name )
+        elif Gene.is_legacy_accession( name ):
+            return model.genes.by_legacy_accession( name )
+        elif Point.is_legacy_accession( name ):
+            return model.fusions.find_point_by_legacy_accession( name )
+        elif Formation.is_legacy_accession( name ):
+            return model.fusions.find_formation_by_legacy_accession( name )
         else:
-            return model.find_sequence_by_accession( name )
+            return model.genes[name]
     except NotFoundError as ex:
         if skip_missing:
             return None
@@ -101,6 +103,7 @@ def is_root( node: MNode ):
         return True
     
     return False
+
 
 def export_newick( graph: MGraph ):
     """
@@ -129,7 +132,7 @@ def export_newick( graph: MGraph ):
                                     internal = False )
 
 
-def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None, reclade: bool = True ) -> MGraph:
+def import_newick( newick: str, model: Model, root_ref: ByRef[MNode] = None, reclade: bool = True ) -> MGraph:
     """
     Imports a newick string as an MGraph object.
     
@@ -143,12 +146,12 @@ def import_newick( newick: str, model: LegoModel, root_ref: ByRef[MNode] = None,
     # Convert node names back to references
     for node in graph.nodes:
         node.data = import_leaf_reference( cast( str, node.data ),
-                                                      model,
-                                                      allow_empty = True )
+                                           model,
+                                           allow_empty = True )
     
     # Reclade fusion nodes
     if reclade:
-        fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, LegoPoint ) )
+        fusion_nodes = analysing.realise_node_predicate_as_set( graph, lambda x: isinstance( x.data, Point ) )
         
         for node in fusion_nodes:
             node.parent.data = node.data

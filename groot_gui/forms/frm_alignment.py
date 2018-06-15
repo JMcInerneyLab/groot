@@ -6,8 +6,8 @@ from groot_gui.forms.designer import frm_alignment_designer
 from groot.data.model_interfaces import IHasFasta
 from groot.data import FastaError
 from groot_gui.forms.frm_base import FrmSelectingToolbar
-from groot_gui.utilities.gui_view_support import LookupTable
-from groot_gui.utilities.gui_view_utils import ESelect
+from groot_gui.lego import LookupTable
+from groot_gui.utilities.selection import ESelect
 from mhelper import bio_helper
 from mhelper_qt import qt_colour_helper
 

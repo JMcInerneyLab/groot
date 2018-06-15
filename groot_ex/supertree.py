@@ -1,4 +1,4 @@
-from groot import supertree_algorithms, LegoSubset, LegoSequence
+from groot import supertree_algorithms, Subset, Gene
 from mgraph import importing, MGraph
 from mhelper import file_helper, Logger, LogicError, exception_helper
 from intermake import subprocess_helper
@@ -31,7 +31,7 @@ def supertree_clann( inputs: str ) -> str:
 
 
 @supertree_algorithms.register( "groot" )
-def supertree_groot( subset_src: LegoSubset ) -> MGraph:
+def supertree_groot( subset_src: Subset ) -> MGraph:
     """
     Uses GROOT to grow a supertree from the splits.
     
@@ -40,7 +40,7 @@ def supertree_groot( subset_src: LegoSubset ) -> MGraph:
     
     __LOG_CREATE.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CREATE GRAPHS FOR POINTS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
-    exception_helper.assert_type( "subset_src", subset_src, LegoSubset )
+    exception_helper.assert_type( "subset_src", subset_src, Subset )
     
     subset = subset_src.contents
     __LOG_CREATE.pause( "***** LEAF SET {} *****", subset )
@@ -51,7 +51,7 @@ def supertree_groot( subset_src: LegoSubset ) -> MGraph:
     model = subset_src.model
     
     for split in model.consensus:
-        subset_sequences = frozenset( x for x in subset if isinstance( x, LegoSequence ) )
+        subset_sequences = frozenset( x for x in subset if isinstance( x, Gene ) )
         
         if split.split.all.issuperset( subset_sequences ):  # S c G
             intersection = split.split.intersection( subset )

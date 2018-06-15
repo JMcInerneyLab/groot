@@ -1,5 +1,5 @@
 from groot.constants import STAGES, EChanges
-from groot.data import EPosition, FusionGraph, LegoFormation, LegoPoint, LegoSequence, global_view
+from groot.data import EPosition, FusionGraph, Formation, Point, Gene, global_view
 from groot.utilities import lego_graph
 from groot import constants
 from intermake import command
@@ -52,7 +52,7 @@ def __make_outgroup_parents_roots( nrfg: MGraph ) -> None:
     LOG( "Fixing outgroups..." )
     
     for node in nrfg:
-        if isinstance( node.data, LegoSequence ) and node.data.position != EPosition.NONE:
+        if isinstance( node.data, Gene ) and node.data.position != EPosition.NONE:
             if node.data.position == EPosition.OUTGROUP:
                 # We call "make root" and not "make outgroup" because the network should
                 # already have the right topology, we just need to adjust the directions
@@ -61,7 +61,7 @@ def __make_outgroup_parents_roots( nrfg: MGraph ) -> None:
                 node.relation.make_root( node_filter = lambda x: not lego_graph.is_fusion_like( x ), ignore_cycles = True )
             elif node.data.position == EPosition.ROOT:
                 LOG( "Make root: {}".format( node ) )
-                node.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ), ignore_cycles = True )
+                node.make_root( node_filter = lambda x: not isinstance( x.data, Point ), ignore_cycles = True )
             else:
                 raise SwitchError( "node.data.position", node.data.position )
 
@@ -75,11 +75,11 @@ def __make_fusions_rootlets( nrfg: MGraph ) -> None:
     for node in nrfg:
         if lego_graph.is_formation( node ):
             LOG( "Fix fusion edges: {}".format( node ) )
-            fusion: LegoFormation = node.data
+            fusion: Formation = node.data
             major = set()
             
-            for p in fusion.event.products:
-                major.update( p.major_sequences )
+            
+            major.update( fusion.event.component_c.major_genes )
             
             # Sometimes a fusion has more than the expected number of inputs/outputs (when we haven't been able to resolve it properly)
             # For this reason, we deal with each edge in turn
@@ -98,8 +98,8 @@ def __make_fusions_rootlets( nrfg: MGraph ) -> None:
                 if end.data in major:
                     # Is a product
                     LOG( "PRODUCT: {} --> {}".format( node, oppo ) )
-                    oppo.make_root( node_filter = lambda x: not isinstance( x.data, LegoPoint ),
-                                    edge_filter = lambda x: not isinstance( x.left.data, LegoPoint ) and not isinstance( x.right.data, LegoPoint ),
+                    oppo.make_root( node_filter = lambda x: not isinstance( x.data, Point ),
+                                    edge_filter = lambda x: not isinstance( x.left.data, Point ) and not isinstance( x.right.data, Point ),
                                     ignore_cycles = True )
                     
                     edge.ensure( node, oppo )

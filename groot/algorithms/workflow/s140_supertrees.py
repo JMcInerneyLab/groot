@@ -1,19 +1,19 @@
 from intermake import MCMD, command
 from mgraph import MGraph, MNode
 from mhelper import Logger, SwitchError, string_helper, FunctionInspector
-from typing import Callable, Iterable, Optional, Sequence, Union
+from typing import Callable, Iterable, Sequence, Union
 
 import groot.utilities.external_runner
 from groot import constants
 from groot.constants import STAGES, EChanges
-from groot.data import INamedGraph, LegoFormation, LegoPoint, LegoPregraph, LegoSequence, LegoSubset, Subgraph, global_view
+from groot.data import INamedGraph, Formation, Point, Pregraph, Subset, Subgraph, global_view, Gene
 from groot.utilities import AlgorithmCollection, lego_graph
 
 
 LOG = Logger( "possible_graphs", False )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-DAlgorithm = Callable[[Union[str, LegoSubset]], Union[str, MGraph]]
+DAlgorithm = Callable[[Union[str, Subset]], Union[str, MGraph]]
 """
 Task:
     A supertree consensus is required whereby the set of taxa on the inputs may not be the same.
@@ -29,11 +29,11 @@ Output (ONE OF):
 Uses Pep-484 to indicate which input is required, otherwise the default will be assumed.
 """
 
-supertree_algorithms = AlgorithmCollection[DAlgorithm]( "Supertree" )
+supertree_algorithms = AlgorithmCollection( DAlgorithm, "Supertree" )
 
 
-@command(folder = constants.F_CREATE)
-def create_supertrees( algorithm: str ) -> None:
+@command( folder = constants.F_CREATE )
+def create_supertrees( algorithm: supertree_algorithms.Algorithm ) -> None:
     """
     Creates the supertrees/subgraphs for the model.
     
@@ -67,7 +67,7 @@ def create_supertrees( algorithm: str ) -> None:
             raise ValueError( "The subgraph («{}») of the subset «{}» («{}») doesn't appear to have any fusion point nodes. Refusing to continue because this means the subgraph's position in the NRFG is unavailable.".format( string_helper.format_array( subgraph.nodes ), subset, string_helper.format_array( subset.contents ) ) )
         
         for node in ffn:  # type:MNode
-            formation: LegoFormation = node.data
+            formation: Formation = node.data
             
             if any( x in sequences for x in formation.pertinent_inner ):
                 destinations.add( node.uid )
@@ -76,12 +76,12 @@ def create_supertrees( algorithm: str ) -> None:
     
     model.subgraphs_destinations = tuple( destinations )
     model.subgraphs_sources = tuple( sources )
-    model.subgraphs = tuple( Subgraph( subgraph, subset, algorithm ) for subset, subgraph in subgraphs )
+    model.subgraphs = tuple( Subgraph( subgraph, subset, repr( algorithm ) ) for subset, subgraph in subgraphs )
     
     return EChanges.MODEL_DATA
 
 
-@command(folder = constants.F_DROP)
+@command( folder = constants.F_DROP )
 def drop_supertrees() -> EChanges:
     """
     Removes data from the model.
@@ -111,22 +111,21 @@ def print_supertrees() -> EChanges:
     return EChanges.INFORMATION
 
 
-def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph:
+def __create_supertree( algorithm: supertree_algorithms.Algorithm, subset: Subset ) -> MGraph:
     """
     Generates a supertree from a set of trees.
     
     :param algorithm:   Algorithm to use. See `algorithm_help`.
-    :param subset:      Subset to generate consensus from 
-    :return:            Consensus graph (this may be a reference to one of the input `graphs`)
+    :param subset:      Subset of genes from which we generate the consensus from 
+    :return:            The consensus graph (this may be a reference to one of the input `graphs`)
     """
     # Get our algorithm
-    algo = supertree_algorithms[algorithm]
-    ins = FunctionInspector( algo )
+    ins = FunctionInspector( algorithm.function )
     
     # We allow two kinds of algorithm
-    # - Python - take a `LegoSubset` instance
-    # - External - take a newick-formatted string
-    if ins.args[0].annotation == LegoSubset:
+    # - Python algorithms, which takes a `LegoSubset` instance
+    # - External algorithms, which takes a newick-formatted string
+    if ins.args[0].annotation == Subset:
         # Python algorithms get the subset instance
         input = subset
     else:
@@ -138,8 +137,12 @@ def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph
         
         input = "\n".join( input_lines ) + "\n"
     
-    output = groot.utilities.external_runner.run_in_temporary( algo, input )
+    # Run the algorithm!
+    output = groot.utilities.external_runner.run_in_temporary( algorithm, input )
     
+    # We allow two types of result
+    # - `MGraph` objects
+    # - `str` objects, which denote a newick-formatted string
     if isinstance( output, MGraph ):
         result = output
     elif isinstance( output, str ):
@@ -151,10 +154,10 @@ def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph
     # Assert the result
     # - All elements of the subset are in the supertree
     for element in subset.contents:
-        if isinstance( element, LegoSequence ):
+        if isinstance( element, Gene ):
             if element in result.nodes.data:
                 continue
-        elif isinstance( element, LegoPoint ):
+        elif isinstance( element, Point ):
             if element.formation in result.nodes.data:
                 continue
         
@@ -168,7 +171,7 @@ def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph
             continue
         
         if lego_graph.is_formation( node ):
-            if any( x.formation is node.data for x in subset.contents if isinstance( x, LegoPoint ) ):
+            if any( x.formation is node.data for x in subset.contents if isinstance( x, Point ) ):
                 continue
         
         if lego_graph.is_sequence_node( node ):
@@ -182,7 +185,7 @@ def __create_supertree( algorithm: Optional[str], subset: LegoSubset ) -> MGraph
     return result
 
 
-def __graphs_to_newick( graphs: Iterable[LegoPregraph] ):
+def __graphs_to_newick( graphs: Iterable[Pregraph] ):
     """
     Converts a set of pregraphs to Newick.
     """

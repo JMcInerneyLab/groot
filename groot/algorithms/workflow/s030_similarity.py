@@ -8,13 +8,13 @@ from typing import Callable, List, Optional
 
 import re
 
-from groot.algorithms.workflow.s020_sequences import _make_sequence
+from groot.algorithms.workflow.s020_sequences import _make_gene
 from intermake import MCMD, command
 from mhelper import EFileMode, Filename, Logger
 
-from groot import LegoEdge, constants
+from groot import Edge, constants
 from groot.constants import EXT_BLAST, STAGES, EChanges
-from groot.data import LegoModel, LegoSubsequence, global_view
+from groot.data import Model, Domain, global_view
 from groot.utilities import AlgorithmCollection, external_runner
 
 
@@ -33,11 +33,11 @@ Output:
     str: A similarity matrix in BLAST format 6 TSV.
 """
 
-similarity_algorithms = AlgorithmCollection[DAlgorithm]( "Similarity" )
+similarity_algorithms = AlgorithmCollection( DAlgorithm, "Similarity" )
 
 
 @command( folder = constants.F_CREATE )
-def create_similarity( algorithm: str, evalue: float = None, length: int = None ):
+def create_similarity( algorithm: similarity_algorithms.Algorithm, evalue: float = None, length: int = None ):
     """
     Create and imports similarity matrix created using the specified algorithm.
     
@@ -45,30 +45,28 @@ def create_similarity( algorithm: str, evalue: float = None, length: int = None 
     :param evalue:      e-value cutoff. 
     :param length:      length cutoff.
     """
-    model: LegoModel = global_view.current_model()
+    model: Model = global_view.current_model()
     model.get_status( STAGES.BLAST_2 ).assert_create()
     
-    algorithm_fn = similarity_algorithms[algorithm]
+    input = model.genes.to_fasta()
     
-    input = model.sequences.to_fasta()
-    
-    output = external_runner.run_in_temporary( algorithm_fn, input )
+    output = external_runner.run_in_temporary( algorithm, input )
     
     __import_blast_format_6( evalue, output, "untitled_blast_data", length, model, True )
 
 
 @command( folder = constants.F_SET )
-def set_similarity( left: LegoSubsequence, right: LegoSubsequence ) -> EChanges:
+def set_similarity( left: Domain, right: Domain ) -> EChanges:
     """
     Adds a new edge to the model.
     :param left:     Subsequence to create the edge from 
     :param right:    Subsequence to create the edge to
     """
-    model: LegoModel = global_view.current_model()
+    model: Model = global_view.current_model()
     model.get_status( STAGES.BLAST_2 ).assert_set()
     
-    edge = LegoEdge( left, right )
-    left.sequence.model.edges.add( edge )
+    edge = Edge( left, right )
+    left.gene.model.edges.add( edge )
     
     return EChanges.MODEL_ENTITIES
 
@@ -83,7 +81,7 @@ def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: O
     :param length:      Length cutoff 
     :return: 
     """
-    model: LegoModel = global_view.current_model()
+    model: Model = global_view.current_model()
     model.get_status( STAGES.BLAST_2 ).assert_create()
     
     obtain_only = model._has_data()
@@ -96,19 +94,19 @@ def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: O
 
 
 @command( folder = constants.F_DROP )
-def drop_similarity( edges: Optional[List[LegoEdge]] = None ):
+def drop_similarity( edges: Optional[List[Edge]] = None ):
     """
     Detaches the specified edges from the specified subsequences.
     
     :param edges:           Edges to affect.
                             If `None` then all edges are dropped.
     """
-    model: LegoModel = global_view.current_model()
+    model: Model = global_view.current_model()
     model.get_status( STAGES.BLAST_2 ).assert_drop()
     
     if edges is not None:
         for edge in edges:
-            edge.left.sequence.model.edges.remove( edge )
+            edge.left.gene.model.edges.remove( edge )
     else:
         model.edges = []
 
@@ -134,7 +132,7 @@ def print_similarity( find: str = "" ) -> EChanges:
     return EChanges.NONE
 
 
-def __import_blast_format_6( evalue, file, file_title, length, model, obtain_only ):
+def __import_blast_format_6( e_value_tol, file, file_title, length_tol, model, obtain_only ):
     LOG( "IMPORT {} BLAST FROM '{}'", "MERGE" if obtain_only else "NEW", file_title )
     
     for line in file:
@@ -169,29 +167,29 @@ def __import_blast_format_6( evalue, file, file_title, length, model, obtain_onl
             e_value = float( e[10] )
             LOG( "BLAST SAYS {} {}:{} ({}) --> {} {}:{} ({})".format( query_accession, query_start, query_end, query_length, subject_accession, subject_start, subject_end, subject_length ) )
             
-            if evalue is not None and e_value > evalue:
+            if e_value_tol is not None and e_value > e_value_tol:
                 LOG( "REJECTED E VALUE" )
                 continue
             
-            if length is not None and query_length < length:
+            if length_tol is not None and query_length < length_tol:
                 LOG( "REJECTED LENGTH" )
                 continue
             
             assert query_length > 0 and subject_length > 0
             
-            query_s = _make_sequence( model, query_accession, obtain_only, 0, True )
-            subject_s = _make_sequence( model, subject_accession, obtain_only, 0, True )
+            query_s = _make_gene( model, query_accession, obtain_only, 0, True )
+            subject_s = _make_gene( model, subject_accession, obtain_only, 0, True )
             
             if query_s and subject_s and query_s is not subject_s:
-                query = LegoSubsequence( query_s, query_start, query_end )
-                subject = LegoSubsequence( subject_s, subject_start, subject_end )
+                query = Domain( query_s, query_start, query_end )
+                subject = Domain( subject_s, subject_start, subject_end )
                 LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
                 __make_edge( model, query, subject )
     
     MCMD.progress( "Imported Blast from «{}».".format( file_title ) )
 
 
-def __make_edge( model: LegoModel, source: LegoSubsequence, destination: LegoSubsequence ) -> LegoEdge:
+def __make_edge( model: Model, source: Domain, destination: Domain ) -> Edge:
     """
     Creates the specified edge, or returns it if it already exists.
     """
@@ -202,7 +200,7 @@ def __make_edge( model: LegoModel, source: LegoSubsequence, destination: LegoSub
                 or (edge.left == destination and edge.right == source):
             return edge
     
-    result = LegoEdge( source, destination )
+    result = Edge( source, destination )
     model.edges.add( result )
     
     return result

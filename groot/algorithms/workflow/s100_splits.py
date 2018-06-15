@@ -1,11 +1,11 @@
-from groot import LegoComponent, constants
+from groot import Component, constants
 from intermake import MCMD, command
-from mgraph import MGraph, Split, exporting
+from mgraph import MGraph, MSplit, exporting
 from mhelper import Logger
 from typing import Dict, Optional
 
 from groot.constants import STAGES, EChanges
-from groot.data import ILegoNode, LegoModel, LegoSplit, global_view
+from groot.data import INode, Model, Split, global_view
 from groot.utilities import lego_graph
 
 
@@ -38,12 +38,12 @@ def create_splits(  ):
 
     Requisites: `create_fusions`
     """
-    model: LegoModel   =global_view.current_model()
+    model: Model   =global_view.current_model()
     
     # Status check
     model.get_status( STAGES.SPLITS_8 ).assert_create()
     
-    all_splits: Dict[Split, LegoSplit] = { }
+    all_splits: Dict[MSplit, Split] = { }
     
     for component in model.components:
         __LOG_SPLITS( "FOR COMPONENT {}", component )
@@ -55,7 +55,7 @@ def create_splits(  ):
         
         # Split the tree, `ILeaf` is a strange definition of a "leaf", since we'll pull out clades too (`LegoPoint`s).
         # We fix this when we reconstruct the NRFG.
-        component_splits = exporting.export_splits( tree, filter = lambda x: isinstance( x.data, ILegoNode ) )
+        component_splits = exporting.export_splits( tree, filter = lambda x: isinstance( x.data, INode ) )
         component_splits_r = []
         
         for split in component_splits:
@@ -64,7 +64,7 @@ def create_splits(  ):
             exi = all_splits.get( split )
             
             if exi is None:
-                exi = LegoSplit( split, len( all_splits ) )
+                exi = Split( split, len( all_splits ) )
                 all_splits[split] = exi
             
             exi.components.add( component )
@@ -82,7 +82,7 @@ def drop_splits( ):
     """
     Removes data from the model.
     """
-    model: LegoModel   =global_view.current_model()
+    model: Model   =global_view.current_model()
     model.get_status( STAGES.SPLITS_8 ).assert_drop()
     
     model.splits = frozenset()
@@ -95,7 +95,7 @@ def drop_splits( ):
 
 
 @command( names = ["print_splits", "splits"], folder=constants.F_PRINT )
-def print_splits( component: Optional[LegoComponent] = None ) -> EChanges:
+def print_splits( component: Optional[Component] = None ) -> EChanges:
     """
     Prints NRFG candidate splits.
     :param component:   Component, or `None` for the global split set.

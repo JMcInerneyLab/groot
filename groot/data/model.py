@@ -1,15 +1,15 @@
-from typing import List, FrozenSet, Sequence, Iterable, Iterator, Dict, Tuple
-from intermake.engine.environment import MCMD, IVisualisable, UiInfo
-from mhelper import string_helper, file_helper as FileHelper, NotFoundError
+from typing import Dict, FrozenSet, Iterable, Iterator, List, Sequence, Tuple
 
-from groot.constants import LegoStage
-from groot.data.model_meta import ModelStatus
+from groot.constants import Stage
+from groot.data.model_collections import ComponentCollection, EdgeCollection, FusionCollection, GeneCollection, UserDomainCollection, UserGraphCollection
+from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset
 from groot.data.model_interfaces import ESiteType
-from groot.data.model_core import FusionGraph, Subgraph, LegoReport, LegoFormation, LegoPregraph, LegoSplit, LegoSubset, LegoPoint, LegoSequence
-from groot.data.model_collections import LegoUserGraphCollection, LegoSequenceCollection, LegoEdgeCollection, LegoFusionEventCollection, LegoUserDomainCollection, LegoComponentCollection
+from groot.data.model_meta import ModelStatus
+from intermake.engine.environment import IVisualisable, MCMD, UiInfo
+from mhelper import file_helper as FileHelper, string_helper
 
 
-class LegoModel( IVisualisable ):
+class Model( IVisualisable ):
     """
     The model used by Groot.
     """
@@ -22,49 +22,49 @@ class LegoModel( IVisualisable ):
         Use the `import_*` functions to add data from a file.
         """
         # Classic model data
-        self.sequences = LegoSequenceCollection( self )
-        self.edges = LegoEdgeCollection( self )
-        self.components = LegoComponentCollection( self )
-        self.fusion_events = LegoFusionEventCollection()
-        self.splits: FrozenSet[LegoSplit] = frozenset()
-        self.consensus: FrozenSet[LegoSplit] = frozenset()
-        self.subsets: FrozenSet[LegoSubset] = frozenset()
+        self.genes = GeneCollection( self )
+        self.edges = EdgeCollection( self )
+        self.components = ComponentCollection( self )
+        self.fusions = FusionCollection()
+        self.splits: FrozenSet[Split] = frozenset()
+        self.consensus: FrozenSet[Split] = frozenset()
+        self.subsets: FrozenSet[Subset] = frozenset()
         self.subgraphs: Sequence[Subgraph] = tuple()
         self.subgraphs_sources: Sequence[int] = tuple()
         self.subgraphs_destinations: Sequence[int] = tuple()
         self.fusion_graph_unclean: FusionGraph = None
         self.fusion_graph_clean: FusionGraph = None
-        self.report: LegoReport = None
+        self.report: Report = None
         
         # Metadata
         self.file_name = None
         self.__seq_type = ESiteType.UNKNOWN
-        self.lego_domain_positions: Dict[Tuple[int, int], Tuple[int, int]] = { }
+        self.lego_domain_positions: Dict[Tuple[int, int], Dict[str, object]] = { }
         
         # User-data
-        self.user_domains = LegoUserDomainCollection( self )
-        self.user_graphs = LegoUserGraphCollection( self )
-        self.user_reports: List[LegoReport] = []
+        self.user_domains = UserDomainCollection( self )
+        self.user_graphs = UserGraphCollection( self )
+        self.user_reports: List[Report] = []
         self.user_comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
     
     
-    def iter_pregraphs( self ) -> Iterable[LegoPregraph]:
+    def iter_pregraphs( self ) -> Iterable[Pregraph]:
         """
         Iterates through the model pregraphs.
         """
-        for subset in self.subsets:  # type: LegoSubset
+        for subset in self.subsets:  # type: Subset
             if subset.pregraphs is not None:
                 yield from subset.pregraphs
     
     
     @property
-    def fusion_points( self ) -> Iterator[LegoPoint]:
-        for event in self.fusion_events:
+    def fusion_points( self ) -> Iterator[Point]:
+        for event in self.fusions:
             for formation in event.formations:
                 yield from formation.points
     
     
-    def get_status( self, stage: LegoStage ) -> ModelStatus:
+    def get_status( self, stage: Stage ) -> ModelStatus:
         return ModelStatus( self, stage )
     
     
@@ -73,16 +73,16 @@ class LegoModel( IVisualisable ):
     
     
     def on_get_vis_info( self, u: UiInfo ) -> None:
-        u.text = "{} sequences".format( len( self.sequences ) )
+        u.text = "{} sequences".format( len( self.genes ) )
         u.hint = u.Hints.FOLDER
         u.contents += { "graphs"                : list( self.iter_graphs() ),
-                        "sequences"             : self.sequences,
+                        "sequences"             : self.genes,
                         "components"            : self.components,
                         "edges"                 : self.edges,
                         "comments"              : self.user_comments,
                         "site_type"             : self.site_type,
                         "file_name"             : self.file_name,
-                        "fusion_events"         : self.fusion_events,
+                        "fusions"               : self.fusions,
                         "user_domains"          : self.user_domains,
                         "user_graphs"           : self.user_graphs,
                         "splits"                : self.splits,
@@ -111,7 +111,7 @@ class LegoModel( IVisualisable ):
         
         if self.file_name:
             return FileHelper.get_filename_without_extension( self.file_name )
-        elif self.sequences:
+        elif self.genes:
             return "Unsaved model"
         else:
             return "Empty model"
@@ -128,7 +128,7 @@ class LegoModel( IVisualisable ):
         
         s = ESiteType.UNKNOWN
         
-        for x in self.sequences:
+        for x in self.genes:
             if x.site_array:
                 for y in x.site_array:
                     if y not in "GAC":
@@ -147,51 +147,7 @@ class LegoModel( IVisualisable ):
     
     
     def _has_data( self ) -> bool:
-        return bool( self.sequences )
-    
-    
-    def find_sequence_by_accession( self, name: str ) -> LegoSequence:
-        for x in self.sequences:
-            if x.accession == name:
-                return x
-        
-        raise NotFoundError( "There is no sequence with the accession «{}».".format( name ) )
-    
-    
-    def find_sequence_by_legacy_accession( self, name: str ) -> LegoSequence:
-        id = LegoSequence.read_legacy_accession( name )
-        
-        for x in self.sequences:
-            if x.index == id:
-                return x
-        
-        raise NotFoundError( "There is no sequence with the internal ID «{}».".format( id ) )
-    
-    
-    def find_fusion_point_by_legacy_accession( self, name: str ) -> "LegoPoint":
-        i_event, i_formation, i_point = LegoPoint.read_legacy_accession( name )
-        
-        for event in self.fusion_events:
-            if event.index == i_event:
-                for formation in event.formations:
-                    if formation.index == i_formation:
-                        for point in formation.points:
-                            if point.index == i_point:
-                                return point
-        
-        raise NotFoundError( "There is no fusion point with the internal ID «{}».".format( id ) )
-    
-    
-    def find_fusion_formation_by_legacy_accession( self, name: str ) -> "LegoFormation":
-        i_event, i_formation = LegoFormation.read_legacy_accession( name )
-        
-        for event in self.fusion_events:
-            if event.index == i_event:
-                for formation in event.formations:
-                    if formation.index == i_formation:
-                        return formation
-        
-        raise NotFoundError( "There is no fusion formation with the internal ID «{}».".format( id ) )
+        return bool( self.genes )
     
     
     def iter_graphs( self ):

@@ -1,14 +1,15 @@
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu, QToolTip, QMessageBox
-from typing import Optional
-from intermake import AbstractCommand, VisualisablePath
-from intermake_qt import FrmArguments
-from mhelper import SwitchError, ArgValueCollection
-from mhelper_qt import qt_gui_helper, menu_helper
-import groot
+from typing import Optional, Any
 
-from groot_gui.utilities.gui_view_utils import LegoSelection
-from groot_gui.utilities.gui_workflow import EIntent, LegoStage, LegoVisualiser
+import intermake
+import groot
+import intermake_qt
+
+from mhelper import SwitchError, ArgsKwargs
+from mhelper_qt import qt_gui_helper, menu_helper
+from groot_gui.utilities.selection import LegoSelection
+from groot_gui.utilities.gui_workflow import EIntent, Stage, LegoVisualiser
 from groot_gui.utilities import gui_workflow
 
 
@@ -21,8 +22,11 @@ class GuiActions:
         self.window: FrmBase = window
     
     
-    def launch_intent( self, stage: LegoStage, intent: EIntent ):
-        visualisers = list( LegoVisualiser.for_stage( stage, intent ) )
+    def launch_intent( self, stage: Stage, intent: EIntent ):
+        """
+        Given a `stage` and `intent` this finds the corresponding `LegoVisualiser` and `launch`es its action.
+        """
+        visualisers = list( LegoVisualiser.iter_from_stage( stage, intent ) )
         
         if len( visualisers ) == 0:
             QMessageBox.info( self.window, "Intent", "No handlers for this intent: {}+{}".format( stage, intent ) )
@@ -46,18 +50,23 @@ class GuiActions:
     
     
     def launch( self, visualiser: LegoVisualiser, *args ):
+        """
+        Exacts the action denoted by a particular `LegoVisualiser`.
+        """
         from groot_gui.forms.frm_base import FrmBase
         
-        
         if isinstance( visualiser.action, type ) and issubclass( visualiser.action, FrmBase ):
-            self.frm_main.show_form( visualiser.action )
-        elif isinstance( visualiser.action, AbstractCommand ):
+            self.frm_main.show_form( visualiser.action, *args )
+        elif isinstance( visualiser.action, intermake.AbstractCommand ) or intermake.BasicCommand.retrieve( visualiser.action, None ) is not None:
             self.request( visualiser.action, *args )
         else:
             visualiser.action( self )
     
     
-    def menu( self, stage: LegoStage ):
+    def menu( self, stage: Stage ):
+        """
+        Shows the menu associated with a particular `stage`.
+        """
         menu_handler = self.frm_main.menu_handler
         menu = menu_handler.stages[stage]
         menu_handler.update_dynamic_menu( menu )
@@ -68,7 +77,7 @@ class GuiActions:
         """
         Closes the calling window.
         
-        As well as providing a means for help HTML to close the form,
+        As well as providing a means to close the form via an action string,
         this should be called instead of `QDialog.close` since QDialog.close doesn't work
         properly if the form is hosted as an MDI window.
         """
@@ -76,48 +85,58 @@ class GuiActions:
     
     
     def wizard_next( self ):
-        groot.continue_wizard()
+        self.run( groot.continue_wizard )
     
     
     def close_application( self ):
         self.frm_main.close()
     
     
-    def get_model( self ):
+    def run( self, command: intermake.AbstractCommand, *args, **kwargs ) -> intermake.AsyncResult:
+        """
+        Runs an Intermake command asynchronously.
+        """
+        return intermake.acquire( command, window = self.window ).run( *args, **kwargs )
+    
+    
+    def get_model( self ) -> groot.Model:
         return groot.current_model()
     
     
-    def save_model( self ):
+    def save_model( self ) -> None:
         if self.get_model().file_name:
-            groot.file_save( self.get_model().file_name )
+            self.run( groot.file_save, self.get_model().file_name )
         else:
-            self.launch( gui_workflow.VISUALISERS.VIEW_SAVE_FILE )
+            self.launch( gui_workflow.get_visualisers().VIEW_SAVE_FILE )
     
     
-    def save_model_to( self, file_name: str ):
-        groot.file_save( file_name )
+    def save_model_to( self, file_name: str ) -> None:
+        self.run( groot.file_save, file_name )
     
     
-    def request( self, plugin: AbstractCommand, *args, **kwargs ):
+    def request( self, plugin: intermake.AbstractCommand, *args, **kwargs ) -> Optional[intermake.AsyncResult]:
+        """
+        Runs an Intermake command after showing the user the arguments request form.
+        """
         if args is None:
             args = ()
         
-        FrmArguments.request( self.window, plugin, *args, **kwargs ) # --> self.plugin_completed
+        return intermake_qt.FrmArguments.request( self.window, plugin, defaults = ArgsKwargs( *args, **kwargs ) )  # --> self.plugin_completed
     
     
-    def show_status_message( self, text: str ):
+    def show_status_message( self, text: str ) -> None:
         QToolTip.showText( QCursor.pos(), text )
     
     
-    def get_visualiser( self, name ):
-        return getattr( gui_workflow.VISUALISERS, name.upper() )
+    def get_visualiser( self, name ) -> LegoVisualiser:
+        return getattr( gui_workflow.get_visualisers(), name.upper() )
     
     
-    def get_stage( self, name ):
+    def get_stage( self, name ) -> Stage:
         return getattr( gui_workflow.STAGES, name.upper() ) if name else None
     
     
-    def by_url( self, link: str, validate = False ):
+    def by_url( self, link: str, validate = False ) -> bool:
         if ":" in link:
             key, value = link.split( ":", 1 )
         else:
@@ -126,7 +145,7 @@ class GuiActions:
         
         if key == "action":
             try:
-                visualiser = gui_workflow.VISUALISERS.find_by_key( value )
+                visualiser = gui_workflow.get_visualisers().find_by_key( value )
             except KeyError:
                 if validate:
                     return False
@@ -141,17 +160,17 @@ class GuiActions:
             if validate:
                 return True
             
-            ext_files.file_save( value )
+            self.run( groot.file_save, value )
         elif key == "file_load":
             if validate:
                 return True
             
-            ext_files.file_load( value )
+            self.run( groot.file_load, value )
         elif key == "file_sample":
             if validate:
                 return True
             
-            ext_files.file_sample( value )
+            self.run( groot.file_sample, value )
         else:
             if validate:
                 return False
@@ -159,19 +178,19 @@ class GuiActions:
                 raise SwitchError( "link", link )
     
     
-    def show_intermake( self ):
+    def show_intermake( self ) -> None:
         from intermake_qt import FrmTreeView
-        FrmTreeView.request( self.window, root = VisualisablePath.get_root(), flat = True )
+        FrmTreeView.request( self.window, root = intermake.VisualisablePath.get_root(), flat = True )
     
     
-    def __get_selection_form( self ):
+    def __get_selection_form( self ) -> Any:
         from groot_gui.forms.frm_base import FrmSelectingToolbar
         form: FrmSelectingToolbar = self.window
         assert isinstance( form, FrmSelectingToolbar )
         return form
     
     
-    def get_selection( self ):
+    def get_selection( self ) -> LegoSelection:
         return self.__get_selection_form().get_selection()
     
     
@@ -191,7 +210,7 @@ class GuiActions:
         file_name = qt_gui_helper.browse_open( self.window, groot.constants.DIALOGUE_FILTER )
         
         if file_name:
-            groot.file_load( file_name )
+            self.run( groot.file_load, file_name )
     
     
     def enable_inbuilt_browser( self ):
@@ -225,15 +244,15 @@ class GuiActions:
     
     
     def load_sample_from( self, param ):
-        groot.file_sample( param )
+        self.run( groot.file_sample, param )
     
     
     def load_file_from( self, param ):
-        groot.file_load( param )
+        self.run( groot.file_load, param )
     
     
     def stop_wizard( self ):
-        groot.stop_wizard()
+        self.run( groot.drop_wizard )
     
     
     def import_file( self ):
@@ -247,11 +266,11 @@ class GuiActions:
         filter_index = filters.index( filter )
         
         if filter_index == 0:
-            groot.import_file( file_name )
+            self.run( groot.import_file, file_name )
         elif filter_index == 0:
-            groot.import_sequences( file_name )
+            self.run( groot.import_genes, file_name )
         elif filter_index == 1:
-            groot.import_similarity( file_name )
+            self.run( groot.import_similarity, file_name )
         else:
             raise SwitchError( "filter_index", filter_index )
     
@@ -260,4 +279,4 @@ class GuiActions:
         file_name = qt_gui_helper.browse_save( self.window, groot.constants.DIALOGUE_FILTER )
         
         if file_name:
-            groot.file_save( file_name )
+            self.run( groot.file_save, file_name )

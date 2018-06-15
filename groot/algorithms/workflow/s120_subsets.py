@@ -6,7 +6,7 @@ from intermake import MCMD, command
 from mhelper import Logger, string_helper
 
 from groot.constants import STAGES, EChanges
-from groot.data import ILegoNode, LegoFusion, LegoPoint, LegoSequence, LegoSubset, global_view
+from groot.data import INode, Fusion, Point, Gene, Subset, global_view
 
 
 __LOG = Logger( "nrfg.find", False )
@@ -58,11 +58,11 @@ def create_subsets( no_super: bool = True ):
     model.get_status( STAGES.SUBSETS_10 ).assert_create()
     
     # Define our output variables
-    all_gene_sets: Set[FrozenSet[ILegoNode]] = set()
-    gene_set_to_fusion: Dict[FrozenSet[ILegoNode], List[LegoPoint]] = defaultdict( list )
+    all_gene_sets: Set[FrozenSet[INode]] = set()
+    gene_set_to_fusion: Dict[FrozenSet[INode], List[Point]] = defaultdict( list )
     
     # Iterate over the fusion points 
-    for event in model.fusion_events:  # type: LegoFusion
+    for event in model.fusions:  # type: Fusion
         for formation in event.formations:
             for point in formation.points:
                 # Each fusion point splits the graph into two halves ("inside" and "outside" that point)
@@ -83,7 +83,7 @@ def create_subsets( no_super: bool = True ):
     
     for gene_set in all_gene_sets:
         # Drop EMPTY gene sets
-        if not any( isinstance( x, LegoSequence ) for x in gene_set ):
+        if not any( isinstance( x, Gene ) for x in gene_set ):
             __LOG( "DROP GENE SET (EMPTY): {}", gene_set )
             to_remove.add( gene_set )
             continue
@@ -113,14 +113,14 @@ def create_subsets( no_super: bool = True ):
     
     # Finally, complement our gene sets with the fusion points they are adjacent to
     # We'll need these to know where our graph fits into the big picture
-    results: Set[FrozenSet[ILegoNode]] = set()
+    results: Set[FrozenSet[INode]] = set()
     
     for gene_set in all_gene_sets:
         new_set = set( gene_set )
         new_set.update( gene_set_to_fusion[gene_set] )
         results.add( frozenset( new_set ) )
     
-    model.subsets = frozenset( LegoSubset( model, i, x ) for i, x in enumerate( results ) )
+    model.subsets = frozenset( Subset( model, i, x ) for i, x in enumerate( results ) )
     
     return EChanges.MODEL_DATA
 
@@ -133,7 +133,7 @@ def print_subsets() -> EChanges:
     model = global_view.current_model()
     
     for x in sorted( model.subsets, key = cast( Any, str ) ):
-        assert isinstance( x, LegoSubset )
+        assert isinstance( x, Subset )
         MCMD.information( "{} - {} elements: {}".format( x, len( x ), string_helper.format_array( x.contents, sort = True, autorange = True ) ) )
     
     return EChanges.INFORMATION

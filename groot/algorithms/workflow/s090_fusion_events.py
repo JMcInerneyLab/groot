@@ -3,14 +3,16 @@ Deals with the model's fusion events and fusion points.
 """
 from typing import FrozenSet, List, Set, cast
 
+import itertools
+
 from groot.constants import EChanges
 from intermake import MCMD, command
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, array_helper, string_helper
 
 from groot import constants
-from groot.data import ILegoNode, LegoComponent, LegoFusion, LegoModel, LegoPoint, LegoSequence, global_view
-from groot.data.model_core import LegoFormation
+from groot.data import INode, Component, Fusion, Model, Point, Gene, global_view
+from groot.data.model_core import Formation
 from groot.utilities import lego_graph
 
 
@@ -18,7 +20,8 @@ __LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command(folder = constants.F_CREATE)
+
+@command( folder = constants.F_CREATE )
 def create_fusions() -> EChanges:
     """
     Finds the fusion points in the model.
@@ -28,7 +31,7 @@ def create_fusions() -> EChanges:
     model = global_view.current_model()
     model.get_status( constants.STAGES.FUSIONS_7 ).assert_create()
     
-    r: List[LegoFusion] = []
+    r: List[Fusion] = []
     
     for event in __find_fusion_events( model ):
         __LOG( "Processing fusion event: {}", event )
@@ -40,32 +43,32 @@ def create_fusions() -> EChanges:
         r.append( event )
     
     for x in r:
-        model.fusion_events.add( x )
+        model.fusions.add( x )
     
-    n = len( model.fusion_events )
+    n = len( model.fusions )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
     return EChanges.MODEL_DATA
 
 
-@command(folder = constants.F_DROP)
+@command( folder = constants.F_DROP )
 def drop_fusions() -> EChanges:
     """
     Removes all fusion points from the model.
     """
     model = global_view.current_model()
-    previous = len( model.fusion_events )
+    previous = len( model.fusions )
     model.get_status( constants.STAGES.FUSIONS_7 ).assert_drop()
     
     removed_count = 0
     
-    model.fusion_events.clear()
+    model.fusions.clear()
     
     for component in model.components:
         graph = component.tree
         to_delete: List[MNode] = []
         
         for node in graph.get_nodes():
-            if isinstance( node.data, LegoPoint ):
+            if isinstance( node.data, Point ):
                 if len( node.edges ) == 1:
                     to_delete.append( node )
                     continue
@@ -85,7 +88,7 @@ def drop_fusions() -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_fusions", "fusions"], folder=constants.F_PRINT )
+@command( names = ["print_fusions", "fusions"], folder = constants.F_PRINT )
 def print_fusions() -> EChanges:
     """
     Prints model fusions.
@@ -94,14 +97,12 @@ def print_fusions() -> EChanges:
     
     model = global_view.current_model()
     
-    for event in model.fusion_events:
+    for event in model.fusions:
         results.append( "- name               {}".format( event ) )
         results.append( "  component a        {}".format( event.component_a ) )
         results.append( "  component b        {}".format( event.component_b ) )
         results.append( "  component c        {}".format( event.component_c ) )
         results.append( "  index              {}".format( event.index ) )
-        results.append( "  products           {}".format( string_helper.format_array( event.products ) ) )
-        results.append( "  future products    {}".format( string_helper.format_array( event.future_products ) ) )
         results.append( "  points             {}".format( string_helper.format_array( event.points ) ) )
         
         for point in event.points:
@@ -111,7 +112,7 @@ def print_fusions() -> EChanges:
             results.append( "         outer sequences    {}".format( string_helper.format_array( point.outer_sequences ) ) )
             results.append( "         pertinent inner    {}".format( string_helper.format_array( point.pertinent_inner ) ) )
             results.append( "         pertinent outer    {}".format( string_helper.format_array( point.pertinent_outer ) ) )
-            results.append( "         sequences          {}".format( string_helper.format_array( point.sequences ) ) )
+            results.append( "         sequences          {}".format( string_helper.format_array( point.genes ) ) )
             results.append( "" )
         
         results.append( "" )
@@ -121,90 +122,97 @@ def print_fusions() -> EChanges:
     return EChanges.INFORMATION
 
 
-def __find_fusion_events( model: LegoModel ) -> List[LegoFusion]:
+def __find_fusion_events( model: Model ) -> List[Fusion]:
     """
     Finds the fusion events in the model.
     
     i.e. Which components fuse together to generate which other components.
     """
-    results = []  # type: List[LegoFusion]
+    results = []  # type: List[Fusion]
     
     #
-    # Our EVENTS are two components that produce the same set of components
-    # e.g. if A --> C and B --> C then A and B join to form C
-    #
-    for component_a, component_b in array_helper.triangular_comparison( model.components ):
-        assert isinstance( component_a, LegoComponent )
-        assert isinstance( component_b, LegoComponent )
+    # Our EVENTS are:
+    # A + B → C ∵   A ∋ C
+    #             ∧ B ∋ C
+    #             ∧ ∄X    :    A ∋ X
+    #                        ∧ B ∋ X
+    #                        ∧ X ∋ C
+    for component_a, component_b in itertools.combinations( model.components, 2 ):
+        assert isinstance( component_a, Component )
+        assert isinstance( component_b, Component )
         
-        a_outgoing = set( component_a.outgoing_components() )
-        b_outgoing = set( component_b.outgoing_components() )
+        a_outgoing: Set[Component] = set( component_a.outgoing_components() )
+        b_outgoing: Set[Component] = set( component_b.outgoing_components() )
+        ab_ints: Set[Component] = a_outgoing.intersection( b_outgoing )
         
-        ab_ints = a_outgoing.intersection( b_outgoing )
+        __LOG( "TEST:" )
+        __LOG( "- {} YIELDING {}", component_a, a_outgoing )
+        __LOG( "- {} YIELDING {}", component_b, b_outgoing )
+        __LOG( "- FORMING {}", ab_ints )
         
-        if a_outgoing == b_outgoing:
-            __LOG( "FUSION FOUND" )
-            __LOG( "{} AND {}", component_a, component_b )
-            __LOG( "FORMING {}", ab_ints )
-            results.append( LegoFusion( len( results ), component_a, component_b, ab_ints ) )
-        else:
-            __LOG( "NOT A FUSION:" )
-            __LOG( "{} AND {}", component_a, component_b )
-            __LOG( "FORMING {}", ab_ints )
+        if not a_outgoing or not b_outgoing:
+            __LOG( "---> FORMLESS" )
+            continue
+        
+        has_result = None
+        
+        for component_c in ab_ints:
+            __LOG( "- CONSIDERING {}", component_c )
+            
+            is_valid = True
+            for component_x in ab_ints:
+                if component_x is component_c:
+                    continue
+                
+                if component_c in component_x.outgoing_components():
+                    __LOG( " - REJECTED (ALREADY FORMED BY {})", component_x )
+                    is_valid = False
+                    break
+            
+            if not is_valid:
+                continue
+            
+            __LOG( " - ACCEPTED!" )
+            
+            if has_result is not None:
+                raise ValueError( "{} and {} form {}. How do they also form {}?".format( component_a, component_b, has_result, component_c ) )
+            
+            has_result = True
+            results.append( Fusion( len( results ), component_a, component_b, component_c ) )
     
-    #
-    # Some fusions will form things actually formed by other fusions
-    # strip out subsequence formations from the fusions
-    #
-    continue_ = True
-    
-    while continue_:
-        continue_ = False
-        
-        for event in results:
-            if len( event.products ) > 1:
-                for event_b in results:
-                    f = array_helper.first_or_none( event_b.products )
-                    if len( event_b.products ) == 1 and f in event.products:
-                        for component in (event_b.component_a, event_b.component_b):
-                            if component in event.products:
-                                __LOG( "EVENT {} SHOULD LOSE PRODUCT {} BECAUSE THAT'S ALREADY IN EVENT {}", event, f, event_b )
-                                event.products.remove( f )
-                                __LOG( "NOW INTERSECTIONS ARE {}", event )
-                                continue_ = True
     
     return results
 
 
-def __find_or_create_point( event: LegoFusion,
-                            component: LegoComponent,
-                            inner: FrozenSet[ILegoNode],
-                            outer: FrozenSet[ILegoNode] ):
+def __find_or_create_point( event: Fusion,
+                            component: Component,
+                            inner: FrozenSet[INode],
+                            outer: FrozenSet[INode] ):
     """
     Given an event and construct parameters, either retrieves the
     pertinent point or generates a new one.
     """
     formation = None
     
-    pertinent_inner = frozenset( inner.intersection( event.component_c.major_sequences ) )
+    pertinent_inner = frozenset( inner.intersection( event.component_c.major_genes ) )
     
-    for x in event.formations:  # type: LegoFormation
+    for x in event.formations:  # type: Formation
         if x.pertinent_inner == pertinent_inner:
             formation = x
             break
     
     if formation is None:
-        formation = LegoFormation( event, component, inner, len( event.formations ), pertinent_inner )
+        formation = Formation( event, component, inner, len( event.formations ), pertinent_inner )
         event.formations.append( formation )
     
-    p = LegoPoint( formation, outer, component, len( formation.points ) )
+    p = Point( formation, outer, component, len( formation.points ) )
     
     formation.points.append( p )
     return p
 
 
-def __find_fusion_points( fusion_event: LegoFusion,
-                          component: LegoComponent ) -> None:
+def __find_fusion_points( fusion_event: Fusion,
+                          component: Component ) -> None:
     """
     In the tree of `component` we look for the node separating the event's intersections from everything else.
     
@@ -236,26 +244,26 @@ def __find_fusion_points( fusion_event: LegoFusion,
         first: MNode = graph.root
         root: MNode = first.add_parent()
         root.make_root()
-        sequences: FrozenSet[LegoSequence] = frozenset( lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_sequences ) ) )
-        result: LegoPoint = __find_or_create_point( fusion_event,
-                                                    cast( LegoComponent, component ),
-                                                    sequences,
-                                                    frozenset() )
+        sequences: FrozenSet[Gene] = frozenset( lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_genes ) ) )
+        result: Point = __find_or_create_point( fusion_event,
+                                                cast( Component, component ),
+                                                sequences,
+                                                frozenset() )
         root.data = result
         return
     
     # The `intersection_aliases` correspond to βγδ in the above diagram
     
-    __LOG( "component.minor_sequences = {}", component.minor_sequences )
-    __LOG( "fusion_event.component_a.major_sequences = {}", fusion_event.component_a.major_sequences )
-    __LOG( "fusion_event.component_b.major_sequences = {}", fusion_event.component_b.major_sequences )
+    __LOG( "component.minor_genes = {}", component.minor_genes )
+    __LOG( "fusion_event.component_a.major_genes = {}", fusion_event.component_a.major_genes )
+    __LOG( "fusion_event.component_b.major_genes = {}", fusion_event.component_b.major_genes )
     
-    component_sequences = set( component.minor_sequences )
+    component_sequences = set( component.minor_genes )
     
-    inside_a: Set[LegoSequence] = component_sequences.intersection( fusion_event.component_a.major_sequences )
-    inside_b: Set[LegoSequence] = component_sequences.intersection( fusion_event.component_b.major_sequences )
-    outside: Set[LegoSequence] = component_sequences.intersection( [y for x in fusion_event.products for y in x.major_sequences] )
-    ignored: Set[LegoSequence] = component_sequences - inside_a - inside_b - outside
+    inside_a: Set[Gene] = component_sequences.intersection( fusion_event.component_a.major_genes )
+    inside_b: Set[Gene] = component_sequences.intersection( fusion_event.component_b.major_genes )
+    outside: Set[Gene] = component_sequences.intersection( fusion_event.component_c.major_genes )
+    ignored: Set[Gene] = component_sequences - inside_a - inside_b - outside
     
     if not inside_a and not inside_b:
         __LOG( "THESE AREN'T THE COMPONENTS WE'RE LOOKING FOR" )
@@ -273,8 +281,8 @@ def __find_fusion_points( fusion_event: LegoFusion,
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
-    inside_nodes = set( node for node in graph if (isinstance( node.data, LegoSequence ) and node.data in inside) )
-    outside_nodes = set( node for node in graph if (isinstance( node.data, LegoSequence ) and node.data in outside) )
+    inside_nodes = set( node for node in graph if (isinstance( node.data, Gene ) and node.data in inside) )
+    outside_nodes = set( node for node in graph if (isinstance( node.data, Gene ) and node.data in outside) )
     
     __LOG( graph.to_ascii() )
     isolation_points = list( isolate( graph, inside_nodes, outside_nodes ) )

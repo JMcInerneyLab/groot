@@ -37,10 +37,10 @@ class FrmFusions( FrmBase ):
             fusion_item.setIcon( self.headers["name"], fusion.get_vis_info().icon() )
             fusion_item.setText( self.headers["name"], "{}".format( fusion ) )
             fusion_item.setText( self.headers["index"], "{}".format( fusion.index ) )
-            fusion_item.setText( self.headers["left"], "{}".format( fusion.component_a ) )
-            fusion_item.setText( self.headers["right"], "{}".format( fusion.component_b ) )
-            fusion_item.setText( self.headers["component"], "{}".format( fusion.component_c ) )
-            self.__add_array_item( fusion_item, "Products", fusion.products )
+            fusion_item.setText( self.headers["A"], "{}".format( fusion.component_a ) )
+            fusion_item.setText( self.headers["B"], "{}".format( fusion.component_b ) )
+            fusion_item.setText( self.headers["C"], "{}".format( fusion.component_c ) )
+            
             self.__add_array_item( fusion_item, "Future", fusion.future_products )
             self.ui.TVW_MAIN.addTopLevelItem( fusion_item )
             
@@ -50,7 +50,7 @@ class FrmFusions( FrmBase ):
                 formation_item.setText( self.headers["name"], "{}".format( formation ) )
                 formation_item.setText( self.headers["index"], "Index: {}".format( formation.index ) )
                 formation_item.setText( self.headers["component"], "{}".format( formation.component ) )
-                self.__add_array_item( formation_item, "Sequences", formation.sequences )
+                self.__add_array_item( formation_item, "Sequences", formation.genes )
                 self.__add_array_item( formation_item, "All", formation.pertinent_inner )
                 fusion_item.addChild( formation_item )
                 

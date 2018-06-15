@@ -1,9 +1,9 @@
 from typing import Optional
 
-from groot.constants import LegoStage, STAGES
+from groot.constants import Stage, STAGES
 from groot.data.exceptions import NotReadyError, InUseError
 from groot.data.model_interfaces import INamed, IHasFasta, INamedGraph
-from groot.data.model_core import LegoComponent
+from groot.data.model_core import Component
 from mgraph import MGraph
 
 
@@ -11,7 +11,7 @@ _LegoModel_ = "LegoModel"
 
 
 class _ComponentAsFasta( INamed, IHasFasta ):
-    def __init__( self, component: LegoComponent, is_aligned: bool ):
+    def __init__( self, component: Component, is_aligned: bool ):
         self.component = component
         self.is_aligned = is_aligned
     
@@ -43,7 +43,7 @@ class _ComponentAsGraph( INamedGraph ):
         return "{}_{}".format( self.component, "unrooted" if self.unrooted else "tree" )
     
     
-    def __init__( self, component: "LegoComponent", unrooted = False ):
+    def __init__( self, component: "Component", unrooted = False ):
         self.component = component
         self.unrooted = unrooted
     
@@ -59,10 +59,10 @@ class _ComponentAsGraph( INamedGraph ):
 
 
 class ModelStatus:
-    def __init__( self, model: _LegoModel_, stage: LegoStage ):
-        assert isinstance( stage, LegoStage ), stage
+    def __init__( self, model: _LegoModel_, stage: Stage ):
+        assert isinstance( stage, Stage ), stage
         self.model: _LegoModel_ = model
-        self.stage: LegoStage = stage
+        self.stage: Stage = stage
     
     
     def assert_drop( self ):
@@ -74,8 +74,8 @@ class ModelStatus:
     
     def assert_not_in_use( self, method ):
         for dependant_stage in STAGES:
-            if self in dependant_stage.requires:
-                dependant_status: ModelStatus = self.model.get_status( self.stage.requires )
+            if self.stage in dependant_stage.requires:
+                dependant_status: ModelStatus = self.model.get_status( dependant_stage )
                 
                 if dependant_status.is_partial:
                     raise InUseError( "Cannot {} «{}» because at least one subsequent stage, «{}», is relying on the current data. Perhaps you meant to drop that stage first?".format( method, self.stage, dependant_stage ) )

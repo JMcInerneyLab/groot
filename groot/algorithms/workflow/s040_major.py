@@ -10,7 +10,7 @@ from intermake import MCMD, Table, cli_helper, command
 from mhelper import ComponentFinder, Logger, string_helper
 
 from groot.constants import STAGES, EChanges
-from groot.data import LegoComponent, LegoSequence, global_view
+from groot.data import Component, Gene, global_view, Edge
 
 
 LOG_MAJOR = Logger( "comp.major", False )
@@ -49,11 +49,11 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     components = ComponentFinder()
     
     # Basic assertions
-    LOG_MAJOR( "There are {} sequences.", len( model.sequences ) )
+    LOG_MAJOR( "There are {} sequences.", len( model.genes ) )
     missing_edges = []
     
-    for sequence in model.sequences:
-        edges = model.edges.find_sequence( sequence )
+    for sequence in model.genes:
+        edges = model.edges.find_gene( sequence )
         
         if not edges:
             missing_edges.append( sequence )
@@ -62,18 +62,19 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
         raise ValueError( "Refusing to detect components because some sequences have no edges: «{}»".format( string_helper.format_array( missing_edges ) ) )
     
     # Iterate sequences
-    for sequence_alpha in model.sequences:
-        assert isinstance( sequence_alpha, LegoSequence )
+    for sequence_alpha in model.genes:
+        assert isinstance( sequence_alpha, Gene )
         
-        alpha_edges = model.edges.find_sequence( sequence_alpha )
+        alpha_edges = model.edges.find_gene( sequence_alpha )
         any_accept = False
         
         LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( alpha_edges ) )
         
         for edge in alpha_edges:
-            source_difference = abs( edge.left.length - edge.left.sequence.length )
-            destination_difference = abs( edge.right.length - edge.right.sequence.length )
-            total_difference = abs( edge.left.sequence.length - edge.right.sequence.length )
+            assert isinstance(edge, Edge)
+            source_difference = abs( edge.left.length - edge.left.gene.length )
+            destination_difference = abs( edge.right.length - edge.right.gene.length )
+            total_difference = abs( edge.left.gene.length - edge.right.gene.length )
             
             LOG_MAJOR_V( "{}", edge )
             LOG_MAJOR_V( "-- Source difference ({})", source_difference )
@@ -92,11 +93,11 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
             else:
                 LOG_MAJOR_V( "-- ==> ACCEPTED" )
             
-            if debug and edge.left.sequence.accession[0] != edge.right.sequence.accession[0]:
+            if debug and edge.left.gene.accession[0] != edge.right.gene.accession[0]:
                 raise ValueError( "Debug assertion failed. This edge not rejected: {}".format( edge ) )
             
             any_accept = True
-            beta = edge.opposite( sequence_alpha ).sequence
+            beta = edge.opposite( sequence_alpha ).gene
             LOG_MAJOR( "-- {:<40} LINKS {:<5} AND {:<5}", edge, sequence_alpha, beta )
             components.join( sequence_alpha, beta )
         
@@ -107,19 +108,20 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     sequences_in_components = set()
     
     for index, sequence_list in enumerate( components.tabulate() ):
-        model.components.add( LegoComponent( model, index, sequence_list ) )
+        model.components.add( Component( model, index, sequence_list ) )
         LOG_MAJOR( "COMPONENT MAJOR: {}", sequence_list )
         sequences_in_components.update( sequence_list )
     
     # Create components for orphans
-    for sequence in model.sequences:
+    for sequence in model.genes:
         if sequence not in sequences_in_components:
             LOG_MAJOR( "ORPHAN: {}", sequence )
-            model.components.add( LegoComponent( model, len( model.components ), (sequence,) ) )
+            model.components.add( Component( model, len( model.components ), (sequence,) ) )
     
     # An assertion
     for component in model.components:
-        if len( component.major_sequences ) == 1:
+        assert isinstance(component, Component)
+        if len( component.major_genes ) == 1:
             MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ) )
             break
     
@@ -129,7 +131,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
 
 
 @command(folder = constants.F_DROP)
-def drop_major( components: Optional[List[LegoComponent]] = None ) -> EChanges:
+def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
     """
     Drops all components from the model.
     The components are removed from :ivar:`model.components`.
@@ -147,28 +149,30 @@ def drop_major( components: Optional[List[LegoComponent]] = None ) -> EChanges:
         for component in components:
             model.components.remove( component )
     
-    MCMD.print( "{} components dropped".format( previous_count - len( model.components ) ) )
+    MCMD.progress( "{} components dropped".format( previous_count - len( model.components ) ) )
     
     return EChanges.COMPONENTS
 
 
 @command(folder = constants.F_SET)
-def set_major( sequences: List[LegoSequence] ):
+def set_major( genes: List[Gene] ):
     """
     Creates a major component (manually). 
     
-    :param sequences:   Components 
+    :param genes:   Components 
     :return:            Nothing is returned, the component is added to the model. 
     """
     
     model = global_view.current_model()
     model.get_status( STAGES.MAJOR_3 ).assert_set()
     
-    for sequence in sequences:
-        if model.components.find_component_for_major_sequence( sequence ) is not None:
-            raise ValueError( "Refusing to create a component containing the sequence «{}» because that sequence is already assigned to a component.".format( sequence ) )
+    for gene in genes:
+        if model.components.find_component_for_major_gene( gene, default = None ) is not None:
+            raise ValueError( "Refusing to create a component containing the gene «{}» because that gene is already assigned to a component.".format( gene ) )
     
-    model.components.add( LegoComponent( model, len( model.components ), tuple( sequences ) ) )
+    model.components.add( Component( model,
+                                     len( model.components ),
+                                     tuple( genes ) ) )
     
     return EChanges.COMPONENTS
 
@@ -209,7 +213,7 @@ def print_major( verbose: bool = False ) -> EChanges:
     message.add_hline()
     
     for component in model.components:
-        message.add_row( component, ", ".join( x.accession for x in component.major_sequences ) )
+        message.add_row( component, ", ".join( x.accession for x in component.major_genes ) )
     
     MCMD.print( message.to_string() )
     

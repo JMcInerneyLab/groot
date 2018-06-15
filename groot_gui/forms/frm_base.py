@@ -7,7 +7,7 @@ from groot_gui.forms.resources import resources
 
 from groot.data import global_view
 from groot_gui.utilities.gui_menu import GuiActions
-from groot_gui.utilities.gui_view_utils import ESelect, LegoSelection
+from groot_gui.utilities.selection import ESelect, LegoSelection, show_selection_menu
 from mhelper import virtual
 from mhelper_qt import exceptToGui, menu_helper
 
@@ -21,6 +21,13 @@ class FrmBase( QDialog ):
         super().__init__( parent )
         
         self.actions: GuiActions = GuiActions( self.frm_main, self )
+        
+    @virtual
+    def on_apply_request( self, *args ):
+        """
+        Argument sent when showing the form.
+        """
+        pass
     
     
     def on_command_completed( self ):
@@ -150,8 +157,7 @@ class FrmSelectingToolbar( FrmBase ):
     
     def show_selection_menu( self ):
         self.select_button.setStyleSheet( MENU_SHOWN_STYLE )
-        from groot_gui.utilities import gui_view_utils
-        gui_view_utils.show_selection_menu( self.select_button, self.actions, self.selecting_mode )
+        show_selection_menu( self.select_button, self.actions, self.selecting_mode )
         self.select_button.setStyleSheet( SELECT_STYLE )
 
 
