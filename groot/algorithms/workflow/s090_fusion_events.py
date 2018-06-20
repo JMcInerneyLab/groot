@@ -99,9 +99,8 @@ def print_fusions() -> EChanges:
     
     for event in model.fusions:
         results.append( "- name               {}".format( event ) )
-        results.append( "  component a        {}".format( event.component_a ) )
-        results.append( "  component b        {}".format( event.component_b ) )
-        results.append( "  component c        {}".format( event.component_c ) )
+        results.append( "  components in      {}".format( event.components_in ) )
+        results.append( "  component out      {}".format( event.component_out ) )
         results.append( "  index              {}".format( event.index ) )
         results.append( "  points             {}".format( string_helper.format_array( event.points ) ) )
         
@@ -128,60 +127,34 @@ def __find_fusion_events( model: Model ) -> List[Fusion]:
     
     i.e. Which components fuse together to generate which other components.
     """
-    results = []  # type: List[Fusion]
+    results: List[Fusion] = []
     
-    #
-    # Our EVENTS are:
-    # A + B → C ∵   A ∋ C
-    #             ∧ B ∋ C
-    #             ∧ ∄X    :    A ∋ X
-    #                        ∧ B ∋ X
-    #                        ∧ X ∋ C
-    for component_a, component_b in itertools.combinations( model.components, 2 ):
-        assert isinstance( component_a, Component )
-        assert isinstance( component_b, Component )
+    for outgoing in model.components:
+        incoming = [x for x in model.components if outgoing in x.outgoing_components()]
         
-        a_outgoing: Set[Component] = set( component_a.outgoing_components() )
-        b_outgoing: Set[Component] = set( component_b.outgoing_components() )
-        ab_ints: Set[Component] = a_outgoing.intersection( b_outgoing )
+        while __remove_causing( incoming ):
+            pass
         
-        __LOG( "TEST:" )
-        __LOG( "- {} YIELDING {}", component_a, a_outgoing )
-        __LOG( "- {} YIELDING {}", component_b, b_outgoing )
-        __LOG( "- FORMING {}", ab_ints )
-        
-        if not a_outgoing or not b_outgoing:
-            __LOG( "---> FORMLESS" )
-            continue
-        
-        has_result = None
-        
-        for component_c in ab_ints:
-            __LOG( "- CONSIDERING {}", component_c )
-            
-            is_valid = True
-            for component_x in ab_ints:
-                if component_x is component_c:
-                    continue
-                
-                if component_c in component_x.outgoing_components():
-                    __LOG( " - REJECTED (ALREADY FORMED BY {})", component_x )
-                    is_valid = False
-                    break
-            
-            if not is_valid:
-                continue
-            
-            __LOG( " - ACCEPTED!" )
-            
-            if has_result is not None:
-                raise ValueError( "{} and {} form {}. How do they also form {}?".format( component_a, component_b, has_result, component_c ) )
-            
-            has_result = True
-            results.append( Fusion( len( results ), component_a, component_b, component_c ) )
-    
+        if incoming:
+            results.append( Fusion( len( results ), tuple( incoming ), outgoing ) )
     
     return results
+
+
+def __remove_causing( the_list: List[Component] ) -> bool:
+    """
+    Removes an 𝓐 from `the_list` (𝕃) if 𝓑 is already in 𝕃 and 𝓐 forms 𝓑.
+    :return: Was an 𝓐 removed?
+    """
+    for a, b in itertools.combinations( the_list, 2 ):
+        assert isinstance( a, Component )
+        assert isinstance( b, Component )
+        
+        if b in a.outgoing_components():
+            the_list.remove( a )
+            return True
+    
+    return False
 
 
 def __find_or_create_point( event: Fusion,
@@ -189,12 +162,11 @@ def __find_or_create_point( event: Fusion,
                             inner: FrozenSet[INode],
                             outer: FrozenSet[INode] ):
     """
-    Given an event and construct parameters, either retrieves the
-    pertinent point or generates a new one.
+    Either retrieves the matching point or generates a new one.
     """
     formation = None
     
-    pertinent_inner = frozenset( inner.intersection( event.component_c.major_genes ) )
+    pertinent_inner = frozenset( inner.intersection( event.component_out.major_genes ) )
     
     for x in event.formations:  # type: Formation
         if x.pertinent_inner == pertinent_inner:
@@ -237,47 +209,50 @@ def __find_fusion_points( fusion_event: Fusion,
     
     __LOG( "***** LOOKING FOR EVENT {} IN COMPONENT {} ***** ", fusion_event, component )
     
+    
     graph: MGraph = component.tree
     
-    if fusion_event.component_c is component:
+    if fusion_event.component_out is component:
+        assert component is not None
         __LOG( "Base of graph" )
         first: MNode = graph.root
         root: MNode = first.add_parent()
         root.make_root()
-        sequences: FrozenSet[Gene] = frozenset( lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_c.major_genes ) ) )
+        genes: FrozenSet[Gene] = frozenset( lego_graph.get_sequence_data( graph ).intersection( set( fusion_event.component_out.major_genes ) ) )
         result: Point = __find_or_create_point( fusion_event,
-                                                cast( Component, component ),
-                                                sequences,
-                                                frozenset() )
+                                                component,
+                                                inner = genes,
+                                                outer = frozenset() )
         root.data = result
         return
     
     # The `intersection_aliases` correspond to βγδ in the above diagram
     
     __LOG( "component.minor_genes = {}", component.minor_genes )
-    __LOG( "fusion_event.component_a.major_genes = {}", fusion_event.component_a.major_genes )
-    __LOG( "fusion_event.component_b.major_genes = {}", fusion_event.component_b.major_genes )
     
     component_sequences = set( component.minor_genes )
+    s = []
+    insides: List[Set[Gene]] = []
     
-    inside_a: Set[Gene] = component_sequences.intersection( fusion_event.component_a.major_genes )
-    inside_b: Set[Gene] = component_sequences.intersection( fusion_event.component_b.major_genes )
-    outside: Set[Gene] = component_sequences.intersection( fusion_event.component_c.major_genes )
-    ignored: Set[Gene] = component_sequences - inside_a - inside_b - outside
+    for i, com in enumerate( fusion_event.components_in ):
+        __LOG( "fusion_event.component_{}.major_genes = {}", i, com.major_genes )
+        st = set( com.major_genes )
+        s.append( st )
+        insides.append( component_sequences.intersection( st ) )
     
-    if not inside_a and not inside_b:
+    outside: Set[Gene] = component_sequences.intersection( fusion_event.component_out.major_genes )
+    
+    if not any( x for x in insides ):
         __LOG( "THESE AREN'T THE COMPONENTS WE'RE LOOKING FOR" )
         return
     
-    if inside_a and inside_b:
+    if sum( bool( x ) for x in insides ) != 1:
         raise ValueError( "What is happening?" )
     
-    inside = inside_a or inside_b
+    inside = array_helper.single( x for x in insides if x )
     
-    __LOG( "I WANT INSIDE  {}", inside_a )
-    __LOG( "            OR {}", inside_b )
+    __LOG( "I WANT INSIDE  {}", "            OR ".join( str( insides ) ) )
     __LOG( "I WANT OUTSIDE {}", outside )
-    __LOG( "I WANT IGNORED {}", ignored )  # TODO: not sure whether to have an ignored set makes any sense
     
     # Iterate over all the edges to make a list of `candidate` edges
     # - those separating βγδ from everything else
@@ -307,9 +282,9 @@ def __find_fusion_points( fusion_event: Fusion,
         graph.add_edge( fusion_node, edge.right )
         edge.remove_edge()
         
-        sequences = lego_graph.get_ileaf_data( isolation_point.outside_nodes )
+        genes = lego_graph.get_ileaf_data( isolation_point.outside_nodes )
         outer_sequences = frozenset( lego_graph.get_ileaf_data( isolation_point.inside_nodes ) )
-        fusion_point = __find_or_create_point( fusion_event, component, sequences, outer_sequences )
+        fusion_point = __find_or_create_point( fusion_event, component, genes, outer_sequences )
         fusion_node.data = fusion_point
 
 

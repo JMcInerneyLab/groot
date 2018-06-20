@@ -30,7 +30,7 @@ def __mk():
         
         @classmethod
         def can_handle( cls, info: EditorInfo ) -> bool:
-            return info.annotation.is_directly_below( INamedGraph )
+            return info.annotation.is_direct_subclass_of( INamedGraph )
         
         
         def on_browse( self, value: Optional[object] ) -> Optional[str]:

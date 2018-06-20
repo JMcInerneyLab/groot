@@ -208,7 +208,7 @@ The _triptych_ sample contains a set of genes which have undergone two recombina
 The final gene family, _EPSILON_, therefore looks something like this:
 
 ```
-        __5'[ALPHA][BETA][GAMMA]3'__
+        __5'[ALPHA][BETA][GAMMA]3'__
 ```
 
 Let's pretend we don't already know this, and use Gʀᴏᴏᴛ to analyse the triptych.
@@ -690,6 +690,20 @@ Groot has been coded for multiple platforms, however, one or more settings may n
     * Set _shared contexts_ **off**.
     * Turn the inbuilt browser **off**
 * Restart GROOT
+
+### Multi-fusion sources ###
+
+Groot is able to detect and handle the following cases:
+
+* A normal fusion case: `A + B --> F`
+* A "lossy fission" or a fusion case where one side is not present in the data `A --> F`
+
+It is currently unable to detect:
+
+* An n-parted fusion, or a multi-fusion case where one or more intermediates are not present in the data, A + B + C --> F
+
+Groot may still be able to deal with this circumstance, provding you guide it in the direction by specifying the fusion event manually.
+
 
 ### The spaceship and the triangle ###
 

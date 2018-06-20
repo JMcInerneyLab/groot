@@ -192,7 +192,7 @@ def remember_file( file_name: str ) -> None:
 
 
 def save_global_options():
-    MCMD.environment.local_data.store.commit( "lego-options" )
+    MCMD.environment.local_data.store.commit( "lego-options", __global_options )
 
 
 new_model()

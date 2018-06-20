@@ -4,6 +4,7 @@ from typing import Callable, cast
 from PyQt5.QtGui import QColor
 
 import groot
+import mhelper_qt
 from groot_gui.lego import ColourBlock, DomainView, ModelView
 from mhelper import Sentinel, array_helper
 
@@ -37,18 +38,22 @@ def get_legend( model_view: ModelView ):
 def __apply_colour_by_set( model_view: ModelView, function: Callable[[DomainView], frozenset] ):
     for domain_view in __get_apply_selection( model_view ):
         set_: frozenset = function( domain_view )
-        colour = model_view.legend.get( set_ )
         
-        if colour is None:
-            index = len( model_view.legend )
+        if not set_:
+            colour = ColourBlock( mhelper_qt.Colours.GRAY )
+        else:
+            colour = model_view.legend.get( set_ )
             
-            if index < len( DEFAULT_COLOURS ):
-                col = QColor( DEFAULT_COLOURS[index] )
-            else:
-                col = QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) )
-            
-            colour = ColourBlock( col )
-            model_view.legend[set_] = colour
+            if colour is None:
+                index = len( model_view.legend )
+                
+                if index < len( DEFAULT_COLOURS ):
+                    col = QColor( DEFAULT_COLOURS[index] )
+                else:
+                    col = QColor( randint( 0, 255 ), randint( 0, 255 ), randint( 0, 255 ) )
+                
+                colour = ColourBlock( col )
+                model_view.legend[set_] = colour
         
         domain_view.colour = colour
     
@@ -80,6 +85,17 @@ def __colour_major( model_view: ModelView ) -> None:
 @colour_algorithms.register( "colour_by_minor_component" )
 def __colour_minor( model_view: ModelView ) -> None:
     fn = lambda x: frozenset( model_view.model.components.find_components_for_minor_domain( cast( DomainView, x ).domain ) )
+    __apply_colour_by_set( model_view, fn )
+
+
+@colour_algorithms.register( "colour_by_minor_component_formed" )
+def __colour_minor( model_view: ModelView ) -> None:
+    valid = set()
+    
+    for fus in model_view.model.fusions:
+        valid.add( fus.component_out )
+    
+    fn = lambda x: frozenset( model_view.model.components.find_components_for_minor_domain( cast( DomainView, x ).domain ) ) - valid
     __apply_colour_by_set( model_view, fn )
 
 

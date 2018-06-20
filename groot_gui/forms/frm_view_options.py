@@ -200,4 +200,4 @@ class FrmViewOptions( FrmBase ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, common_commands.cmd_local )
+        FrmArguments.request( self, common_commands.cmd_local_data )

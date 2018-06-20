@@ -2,26 +2,26 @@ from typing import Callable, Iterable, List, cast, Dict
 
 import groot
 from groot_gui.lego import ModelView
-from groot_gui.lego.views import EdgeView, DomainView
+from groot_gui.lego.views import EdgeView, DomainView, GeneView
 
 
 DAlgorithm = Callable[[ModelView], None]
 position_algorithms = groot.AlgorithmCollection( DAlgorithm, "LegoPosition" )
 
 
-def leftmost_per_gene( domain_views: Iterable[DomainView], rightmost : bool = False ) -> List[DomainView]:
+def leftmost_per_gene( domain_views: Iterable[DomainView], rightmost: bool = False ) -> List[DomainView]:
     """
     Given a set of `domain_views` returns the set of views containing the leftmost view for each gene.
     """
     pg = { }
     
-    cp = (lambda x, y: x > y) if rightmost else (lambda x, y: x < y) 
+    cp = (lambda x, y: x > y) if rightmost else (lambda x, y: x < y)
     
     for dv in domain_views:
         g = dv.domain.gene
         bdv: DomainView = pg.get( g )
         
-        if bdv is None or cp(dv.domain.start, bdv.domain.start):
+        if bdv is None or cp( dv.domain.start, bdv.domain.start ):
             pg[g] = dv
     
     return list( pg.values() )
@@ -60,15 +60,26 @@ def make_extra_contiguous( model_view: ModelView, domain_views: List[DomainView]
 
 
 def apply_position( model_view: ModelView, algorithm: position_algorithms.Algorithm ):
+    """
+    Applies a position algorithm.
+    """
     algorithm( model_view )
     model_view.save_all_states()
 
 
 def get_views( model_view: ModelView, domains: Iterable[groot.UserDomain] ) -> List[DomainView]:
+    """
+    Retrieves the list of `DomainView`s matching the list of `domains`.
+    """
     return [model_view.domain_views[x] for x in domains]
 
 
 def get_selection( model_view: ModelView ) -> List[DomainView]:
+    """
+    Obtains the `DomainView`s selected in the model.
+    :param model_view: 
+    :return: 
+    """
     return get_views( model_view, model_view.selection or model_view.all )
 
 
@@ -79,20 +90,21 @@ def pos_align_all_domains_in_this_component( model_view: ModelView ) -> None:
     """
     sel = leftmost_per_gene( get_selection( model_view ) )
     
-    if len( sel ) != 1:
-        raise ValueError( "You must specify only one domain for this function to work." )
-    
     sel_domain_view = sel[0]
-    comp = model_view.model.components.find_components_for_minor_domain( sel_domain_view )
+    sel_comps = []
+    
+    for s in sel:
+        sel_comps.append( set( model_view.model.components.find_components_for_minor_domain( s.domain ) ) )
+    
     valid = []
     
     for domain_view in model_view.domain_views.values():
         if domain_view.domain.gene is sel_domain_view.domain.gene:
             continue
         
-        comp2 = model_view.model.components.find_components_for_minor_domain( sel_domain_view )
+        comp2 = set( model_view.model.components.find_components_for_minor_domain( domain_view.domain ) )
         
-        if any( x in comp for x in comp2 ):
+        if any( x == comp2 for x in sel_comps ):
             valid.append( domain_view )
     
     valid: List[DomainView] = leftmost_per_gene( valid )
@@ -109,7 +121,8 @@ def pos_make_selection_contiguous( model_view: ModelView ):
     Aligns domains next to the selected domains such that the view is contiguous.
     """
     make_extra_contiguous( model_view, get_selection( model_view ) )
-    
+
+
 @position_algorithms.register( "make_contiguous_within_selection" )
 def pos_make_selection_contiguous( model_view: ModelView ):
     """
@@ -130,7 +143,8 @@ def position_align_left( model_view: ModelView ):
     for dom_view in sel:
         dom_view.setX( x )
         dom_view.save_state()
-        
+
+
 @position_algorithms.register( "align_right" )
 def position_align_right( model_view: ModelView ):
     """
@@ -145,8 +159,54 @@ def position_align_right( model_view: ModelView ):
         dom_view.save_state()
 
 
+@position_algorithms.register( "y_sort_by_name" )
+def y_sort_by_name( model_view: ModelView ):
+    """
+    y-sorts the genes by their names.
+    """
+    x = sorted( model_view.gene_views.values(), key = lambda x: str( x.gene ) )
+    y_sort( model_view, x )
+
+
+@position_algorithms.register( "y_sort_by_component" )
+def y_sort_by_component( model_view: ModelView ):
+    """
+    y-sorts the genes by their components.
+    """
+    comps = model_view.model.components
+    x = sorted( model_view.gene_views.values(), key = lambda x: str( comps.find_component_for_major_gene( x.gene ) ) )
+    y_sort( model_view, x )
+
+
+@position_algorithms.register( "y_sort_by_length" )
+def y_sort_by_length( model_view: ModelView ):
+    """
+    y-sorts the genes by their length.
+    """
+    x = sorted( model_view.gene_views.values(), key = lambda x: x.gene.length )
+    y_sort( model_view, x )
+
+
+def y_sort( model_view, order: List[GeneView] ):
+    """
+    y-sorts the genes in the specified order.
+    """
+    table = model_view.lookup_table
+    
+    for index, gene_view in enumerate( order ):
+        assert isinstance( gene_view, GeneView )
+        y = index * (table.gene_ysep + table.gene_height)
+        
+        for dv in gene_view.domain_views.values():
+            dv.setY( y )
+            dv.save_state()
+
+
 @position_algorithms.register( "align_automatically" )
 def position_align_automatically( model_view: ModelView ):
+    """
+    Attempts to align the domains in the genes.
+    """
     for n in range( 0, 100 ):
         for edge_view in model_view.overlay_view.edge_views.values():
             assert isinstance( edge_view, EdgeView )
@@ -155,11 +215,11 @@ def position_align_automatically( model_view: ModelView ):
             
             diff = left.get_x_for_site( edge_view.left_view.domain.start ) - right.get_x_for_site( edge_view.right_view.domain.start )
             
-            if diff > 10:
+            if diff > 1:
                 # Move left left
-                left.setX( left.x() - 5 )
-            elif diff < -10:
+                left.setX( left.x() - 1 )
+            elif diff < -1:
                 # Move left right
-                left.setX( left.x() + 5 )
+                left.setX( left.x() + 1 )
             
             make_extra_contiguous( model_view, [left] )

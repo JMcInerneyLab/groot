@@ -28,22 +28,37 @@ class EdgeCollection:
     
     
     def __bool__( self ):
+        """
+        False when empty/
+        """
         return bool( self.__edges )
     
     
     def __len__( self ):
+        """
+        Number of edges.
+        """
         return len( self.__edges )
     
     
     def __iter__( self ):
+        """
+        Iterates edges.
+        """
         return iter( self.__edges )
     
     
     def __str__( self ):
+        """
+        Descriptive text.
+        """
         return "{} edges".format( len( self ) )
     
     
     def find_gene( self, gene: Gene ) -> List[Edge]:
+        """
+        Obtains the list of edges crossing a specified `gene`.
+        """
         return self.__by_gene.get( gene, [] )
     
     
@@ -63,12 +78,18 @@ class EdgeCollection:
     
     
     def add( self, edge: Edge ):
+        """
+        Adds an edge to the collection.
+        """
         self.__edges.append( edge )
         array_helper.add_to_listdict( self.__by_gene, edge.left.gene, edge )
         array_helper.add_to_listdict( self.__by_gene, edge.right.gene, edge )
     
     
     def remove( self, edge: Edge ):
+        """
+        Removes an edge from the collection.
+        """
         self.__edges.remove( edge )
         array_helper.remove_from_listdict( self.__by_gene, edge.left.gene, edge )
         array_helper.remove_from_listdict( self.__by_gene, edge.right.gene, edge )

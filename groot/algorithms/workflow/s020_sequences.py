@@ -62,18 +62,27 @@ def import_genes( file_name: str ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command()
+@command( folder = constants.F_IMPORT )
 def import_gene_names( file: str ):
     """
-    Maps the gene accessions to new ones.
-    :param file:    Path to a CSV file with two columns: old names, new names.
+    Loads in the displayed gene names from a file.
+    
+    :param file:    Path to a CSV or TSV file with two columns: accessions, display name.
     """
     model = global_view.current_model()
     
+    tot = 0
+    
     with open( file ) as in_:
         for row in in_:
-            if "," in row:
+            if "\t" in row:
+                accession, name = row.split( "\t", 1 )
+            elif "," in row:
                 accession, name = row.split( ",", 1 )
+            else:
+                accession, name = None, None
+                
+            if accession:
                 accession = accession.strip()
                 name = name.strip()
                 gene = model.genes.get( accession )
@@ -83,16 +92,19 @@ def import_gene_names( file: str ):
                     continue
                 
                 gene.display_name = name
+                tot += 1
+    
+    MCMD.progress( "{} genes renamed".format( tot ) )
 
 
-@command()
-def set_gene_name( gene: Gene, new_name: str ) -> EChanges:
+@command( folder = constants.F_SET )
+def set_gene_name( gene: Gene, name: str ) -> EChanges:
     """
     Changes the display name of the gene (_not_ the accession).
     :param gene:        Gene to set the name of 
-    :param new_name:    New name of the gene. If set to an empty string the accession will be used as the name. 
+    :param name:    New name of the gene. If set to an empty string the accession will be used as the name. 
     """
-    gene.display_name = new_name
+    gene.display_name = name
     return EChanges.MODEL_DATA
 
 

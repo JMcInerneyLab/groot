@@ -64,7 +64,7 @@ class FrmBase( QDialog ):
     
     
     def show_menu( self, *args ):
-        return menu_helper.show( self, *args )
+        return menu_helper.show_menu( self, *args )
     
     
     def show_form( self, form_class ):

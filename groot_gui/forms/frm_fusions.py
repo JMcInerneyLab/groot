@@ -1,7 +1,8 @@
 from typing import Iterable
-from PyQt5.QtWidgets import QTreeWidgetItem
-from intermake.visualisables.visualisable import IVisualisable
-from mhelper_qt import exceptToGui, TreeHeaderMap
+
+import intermake_qt
+import groot as gr
+import mhelper_qt as qt
 
 from groot_gui.forms.resources import resources
 from groot_gui.forms.designer import frm_fusions_designer
@@ -9,7 +10,7 @@ from groot_gui.forms.frm_base import FrmBase
 
 
 class FrmFusions( FrmBase ):
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self, parent ):
         """
         CONSTRUCTOR
@@ -18,7 +19,7 @@ class FrmFusions( FrmBase ):
         self.ui = frm_fusions_designer.Ui_Dialog( self )
         self.setWindowTitle( "Fusions" )
         
-        self.headers = TreeHeaderMap( self.ui.TVW_MAIN )
+        self.headers = qt.TreeHeaderMap( self.ui.TVW_MAIN )
         self.update_list()
     
     
@@ -26,58 +27,68 @@ class FrmFusions( FrmBase ):
         model = self.get_model()
         self.ui.TVW_MAIN.clear()
         
-        if len( model.fusion_events ) == 0:
+        if len( model.fusions ) == 0:
             self.ui.LBL_MAIN.setText( "Fusions have not yet been generated" )
             return
         
-        self.ui.LBL_MAIN.setText( "Model contains {} fusion events".format( len( model.fusion_events ) ) )
+        self.ui.LBL_MAIN.setText( "Model contains {} fusion events".format( len( model.fusions ) ) )
         
-        for fusion in model.fusion_events:
-            fusion_item = QTreeWidgetItem()
-            fusion_item.setIcon( self.headers["name"], fusion.get_vis_info().icon() )
-            fusion_item.setText( self.headers["name"], "{}".format( fusion ) )
-            fusion_item.setText( self.headers["index"], "{}".format( fusion.index ) )
-            fusion_item.setText( self.headers["A"], "{}".format( fusion.component_a ) )
-            fusion_item.setText( self.headers["B"], "{}".format( fusion.component_b ) )
-            fusion_item.setText( self.headers["C"], "{}".format( fusion.component_c ) )
+        for fusion in model.fusions:
+            assert isinstance( fusion, gr.Fusion )
+            fusion_item = qt.QTreeWidgetItem()
             
-            self.__add_array_item( fusion_item, "Future", fusion.future_products )
+            fusion_item.setIcon( self.headers["name"], resources.black_fusion.icon() )
+            fusion_item.setText( self.headers["name"], "FUSION {}".format( fusion ) )
+            self.__add_array_item( fusion_item, "in", fusion.components_in, intermake_qt.resources.list )
+            fusion_item.setText( self.headers["component"], "{}".format( fusion.component_out ) )
+            
             self.ui.TVW_MAIN.addTopLevelItem( fusion_item )
             
             for formation in fusion.formations:
-                formation_item = QTreeWidgetItem()
+                assert isinstance( formation, gr.Formation )
+                formation_item = qt.QTreeWidgetItem()
                 formation_item.setIcon( self.headers["name"], resources.black_fusion.icon() )
-                formation_item.setText( self.headers["name"], "{}".format( formation ) )
-                formation_item.setText( self.headers["index"], "Index: {}".format( formation.index ) )
+                formation_item.setText( self.headers["name"], "FORMATION {}".format( formation ) )
                 formation_item.setText( self.headers["component"], "{}".format( formation.component ) )
-                self.__add_array_item( formation_item, "Sequences", formation.genes )
-                self.__add_array_item( formation_item, "All", formation.pertinent_inner )
+                
+                self.__add_array_item( formation_item, "Genes", formation.genes, intermake_qt.resources.list )
+                self.__add_array_item( formation_item, "Pertinent", formation.pertinent_inner, intermake_qt.resources.list )
                 fusion_item.addChild( formation_item )
                 
                 for point in formation.points:
-                    point_item = QTreeWidgetItem()
-                    point_item.setIcon( 0, resources.black_fusion.icon() )
-                    point_item.setText( 0, "{}".format( point ) )
-                    point_item.setText( 1, "{}".format( point.index ) )
-                    point_item.setText( 2, "{}".format( point.point_component ) )
-                    self.__add_array_item( point_item, "Sequences", point.outer_sequences )
-                    self.__add_array_item( point_item, "All", point.pertinent_outer )
-                    fusion_item.addChild( point_item )
+                    assert isinstance( point, gr.Point )
+                    
+                    point_item = qt.QTreeWidgetItem()
+                    point_item.setIcon( self.headers["name"], resources.black_fusion.icon() )
+                    point_item.setText( self.headers["name"], "POINT {}".format( point ) )
+                    point_item.setText( self.headers["component"], "{}".format( point.point_component ) )
+                    
+                    self.__add_array_item( point_item, "Genes", point.outer_genes, intermake_qt.resources.list )
+                    self.__add_array_item( point_item, "Pertinent", point.pertinent_outer, intermake_qt.resources.list )
+                    formation_item.addChild( point_item )
+        
+        self.ui.TVW_MAIN.expandAll()
+        self.ui.TVW_MAIN.resizeColumnToContents( 0 )
     
     
-    def __add_array_item( self, parent_item: QTreeWidgetItem, name: str, array: Iterable[object] ):
-        array_item = QTreeWidgetItem()
+    def __add_array_item( self,
+                          parent_item: qt.QTreeWidgetItem,
+                          name: str,
+                          array: Iterable[object],
+                          icon: qt.ResourceIcon ):
+        array_item = qt.QTreeWidgetItem()
         array_item.setText( self.headers["name"], name )
         parent_item.addChild( array_item )
         
         for element in sorted( array, key = str ):
-            element_item = QTreeWidgetItem()
+            item = qt.QTreeWidgetItem()
+            item.setIcon( self.headers["name"], icon.icon() )
+            item.setText( self.headers["name"], str( element ) )
             
-            if isinstance( element, IVisualisable ):
-                element_item.setIcon( self.headers["name"], element.get_vis_info().icon.icon() )
+            if isinstance( element, gr.Gene ):
+                item.setText( self.headers["component"], str( element.model.components.find_component_for_major_gene( element ) ) )
             
-            element_item.setText( self.headers["name"], str( element ) )
-            array_item.addChild( element_item )
+            array_item.addChild( item )
     
     
     def on_command_completed( self ):

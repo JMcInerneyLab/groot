@@ -11,15 +11,14 @@ LOG = Logger( "clean", False )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 
-
-@command(folder = constants.F_CREATE)
-def create_cleaned( ):
+@command( folder = constants.F_CREATE )
+def create_cleaned():
     """
     Cleans the NRFG.
     
     Requisites: `create_fused`
     """
-    model=global_view.current_model()
+    model = global_view.current_model()
     model.get_status( STAGES.CLEANED_13 ).assert_create()
     nrfg = model.fusion_graph_unclean.graph.copy()
     
@@ -30,13 +29,14 @@ def create_cleaned( ):
     
     model.fusion_graph_clean = FusionGraph( nrfg, True )
     return EChanges.MODEL_DATA
-    
-@command(folder = constants.F_DROP)
-def drop_cleaned( ):
+
+
+@command( folder = constants.F_DROP )
+def drop_cleaned():
     """
     Removes data from the model.
     """
-    model=global_view.current_model()
+    model = global_view.current_model()
     model.get_status( STAGES.CLEANED_13 ).assert_drop()
     
     model.fusion_graph_clean = None
@@ -78,13 +78,12 @@ def __make_fusions_rootlets( nrfg: MGraph ) -> None:
             fusion: Formation = node.data
             major = set()
             
-            
-            major.update( fusion.event.component_c.major_genes )
+            major.update( fusion.event.component_out.major_genes )
             
             # Sometimes a fusion has more than the expected number of inputs/outputs (when we haven't been able to resolve it properly)
             # For this reason, we deal with each edge in turn
             
-            for edge in list(node.edges):
+            for edge in list( node.edges ):
                 oppo = edge.opposite( node )
                 
                 path = analysing.find_shortest_path( graph = nrfg,
@@ -99,7 +98,8 @@ def __make_fusions_rootlets( nrfg: MGraph ) -> None:
                     # Is a product
                     LOG( "PRODUCT: {} --> {}".format( node, oppo ) )
                     oppo.make_root( node_filter = lambda x: not isinstance( x.data, Point ),
-                                    edge_filter = lambda x: not isinstance( x.left.data, Point ) and not isinstance( x.right.data, Point ),
+                                    edge_filter = lambda x: not isinstance( x.left.data, Point )
+                                                            and not isinstance( x.right.data, Point ),
                                     ignore_cycles = True )
                     
                     edge.ensure( node, oppo )

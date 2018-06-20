@@ -1,6 +1,6 @@
 import re
 import warnings
-from itertools import combinations
+from itertools import combinations, chain
 from typing import Tuple, Optional, List, Iterable, FrozenSet, cast, Any, Set
 
 from groot.data.model_interfaces import EPosition, INamed, IHasFasta, INamedGraph, INode
@@ -8,7 +8,7 @@ from groot import resources as groot_resources
 from intermake.engine.environment import MENV
 from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable, UiHint
 from mgraph import MGraph, MSplit
-from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate
+from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate, assert_type
 
 
 _Model_ = "Model"
@@ -602,7 +602,7 @@ class Component( INamed, IVisualisable ):
     
     
     def on_get_name( self ):
-        return "comp_{}".format( self.get_accid() )
+        return self.get_accid()
     
     
     def get_alignment_by_accession( self ) -> str:
@@ -851,27 +851,31 @@ class Fusion( INamed, IVisualisable ):
     """
     Describes a fusion event
     
-    :ivar component_a:          First component
-    :ivar component_b:          Second component
-    :ivar component_b:          Generated component
+    :ivar components_in:       Input component(s) (usually more than one if it's a fusion! but the others may not be present in our data)
+    :ivar component_out:       Output component
     """
     
     
-    def __init__( self, index: int, component_a: Component, component_b: Component, component_c: Component ) -> None:
+    def __init__( self, index: int, components_in: Tuple[Component, ...], component_out: Component ) -> None:
+        assert_type( "components_in", components_in, tuple )
+        assert_type( "component_out", component_out, Component )
+        
         self.index: int = index
-        self.component_a: Component = component_a
-        self.component_b: Component = component_b
-        self.component_c: Component = component_c
+        self.components_in: Tuple[Component] = components_in
+        self.component_out: Component = component_out
         self.formations: List[Formation] = []
         
-        for x, y in combinations( (component_a, component_b, component_c), 2 ):
+        if not self.components_in:
+            raise ValueError( "Invalid Fusion. Cannot have an empty input list." )
+        
+        for x, y in combinations( chain( self.components_in, [self.component_out] ), 2 ):
             if x is y:
-                raise ValueError( "Invalid Fusion. Two edges cannot refer to the same component.".format( self ) )
+                raise ValueError( "Invalid Fusion. Two edges cannot refer to the same component, '{}'.".format( self, x ) )
     
     
     @property
     def long_name( self ):
-        return "({}+{}={})".format( self.component_a, self.component_b, self.component_c )
+        return "({}={})".format( "+".join( str( x ) for x in self.components_in ), self.component_out )
     
     
     def __str__( self ):
@@ -879,17 +883,16 @@ class Fusion( INamed, IVisualisable ):
     
     
     def get_accid( self ):
-        return self.component_c.get_accid()
+        return self.component_out.get_accid()
     
     
     def on_get_vis_info( self, u: UiInfo ) -> None:
         super().on_get_vis_info( u )
         u.hint = UiHint( colour = EColour.RED, icon = groot_resources.black_fusion )
         u.text = self.long_name
-        u.properties += { "index"      : self.index,
-                          "component_a": self.component_a,
-                          "component_b": self.component_b,
-                          "component_c": self.component_c }
+        u.properties += { "index"        : self.index,
+                          "components_in": self.components_in,
+                          "component_out": self.component_out }
     
     
     def on_get_name( self ):
@@ -908,6 +911,18 @@ class Formation( INamed, IVisualisable, INode ):
                   genes: FrozenSet[INode],
                   index: int,
                   pertinent_inner: FrozenSet[INode] ):
+        """
+        CONSTRUCTOR
+        
+        :param event:               The fusion event to which this `Formation` belongs.
+        :param component:           The component we are _forming_.
+                                    In a correctly operating process, this should be the same as `event.component_out`.
+        :param genes:               The total set of _output_ genes in the tree, formed _by_ the fusion event.
+                                    i.e. those that are formed by this fusion event,
+        :param index:               Index of this `Formation` within the `Fusion` event (arbitrary).
+        :param pertinent_inner:     The subset of `genes` that reside in the output component.
+                                    i.e. the intersection of `event.component_out` and `genes`.
+        """
         self.event = event
         self.component = component
         self.genes = genes
@@ -980,14 +995,16 @@ class Point( INamed, INode, IVisualisable ):
                   index: int ):
         """
         CONSTRUCTOR
-        :param formation:             What this point is creating
-        :param outer_genes:       A subset of genes from which this fusion point _originates_
-        :param point_component:       The component tree this point resides within
-        :param index:                 The index of this point within the owning `formation`
+        :param formation:               What this point is creating
+        :param outer_genes:             A subset of genes from which this fusion point _originates_
+        :param point_component:         The component tree this point resides within
+        :param index:                   The index of this point within the owning `formation`
         """
+        u = set.union( *[set( x.major_genes ) for x in formation.event.components_in] )
+        
         self.formation = formation
         self.outer_genes = outer_genes
-        self.pertinent_outer = frozenset( self.outer_genes.intersection( set( self.formation.event.component_a.major_genes ).union( set( self.formation.event.component_b.major_genes ) ) ) )
+        self.pertinent_outer = frozenset( self.outer_genes.intersection( u ) )
         self.point_component = point_component
         self.index = index
     

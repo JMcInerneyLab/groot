@@ -1,4 +1,5 @@
 from mhelper import NotFoundError
+from typing import Union
 
 
 def setup():
@@ -19,16 +20,16 @@ def setup():
     
     class AlgorithmCoercer( sc.AbstractCoercer ):
         """
-        Algorithms are referenced in the CLI by names, with parameters specified using semicolons.
+        Algorithms referenced by their names, with parameters specified using semicolons.
         
-        * "x;y;...;z" where:
-            * "x" is the algorithm name
-            * "y" and "z" are parameters (_if_ required).
+        e.g. `dbscan`
+        e.g. `kmeans;3`
         """
         
         
-        def on_get_priority( self, info: sc.CoercionInfo ) -> int:
-            return info.annotation.is_directly_below( AbstractAlgorithm )
+        
+        def on_get_archetype( self ) -> type:
+            return AbstractAlgorithm
         
         
         def on_coerce( self, info: sc.CoercionInfo ) -> AbstractAlgorithm:
@@ -60,18 +61,23 @@ def setup():
     class MGraphCoercer( sc.AbstractEnumCoercer ):
         """
         **Graphs and trees** are referenced by one of the following:
+        
             * Graph in model  : The name of a graph in the current model (you can get a list of graph names via `cd /graphs ; ls`)
             * Graph on disk   : The name of a file 
             * Compact edgelist: File extension is `.edg` OR argument is prefixed `compact:` or `file-compact:` OR argument/file contains `pipe`
             * TSV             : ''                `.tsv` OR ''                   `tsv:`     or `file-tsv:`     OR ''                     `newline` and `tab`
             * CSV             : ''                `.csv` OR ''                   `csv:`     or `file-csv:`     OR ''                     `newline` and not `tab` 
             * Newick          : ''                `.nwk` OR ''                   `newick:`  or `file-newick:`  OR ''                     none of the above
+            
         * You can be explicit by prefixing your string with `newick:` `compact:` `csv:` `tsv:` `file:` `file-newick:` `file-compact:` `file-csv:` `file-tsv:`
         """
         
         
-        def on_get_priority( self, info: sc.CoercionInfo ):
-            return self.PRIORITY.HIGH if (info.annotation.is_directly_below( INamedGraph ) or info.annotation.is_directly_below( mgraph.MGraph )) else False
+        def on_get_priority( self ):
+            return self.PRIORITY.HIGH
+        
+        def on_get_archetype( self ) -> type:
+            return Union[mgraph.MGraph, INamedGraph]
         
         
         def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
@@ -95,7 +101,7 @@ def setup():
             if not isinstance( option, INamedGraph ):
                 raise ValueError( "Return should be `INamedGraph` but I've got a `{}`".format( repr( option ) ) )
             
-            if info.annotation.is_directly_below( INamedGraph ):
+            if info.annotation.is_direct_subclass_of( INamedGraph ):
                 return option
             else:
                 return option.graph
@@ -156,8 +162,8 @@ def setup():
         """
         
         
-        def on_get_priority( self, info: sc.CoercionInfo ):
-            return info.annotation.is_directly_below( Gene )
+        def on_get_archetype( self ) -> type:
+            return Gene
         
         
         def on_get_options( self, info: sc.CoercionInfo ) -> Iterable[object]:
@@ -180,8 +186,8 @@ def setup():
             return global_view.current_model().user_domains
         
         
-        def on_get_priority( self, info: sc.CoercionInfo ):
-            return info.annotation.is_directly_below( Domain )
+        def on_get_archetype( self ) -> type:
+            return Domain
         
         
         def on_convert_user_option( self, info: sc.CoercionInfo ) -> object:
@@ -222,8 +228,8 @@ def setup():
             return global_view.current_model().components
         
         
-        def on_get_priority( self, info: sc.CoercionInfo ):
-            return info.annotation.is_directly_below( Component )
+        def on_get_archetype( self ) -> type:
+            return Component
         
         
         def on_get_option_names( self, value: Component ) -> Iterable[str]:
