@@ -18,6 +18,14 @@ _MAX_DISPLAYED_FILES = 20
 
 
 class FrmSamples( FrmBase ):
+    """
+    This screen allows the user to load or save Groot models (depending on the mode).
+    
+    Additionally, the sample data that ships with Groot may also be loaded from here.
+    
+    The CLI/Python equivalents of this screen are the `file_load`, `file_save` and `file_sample` commands.
+    """
+    
     @exceptToGui()
     def __init__( self,
                   parent: QWidget,
@@ -32,7 +40,7 @@ class FrmSamples( FrmBase ):
         super().__init__( parent )
         self.ui = frm_samples_designer.Ui_Dialog( self )
         self.browse_action = browse_action
-        self.setWindowTitle( "Load diagram" )
+        self.setWindowTitle( "Load model" )
         self.__controls: List[QWidget] = []
         self.data_warn = data_warn
         self.ui.LBL_TITLE_MAIN.setText( title )
@@ -160,7 +168,13 @@ class FrmSamples( FrmBase ):
         """
         self.actions.by_url( self.browse_action )
     
-    
+    @exqtSlot()
+    def on_BTN_HELP_clicked(self) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
+            
     @exqtSlot()
     def on_BTN_REFRESH_clicked( self ) -> None:
         """

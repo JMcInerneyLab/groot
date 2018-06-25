@@ -5,25 +5,34 @@ Despite the name, FrmWebtree does everything report (HTML) based.
 """
 
 from os import path
+
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QGridLayout
+from groot_gui.forms.designer import frm_webtree_designer
 
+from groot import Model
+from groot.utilities import entity_to_html
 from groot_gui import LegoGuiHost
+from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.forms.frm_view_options import BROWSE_MODE
+from intermake import MENV, constants as im_constants
 from mhelper import OpeningWriter, SwitchError, file_helper, string_helper
 from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
-from intermake import MENV, constants as im_constants
-
-import groot
-from groot import Model, Gene
-from groot.data import EPosition
-from groot_gui.forms.designer import frm_webtree_designer
-from groot_gui.forms.frm_base import FrmSelectingToolbar
-from groot_gui.utilities.selection import ESelect
-from groot.utilities import entity_to_html
 
 
-class FrmWebtree( FrmSelectingToolbar ):
+class FrmWebtree( FrmBaseWithSelection ):
+    """
+    The reports screen generates HTML (webpage) reports on various elements of your Groot model.
+
+    Groot will attempt to find a suitable engine to render HTML in this window, which can be
+    configured from the preferences screen, or, if this doesn't work, you can opt for using your
+    external web browser.
+    
+    Note that, aside from trees visualised using Javascript, the reports are not interactive,
+    the various other Groot screens provide interaction more specific to specific elements.
+    """
+    
+    
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -31,7 +40,7 @@ class FrmWebtree( FrmSelectingToolbar ):
         """
         super().__init__( parent )
         self.ui = frm_webtree_designer.Ui_Dialog( self )
-        self.setWindowTitle( "Tree Viewer" )
+        self.setWindowTitle( "Reports" )
         
         # Disable the browser host until its enabled
         self.ui.WIDGET_MAIN.setVisible( False )
@@ -41,7 +50,7 @@ class FrmWebtree( FrmSelectingToolbar ):
         
         # Setup the base class
         self.bind_to_label( self.ui.LBL_BROWSER_WARNING )
-        self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.ALL )
+        self.add_select_button( self.ui.FRA_TOOLBAR )
         
         # Enable our browser?
         switch = LegoGuiHost.get_settings().enable_browser
@@ -60,20 +69,13 @@ class FrmWebtree( FrmSelectingToolbar ):
     
     
     def update_page( self ):
-        selection = self.get_selection()
-        s = selection.single
         model: Model = self.get_model()
-        self.html = entity_to_html.render( s, model ) if s else ""
+        self.html = entity_to_html.render( self.selection, model ) if self.selection else ""
         self.__update_browser()
-        
-        if isinstance( s, Gene ):
-            self.ui.BTN_OUTGROUP.setEnabled( True )
-            self.ui.BTN_OUTGROUP.setChecked( s.position == EPosition.OUTGROUP )
-        else:
-            self.ui.BTN_OUTGROUP.setEnabled( False )
     
     
-    def on_selection_changed( self ):
+    def on_inspect( self, item: object ):
+        super().on_inspect( item )
         self.update_page()
     
     
@@ -106,16 +108,19 @@ class FrmWebtree( FrmSelectingToolbar ):
     
     
     @exqtSlot()
-    def on_BTN_OUTGROUP_clicked( self ) -> None:
+    def on_BTN_HELP_clicked( self ) -> None:
         """
         Signal handler:
         """
-        selection = self.get_selection()
-        s = selection.single
-        
-        if isinstance( s, Gene ):
-            # We'll get a callback when the plugin completes so we don't need to confirm the button's status
-            groot.set_outgroups( [s], not s.is_outgroup )
+        self.actions.show_my_help()
+    
+    
+    @exqtSlot()
+    def on_BTN_VIEW_ELSEWHERE_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.inspect_elsewhere()
     
     
     @exqtSlot()
@@ -123,7 +128,7 @@ class FrmWebtree( FrmSelectingToolbar ):
         """
         Signal handler:
         """
-        self.update_trees()
+        self.__update_browser()
     
     
     def enable_inbuilt_browser( self ):

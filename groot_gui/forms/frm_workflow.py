@@ -3,10 +3,22 @@ import groot
 from groot_gui.utilities import gui_workflow
 from groot_gui.forms.designer import frm_workflow_designer
 from groot_gui.forms.frm_base import FrmBase
+from groot_gui.utilities.gui_workflow import EIntent, handlers
 from mhelper_qt import exceptToGui, exqtSlot, menu_helper
 
 
 class FrmWorkflow( FrmBase ):
+    """
+    The workflow screen shows the Groot workflow: the set of stages required to generate
+    an n-rooted fusion graph (and a few other stages that are interesting, if not particularly relevant).
+    
+    For each stage, its current status is displayed, and an option to manipulate or view more data on
+    this stage is shown alongside.
+    
+    If the Wizard is running in interactive mode, the controls to continue or stop the wizard will
+    also be shown on this screen. 
+    """
+    
     INDICATOR_SUFFIX = " margin-top: 2px; margin-bottom: 2px;"
     
     
@@ -110,4 +122,12 @@ class FrmWorkflow( FrmBase ):
         """
         Signal handler:
         """
-        self.actions.launch( gui_workflow.get_visualisers().ACT_WIZARD_NEXT )
+        handlers().ACT_WIZARD_NEXT.execute( self, EIntent.DIRECT, None )
+        
+    @exqtSlot()
+    def on_BTN_HELP_clicked(self) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
+            

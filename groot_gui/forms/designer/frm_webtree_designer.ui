@@ -33,51 +33,6 @@
     <widget class="QFrame" name="FRA_TOOLBAR">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QToolButton" name="BTN_REFRESH">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Refresh</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/refresh.svg</normaloff>:/groot/refresh.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>32</width>
-          <height>32</height>
-         </size>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextUnderIcon</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QToolButton" name="BTN_BROWSE_HERE">
         <property name="minimumSize">
          <size>
@@ -176,14 +131,20 @@ browser</string>
        </widget>
       </item>
       <item>
-       <widget class="Line" name="line_3">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Horizontal</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
-       <widget class="QToolButton" name="BTN_OUTGROUP">
+       <widget class="QToolButton" name="BTN_VIEW_ELSEWHERE">
         <property name="minimumSize">
          <size>
           <width>64</width>
@@ -197,11 +158,11 @@ browser</string>
          </size>
         </property>
         <property name="text">
-         <string>Outgroup</string>
+         <string>View</string>
         </property>
         <property name="icon">
          <iconset resource="../resources/resources.qrc">
-          <normaloff>:/groot/outgroup.svg</normaloff>:/groot/outgroup.svg</iconset>
+          <normaloff>:/groot/view.svg</normaloff>:/groot/view.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -209,8 +170,81 @@ browser</string>
           <height>32</height>
          </size>
         </property>
-        <property name="checkable">
-         <bool>true</bool>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_REFRESH">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/refresh.svg</normaloff>:/groot/refresh.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_HELP">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Help</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/help.svg</normaloff>:/groot/help.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
         </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonTextUnderIcon</enum>
@@ -286,7 +320,7 @@ Either &lt;a href=&quot;action:enable_inbuilt_browser&quot;&gt;enable&lt;/a&gt; 
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+  <include location="../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

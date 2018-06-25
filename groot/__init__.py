@@ -5,6 +5,7 @@ Groot initialisation logic and API exports.
 #
 # Meta-data
 #
+from groot.data.model_meta import _ComponentAsFasta, _ComponentAsGraph
 
 
 __author__ = "Martin Rusilowicz"
@@ -60,7 +61,7 @@ from groot.algorithms.gimmicks.usergraphs import import_graph, drop_graph
 from groot.algorithms.gimmicks.wizard import Wizard, create_wizard, drop_wizard, continue_wizard, create_components, drop_components, import_file, import_directory
 
 from groot.algorithms.workflow.s010_file import file_load, file_load_last, file_new, file_save, file_sample, file_recent
-from groot.algorithms.workflow.s020_sequences import drop_genes, set_genes, import_genes, set_gene_name
+from groot.algorithms.workflow.s020_sequences import drop_genes, set_genes, import_genes, set_gene_name, import_gene_names
 from groot.algorithms.workflow.s030_similarity import create_similarity, drop_similarity, set_similarity, import_similarity, print_similarity
 from groot.algorithms.workflow.s040_major import create_major, drop_major, set_major, print_major
 from groot.algorithms.workflow.s050_minor import create_minor, drop_minor, print_minor

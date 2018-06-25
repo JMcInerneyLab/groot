@@ -7,6 +7,7 @@ from groot_gui.forms.frm_base import FrmBase
 from groot_gui.forms.frm_sample_browser import FrmSampleBrowser
 from groot_gui.forms.designer import frm_wizard_designer
 from groot_gui.utilities import gui_workflow
+from groot_gui.utilities.gui_workflow import handlers, EIntent
 from intermake.engine.environment import MENV
 from mhelper import array_helper, file_helper
 from mhelper_qt import exceptToGui, exqtSlot
@@ -16,6 +17,15 @@ SETTINGS_KEY = "walkthroughs"
 
 
 class FrmWizard( FrmBase ):
+    """
+    The wizard screen allows the user to set up a Groot wizard, that will run through the entire process of
+    creating an n-rooted fusion graph automatically.
+    
+    For finer control, the user is directed to the Workflow screen instead, which allows each stage to
+    be configured and advanced manually, with more control. 
+    """
+    
+    
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -93,8 +103,16 @@ class FrmWizard( FrmBase ):
         
         walkthrough.make_active()
         
-        self.actions.launch( gui_workflow.get_visualisers().VIEW_WORKFLOW )
+        handlers().VIEW_WORKFLOW.execute( self, EIntent.DIRECT, None )
         self.close()
+    
+    
+    @exqtSlot()
+    def on_BTN_HELP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
     
     
     @exqtSlot()
@@ -256,7 +274,7 @@ class FrmWizard( FrmBase ):
         array_helper.remove_where( walkthroughs, lambda x: x.name == walkthrough.name )
         walkthroughs.append( walkthrough )
         
-        MENV.local_data.store.commit(SETTINGS_KEY)
+        MENV.local_data.store.commit( SETTINGS_KEY )
     
     
     @exqtSlot()

@@ -170,9 +170,6 @@ def reposition_tree( tree: MGraph ) -> bool:
             if d.position == EPosition.OUTGROUP:
                 node.make_outgroup()
                 return True
-            elif d.position == EPosition.ROOT:
-                node.make_root()
-                return True
             elif d.position == EPosition.NONE:
                 pass
             else:

@@ -7,12 +7,21 @@ from groot_gui.forms.frm_base import FrmBase
 import groot
 import editorium
 import intermake
+from groot_gui.utilities.gui_workflow import Intent
 from mhelper import FunctionInspector, ArgValueCollection, NOT_PROVIDED
-from mhelper_qt import exceptToGui, exqtSlot
+import mhelper_qt as qt
 
 
 class FrmRunAlgorithm( FrmBase ):
-    @exceptToGui()
+    """
+    The user can select an algorithm from this screen.
+    
+    The set of algorithms available depends upon the command being executed and the
+    plugins/extensions the user has installed.
+    """
+    
+    
+    @qt.exceptToGui()
     def __init__( self,
                   parent: QWidget,
                   title_text: str,
@@ -44,15 +53,18 @@ class FrmRunAlgorithm( FrmBase ):
         self.update_labels()
     
     
-    def on_apply_request( self, *args ):
-        if len(args) ==1:
-            algo: groot.AbstractAlgorithm = args[0]
-
-            for cb in self.radios:
-                assert isinstance( cb, QRadioButton )
-                if cb.toolTip() == algo.name:
-                    cb.setChecked( True )
-                    return
+    def on_apply_request( self, intent: Intent ):
+        if intent.is_inspect:
+            if isinstance( intent.target, groot.AbstractAlgorithm ):
+                algo: groot.AbstractAlgorithm = intent.target
+                
+                for cb in self.radios:
+                    assert isinstance( cb, QRadioButton )
+                    if cb.toolTip() == algo.name:
+                        cb.setChecked( True )
+                        return
+            else:
+                intent.warn()
     
     
     def add_radio( self, name ):
@@ -117,7 +129,7 @@ class FrmRunAlgorithm( FrmBase ):
             self.actions.close_window()
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_OK_clicked( self ) -> None:
         """
         Signal handler:
@@ -129,6 +141,14 @@ class FrmRunAlgorithm( FrmBase ):
         
         algorithm: groot.AbstractAlgorithm = self.algorithms.get_algorithm( algo_name, **avc.tokwargs() )
         self.run_algorithm( algorithm )
+    
+    
+    @qt.exqtSlot()
+    def on_BTN_HELP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
     
     
     def __get_selected_algorithm_name( self, default = NOT_PROVIDED ) -> str:
@@ -159,7 +179,7 @@ class FrmCreateTrees( FrmRunAlgorithm ):
         return True, ""
     
     
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self, parent ):
         """
         CONSTRUCTOR
@@ -183,7 +203,7 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
         return True, ""
     
     
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self, parent ):
         """
         CONSTRUCTOR
@@ -207,7 +227,7 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
         return True, ""
     
     
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self, parent ):
         """
         CONSTRUCTOR
@@ -228,7 +248,7 @@ class FrmCreateDomains( FrmRunAlgorithm ):
         return True, ""
     
     
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self, parent ):
         """
         CONSTRUCTOR

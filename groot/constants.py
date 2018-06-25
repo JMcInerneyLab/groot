@@ -4,10 +4,7 @@ from typing import Callable, Iterable, Iterator, Tuple, cast
 from mhelper import MEnum, ResourceIcon, SwitchError, MFlags
 
 
-class EIntent( MEnum ):
-    VIEW = 1
-    CREATE = 2
-    DROP = 3
+
 
 
 _Model_ = "Model"

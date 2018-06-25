@@ -63,6 +63,7 @@ def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
     
     :param algorithm:      How to break up the sequences. See `algorithm_help`.
     """
+    assert isinstance(algorithm, domain_algorithms.Algorithm), algorithm
     
     model = global_view.current_model()
     longest = max( x.length for x in model.genes )
@@ -114,4 +115,5 @@ def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
 
 
 def __list_userdomains( sequence: Gene, algorithm: domain_algorithms.Algorithm ):
+    assert isinstance(algorithm, domain_algorithms.Algorithm), algorithm
     return algorithm( sequence )

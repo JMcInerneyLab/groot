@@ -6,6 +6,10 @@ from mhelper_qt import exceptToGui
 
 
 class FrmAbout( FrmBase ):
+    """
+    Displays information about Groot.
+    """
+    
     @exceptToGui()
     def __init__( self, parent ):
         """

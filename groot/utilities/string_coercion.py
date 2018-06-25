@@ -1,4 +1,4 @@
-from mhelper import NotFoundError
+from mhelper import NotFoundError, ArgsKwargs
 from typing import Union
 
 
@@ -25,7 +25,6 @@ def setup():
         e.g. `dbscan`
         e.g. `kmeans;3`
         """
-        
         
         
         def on_get_archetype( self ) -> type:
@@ -55,7 +54,7 @@ def setup():
                     arg = args.by_index( index )
                     arg_values[arg.name] = info.collection.coerce( elements.pop( 0 ), arg.annotation.value )
             
-            return type_( algo_name, **arg_values )
+            return type_( function = function, name = algo_name, argskwargs = ArgsKwargs( **arg_values ) )
     
     
     class MGraphCoercer( sc.AbstractEnumCoercer ):
@@ -75,6 +74,7 @@ def setup():
         
         def on_get_priority( self ):
             return self.PRIORITY.HIGH
+        
         
         def on_get_archetype( self ) -> type:
             return Union[mgraph.MGraph, INamedGraph]

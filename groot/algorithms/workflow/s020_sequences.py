@@ -11,7 +11,7 @@ import re
 
 from groot.constants import STAGES, EChanges
 from intermake import MCMD, command
-from mhelper import Logger, bio_helper
+from mhelper import Logger, bio_helper, Filename
 
 from groot import Gene, Model, constants
 from groot.data import IHasFasta, global_view
@@ -62,8 +62,11 @@ def import_genes( file_name: str ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
+_T = Filename["r", ".csv"]
+
+
 @command( folder = constants.F_IMPORT )
-def import_gene_names( file: str ):
+def import_gene_names( file: _T ):
     """
     Loads in the displayed gene names from a file.
     
@@ -81,7 +84,7 @@ def import_gene_names( file: str ):
                 accession, name = row.split( ",", 1 )
             else:
                 accession, name = None, None
-                
+            
             if accession:
                 accession = accession.strip()
                 name = name.strip()

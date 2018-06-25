@@ -14,13 +14,20 @@ from mhelper_qt import exqtSlot
 
 
 class FrmViewOptions( FrmBase ):
+    """
+    Groot's application-wide settings can be configured from this screen.
+    
+    The CLI/Python interactive equivalent of this screen is the `local` command.
+    The Python script equivalent is the `groot.global_view.options()` object.
+    """
+    
     def __init__( self, parent: QWidget ):
         """
         CONSTRUCTOR
         """
         super().__init__( parent )
         self.ui = Ui_Dialog( self )
-        self.setWindowTitle( "Options" )
+        self.setWindowTitle( "Preferences" )
         
         self.ignore_map = False
         

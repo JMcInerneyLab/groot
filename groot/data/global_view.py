@@ -100,18 +100,29 @@ def get_sample_data_folder( name: str = None ):
 
 
 class EStartupMode( MEnum ):
+    """
+    Which screen shows when `FrmMain` is shown.
+    """
     STARTUP = 0
     WORKFLOW = 1
     SAMPLES = 2
     NOTHING = 3
     
 class EWindowMode( MEnum ):
+    """
+    How `FrmMain` shows sub-windows.
+    
+    This was introduced because MDI/TDI cause problems on some platforms.
+    """
     BASIC = 0
     MDI = 1
     TDI = 2
 
 
 class RecentFile:
+    """
+    Holds a file and when it was last accessed.
+    """
     def __init__( self, file_name ):
         self.file_name = file_name
         self.time = time.time()

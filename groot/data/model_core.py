@@ -336,7 +336,7 @@ class Gene( INode, IHasFasta, IVisualisable, INamed ):
     
     
     def iter_edges( self ) -> Iterable[Edge]:
-        return (x for x in self.model.edges if x.left is self or x.right is self)
+        return (x for x in self.model.edges if x.left.gene is self or x.right.gene is self)
     
     
     def iter_userdomains( self ):
@@ -397,12 +397,25 @@ class Gene( INode, IHasFasta, IVisualisable, INamed ):
         super().on_get_vis_info( u )
         u.hint = UiHint( colour = EColour.BLUE, icon = groot_resources.black_gene )
         u.value = "{} sites".format( self.length )
-        u.properties += { "id"       : self.legacy_accession,
-                          "length"   : self.length,
-                          "accession": self.accession,
-                          "position" : self.position,
-                          "num_sites": len( self.site_array ) if self.site_array else "?",
-                          "sites"    : self.site_array }
+        u.properties += { "id"          : self.legacy_accession,
+                          "display_name": self.display_name,
+                          "length"      : self.length,
+                          "accession"   : self.accession,
+                          "position"    : self.position,
+                          "num_sites"   : len( self.site_array ) if self.site_array else "?",
+                          "sites"       : self.site_array,
+                          "domains"     : list( self.iter_userdomains() ),
+                          "edges"       : list( self.iter_edges() ),
+                          "major"       :  self.find_major(),
+                          "minor"       : list( self.iter_minor() ), }
+    
+    
+    def find_major( self ):
+        return self.model.components.find_component_for_major_gene( self )
+    
+    
+    def iter_minor( self ):
+        return self.model.components.find_components_for_minor_gene( self )
     
     
     def __str__( self ) -> str:

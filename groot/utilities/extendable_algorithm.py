@@ -1,8 +1,10 @@
 """
 Dealing with extendable algorithms
 """
+import inspect
 from typing import Callable, Type, TypeVar
 
+import mhelper
 from mhelper import ArgsKwargs, NotFoundError
 
 
@@ -33,6 +35,7 @@ class AbstractAlgorithm:
         :param function:        Function to call. 
         :param argskwargs:      Any __additional__ parameters this function takes should be specified here.  
         """
+        assert inspect.isfunction( function ), repr( function )
         self.function = function
         self.argskwargs = argskwargs
         self.name = name

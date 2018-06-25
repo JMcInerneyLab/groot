@@ -148,7 +148,7 @@ class ComponentView:
     
     def paint_component( self, painter: QPainter ) -> None:
         """
-        Paint edge group
+        Paint component edges
         """
         if len( self.model_view.selection ) != 1:
             return
@@ -330,31 +330,12 @@ class DomainView( QGraphicsItem ):
         # Selection bars
         # (A blue box inside the gene box)
         if draw_sel_bars:
-            MARGIN = 4
-            painter.setBrush( 0 )
-            painter.setPen( DRAWING.SELECTION_LINE )
-            painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
+            self.__paint_selection_rect( painter )
         
         # Movement bars
         # (The same as the selection bars but dotted in red and cyan)
         if move_enabled and is_selected:
-            MARGIN = 4
-            painter.setBrush( 0 )
-            painter.setPen( DRAWING.MOVE_LINE )
-            painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
-            painter.setPen( DRAWING.MOVE_LINE_SEL )
-            painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
-            
-            # Black start/end when in movement mode if domain isn't adjacent to its siblings
-            if self.sibling_next and self.sibling_next.window_rect().left() != self.window_rect().right():
-                MARGIN = 8
-                painter.setPen( DRAWING.DISJOINT_LINE )
-                painter.drawLine( r.right(), r.top() - MARGIN, r.right(), r.bottom() + MARGIN )
-            
-            if self.sibling_previous and self.sibling_previous.window_rect().right() != self.window_rect().left():
-                MARGIN = 8
-                painter.setPen( DRAWING.DISJOINT_LINE )
-                painter.drawLine( r.left(), r.top() - MARGIN, r.left(), r.bottom() + MARGIN )
+            self.__paint_movement_rect( painter )
         
         # Piano roll
         # (A piano roll for genes)
@@ -408,25 +389,59 @@ class DomainView( QGraphicsItem ):
             if misc_helper.coalesce( self.options.lego_view_positions, is_selected ):
                 # Draw position
                 if self.sibling_previous is None or self.sibling_next is None or self.sibling_previous.rect.width() > 32:
-                    painter.setPen( DRAWING.POSITION_TEXT )
-                    
-                    text = str( self.domain.start )
-                    lx = self.rect.left() - QFontMetrics( painter.font() ).width( text ) / 2
-                    painter.setPen( DRAWING.TEXT_LINE )
-                    painter.drawText( QPointF( lx, self.rect.top() - DRAWING.TEXT_MARGIN ), text )
+                    self.__draw_position( painter )
             
             # Domains (when not in move mode)
             if misc_helper.coalesce( self.options.lego_view_components, is_selected ):
-                # Draw component name
-                painter.setPen( DRAWING.COMPONENT_PEN )
-                painter.setBrush( 0 )
-                text = "".join( str( x ) for x in self.components )
-                x = (self.rect.left() + self.rect.right()) / 2 - QFontMetrics( painter.font() ).width( text ) / 2
-                y = self.rect.top() - DRAWING.TEXT_MARGIN
-                painter.drawText( QPointF( x, y ), text )
+                self.__draw_component_name( painter )
     
     
-    def __draw_position( self, is_selected ):
+    def __draw_component_name( self, painter: QPainter ):
+        text = ", ".join( str( x ) for x in self.components )
+        x = (self.rect.left() + self.rect.right()) / 2 - QFontMetrics( painter.font() ).width( text ) / 2
+        y = self.rect.top() - DRAWING.TEXT_MARGIN
+        
+        painter.setPen( DRAWING.COMPONENT_PEN )
+        painter.setBrush( 0 )
+        painter.drawText( QPointF( x, y ), text )
+    
+    
+    def __draw_position( self, painter: QPainter ):
+        text = str( self.domain.start )
+        lx = self.rect.left() - QFontMetrics( painter.font() ).width( text ) / 2
+        
+        painter.setPen( DRAWING.POSITION_TEXT )
+        painter.drawText( QPointF( lx, self.rect.top() - DRAWING.TEXT_MARGIN ), text )
+    
+    
+    def __paint_movement_rect( self, painter: QPainter ):
+        r = self.rect
+        MARGIN = 4
+        painter.setBrush( 0 )
+        painter.setPen( DRAWING.MOVE_LINE )
+        painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
+        painter.setPen( DRAWING.MOVE_LINE_SEL )
+        painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
+        # Black start/end when in movement mode if domain isn't adjacent to its siblings
+        if self.sibling_next and self.sibling_next.window_rect().left() != self.window_rect().right():
+            MARGIN = 8
+            painter.setPen( DRAWING.DISJOINT_LINE )
+            painter.drawLine( r.right(), r.top() - MARGIN, r.right(), r.bottom() + MARGIN )
+        if self.sibling_previous and self.sibling_previous.window_rect().right() != self.window_rect().left():
+            MARGIN = 8
+            painter.setPen( DRAWING.DISJOINT_LINE )
+            painter.drawLine( r.left(), r.top() - MARGIN, r.left(), r.bottom() + MARGIN )
+    
+    
+    def __paint_selection_rect( self, painter: QPainter ):
+        r = self.rect
+        MARGIN = 4
+        painter.setBrush( 0 )
+        painter.setPen( DRAWING.SELECTION_LINE )
+        painter.drawRect( r.left() + MARGIN, r.top() + MARGIN, r.width() - MARGIN * 2, r.height() - MARGIN * 2 )
+    
+    
+    def __is_draw_position( self, is_selected ):
         return misc_helper.coalesce( self.options.lego_view_positions, is_selected )
     
     
@@ -436,7 +451,7 @@ class DomainView( QGraphicsItem ):
         if ns is None:
             return False
         
-        if not ns.__draw_position( is_selected ):
+        if not ns.__is_draw_position( is_selected ):
             return False
         
         return ns.pos().x() == self.window_rect().right()
@@ -610,20 +625,23 @@ class GeneView:
     
     
     def paint_name( self, painter: QPainter ):
+        """
+        Paints the name of this gene.
+        """
         if not misc_helper.coalesce( gr.global_view.options().lego_view_names, any( x.is_selected for x in self.domain_views.values() ) ):
             return
         
         leftmost_domain = sorted( self.domain_views.values(), key = lambda xx: xx.pos().x() )[0]
         text = str( self.gene )
         
+        # Add a sigil for outgroups
         if self.gene.position == gr.EPosition.OUTGROUP:
             text = "←" + text
-        if self.gene.position == gr.EPosition.ROOT:
-            text = "↑" + text
         
         r = leftmost_domain.window_rect()
         x = r.left() - DRAWING.TEXT_MARGIN - QFontMetrics( painter.font() ).width( text )
         y = r.top() + r.height() / 2
+        painter.setPen( DRAWING.DARK_TEXT )
         painter.drawText( QPointF( x, y ), text )
 
 
@@ -881,6 +899,7 @@ class ModelView:
         
         # Create the edges view
         self.overlay_view = OverlayView( self )
+        self.overlay_view.setZValue( -1 )
         self.scene.addItem( self.overlay_view )
     
     

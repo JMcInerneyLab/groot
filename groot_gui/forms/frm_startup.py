@@ -9,6 +9,10 @@ from mhelper_qt import exceptToGui
 
 
 class FrmStartup( FrmBase ):
+    """
+    This screen is displayed by default when the Groot GUI starts.
+    """
+    
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -29,7 +33,7 @@ class FrmStartup( FrmBase ):
             assert isinstance(file, RecentFile)
             r.append( '<li><a href="file_load:{}">{}</a></li>'.format( file.file_name, file_helper.get_filename_without_extension( file.file_name ) ) )
         
-        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.get_visualisers().ACT_FILE_OPEN ) )
+        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.handlers().ACT_FILE_OPEN ) )
         r.append( "</ul>" )
         
         r.append( "<h3>Sample data</h3><ul>" )
@@ -37,7 +41,7 @@ class FrmStartup( FrmBase ):
         for file in global_view.get_samples():
             r.append( '<li><a href="file_sample:{}">{}</a><li/>'.format( file, file_helper.get_filename_without_extension( file ) ) )
         
-        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.get_visualisers().VIEW_OPEN_FILE ) )
+        r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.handlers().VIEW_OPEN_FILE ) )
         r.append( "</ul>" )
         
         txt = txt.replace( "$(RECENT_FILES)", "\n".join( r ) )

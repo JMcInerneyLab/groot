@@ -1,16 +1,15 @@
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QAction, QFileDialog, QMenu, QToolTip, QMessageBox
-from typing import Optional, Any
+import warnings
+from typing import Any, Optional
 
-import intermake
 import groot
+import intermake
 import intermake_qt
-
-from mhelper import SwitchError, ArgsKwargs
-from mhelper_qt import qt_gui_helper, menu_helper
-from groot_gui.utilities.selection import LegoSelection
-from groot_gui.utilities.gui_workflow import EIntent, Stage, LegoVisualiser
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QFileDialog, QToolTip
 from groot_gui.utilities import gui_workflow
+from groot_gui.utilities.gui_workflow import EIntent, IntentHandler, handlers
+from mhelper import ArgsKwargs, SwitchError, get_basic_documentation
+from mhelper_qt import FrmGenericText, menu_helper, qt_gui_helper
 
 
 class GuiActions:
@@ -22,48 +21,18 @@ class GuiActions:
         self.window: FrmBase = window
     
     
-    def launch_intent( self, stage: Stage, intent: EIntent ):
+    
+    
+    def launch( self, visualiser: IntentHandler ):
         """
-        Given a `stage` and `intent` this finds the corresponding `LegoVisualiser` and `launch`es its action.
+        Exacts the action denoted by a particular `IntentHandler`.
         """
-        visualisers = list( LegoVisualiser.iter_from_stage( stage, intent ) )
+        warnings.warn("Deprecated - use `IntentHandler`.launch", DeprecationWarning)
+        visualiser.execute( self.window, EIntent.DIRECT, None )
         
-        if len( visualisers ) == 0:
-            QMessageBox.info( self.window, "Intent", "No handlers for this intent: {}+{}".format( stage, intent ) )
-        elif len( visualisers ) == 1:
-            self.launch( visualisers[0] )
-        else:
-            menu = QMenu()
-            map = { }
-            
-            for visualiser in visualisers:
-                action = QAction()
-                action.setText( visualiser.name )
-                action.setIcon( visualiser.icon.icon() if visualiser.icon else None )
-                map[action] = visualiser
-                menu.addAction( action )
-            
-            selected = menu_helper.show_menu( self.window, menu )
-            
-            if selected is not None:
-                self.launch( map[selected] )
     
     
-    def launch( self, visualiser: LegoVisualiser, *args ):
-        """
-        Exacts the action denoted by a particular `LegoVisualiser`.
-        """
-        from groot_gui.forms.frm_base import FrmBase
-        
-        if isinstance( visualiser.action, type ) and issubclass( visualiser.action, FrmBase ):
-            self.frm_main.show_form( visualiser.action, *args )
-        elif isinstance( visualiser.action, intermake.AbstractCommand ) or intermake.BasicCommand.retrieve( visualiser.action, None ) is not None:
-            self.request( visualiser.action, *args )
-        else:
-            visualiser.action( self )
-    
-    
-    def menu( self, stage: Stage ):
+    def menu( self, stage: groot.Stage ):
         """
         Shows the menu associated with a particular `stage`.
         """
@@ -107,7 +76,7 @@ class GuiActions:
         if self.get_model().file_name:
             self.run( groot.file_save, self.get_model().file_name )
         else:
-            self.launch( gui_workflow.get_visualisers().VIEW_SAVE_FILE )
+            handlers().VIEW_SAVE_FILE.execute( self, EIntent.DIRECT, None )
     
     
     def save_model_to( self, file_name: str ) -> None:
@@ -118,6 +87,7 @@ class GuiActions:
         """
         Runs an Intermake command after showing the user the arguments request form.
         """
+        warnings.warn("Deprecated, use `Intent`.", DeprecationWarning)
         if args is None:
             args = ()
         
@@ -128,12 +98,12 @@ class GuiActions:
         QToolTip.showText( QCursor.pos(), text )
     
     
-    def get_visualiser( self, name ) -> LegoVisualiser:
-        return getattr( gui_workflow.get_visualisers(), name.upper() )
+    def get_visualiser( self, name ) -> IntentHandler:
+        return getattr( gui_workflow.handlers(), name.upper() )
     
     
-    def get_stage( self, name ) -> Stage:
-        return getattr( gui_workflow.STAGES, name.upper() ) if name else None
+    def get_stage( self, name ) -> groot.Stage:
+        return getattr( groot.STAGES, name.upper() ) if name else None
     
     
     def by_url( self, link: str, validate = False ) -> bool:
@@ -145,7 +115,7 @@ class GuiActions:
         
         if key == "action":
             try:
-                visualiser = gui_workflow.get_visualisers().find_by_key( value )
+                visualiser = gui_workflow.handlers().find_by_key( value )
             except KeyError:
                 if validate:
                     return False
@@ -155,7 +125,7 @@ class GuiActions:
             if validate:
                 return True
             
-            self.launch( visualiser )
+            visualiser.execute( self.window, EIntent.DIRECT, None )
         elif key == "file_save":
             if validate:
                 return True
@@ -184,26 +154,20 @@ class GuiActions:
     
     
     def __get_selection_form( self ) -> Any:
-        from groot_gui.forms.frm_base import FrmSelectingToolbar
-        form: FrmSelectingToolbar = self.window
-        assert isinstance( form, FrmSelectingToolbar )
+        from groot_gui.forms.frm_base import FrmBaseWithSelection
+        form: FrmBaseWithSelection = self.window
+        assert isinstance( form, FrmBaseWithSelection )
         return form
     
     
-    def get_selection( self ) -> LegoSelection:
+    def get_selection( self ) -> object:
         return self.__get_selection_form().get_selection()
     
     
-    def show_selection( self ):
-        return self.__get_selection_form().show_selection_menu()
     
     
-    def set_selection( self, value: LegoSelection ):
-        return self.__get_selection_form().set_selection( value )
     
     
-    def clear_selection( self ):
-        self.set_selection( LegoSelection() )
     
     
     def browse_open( self ):
@@ -230,6 +194,10 @@ class GuiActions:
     def show_help( self ):
         import webbrowser
         webbrowser.open( "https://bitbucket.org/mjr129/groot" )
+    
+    
+    def show_my_help( self ):
+        FrmGenericText.request( self.window, text = get_basic_documentation( self.window ) )
     
     
     def exit( self ):

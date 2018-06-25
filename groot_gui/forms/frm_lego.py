@@ -3,26 +3,38 @@ from typing import Callable, Set
 from PyQt5.QtCore import QEvent, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
-from PyQt5.QtWidgets import QAction, QGraphicsScene, QGridLayout, QMenu, QSizePolicy, QMessageBox, QAbstractButton
+from PyQt5.QtWidgets import QAction, QGraphicsScene, QGridLayout, QMenu, QSizePolicy, QAbstractButton
 from groot_gui.forms.designer import frm_lego_designer
 
+import intermake
 import groot
-from groot_gui.forms.frm_base import FrmSelectingToolbar
-from groot_gui.forms.frm_view_options import FrmViewOptions
+from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.lego import InteractiveGraphicsView, ModelView, lay_colour, lay_position, lay_selection
-from groot_gui.utilities import gui_workflow
-from groot_gui.utilities.selection import ESelect, show_selection_menu
+from groot_gui.utilities.gui_workflow import handlers, EIntent, Intent
+from groot_gui.utilities.selection import show_selection_menu
 from intermake.engine.environment import MCMD
-from mhelper import array_helper, string_helper, FunctionInspector, ignore
-from mhelper_qt import FrmGenericText, exceptToGui, exqtSlot, menu_helper
+from mhelper import array_helper, FunctionInspector, ignore
+import mhelper_qt as qt
 
 
 _BIT = "TAG_info"
 
 
-class FrmLego( FrmSelectingToolbar ):
+class FrmLego( FrmBaseWithSelection ):
+    """
+    The Lego diagram editor allows the user to construct and view Lego diagrams from the current model.
     
-    @exceptToGui()
+    For good diagrams, a suitably defined set of Domains should have been generated first.
+    
+    The sidebar allows the user to quickly define domains and organise the diagram automatically.
+    
+    Double clicking elements in the diagram toggles edit mode.
+    
+    Settings for viewing the diagram are available from the Preferences window.
+    """
+    
+    
+    @qt.exceptToGui()
     def __init__( self, parent ) -> None:
         """
         CONSTRUCTOR
@@ -30,7 +42,6 @@ class FrmLego( FrmSelectingToolbar ):
         super().__init__( parent )
         self.ui = frm_lego_designer.Ui_Dialog( self )
         self.setWindowTitle( "Lego Diagram Editor" )
-        # self.bind_to_workflow_box( self.ui.FRA_TOOLBAR, ESelect.ALL )
         
         #
         # Graphics view
@@ -74,10 +85,15 @@ class FrmLego( FrmSelectingToolbar ):
             x.clicked[bool].connect( self.on_btn_click )
     
     
+    def on_apply_request( self, request: Intent ):
+        if request.is_inspect:
+            lay_selection.select_by_entity( self.model_view, request.target )
+    
+    
     def on_btn_click( self, _ ):
         s: QAbstractButton = self.sender()
-        msg = getattr( s, _BIT, "" )
-        QMessageBox.information( self, "Information", msg )
+        msg = getattr( s, _BIT, None )
+        self.inspect_elsewhere( msg )
     
     
     def event( self, e: QEvent ) -> bool:
@@ -114,14 +130,14 @@ class FrmLego( FrmSelectingToolbar ):
         self.ui.BTN_S_EDGES_.setText( "{} edges".format( len( edges ) ) if len( edges ) != 1 else str( array_helper.single( edges ) ) )
         self.ui.BTN_S_GENES_.setText( "{} genes".format( len( genes ) ) if len( genes ) != 1 else str( array_helper.single( genes ) ) )
         
-        setattr( self.ui.BTN_S_DOMAINS_, _BIT, string_helper.format_array( domains, sort = True ) )
-        setattr( self.ui.BTN_S_COMPS_, _BIT, string_helper.format_array( major, sort = True ) )
-        setattr( self.ui.BTN_S_MINCOMPS_, _BIT, string_helper.format_array( minor, sort = True ) )
-        setattr( self.ui.BTN_S_EDGES_, _BIT, string_helper.format_array( edges, sort = True ) )
-        setattr( self.ui.BTN_S_GENES_, _BIT, string_helper.format_array( genes, sort = True ) )
+        setattr( self.ui.BTN_S_DOMAINS_, _BIT, domains )
+        setattr( self.ui.BTN_S_COMPS_, _BIT, major )
+        setattr( self.ui.BTN_S_MINCOMPS_, _BIT, minor )
+        setattr( self.ui.BTN_S_EDGES_, _BIT, edges )
+        setattr( self.ui.BTN_S_GENES_, _BIT, genes )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_ALIGN_clicked( self ) -> None:
         """
         Signal handler:
@@ -129,15 +145,15 @@ class FrmLego( FrmSelectingToolbar ):
         self.show_intent_menu( lay_position.apply_position, lay_position.position_algorithms )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_OPTIONS_clicked( self ) -> None:
         """
         Signal handler:
         """
-        self.show_form( FrmViewOptions )
+        handlers().VIEW_PREFERENCES.execute( self, EIntent.DIRECT, None )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_COLOUR_clicked( self ) -> None:
         """
         Signal handler:
@@ -159,7 +175,7 @@ class FrmLego( FrmSelectingToolbar ):
             map[act] = key
             menu.addAction( act )
         
-        a: QAction = menu_helper.show_menu( self, menu )
+        a: QAction = qt.menu_helper.show_menu( self, menu )
         
         if a is None:
             return
@@ -180,12 +196,12 @@ class FrmLego( FrmSelectingToolbar ):
         
         # Any extra args
         if len( FunctionInspector( algo.function ).args ) > groot.domain_algorithms.num_expected_args:
-            self.actions.launch( gui_workflow.get_visualisers().CREATE_DOMAINS, algo )
+            handlers().CREATE_DOMAINS.execute( self, EIntent.INSPECT, algo )
         else:
             self.actions.run( groot.create_domains, algorithm = algo )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_REFRESH_clicked( self ) -> None:
         """
         Signal handler:
@@ -193,7 +209,7 @@ class FrmLego( FrmSelectingToolbar ):
         self.update_view()
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_SHOW_EDIT_clicked( self ) -> None:
         """
         Signal handler:
@@ -209,13 +225,13 @@ class FrmLego( FrmSelectingToolbar ):
         self.ui.BTN_RENAME_GENE.setVisible( v )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_DELETE_GENE_clicked( self ) -> None:
         """
         Signal handler:
         """
-        g = self.__get_selected_genes()
-        self.actions.request( groot.drop_genes, genes = list( g ) )
+        genes = self.__get_selected_genes()
+        handlers().DROP_GENES.execute( self, EIntent.INSPECT, list( genes ) )
     
     
     def __get_selected_genes( self ):
@@ -227,36 +243,47 @@ class FrmLego( FrmSelectingToolbar ):
         return genes
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_OUTGROUP_GENE_clicked( self ) -> None:
         """
         Signal handler:
         """
         genes = self.__get_selected_genes()
-        self.actions.request( groot.set_outgroups, genes = list( genes ) )
+        intermake.acquire( groot.set_outgroups, parent = self ).run( genes = list( genes ) )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_RENAME_GENE_clicked( self ) -> None:
         """
         Signal handler:
         """
         genes = self.__get_selected_genes()
-        gene = array_helper.first_or_none( genes )
+        gene: groot.Gene = array_helper.first_or_none( genes )
         
-        self.actions.request( groot.set_gene_name, gene = gene )
+        name = qt.FrmGenericText( self, message = "Rename the gene with accession '{}'".format( gene.accession ), text = gene.display_name, editable = True )
+        
+        if name:
+            intermake.acquire( groot.set_gene_name, parent = self ).run( gene = gene, name = name )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_COMPONENT_GENE_clicked( self ) -> None:
         """
         Signal handler:
         """
         genes = self.__get_selected_genes()
-        self.actions.request( groot.set_major, genes = list( genes ) )
+        intermake.acquire( groot.set_major, parent = self ).run( genes = genes )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
+    def on_BTN_HELP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
+    
+    
+    @qt.exqtSlot()
     def on_BTN_DOMAINS_clicked( self ) -> None:
         """
         Signal handler:
@@ -264,27 +291,27 @@ class FrmLego( FrmSelectingToolbar ):
         self.show_intent_menu( self.domain_fake_fn, groot.domain_algorithms )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_FIND_clicked( self ) -> None:
         """
         Signal handler:
         """
-        sel = show_selection_menu( self.ui.BTN_FIND, None, ESelect.IS_NORMAL )
+        sel = show_selection_menu( self.ui.BTN_FIND, None, self.__selecting_mode )
         
         if sel is not None:
-            lay_selection.select_by_selection( self.model_view, sel )
+            lay_selection.select_by_entity( self.model_view, sel )
             self.refresh_view()
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_LEGEND_clicked( self ) -> None:
         """
         Signal handler: Show legend button
         """
-        FrmGenericText.request( self, "Legend", "".join( lay_colour.get_legend( self.model_view ) ) )
+        qt.FrmGenericText.request( self, title = "Legend", text = "".join( lay_colour.get_legend( self.model_view ) ) )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_SELECT_clicked( self ) -> None:
         """
         Signal handler:

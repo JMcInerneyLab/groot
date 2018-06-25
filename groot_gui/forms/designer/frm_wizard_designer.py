@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def __init__(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1016, 604)
+        Dialog.resize(1018, 604)
         Dialog.setStyleSheet("/**\n"
 "    PURPOSE:\n"
 "        This is the default style-sheet used by all Intermake dialogues.\n"
@@ -487,6 +487,12 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addWidget(self.SPC_ERROR)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.BTN_HELP = QtWidgets.QPushButton(Dialog)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/groot/help.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.BTN_HELP.setIcon(icon)
+        self.BTN_HELP.setObjectName("BTN_HELP")
+        self.horizontalLayout_3.addWidget(self.BTN_HELP)
         self.BTN_CANCEL = QtWidgets.QPushButton(Dialog)
         self.BTN_CANCEL.setObjectName("BTN_CANCEL")
         self.horizontalLayout_3.addWidget(self.BTN_CANCEL)
@@ -568,6 +574,7 @@ class Ui_Dialog(object):
         self.label_24.setProperty("style", _translate("Dialog", "heading"))
         self.label_14.setText(_translate("Dialog", "When you\'re ready, click begin. The wizard will start paused and you can come back to this screen to view the current settings at any time."))
         self.label_14.setProperty("style", _translate("Dialog", "helpbox"))
+        self.BTN_HELP.setText(_translate("Dialog", "Help"))
         self.BTN_CANCEL.setText(_translate("Dialog", "Cancel"))
         self.BTN_BACK.setText(_translate("Dialog", "Back"))
         self.BTN_NEXT.setText(_translate("Dialog", "Next"))

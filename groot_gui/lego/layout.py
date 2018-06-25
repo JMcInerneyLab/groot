@@ -9,7 +9,6 @@ from PyQt5.QtGui import QColor
 import groot
 from groot_gui.lego import ColourBlock, DomainView, ModelView
 from groot_gui.lego.views import EdgeView
-from groot_gui.utilities.selection import LegoSelection
 from mhelper import MEnum, Sentinel, SwitchError, array_helper, exception_helper
 
 

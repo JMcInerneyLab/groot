@@ -9,12 +9,9 @@ class EPosition( MEnum ):
     Node positions.
     
     :cvar NONE:     No specific position
-    :cvar ROOT:     Node is a root.
-                    Many software and algorithms only allow named taxa on leaves so this isn't recommended and may be removed.
     :cvar OUTGROUP: Node is an outgroup.
     """
     NONE = 0
-    ROOT = 1
     OUTGROUP = 2
 
 

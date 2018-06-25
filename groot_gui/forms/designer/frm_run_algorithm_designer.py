@@ -56,6 +56,12 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.FRA_PARAMETERS)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.BTN_HELP = QtWidgets.QPushButton(Dialog)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/groot/help.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.BTN_HELP.setIcon(icon)
+        self.BTN_HELP.setObjectName("BTN_HELP")
+        self.horizontalLayout.addWidget(self.BTN_HELP)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.BTN_OK = QtWidgets.QPushButton(Dialog)
@@ -73,5 +79,7 @@ class Ui_Dialog(object):
         self.label_2.setText(_translate("Dialog", "Algorithm"))
         self.LBL_HELP.setText(_translate("Dialog", "Select the algorithm you\'d like to use. Remember, you can add your own algorithms to Groot as well!"))
         self.label_3.setText(_translate("Dialog", "Parameters"))
+        self.BTN_HELP.setText(_translate("Dialog", "Help"))
         self.BTN_OK.setText(_translate("Dialog", "OK"))
+
 

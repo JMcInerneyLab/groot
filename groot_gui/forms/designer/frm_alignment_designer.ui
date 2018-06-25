@@ -120,6 +120,102 @@
         </item>
        </layout>
       </item>
+      <item>
+       <widget class="QToolButton" name="BTN_VIEW_ELSEWHERE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>View</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/view.svg</normaloff>:/groot/view.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_REFRESH">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/refresh.svg</normaloff>:/groot/refresh.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="BTN_HELP">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Help</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/help.svg</normaloff>:/groot/help.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -157,7 +253,7 @@
         <x>0</x>
         <y>0</y>
         <width>930</width>
-        <height>487</height>
+        <height>459</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="GRID_MAIN">
@@ -201,13 +297,10 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="1" column="1">
-       <widget class="QLabel" name="LBL_POSITION">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
+      <item row="0" column="2">
+       <widget class="QLabel" name="LBL_INFO_5">
         <property name="text">
-         <string/>
+         <string>Site</string>
         </property>
        </widget>
       </item>
@@ -226,29 +319,62 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="LBL_SEQUENCE">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
+       <widget class="QToolButton" name="BTN_SEQUENCE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
          <string/>
         </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/black_gene.svg</normaloff>:/groot/black_gene.svg</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="LBL_INFO_5">
+      <item row="1" column="1">
+       <widget class="QToolButton" name="BTN_POSITION">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Site</string>
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/black_domain.svg</normaloff>:/groot/black_domain.svg</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
         </property>
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QLabel" name="LBL_SITE">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
+       <widget class="QToolButton" name="BTN_SITE">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/groot/black_alignment.svg</normaloff>:/groot/black_alignment.svg</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
         </property>
        </widget>
       </item>

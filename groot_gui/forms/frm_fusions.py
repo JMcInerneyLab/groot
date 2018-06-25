@@ -7,9 +7,17 @@ import mhelper_qt as qt
 from groot_gui.forms.resources import resources
 from groot_gui.forms.designer import frm_fusions_designer
 from groot_gui.forms.frm_base import FrmBase
+from mhelper_qt import exqtSlot
 
 
 class FrmFusions( FrmBase ):
+    """
+    The fusions screen displays the list of fusions found in the current model.
+    
+    More details on fusions themselves can be found in the `Fusion` class documentation.
+    """
+    
+    
     @qt.exceptToGui()
     def __init__( self, parent ):
         """
@@ -92,4 +100,19 @@ class FrmFusions( FrmBase ):
     
     
     def on_command_completed( self ):
+        self.update_list()
+    
+    
+    @qt.exqtSlot()
+    def on_BTN_HELP_clicked( self ) -> None:
+        """
+        Signal handler:
+        """
+        self.actions.show_my_help()
+    
+    @exqtSlot()
+    def on_BTN_REFRESH_clicked(self) -> None:
+        """
+        Signal handler:
+        """
         self.update_list()

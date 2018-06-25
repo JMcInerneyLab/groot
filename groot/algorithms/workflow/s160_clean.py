@@ -59,9 +59,6 @@ def __make_outgroup_parents_roots( nrfg: MGraph ) -> None:
                 LOG( "Make outgroup: {}".format( node ) )
                 LOG( "--i.e. make root: {}".format( node.relation ) )
                 node.relation.make_root( node_filter = lambda x: not lego_graph.is_fusion_like( x ), ignore_cycles = True )
-            elif node.data.position == EPosition.ROOT:
-                LOG( "Make root: {}".format( node ) )
-                node.make_root( node_filter = lambda x: not isinstance( x.data, Point ), ignore_cycles = True )
             else:
                 raise SwitchError( "node.data.position", node.data.position )
 

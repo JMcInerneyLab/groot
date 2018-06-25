@@ -3,7 +3,7 @@ Groot
 
 Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
-```
+```text
 \         /       /
  A       B       C       <-Roots
   \     /       /
@@ -19,13 +19,14 @@ Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi
 
 [](toc)
 
+
 Installation
 ------------
 
 ### Prerequisites ###
-Groot runs under Python 3.6 and is installed using Pip.
-In addition to these programs, you will also need some phylogenetic tools to conduct the actual analysis.
-Please download the the following, install, **and confirm that they work** from the command line before continuing to install Groot.
+Groot runs under Python 3.6 and should be installed using Pip.
+* In addition to Python, you will also need some phylogenetic tools to conduct the actual analysis.
+* Please download the the following, install, **and confirm that they work** from the command line before continuing to install Groot.
 
 | Tool      | Purpose                | URL                                              |
 |-----------|------------------------|--------------------------------------------------|
@@ -37,7 +38,7 @@ Please download the the following, install, **and confirm that they work** from 
 | Python    | interpreter            | https://www.python.org/downloads/                |
 | Raxml     | phylogeny inference    | https://sco.h-its.org/exelixis/software.html     |
 
-Note: You can substitute all of these for your own preferred tools, or specify the data manually, but this list comprises a good "starter package". 
+Note: You can substitute all of these for your own preferred tools, or specify the data manually, but this list comprises a good "starter pack". 
 
 _Warning: For legacy reasons, MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, which was last updated in 2006. This isn't enough - you'll still need to install Python 3.6 to use Groot__
 
@@ -65,18 +66,8 @@ After the install completes, test that you can actually run Groot:
 $   groot
 ```
 
-#### Troubleshooting: Groot not found ####
-If you see the Groot command prompt that's great, it works, but if you get a message like `groot not found` then Python probably doesn't have its PATH configured correctly.
-You might be able to start Groot using `python -m groot`, but it's probably best to consult the Python documentation at this time and fix the issue before continuing.
+If Groot fails to start see the troubleshooting section on [Groot not found](#groot-not-found). 
 
-You probably need to add the Python binaries to your path, using a command something like:
-
-```bash
-export PATH=$PATH:/opt/local/Library/Frameworks/Python.framework/Versions/3.6/bin
-```
-
-Check out [this StackOverflow post](https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) as a starting point.
- 
 
 ### Starting and stopping Groot ###
 
@@ -207,7 +198,7 @@ The _triptych_ sample contains a set of genes which have undergone two recombina
 
 The final gene family, _EPSILON_, therefore looks something like this:
 
-```
+```text
         __5'[ALPHA][BETA][GAMMA]3'__
 ```
 
@@ -679,7 +670,26 @@ As the test cases are randomly generated, this may result in _a1=a2_ and/or _b1=
 Troubleshooting
 ---------------
 
-***Please also see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) troubleshooting section for technical issues ***
+Troubleshooting and bugs
+------------------------
+
+* Please report all bugs on the official bitbucket page at [https://bitbucket.org/mjr129/groot/issues].
+* Please also see the [Iɴᴛᴇʀᴍᴀᴋᴇ](https://www.bitbucket.org/mjr129/intermake) documentation for handling technical issues.
+
+
+### Groot not found ###
+
+If you see the Groot command prompt that's great, it works, but if you get a message like `groot not found` then Python probably doesn't have its PATH configured correctly.
+You might be able to start Groot using `python -m groot`, but it's probably best to consult the Python documentation at this time and fix the issue before continuing.
+
+You probably need to add the Python binaries to your path, using a command something like:
+
+```bash
+export PATH=$PATH:/opt/local/Library/Frameworks/Python.framework/Versions/3.6/bin
+```
+
+Check out [this StackOverflow post](https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) as a starting point.
+
 
 ### Screen goes black, images or windows disappear ###
 
@@ -702,7 +712,7 @@ It is currently unable to detect:
 
 * An n-parted fusion, or a multi-fusion case where one or more intermediates are not present in the data, A + B + C --> F
 
-Groot may still be able to deal with this circumstance, provding you guide it in the direction by specifying the fusion event manually.
+Groot may still be able to deal with this circumstance, providing you guide it in the direction by specifying the fusion event manually.
 
 
 ### The spaceship and the triangle ###
@@ -780,8 +790,8 @@ Meta-data
 ```ini
 language    = python3
 author      = martin rusilowicz
-date        = 2017
+date        = 2017,2018
 keywords    = blast, genomics, genome, gene, nrgf, graphs, intermake
-host        = bitbucket
+host        = bitbucket,git,mcinerneylab-git,pypi
 type        = application,application-gui,application-cli
 ```

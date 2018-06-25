@@ -22,7 +22,7 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
+     <item alignment="Qt::AlignBottom">
       <widget class="QLabel" name="LBL_TITLE_MAIN">
        <property name="text">
         <string>Load data</string>
@@ -33,21 +33,42 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="BTN_REFRESH">
+      <widget class="QPushButton" name="BTN_REFRESH">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
+       <property name="text">
+        <string>Refresh</string>
        </property>
-       <property name="style" stdset="0">
-        <string>refresh</string>
+       <property name="icon">
+        <iconset resource="../resources/resources.qrc">
+         <normaloff>:/groot/refresh.svg</normaloff>:/groot/refresh.svg</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BTN_HELP">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Help</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources/resources.qrc">
+         <normaloff>:/groot/help.svg</normaloff>:/groot/help.svg</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -288,7 +309,7 @@
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+  <include location="../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,0 +1,709 @@
+/**
+    PURPOSE:
+        This is the default style-sheet used by all Intermake dialogues.
+        It needs to be processed by intermake_gui.py before it can be used. 
+        It can be retrieved in processed form by the `intermake_gui.default_style_sheet()` function.
+
+    USAGE:    
+        You can replace this stylesheet with your own.
+        If you blank the contents of this stylesheet, the OSs default controls will be used.
+        If you delete this stylesheet, the program will crash.
+        
+    EXTENSIONS:
+        Normally not permitted in Qt, the following values are read through Intermake.
+            * #DEFINE X Y                    - replaces all text `X` with `Y`
+            * #WHEN X Y Z                    - only executes the following lines if the current
+                                               section is any of `X` `Y` or `Z`.
+                                               The section is specified when the user selects a
+                                               stylesheet.
+            * `QApplication.style`           - one of the Qt styles
+            * `QApplication.small_icon_size` - the menu icon size, permitted only if `style` is set
+            * `QMdiArea.background`          - colour of the Mdi area
+
+    DETAILS:
+        Follow standard Qt stylesheet guidelines.
+        
+        The `:root` section defines constants that may be used elsewhere. These constants are
+        substituted during the the processing stage and the `:root` section is removed.
+        
+        Intermake controls may have a string property named "theme" assigned to to certain widgets.
+        This specifies that a unique appearance for the widget is intended:
+        
+        WIDGET           | THEME             | APPEARANCE (GUIDE)            | USAGE (GUIDE)
+        -----------------+-------------------+-------------------------------+-------------------------------
+        QLabel           | heading           | border, big, bold             | section titles 
+        QLabel           | subheading        | border, big, bold             | section titles 
+        QTextEdit        | console           | monospaced, black background  | code, console output
+        QPushButton      | completed         |                               |
+        QPushButton      | cancel            | red                           | abort button
+        QFrame           | header            | border                        | section titles
+        QFrame           | contents          | white                         | with objects in
+        QToolButton      | listbutton        | condensed                     | buttons in lists
+        QToolButton      | help              | help icon                     | help buttons
+        QLabel           | helpbox           | tooltip background            | help labels
+        QLabel           | icon              | background suitable for image | label showing an icon
+        QLabel           | warning           | yellow background, red text   | warning messages     
+        QMdiArea         | empty             | darker                        | when MDI area has no windows
+        QToolButton      | combo             | white                         | when button presents a selection menu
+        QToolButton      | item              | white background, borderless  | button in a "contents" frame, like a list item
+        QFrame           | helpbox           | yellow background             | frame contains help
+        QFrame           | sidearea          | gray                          | behave like document-mode tab bar
+        QAbstractButton  | expander          | double down / up arrow        | button expands current window frame           
+*/
+
+#DEFINE __BACKGROUND__          #FFFFFF
+#DEFINE __BACKGROUND__          #FFFFFF
+#DEFINE __BUTTON__              #0080C0
+#DEFINE __BUTTON_TEXT__         #FFFFFF
+#DEFINE __BUTTON_ALT__          #00C000
+#DEFINE __DISABLED__            #D0D0D0
+#DEFINE __TEXTBOX__             #EEEEFF
+#DEFINE __TEXT__                #000000
+#DEFINE __MENUBAR__             __BUTTON__
+#DEFINE __MENU__                __BUTTON__
+#DEFINE __MENU_TEXT__           __BUTTON_TEXT__
+#DEFINE __MENU_HOVER__          __BUTTON_ALT__
+#DEFINE __ACCENT__              #FF8000
+#DEFINE __BUTTON_PRESSED__      #0060C0
+#DEFINE __BUTTON_ALT_PRESSED__  #00C040
+#DEFINE __AREA__                #C0C0C0
+#DEFINE __SCROLLBTN__           #90C0D0
+#DEFINE __BORDER__              #808080
+
+#WHEN FANCY
+
+QApplication
+{
+    style: "Fusion";
+    small_icon_size: 24;
+}
+
+QWidget
+{
+    background  : __BACKGROUND__;
+    font-family : "Segoe UI", "American Typewriter", "Courier New", "Courier";
+    font-size   : 16pt;
+}
+
+QTabBar::tab
+{
+    background    : __BACKGROUND__;
+    color         : __TEXT__;
+    border-bottom : 4px solid __BUTTON__;
+    padding       : 4px;
+    margin        : 2px;
+}
+
+QTabWidget::pane
+{
+    background : __BACKGROUND__;
+}
+
+QTabBar::tab:selected
+{
+    border-bottom : 4px solid __BUTTON_ALT__;
+}
+
+QTabBar::tab:hover
+{
+    border-bottom : 4px solid __BUTTON_PRESSED__;
+}
+
+QTabBar::tab:selected:hover
+{
+    border-bottom : 4px solid __BUTTON_ALT_PRESSED__;
+}
+
+#WHEN DEFAULT
+
+QMdiArea
+{
+    background : #E0E0E0;
+}
+
+#WHEN FANCY
+
+QMdiArea
+{
+    background : #6495ED;
+}
+
+QDialog
+{
+    background : __BACKGROUND__;
+}
+
+QToolButton
+{
+    background    : __BUTTON__;
+    color         : __BUTTON_TEXT__;
+    border-radius : 4px;
+    margin        : 2px;
+    padding       : 2px;
+    font-weight   : bold;
+    border        : 3px solid __BUTTON__;
+}
+
+QPushButton
+{
+    background     : __BUTTON__;
+    color          : __BUTTON_TEXT__;
+    font-weight    : bold;
+    padding-left   : 16px;
+    padding-right  : 16px;
+    padding-top    : 8px;
+    padding-bottom : 8px;
+    border         : 3px solid __BUTTON__;
+    border-radius  : 8px;
+}
+
+QPushButton:hover, QToolButton:hover, QTextEdit:hover, QLineEdit:hover, QComboBox:hover
+{
+    border : 3px solid __ACCENT__;
+}
+
+QPushButton:pressed, QToolButton:pressed
+{
+    background : __BUTTON_PRESSED__;
+}
+
+QPushButton:disabled, QToolButton:disabled
+{
+    background : __DISABLED__;
+}
+
+QTreeWidget
+{
+    background    : __TEXTBOX__;
+    color         : black;
+    border-style  : solid;
+    border-width  : 1px;
+    border-color  : __BORDER__;
+    border-radius : 0px;
+}
+
+QTextEdit, QLineEdit, QComboBox, QSpinBox
+{
+    background    : __TEXTBOX__;
+    color         : __TEXT__;
+    border        : 3px solid __BUTTON__;
+    border-radius : 8px;
+    padding       : 5px;
+}
+
+/* Buttons for spin box, combo box */
+
+QSpinBox::up-button,QSpinBox::down-button,QComboBox::drop-down
+{
+    subcontrol-origin   : padding;
+    width               : 24px;
+    margin              : 5px;
+    border-radius       : 4px;
+    background          : __BUTTON__;
+}
+
+QSpinBox::up-button
+{
+    subcontrol-position : top right;
+    height              : 12px;
+}
+
+QSpinBox::down-button
+{
+    subcontrol-position : bottom right;
+    height              : 12px;
+}
+
+QComboBox::drop-down
+{
+    subcontrol-position : right;
+    height              : 24px;
+}
+
+QSpinBox::up-arrow,QSpinBox::down-arrow,QComboBox::down-arrow
+{
+    width  : 16px;
+    height : 16px;
+}
+
+QSpinBox::down-arrow
+{
+    image  : url(:/intermake/down_arrow.svg);
+}
+
+QSpinBox::up-arrow
+{
+    image  : url(:/intermake/up_arrow.svg);
+}
+
+QComboBox::down-arrow
+{
+    image  : url(:/intermake/dropdown.svg);
+}
+
+/* Menu */
+
+QMenuBar
+{
+    background-color : __MENUBAR__;
+    color            : white;
+    border-width     : 1px;
+    border-style     : transparent;
+    border-color     : black;
+}
+
+QMenuBar::item
+{
+    background-color : __MENU__;
+    color            : __MENU_TEXT__;
+    border-width     : 1px;
+    border-style     : solid;
+    border-color     : __MENU__;
+    border-radius    : 8px;
+    padding          : 2px;
+    margin           : 2px;
+}
+
+QMenu
+{
+    background-color : __MENUBAR__;
+    color            : __MENU_TEXT__;
+    border-width     : 1px;
+    border-style     : transparent;
+    border-color     : black;
+    border-radius    : 8px;
+}
+
+QMenu::item
+{
+    background-color : __MENU__;
+    color            : __MENU_TEXT__;
+    border     : 3px solid __MENU__;
+    border-radius    : 8px;
+    padding          : 8px;
+    padding-left     : 32px;
+    margin           : 1px;
+}
+
+QMenu::indicator:non-exclusive:!checked
+{
+    image: url(:/intermake/check_indeterminate.svg);
+    width: 16px;
+    height: 16px;
+}
+
+QMenu::indicator:non-exclusive:checked
+{
+    image: url(:/intermake/check_yes.svg);
+    width: 16px;
+    height: 16px;
+}
+
+QMenu::item:selected
+{
+    border-color : __ACCENT__;
+}
+
+/* Checkable buttons */
+
+QPushButton:checked, QToolButton:checked
+{
+    background : __BUTTON_ALT__;
+}
+
+QPushButton:checked:pressed, QToolButton:checked:pressed
+{
+    background : __BUTTON_ALT_PRESSED__;
+}
+
+/* Scroll bars */
+
+QScrollBar
+{
+    background : __BACKGROUND__;
+}
+
+QScrollBar:vertical
+{
+    width : 8px;
+}
+
+QScrollBar:horizontal
+{
+    height : 8px;
+}
+
+QScrollBar::handle
+{
+    background    : __SCROLLBTN__;
+    border-radius : 4px;
+}
+
+QScrollBar::handle:vertical
+{
+    min-width : 8px;
+    margin    : 8px 0px 8px 0px;
+}
+
+QScrollBar::handle:horizontal
+{
+    min-height : 8px;
+    margin     : 0px 8px 0px 8px;
+}
+
+QScrollBar:up-arrow, QScrollBar::down-arrow, QScrollBar::left-arrow, QScrollBar::right-arrow
+{
+    border-size   : 1px;
+    border-radius : 4px;
+    width         : 8px;
+    height        : 8px;
+    background    : __BUTTON__;
+}
+
+QScrollBar::sub-line, QScrollBar::add-line
+{
+    background : __AREA__;
+}
+
+/* Radio button and checkbox */
+
+QRadioButton, QCheckBox
+{
+    padding : 2px;
+}
+
+QRadioButton::indicator, QCheckBox::indicator
+{
+    background : __BUTTON__;
+    width      : 16px;
+    height     : 16px;
+}
+
+QCheckBox::indicator
+{
+    border-radius : 4px;
+}
+
+QRadioButton::indicator
+{
+    border-radius : 8px;
+}
+
+QRadioButton::indicator:checked, QCheckBox::indicator:checked
+{
+    background : __BUTTON_ALT__;
+    image      : url(:/intermake/check_yes.svg);
+}
+
+QRadioButton::indicator:unchecked, QCheckBox::indicator:unchecked
+{
+    image : none;
+}
+
+QRadioButton::indicator:indeterminate, QCheckBox::indicator:indeterminate
+{
+    image : url(:/intermake/check_indeterminate.svg);
+}
+
+/* Special styles */
+
+#WHEN FANCY DEFAULT
+
+QToolButton[style="listbutton"]
+{
+    background   : #40C0FF;
+    border-style : outset;
+    border-width : 2px;
+    border-color : transparent;
+}
+
+QToolButton[style="listbutton"]::hover
+{
+    background   : #B0D5E8;
+    border-color : blue;
+}
+
+QToolButton[style="listbutton"]::pressed
+{
+    background   : #0040C0;
+    border-style : inset;
+}
+
+QLabel[style="icon"]
+{
+    background    : #EEEEEE;
+    border-radius : 8px;
+}
+
+QFrame[style="title"]
+{
+    margin-top     : 16px;
+    margin-bottom  : 4px;
+    margin-left    : 0px;
+    margin-right   : 0px;
+    border-radius  : 0px;
+    border-bottom  : 2px solid silver;
+    border-left    : none;
+    border-right   : none;
+    border-top     : none;
+    padding-top    : 2px;
+    padding-bottom : 2px;
+    padding-left   : -4px;
+    padding-right  : 0px;
+    color          : black;
+    font-size      : 18px;
+}
+
+QLabel[style="title"], QFrame[style="title"]
+{
+    background    : #EEEEEE;
+    border-radius : 4px;
+    margin        : 2px;
+    padding       : 2px;
+    color         : black;
+    font-size     : 18px;
+}
+
+QLabel[style="title-embeded"]
+{
+    background : #EEEEEE;
+    color      : black;
+    font-size  : 18px;
+}
+
+
+
+#WHEN FANCY
+
+QLabel[style="helpbox"]
+{
+    background    : #FFFFD0;
+    padding       : 8px;
+    border-radius : 4px;
+}
+
+QFrame[style="helpbox"]
+{
+    background    : #FFFFD0;
+}
+
+QLabel[style="subheading"]
+{
+    background : #FF0000;
+}
+
+QLabel[style="heading"], QPushButton[style="heading"]
+{
+    background     : __BACKGROUND__;
+    margin-top     : 16px;
+    margin-bottom  : 4px;
+    margin-left    : 0px;
+    margin-right   : 0px;
+    border-radius  : 0px;
+    border-bottom  : 2px solid silver;
+    border-left    : none;
+    border-right   : none;
+    border-top     : none;
+    padding-top    : 2px;
+    padding-bottom : 2px;
+    padding-left   : -4px;
+    padding-right  : 0px;
+    color          : black;
+    font-size      : 16px;
+}
+
+#WHEN DEFAULT
+
+QLabel[style="helpbox"]
+{
+    background    : transparent;
+    color         : steelblue;
+    padding       : 2px;
+    border-radius : 4px;
+}
+
+QLabel[style="subheading"]
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+QLabel[style="heading"], QPushButton[style="heading"]
+{
+    font-weight: bold;
+    border-bottom  : 1px solid #404040;
+    border-left    : none;
+    border-right   : none;
+    border-top     : none;
+    color: #404040;
+}
+
+#WHEN FANCY DEFAULT
+
+QTextEdit[style="console"]
+{
+    font-family: "Consolas", monospace;
+    background : black;
+    color      : white;
+}
+
+QTextEdit[style="monospaced"]
+{
+    font-family: "Consolas", monospace;
+}
+
+QPushButton[style="completed"]
+{
+    background    : #00C080;
+    border-color  : #00C080; 
+}
+
+QPushButton[style="cancel"]
+{
+    background    : #C00000;
+    color         : white;
+    padding       : 8px;
+    border-color  : white;
+    border-width  : 1px;
+    border-radius : 8px;
+}
+
+QMdiArea[style="empty"]
+{
+    background : #E0E0E0;
+}
+
+QLabel[style="warning"]
+{
+    background       : #FFFFD0;
+    padding          : 8px;
+    border-radius    : 8px;
+    image            : url(":/intermake/warning.svg");
+    image-position   : left;
+    qproperty-indent : 24;
+}
+
+QLabel[style="warning_no_icon"]
+{
+    background       : #FFFF80;
+    color            : #800000;          
+    padding          : 8px;
+    border-radius    : 8px;
+}
+
+QToolButton[style="dropdown"]
+{
+    qproperty-toolButtonStyle : ToolButtonTextBesideIcon;
+    qproperty-icon            : url(:/intermake/dropdown.svg);
+}
+
+QToolButton[style="refresh"]
+{
+    qproperty-toolButtonStyle : ToolButtonTextBesideIcon;
+    qproperty-icon            : url(:/intermake/refresh.svg);
+}
+
+
+QToolButton[style="combo"]
+{
+    background: white;
+}
+
+QFrame[style="contents"]
+{
+    background: white;
+    border: 1px inset silver;
+}
+
+QToolButton[style="item"]
+{
+    background: white;
+    border: 1px solid white;
+    color: black;
+}
+
+QToolButton[style="item"]:hover
+{
+    color: blue;
+    text-decoration: underline;
+    border: 1px dotted #8080FF;
+}
+
+QToolButton[style="item"]:pressed
+{
+    background: #B0D5E8;
+}
+
+QToolButton[style="help"]
+{
+    border: 1px solid transparent;
+    background: transparent;
+    qproperty-icon            : url(:/intermake/help.svg);
+}
+
+QToolButton[style="help"]:hover
+{
+    border: 1px outset silver;
+}
+
+QToolButton[style="help"]:pressed
+{
+    border: 1px inset silver;
+}
+
+QPushButton[style="link"]
+{
+    background: transparent;
+    border: none;
+    color: blue;
+    padding: 4px;
+}
+
+QPushButton[style="link"]:hover
+{
+    color: blue;
+    text-decoration: underline;
+}
+
+QPushButton[style="link"]:pressed
+{
+    color: red;
+    text-decoration: underline;
+    border: 1px solid blue;
+}
+
+QFrame[style="sidearea"]
+{
+    background: gray;
+}
+
+QToolButton[style="sidearea"]
+{
+    background: gray;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+QToolButton[style="sidearea"]:hover
+{
+    background: qlineargradient(spread:pad, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(195, 195, 195, 255), stop:0.0985222 rgba(255, 255, 255, 255), stop:1 rgba(135, 135, 135, 255));
+    border: 1px outset gray;
+    border-radius: 4px;
+}
+
+QToolButton[style="sidearea"]:pressed
+{
+    background: qlineargradient(spread:pad, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(195, 195, 195, 255), stop:0.0985222 rgba(99, 99, 99, 255), stop:1 rgba(135, 135, 135, 255));
+    border: 1px inset gray;
+    border-radius: 4px;
+}
+
+QAbstractButton[style="expander"]:checked
+{
+    qproperty-icon : url(:/intermake/expanddown.svg);
+}
+
+QAbstractButton[style="expander"]:!checked
+{
+    qproperty-icon : url(:/intermake/expandup.svg);
+}

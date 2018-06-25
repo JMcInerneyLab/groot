@@ -1,36 +1,36 @@
-from typing import Callable
+from typing import Callable, cast
 
 import groot
 from groot_gui.lego import ModelView
-from groot_gui.utilities.selection import LegoSelection
-from mhelper import exception_helper
 
 
 DAlgorithm = Callable[[ModelView], None]
-selection_algorithms = groot.AlgorithmCollection( DAlgorithm, "LegoSelection" )
+selection_algorithms = groot.AlgorithmCollection( DAlgorithm, "selection_algorithms" )
 
 
 def apply_select( model_view: ModelView, algorithm: selection_algorithms.Algorithm ):
     algorithm( model_view )
 
 
-def select_by_selection( model_view: ModelView, intent: LegoSelection ):
-    selection = set( model_view.selection )
-    assert isinstance( intent, LegoSelection )
-    
-    sel = intent.single
-    
-    if isinstance( sel, groot.Gene ):
-        for domain_view in model_view.domain_views.values():
-            if domain_view.domain.gene is sel:
-                selection.add( domain_view.domain )
-    elif isinstance( sel, groot.Domain ):
-        selection.update( x.domain for x in model_view.find_userdomain_views_for_domain( sel ) )
+def select_by_entity( model_view: ModelView, target: object ):
+    if isinstance( target, groot.Gene ):
+        predicate = (lambda x: cast( groot.UserDomain, x ).gene is target)
+    elif isinstance( target, groot.Domain ):
+        predicate = (lambda x: cast( groot.UserDomain, x ).has_overlap( cast( groot.Domain, target ) ))
+    elif isinstance( target, groot.Component ):
+        comp = cast( groot.Component, target )
+        predicate = (lambda x: any( y.has_overlap( x ) for y in comp.minor_domains ))
+    elif isinstance( target, groot.Edge ):
+        edge = cast( groot.Edge, target )
+        predicate = (lambda x: any( y.has_overlap( x ) for y in (edge.left, edge.right) ))
     else:
-        raise exception_helper.SwitchError( "sel", sel, instance = True )
+        return False
     
-    if not selection:
-        raise ValueError( "Could not find the element." )
+    selection = set()
+    
+    for domain in model_view.domain_views.keys():
+        if predicate( domain ):
+            selection.add( domain )
     
     model_view.selection = frozenset( selection )
 

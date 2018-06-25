@@ -2,7 +2,7 @@
 Converts Lego entities to HTML.
 """
 from typing import List
-from intermake import IVisualisable, VisualisablePath
+from intermake import VisualisablePath
 from mhelper import array_helper, string_helper
 from mhelper_qt import qt_gui_helper
 
@@ -33,15 +33,14 @@ def render( item, model: Model ):
         render_fasta( html, item, model )
     
     # Anything with metadata
-    if isinstance( item, IVisualisable ):
-        render_visualisable( html, item )
+    render_visualisable( html, item )
     
     html.append( "</body></html>" )
     
     return "\n".join( html )
 
 
-def render_visualisable( html: HTML, item: IVisualisable ):
+def render_visualisable( html: HTML, item: object ):
     html.append( "<h3>Data table</h3>" )
     vi = VisualisablePath.from_visualisable_temporary( item )
     

@@ -10,7 +10,7 @@ def __mk():
     from editorium import EditorInfo, AbstractBrowserEditor
     from groot.data import INamedGraph, global_view
     from typing import Optional
-    from groot_gui.utilities.selection import ESelect, show_selection_menu
+    from groot_gui.utilities.selection import show_selection_menu
     
     class Editor_Graph( AbstractBrowserEditor):
         def on_convert_from_text( self, text: str ) -> object:
@@ -35,7 +35,7 @@ def __mk():
         
         def on_browse( self, value: Optional[object] ) -> Optional[str]:
             ignore( value )
-            r = show_selection_menu( self.edit_btn, None, ESelect.HAS_GRAPH )
+            r = show_selection_menu( self.edit_btn, None, INamedGraph )
             
             if r is not None:
                 assert isinstance( r.single, INamedGraph )

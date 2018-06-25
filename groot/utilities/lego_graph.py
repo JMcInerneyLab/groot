@@ -78,28 +78,27 @@ def import_leaf_reference( name: str, model: Model, *, allow_empty: bool = False
     
     assert isinstance( name, str )
     
-    try:
-        if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
-            return None
-        elif Gene.is_legacy_accession( name ):
-            return model.genes.by_legacy_accession( name )
-        elif Point.is_legacy_accession( name ):
-            return model.fusions.find_point_by_legacy_accession( name )
-        elif Formation.is_legacy_accession( name ):
-            return model.fusions.find_formation_by_legacy_accession( name )
-        else:
-            return model.genes[name]
-    except NotFoundError as ex:
-        if skip_missing:
-            return None
-        else:
-            raise NotFoundError( "Failed to import the leaf reference string «{}». This is not a recognised accession or legacy accession.".format( name ) ) from ex
+    if allow_empty and name == "" or name == "root" or name.startswith( "clade" ):
+        return None
+    
+    r = model.by_legacy_accession( name, None )
+    
+    if r is not None:
+        return r
+    
+    r = model.genes.get( name )
+    
+    if r is not None:
+        return r
+    
+    if skip_missing:
+        return None
+    else:
+        raise NotFoundError( "Failed to import the leaf reference string «{}». This is not a recognised accession or legacy accession.".format( name ) )
 
 
 def is_root( node: MNode ):
-    if is_sequence_node( node ) and node.data.position == EPosition.ROOT:
-        return True
-    elif any( is_sequence_node( x ) and x.data.position == EPosition.OUTGROUP for x in node.relations ):
+    if any( is_sequence_node( x ) and x.data.position == EPosition.OUTGROUP for x in node.relations ):
         return True
     
     return False

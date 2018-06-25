@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def __init__(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(991, 587)
+        Dialog.resize(1066, 738)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.splitter = QtWidgets.QSplitter(Dialog)
@@ -52,7 +52,7 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.TXT_DATA)
         self.verticalLayout_2.addWidget(self.splitter)
         self.BTNBOX_MAIN = QtWidgets.QDialogButtonBox(Dialog)
-        self.BTNBOX_MAIN.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.BTNBOX_MAIN.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Help|QtWidgets.QDialogButtonBox.Ok)
         self.BTNBOX_MAIN.setObjectName("BTNBOX_MAIN")
         self.verticalLayout_2.addWidget(self.BTNBOX_MAIN)
 

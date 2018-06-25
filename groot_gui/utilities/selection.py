@@ -1,275 +1,96 @@
-from typing import Iterable, FrozenSet, Optional, List, Callable, Union
-from PyQt5.QtCore import QPoint
-from PyQt5.QtWidgets import QAbstractButton, QMenu, QAction
-from mhelper import MFlags, array_helper, string_helper, ResourceIcon
+from typing import Callable, Iterable, List, Optional
 
 import groot
-
+from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QAbstractButton, QAction, QMenu
 from groot_gui.forms.resources import resources
+from mhelper import ResourceIcon, AnnotationInspector
 
 
 _MENU_CSS = 'font-size: 18px; font-family: "Segoe UI";'
-
-
-class ESelect( MFlags ):
-    EX_SPECIAL = 1 << 1
-    EX_SEQUENCES = 1 << 2
-    EX_DOMAINS = 1 << 3
-    EX_EDGES = 1 << 4
-    EX_COMPONENTS = 1 << 5
-    EX_ALIGNMENTS = 1 << 6
-    EX_TREES_ROOTED = 1 << 7
-    EX_TREES_UNROOTED = 1 << 8
-    EX_FUSIONS = 1 << 9
-    EX_POINTS = 1 << 10
-    EX_SPLITS = 1 << 11
-    EX_CONSENSUS = 1 << 12
-    EX_SUBSETS = 1 << 13
-    EX_SUBGRAPHS = 1 << 14
-    EX_NRFGS = 1 << 15
-    EX_CHECKED = 1 << 16
-    EX_USERGRAPHS = 1 << 17
-    EX_USER_REPORTS = 1 << 18
-    
-    HAS_FASTA = EX_SEQUENCES | EX_DOMAINS | EX_EDGES | EX_ALIGNMENTS
-    HAS_GRAPH = EX_TREES_ROOTED | EX_TREES_UNROOTED | EX_SUBGRAPHS | EX_NRFGS | EX_USERGRAPHS
-    IS_SPLIT = EX_SPLITS | EX_CONSENSUS
-    IS_NORMAL = EX_SEQUENCES | EX_DOMAINS | EX_EDGES | EX_COMPONENTS | EX_ALIGNMENTS | EX_TREES_ROOTED | EX_TREES_UNROOTED | EX_FUSIONS | EX_POINTS | EX_SPLITS | EX_CONSENSUS | EX_SUBSETS | EX_SUBGRAPHS | EX_NRFGS | EX_CHECKED | EX_USERGRAPHS | EX_USER_REPORTS
-
-
-class LegoSelection:
-    """
-    IMMUTABLE
-    Represents the selection made by the user.
-    """
-    
-    
-    def __init__( self, items: Iterable[object] = None ):
-        if items is None:
-            items = frozenset()
-        
-        if not isinstance( items, FrozenSet ):
-            items = frozenset( items )
-        
-        self.items: FrozenSet[object] = items
-        self.sequences = frozenset( x for x in self.items if isinstance( x, groot.Gene ) )
-        self.user_domains = frozenset( x for x in self.items if isinstance( x, groot.UserDomain ) )
-        self.components = frozenset( x for x in self.items if isinstance( x, groot.Component ) )
-        self.edges = frozenset( x for x in self.items if isinstance( x, groot.Edge ) )
-        self.fusions = frozenset( x for x in self.items if isinstance( x, groot.Fusion ) )
-        self.splits = frozenset( x for x in self.items if isinstance( x, groot.Split ) )
-    
-    
-    def __bool__( self ):
-        return bool( self.items )
-    
-    
-    @property
-    def single( self ):
-        return array_helper.single( self, empty = None )
-    
-    
-    def is_empty( self ):
-        return not self.items
-    
-    
-    def selection_type( self ):
-        return type( array_helper.first_or_none( self.items ) )
-    
-    
-    def __iter__( self ):
-        return iter( self.items )
-    
-    
-    def __contains__( self, item ):
-        return item in self.items
-    
-    
-    def __str__( self ):
-        if len( self.items ) == 0:
-            return "No selection"
-        elif len( self.items ) == 1:
-            return str( array_helper.first_or_error( self.items ) )
-        
-        r = []
-        
-        if self.sequences:
-            r.append( "{} genes".format( len( self.sequences ) ) )
-        
-        if self.user_domains:
-            r.append( "{} domains".format( len( self.user_domains ) ) )
-        
-        if self.components:
-            r.append( "{} components".format( len( self.components ) ) )
-        
-        if self.edges:
-            r.append( "{} edges".format( len( self.edges ) ) )
-        
-        return string_helper.format_array( r, final = " and " )
-
-
-class SelectionManipulator:
-    """
-    Manipulates a selection.
-    
-    """
-    
-    
-    def select_left( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
-        select = set()
-        
-        for domain1 in model.user_domains:
-            for domain2 in selection.user_domains:
-                if domain1.sequence is domain2.gene and domain1.start <= domain2.start:
-                    select.add( domain1 )
-                    break
-        
-        return LegoSelection( select )
-    
-    
-    def select_right( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
-        select = set()
-        
-        for domain1 in model.user_domains:
-            for domain2 in selection.user_domains:
-                if domain1.sequence is domain2.gene and domain1.start <= domain2.start:
-                    select.add( domain1 )
-                    break
-        
-        return LegoSelection( select )
-    
-    
-    def select_direct_connections( self, model: groot.Model, selection: LegoSelection ) -> LegoSelection:
-        edges = set()
-        
-        for domain in selection.user_domains:
-            for edge in model.edges:
-                if edge.left.has_overlap( domain ) or edge.right.has_overlap( domain ):
-                    edges.add( edge )
-        
-        select = set()
-        
-        for edge in edges:
-            select.add( edge.start )
-            select.add( edge.end )
-        
-        return LegoSelection( select )
-    
-    
-    def select_all( self, model: groot.Model, _: LegoSelection ) -> LegoSelection:
-        """
-        Selects everything.
-        """
-        return LegoSelection( model.user_domains )
-
-
 _GuiActions_ = "groot_gui.utilities.gui_menu.GuiActions"
 
 
 def show_selection_menu( control: QAbstractButton,
-                         default: Union[_GuiActions_, LegoSelection, None],
-                         mode: ESelect = ESelect.ALL,
-                         ) -> Optional[LegoSelection]:
+                         default: object,
+                         mode: type = object,
+                         ) -> object:
     """
     Shows the selection menu.
     
     :param control:     Button to drop the menu down from. 
-    :param default:     One of:
-                        * A GuiActions object. The default selection will be retrieved from this object, and any new selection will be committed to it.
-                        * A LegoSelection object. The default selection will be this.
-                        * None. There will be no default selection.
-    :param mode:        Display mode.
+    :param default:     Currently selected item
+    :param mode:        What we are capable of selecting (as a `type`).
     :return:            The selection made. This will have already been committed to `actions` if `actions` is a `GuiActions` object. 
     """
     model = groot.global_view.current_model()
     
-    from groot_gui.utilities.gui_menu import GuiActions
-    if isinstance( default, GuiActions ):
-        selection = default.get_selection()
-    elif isinstance( default, LegoSelection ):
-        selection = default
-    else:
-        selection = LegoSelection()
+    selection = default
     
     alive = []
     
     root = QMenu()
     root.setTitle( "Make selection" )
     
-    # Meta
-    if model.genes:
-        relational = QMenu()
-        relational.setTitle( "Relational" )
-        OPTION_1 = "Select all"
-        OPTION_2 = "Select none"
-        OPTION_3 = "Invert selection"
-        OPTION_4 = "Select sequences with no site data"
-        OPTION_5 = "Select domains to left of selected domains"
-        OPTION_6 = "Select domains to right of selected domains"
-        OPTION_7 = "Select domains connected to selected domains"
-        OPTIONS = (OPTION_1, OPTION_2, OPTION_3, OPTION_4, OPTION_5, OPTION_6, OPTION_7)
-        
-        _add_submenu( "(Selection)", mode & ESelect.EX_SPECIAL, alive, OPTIONS, root, selection, None )
-    
     # Sequences
-    _add_submenu( "1. Genes", mode & ESelect.EX_SEQUENCES, alive, model.genes, root, selection, resources.black_gene )
+    _add_submenu( "Genes", mode, alive, model.genes, root, selection, resources.black_gene )
     
     # Edges
-    _add_submenu( "2. Edges", mode & ESelect.EX_EDGES, alive, model.genes, root, selection, resources.black_edge, ex = [groot.Gene.iter_edges] )
+    _add_submenu( "Edges", mode, alive, model.genes, root, selection, resources.black_edge, expand_functions = [groot.Gene.iter_edges] )
     
     # Components
-    _add_submenu( "3. Components", mode & ESelect.EX_COMPONENTS, alive, model.components, root, selection, resources.black_major )
+    _add_submenu( "Components", mode, alive, model.components, root, selection, resources.black_major )
     
     # Components - FASTA (unaligned)
-    _add_submenu( "3b. Component FASTA (unaligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_unaligned_fasta for x in model.components), root, selection, resources.black_alignment )
+    _add_submenu( "Component FASTA (unaligned)", mode, alive, (x.named_unaligned_fasta for x in model.components), root, selection, resources.black_alignment )
     
     # Domains
-    _add_submenu( "4. Domains", mode & ESelect.EX_DOMAINS, alive, model.genes, root, selection, resources.black_domain, ex = [groot.Gene.iter_userdomains] )
+    _add_submenu( "Domains", mode, alive, model.genes, root, selection, resources.black_domain, expand_functions = [groot.Gene.iter_userdomains] )
     
     # Components - FASTA (aligned)
-    _add_submenu( "5. Component FASTA (aligned)", mode & ESelect.EX_ALIGNMENTS, alive, (x.named_aligned_fasta for x in model.components), root, selection, resources.black_alignment )
+    _add_submenu( "Component FASTA (aligned)", mode, alive, (x.named_aligned_fasta for x in model.components), root, selection, resources.black_alignment )
     
     # Components - trees (rooted)
-    _add_submenu( "6a. Component trees (rooted)", mode & ESelect.EX_TREES_ROOTED, alive, (x.named_tree for x in model.components), root, selection, resources.black_tree )
+    _add_submenu( "Component trees (rooted)", mode, alive, (x.named_tree for x in model.components), root, selection, resources.black_tree )
     
     # Components - trees (unrooted)
-    _add_submenu( "6b. Component trees (unrooted)", mode & ESelect.EX_TREES_UNROOTED, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
+    _add_submenu( "Component trees (unrooted)", mode, alive, (x.named_tree_unrooted for x in model.components), root, selection, resources.black_tree )
     
     # Fusions
-    _add_submenu( "7a. Fusion events", mode & ESelect.EX_FUSIONS, alive, model.fusions, root, selection, resources.black_fusion )
+    _add_submenu( "Fusion events", mode, alive, model.fusions, root, selection, resources.black_fusion )
     
     # Fusion formations
-    _add_submenu( "7b. Fusion formations", mode & ESelect.EX_POINTS, alive, model.fusions, root, selection, resources.black_fusion, ex = [lambda x: x.formations] )
+    _add_submenu( "Fusion formations", mode, alive, model.fusions, root, selection, resources.black_fusion, expand_functions = [lambda x: x.formations] )
     
     # Fusion points
-    _add_submenu( "7c. Fusion points", mode & ESelect.EX_POINTS, alive, model.fusions, root, selection, resources.black_fusion, ex = [lambda x: x.formations, lambda x: x.points] )
+    _add_submenu( "Fusion points", mode, alive, model.fusions, root, selection, resources.black_fusion, expand_functions = [lambda x: x.formations, lambda x: x.points] )
     
     #  Splits
-    _add_submenu( "8. Splits", mode & ESelect.EX_SPLITS, alive, model.splits, root, selection, resources.black_split, it = True )
+    _add_submenu( "Splits", mode, alive, model.splits, root, selection, resources.black_split, create_index = True )
     
     # Consensus
-    _add_submenu( "9. Consensus", mode & ESelect.EX_CONSENSUS, alive, model.consensus, root, selection, resources.black_consensus, it = True )
+    _add_submenu( "Consensus", mode, alive, model.consensus, root, selection, resources.black_consensus, create_index = True )
     
     # Subsets
-    _add_submenu( "10. Subsets", mode & ESelect.EX_SUBSETS, alive, model.subsets, root, selection, resources.black_subset )
+    _add_submenu( "Subsets", mode, alive, model.subsets, root, selection, resources.black_subset )
     
     # Pregraphs
-    _add_submenu( "11. Pregraphs", mode & ESelect.EX_SUBGRAPHS, alive, model.iter_pregraphs(), root, selection, resources.black_pregraph )
+    _add_submenu( "Pregraphs", mode, alive, model.iter_pregraphs(), root, selection, resources.black_pregraph )
     
     # Subgraphs
-    _add_submenu( "12. Supertrees", mode & ESelect.EX_SUBGRAPHS, alive, model.subgraphs, root, selection, resources.black_subgraph )
+    _add_submenu( "Supertrees", mode, alive, model.subgraphs, root, selection, resources.black_subgraph )
     
     # NRFG - clean
-    _add_submenu( "13. Fusion graphs", mode & ESelect.EX_NRFGS, alive, (model.fusion_graph_unclean, model.fusion_graph_clean), root, selection, resources.black_nrfg )
+    _add_submenu( "Fusion graphs", mode, alive, (model.fusion_graph_unclean, model.fusion_graph_clean), root, selection, resources.black_nrfg )
     
     # NRFG - report
-    _add_submenu( "14. Reports", mode & ESelect.EX_CHECKED, alive, (model.report,), root, selection, resources.black_check )
+    _add_submenu( "Reports", mode, alive, (model.report,), root, selection, resources.black_check )
     
     # Usergraphs
-    _add_submenu( "User graphs", mode & ESelect.EX_USERGRAPHS, alive, model.user_graphs, root, selection, resources.black_nrfg )
+    _add_submenu( "User graphs", mode, alive, model.user_graphs, root, selection, resources.black_nrfg )
     
     # Usergraphs
-    _add_submenu( "User reports", mode & ESelect.EX_USER_REPORTS, alive, model.user_reports, root, selection, resources.black_check )
+    _add_submenu( "User reports", mode, alive, model.user_reports, root, selection, resources.black_check )
     
     # Special
     if len( root.actions() ) == 0:
@@ -292,35 +113,39 @@ def show_selection_menu( control: QAbstractButton,
     if selected is None:
         return None
     
-    tag = selected.tag
-    
-    if tag is not None:
-        r = LegoSelection( frozenset( { tag } ) )
-        
-        if default is not None:
-            default.set_selection( r )
-        
-        return r
-    else:
-        return None
+    return selected.tag
 
 
 def _add_submenu( text: str,
-                  requirement: bool,
-                  alive: List[object],
+                  mode: type,
+                  live_list: List[object],
                   elements: Iterable[object],
                   root: QMenu,
-                  selection: LegoSelection,
+                  selection: object,
                   icon: Optional[ResourceIcon],
-                  ex: Optional[List[Callable[[object], Iterable[object]]]] = None,
-                  it: bool = False ) -> int:
-    if it:
+                  expand_functions: Optional[List[Callable[[object], Iterable[object]]]] = None,
+                  create_index: bool = False ) -> int:
+    """
+    
+    :param text: 
+    :param mode: 
+    :param live_list: 
+    :param elements: 
+    :param root: 
+    :param selection: 
+    :param icon: 
+    :param expand_functions:    When set, each of the `elements` is expanded into its own menu via this function.
+                                This should be a list, the first element of which is used (the second element is used to expand the next set, and so forth)
+    :param create_index:        Add an index page (overrides `ex`) 
+    :return: 
+    """
+    if create_index:
         lst = sorted( elements, key = str )
         ne = []
         for s in range( 0, len( lst ), 20 ):
             ne.append( (s, lst[s:s + 20]) )
         
-        ex = ((lambda x: x[1]),)
+        expand_functions = ((lambda x: x[1]),)
         elements = ne
         fmt = lambda x: "{}-{}".format( x[0], x[0] + 20 )
     else:
@@ -335,36 +160,35 @@ def _add_submenu( text: str,
         if element is None:
             continue
         
-        if not ex:
-            if _add_action( requirement, alive, element, selection, sub_menu, icon ):
-                count += 1
+        if not expand_functions:
+            count += _add_action( mode, live_list, element, selection, sub_menu, icon )
         else:
-            count += _add_submenu( fmt( element ), requirement, alive, ex[0]( element ), sub_menu, selection, icon, ex = list( ex[1:] ) )
+            count += _add_submenu( fmt( element ), mode, live_list, expand_functions[0]( element ), sub_menu, selection, icon, expand_functions = list( expand_functions[1:] ) )
     
     if not count:
         # Nothing in the menu
         return 0
     
-    alive.append( sub_menu )
+    live_list.append( sub_menu )
     root.addMenu( sub_menu )
     return count
 
 
-def _add_action( requirement: bool,
-                 alive,
-                 minigraph,
-                 selection,
-                 sub,
-                 icon ):
-    e = bool( requirement )
+def _add_action( mode: type,
+                 live_list: List[object],
+                 element: object,
+                 selection: object,
+                 menu: QMenu,
+                 icon: ResourceIcon ):
+    e = AnnotationInspector( mode ).is_viable_instance( element )
     act = QAction()
     act.setCheckable( True )
-    act.setChecked( minigraph in selection )
-    act.setText( str( minigraph ) )
+    act.setChecked( element is selection )
+    act.setText( str( element ) )
     act.setEnabled( e )
     if icon:
         act.setIcon( icon.icon() )
-    act.tag = minigraph
-    alive.append( act )
-    sub.addAction( act )
-    return e
+    act.tag = element
+    live_list.append( act )
+    menu.addAction( act )
+    return bool( e )

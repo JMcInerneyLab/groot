@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>705</width>
-    <height>516</height>
+    <width>787</width>
+    <height>842</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>664</width>
-        <height>1182</height>
+        <width>746</width>
+        <height>1335</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -66,7 +66,7 @@ Intermake is copyright (c) Martin Rusilowicz
 &lt;li&gt;Webpage: www.bitbucket.org/mjr129/intermake&lt;/li&gt;
 &lt;li&gt;License: https://www.gnu.org/licenses/agpl-3.0.html&lt;/li&gt;
 &lt;/ul&gt;&lt;br/&gt;
-&lt;img width=&quot;96&quot; source=&quot;:/intermake/intermake_logo.png&quot;/&gt;
+&lt;img width=&quot;96&quot; source=&quot;:/intermake/intermake_logo.svg&quot;/&gt;
 
 &lt;h2&gt;Qt5&lt;/h2&gt;
 Qt is copyright (c) The Qt Company
@@ -84,12 +84,16 @@ PyQt5 is copyright (c) Riverbank Computing Limited
 &lt;/ul&gt;
 
 &lt;h2&gt;Images&lt;/h2&gt;
-Images made by Freepik, Google and Good Ware from www.flaticon.com
+Images made by...
 &lt;ul&gt;
-&lt;li&gt;Webpage: https://www.flaticon.com&lt;/li&gt;
+&lt;li&gt;Good Ware&lt;/li&gt;
+&lt;li&gt;Freepik&lt;/li&gt;
+&lt;li&gt;Maxim Basinski&lt;/li&gt;
+&lt;li&gt;Those Icons&lt;/li&gt;
+&lt;li&gt;Pixel perfect&lt;/li&gt;
+&lt;li&gt;Smashicons&lt;/li&gt;
 &lt;/ul&gt;
-
-
+...from &lt;a href=&quot;https://www.flaticon.com&quot;&gt;www.flaticon.com&lt;/a&gt;
 </string>
          </property>
         </widget>
@@ -102,7 +106,7 @@ Images made by Freepik, Google and Good Ware from www.flaticon.com
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+  <include location="../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

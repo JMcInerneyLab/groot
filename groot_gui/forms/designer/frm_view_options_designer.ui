@@ -29,7 +29,7 @@
    <item row="0" column="1">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>7</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="PAGE_BROWSER">
       <property name="page_title" stdset="0">
@@ -1300,7 +1300,7 @@ You can also explore the Groot model through Intermake.</string>
   </layout>
  </widget>
  <resources>
-  <include location="../../../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
+  <include location="../../../../intermake/intermake_qt/forms/designer/resource_files/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

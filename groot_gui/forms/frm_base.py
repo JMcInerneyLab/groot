@@ -1,19 +1,31 @@
 import re
+import warnings
+from typing import Union
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QAbstractButton, QDialog, QFrame, QGroupBox, QHBoxLayout, QLabel, QMessageBox, QToolButton, QWidget, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel, QMessageBox, QToolButton, QWidget
 from groot_gui.forms.resources import resources
 
+import mhelper
+import mhelper as mh
+import mhelper_qt as qt
 from groot.data import global_view
 from groot_gui.utilities.gui_menu import GuiActions
-from groot_gui.utilities.selection import ESelect, LegoSelection, show_selection_menu
-from mhelper import virtual
-from mhelper_qt import exceptToGui, menu_helper
+from groot_gui.utilities.gui_workflow import EIntent, Intent, IntentHandler, handlers
+from groot_gui.utilities.selection import show_selection_menu
 
 
 class FrmBase( QDialog ):
-    @exceptToGui()
+    """
+    This is the base class for Groot dialogues.
+    
+    Its main functions are to construct `self.actions` and define `on_apply_request` and `on_command_completed`. 
+    """
+    handler_info: IntentHandler = None
+    
+    
+    @qt.exceptToGui()
     def __init__( self, parent: QWidget ):
         from groot_gui.forms.frm_main import FrmMain
         assert isinstance( parent, FrmMain )
@@ -22,19 +34,56 @@ class FrmBase( QDialog ):
         
         self.actions: GuiActions = GuiActions( self.frm_main, self )
         
-    @virtual
-    def on_apply_request( self, *args ):
+        handles = self.handler_info.handles[EIntent.INSPECT]
+        
+        if handles:
+            self.selecting_mode = Union[handles]
+        else:
+            self.selecting_mode = None
+    
+    
+    @mh.virtual
+    def on_apply_request( self, request: Intent ):
         """
-        Argument sent when showing the form.
+        Groot forms display _non-modally_, therefore requests to display certain
+        data are handled through this function, rather than `__init__`.
+          
+        The derived class should implement this function to fulfill the request.
         """
+        if request.is_inspect:
+            self.on_inspect( request.target )
+    
+    
+    @mh.virtual
+    def on_inspect( self, item: object ):
         pass
     
     
     def on_command_completed( self ):
+        """
+        The Groot main form calls this on all dialogues when a command completes.
+        
+        The derived class should implement this function to respond to the command.
+        
+        ¡¡¡Overriding this is now obsolete!!!
+        Intermake now allows the callback to be hooked via `AsyncResult.listen`
+        """
+        self.refresh_data()
+    
+    
+    def refresh_data( self ):
+        """
+        Updates the displayed data.
+        """
         self.on_refresh_data()
     
     
     def on_refresh_data( self ):
+        """
+        This is called whenever the model changes.
+        
+        The derived class should update its display accordingly.
+        """
         pass
     
     
@@ -44,7 +93,7 @@ class FrmBase( QDialog ):
         
         for x in re.findall( 'href="([^"]+)"', label.text() ):
             if not self.actions.by_url( x, validate = True ):
-                raise ValueError( "«{}» in the text «{}» in the label «{}».«{}» is not a valid Groot URL.".format( x, label.text(), type( label.window() ), label.objectName() ) )
+                warnings.warn( "«{}» in the text «{}» in the label «{}».«{}» is not a valid Groot URL.".format( x, label.text(), type( label.window() ), label.objectName() ), UserWarning )
     
     
     def alert( self, message: str ):
@@ -64,101 +113,143 @@ class FrmBase( QDialog ):
     
     
     def show_menu( self, *args ):
-        return menu_helper.show_menu( self, *args )
+        return qt.menu_helper.show_menu( self, *args )
     
     
-    def show_form( self, form_class ):
-        self.frm_main.show_form( form_class )
+    def inspect_elsewhere( self, tgt ):
+        if tgt is None:
+            return
+        
+        if mh.array_helper.is_simple_iterable( tgt ):
+            if len( tgt ) == 1:
+                tgt = mhelper.array_helper.single( tgt )
+            else:
+                tgt = self.show_menu( *tgt )
+                
+                if tgt is None:
+                    return
+        
+        handlers_ = handlers().list_avail( EIntent.INSPECT, type( tgt ) )
+        menu = qt.QMenu()
+        acm = { }
+        
+        qt.menu_helper.add_section( menu, "{}: {}".format( type( tgt ).__name__, str( tgt ) ) )
+        
+        for handler in handlers_:
+            act = QAction()
+            menu.addAction( act )
+            acm[act] = handler
+            act.setText( handler.name )
+            if handler.icon:
+                act.setIcon( handler.icon.icon() )
+        
+        act = self.show_menu( menu )
+        
+        if act is None:
+            return
+        
+        acm[act].execute( self, EIntent.INSPECT, tgt )
+    
+    
+    def add_select_button( self, frame: QFrame ):
+        # Create the select button
+        c = QToolButton()
+        c.setIconSize( QSize( 32, 32 ) )
+        c.setText( "Find" )
+        self.on_style_select_button( c )
+        c.clicked.connect( self.on_show_selection_menu )
+        frame.layout().insertWidget( 0, c )
+    
+    
+    def on_style_select_button( self, c ):
+        c.setFixedSize( QSize( 64, 64 ) )
+        c.setToolButtonStyle( Qt.ToolButtonTextUnderIcon )
+        c.setIcon( resources.find.icon() )
+    
+    
+    def on_show_selection_menu( self ):
+        choice = show_selection_menu( self.sender(), None, self.selecting_mode )
+        
+        if choice is not None:
+            self.on_apply_request( Intent( self, EIntent.INSPECT, choice ) )
 
 
-class FrmSelectingToolbar( FrmBase ):
+class FrmBaseWithSelection( FrmBase ):
+    """
+    Extends `FrmBase` by maintaining a persistent selection.
+    
+        * Access the selection through the `selection` property
+        * A unique style is applied to the "select button" created by `add_select_button`
+        * When the selection property changes, so does the text on the "select button"
+        * When an INSPECT intent arrives the selection is changed 
+    """
+    
+    
     def __init__( self, parent: QWidget ):
         super().__init__( parent )
         
-        self.selecting_frame: QGroupBox = None
-        self.selecting_mode: ESelect = None
+        if not self.handler_info.handles[EIntent.INSPECT]:
+            raise mh.LogicError( "This dialogue, {}, has a selection toolbar, but no EIntent.INSPECT has been registered designating what exactly this dialogue is able to handle.".format( type( self ) ) )
         
-        self.__selection: LegoSelection = LegoSelection()
-        
-        self.select_button: QAbstractButton = None
-        self.__clear_button: QAbstractButton = None
+        self.__selection: object = None
+        self.__select_button: qt.QAbstractButton = None
     
     
-    def bind_to_workflow_box( self, frame: QFrame, mode: ESelect ):
-        self.selecting_frame = frame
-        self.selecting_mode = mode
-        frame.setContentsMargins( 0, 0, 0, 8 )
-        frame.setProperty( "style", "custom" )
-        frame.setStyleSheet( 'QFrame[style="custom"] { border-top: none; border-left: none; border-right: none; border-bottom: 1px dotted gray; }' )
-        layout: QHBoxLayout = frame.layout()
-        layout.setContentsMargins( 0, 0, 0, 0 )
-        
-        # Create the select button
-        c = QToolButton()
+    def on_style_select_button( self, c ):
+        """
+        OVERRIDES base to provide unique style
+        """
         c.setFixedSize( QSize( 192, 64 ) )
         c.setToolButtonStyle( Qt.ToolButtonTextBesideIcon )
         c.setIcon( resources.black_check.icon() )
-        c.setIconSize( QSize( 32, 32 ) )
-        c.setText( str( self.actions.get_selection() ) )
-        c.clicked.connect( self.actions.show_selection )
-        # c.setProperty( "style", "combo" )
         c.setStyleSheet( SELECT_STYLE )
-        layout.insertWidget( 0, c )
-        self.actions.select_button = c
-        self.select_button = c
+        self.__select_button = c
+    
+    
+    def on_show_selection_menu( self ):
+        """
+        OVERRIDES base to provide unique style
+        """
+        self.sender().setStyleSheet( MENU_SHOWN_STYLE )
         
-        # Create the divider
-        c = QFrame()
-        c.setFixedWidth( 16 )
-        c.setFrameShape( QFrame.VLine )
-        c.setFrameShadow( QFrame.Sunken )
-        layout.insertWidget( 1, c )
+        choice = show_selection_menu( self.sender(), self.selection, self.selecting_mode )
         
-        # Create the spacer
-        c = QSpacerItem( 1, 1, QSizePolicy.Expanding, QSizePolicy.Minimum )
-        layout.addItem( c )
-    
-    
-    def set_selection( self, selection: LegoSelection ):
-        self.__selection = selection
-        self.handle_selection_changed()
-    
-    
-    def handle_selection_changed( self ):
-        self.select_button.setText( str( self.actions.get_selection() ) )
-        self.on_selection_changed()
-        self.on_refresh_data()
-    
-    
-    @virtual
-    def on_selection_changed( self ):
-        pass
-    
-    
-    def set_selected( self, item, selected ):
-        selection: LegoSelection = self.get_selection()
-        existing = item in selection
+        if choice is not None:
+            self.on_apply_request( Intent( self, EIntent.INSPECT, choice ) )
         
-        if selected == existing:
-            return
+        self.sender().setStyleSheet( SELECT_STYLE )
+    
+    
+    def inspect_elsewhere( self, target = None ):
+        """
+        OVERRIDES base to allow `target` to default to the current selection
+        """
+        if target is None:
+            target = self.selection
         
-        if selected:
-            if selection.is_empty() or selection.selection_type() != type( item ):
-                self.actions.set_selection( LegoSelection( frozenset( { item } ) ) )
-            else:
-                self.actions.set_selection( LegoSelection( selection.items.union( { item } ) ) )
-        else:
-            self.actions.set_selection( LegoSelection( selection.items - { item } ) )
+        super().inspect_elsewhere( target )
     
     
-    def get_selection( self ) -> LegoSelection:
+    def on_inspect( self, item: object ):
+        """
+        OVERRIDES base to set the new selection
+        """
+        self.__selection = item
+        self.__select_button.setText( str( self.__selection ) )
+    
+    
+    def get_selection( self ) -> object:
+        warnings.warn( "Deprecated - use selection", DeprecationWarning )
         return self.__selection
     
     
-    def show_selection_menu( self ):
-        self.select_button.setStyleSheet( MENU_SHOWN_STYLE )
-        show_selection_menu( self.select_button, self.actions, self.selecting_mode )
-        self.select_button.setStyleSheet( SELECT_STYLE )
+    @property
+    def selection( self ):
+        """
+        Retrieves the selection.
+        Note this cannot be set directly - raise an INSPECT intent to do this. 
+        """
+        return self.__selection
 
 
 SELECT_STYLE = """

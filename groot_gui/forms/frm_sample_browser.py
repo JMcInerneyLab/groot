@@ -1,14 +1,23 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QTreeWidgetItem
+from PyQt5.QtWidgets import QDialog, QTreeWidgetItem, QDialogButtonBox
 from typing import Optional
 
-from mhelper import file_helper
-from mhelper_qt import exceptToGui, exqtSlot
+
+from mhelper import file_helper, get_basic_documentation
+from mhelper_qt import exceptToGui, exqtSlot, FrmGenericText
 from groot_gui.forms.designer import frm_sample_browser_designer
 from groot.data import global_view
 
 
 class FrmSampleBrowser( QDialog ):
+    """
+    This screen allows the user to browse and load the sample datasets that ship with Groot.
+    
+    Information on the samples is also provided here.
+    
+    The CLI/Python equivalent of this screen is the `file_sample` command.
+    """
+    
     @exceptToGui()
     def __init__( self, parent ):
         """
@@ -20,7 +29,11 @@ class FrmSampleBrowser( QDialog ):
         self.update_files()
         self.ui.TVW_SAMPLES.itemSelectionChanged.connect( self.__on_item_selection_changed )
         self.ui.CMB_FILES.currentIndexChanged[int].connect( self.__on_current_index_changed )
+        self.ui.BTNBOX_MAIN.button(QDialogButtonBox.Help).clicked[bool].connect(self.on_help_clicked)
         self.sample = None
+        
+    def on_help_clicked( self, _:bool ):
+        FrmGenericText.request( self, text = get_basic_documentation( self ) )
     
     
     def __on_current_index_changed( self, _: int ):

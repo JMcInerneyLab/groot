@@ -2,11 +2,11 @@ from typing import Dict, FrozenSet, Iterable, Iterator, List, Sequence, Tuple
 
 from groot.constants import Stage
 from groot.data.model_collections import ComponentCollection, EdgeCollection, FusionCollection, GeneCollection, UserDomainCollection, UserGraphCollection
-from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset
+from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset, Gene, Formation
 from groot.data.model_interfaces import ESiteType
 from groot.data.model_meta import ModelStatus
 from intermake.engine.environment import IVisualisable, MCMD, UiInfo
-from mhelper import file_helper as FileHelper, string_helper
+from mhelper import file_helper as FileHelper, string_helper, NOT_PROVIDED
 
 
 class Model( IVisualisable ):
@@ -159,3 +159,20 @@ class Model( IVisualisable ):
         if self.fusion_graph_clean:
             yield self.fusion_graph_clean
         yield from self.user_graphs
+    
+    
+    def is_legacy_accession( self, name ):
+        return self.by_legacy_accession( name, None ) is not None
+    
+    
+    def by_legacy_accession( self, name: str, default = NOT_PROVIDED ):
+        if Gene.is_legacy_accession( name ):
+            return self.genes.by_legacy_accession( name )
+        elif Point.is_legacy_accession( name ):
+            return self.fusions.find_point_by_legacy_accession( name )
+        elif Formation.is_legacy_accession( name ):
+            return self.fusions.find_formation_by_legacy_accession( name )
+        elif default is not NOT_PROVIDED:
+            return default
+        else:
+            raise ValueError( "{} is not a legacy accession.".format( name ) )

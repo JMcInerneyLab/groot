@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1016</width>
+    <width>1018</width>
     <height>604</height>
    </rect>
   </property>
@@ -917,6 +917,17 @@ QToolButton[style=&quot;refresh&quot;]
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="BTN_HELP">
+       <property name="text">
+        <string>Help</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources/resources.qrc">
+         <normaloff>:/groot/help.svg</normaloff>:/groot/help.svg</iconset>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="BTN_CANCEL">
        <property name="text">

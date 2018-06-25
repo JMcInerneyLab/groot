@@ -1,32 +1,45 @@
 import warnings
 from typing import Dict, Type
 
+import mhelper as mh
+import mhelper_qt as qt
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMainWindow, QMenu, QToolButton, QMdiArea
-from groot_gui.forms.designer import frm_main_designer
-
+from PyQt5.QtWidgets import QMainWindow, QMdiArea, QMenu, QToolButton
 from groot import constants
-from groot.data import global_view
-from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
-from groot_gui.forms.frm_base import FrmBase
 from groot.constants import EChanges
-from groot_gui.utilities import gui_workflow
+from groot.data import global_view
+from groot.data.global_view import EStartupMode, EWindowMode, GlobalOptions
+from groot_gui.forms.designer import frm_main_designer
+from groot_gui.forms.frm_base import FrmBase
+from groot_gui.utilities.gui_workflow import Intent, handlers, EIntent
 from intermake import AsyncResult
+from intermake.engine.environment import MCMD, MENV
 from intermake_qt import IGuiHostMainWindow, intermake_gui, resources
-from intermake.engine.environment import MENV, MCMD
-from mhelper import SwitchError
-from mhelper_qt import exceptToGui, exqtSlot, menu_helper
 
 
 class FrmMain( QMainWindow, IGuiHostMainWindow ):
     """
-    Main window
+    This is Groot's main window; one window to control them all.
+    
+    Sub-windows can be shown in MDI, TDI or basic overlapping mode, depending on the user's preferences.
+    
+    There are three toolbars at the top:
+        * File controls
+        * Window controls
+        * Workflow controls
+        
+    The file and window controls have multicolour icons, the workflow controls have black, red or green icons, depending on their status.
+        * Green = complete
+        * Black = incomplete, not ready
+        * Red = incomplete, ready
+        
+    Additional and advanced functionality can be accessed from the menu bar and status bar.
     """
     INSTANCE = None
     
     
-    @exceptToGui()
+    @qt.exceptToGui()
     def __init__( self ) -> None:
         """
         CONSTRUCTOR
@@ -66,15 +79,15 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         
         if global_view.current_model().get_status( constants.STAGES._DATA_0 ).is_none:
             if view == EStartupMode.STARTUP:
-                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_STARTUP )
+                handlers().VIEW_STARTUP.execute( self, EIntent.DIRECT, None )
             elif view == EStartupMode.WORKFLOW:
-                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_WORKFLOW )
+                handlers().VIEW_WORKFLOW.execute( self, EIntent.DIRECT, None )
             elif view == EStartupMode.SAMPLES:
-                self.menu_handler.gui_actions.launch( gui_workflow.get_visualisers().VIEW_OPEN_FILE )
+                handlers().VIEW_OPEN_FILE.execute( self, EIntent.DIRECT, None )
             elif view == EStartupMode.NOTHING:
                 pass
             else:
-                raise SwitchError( "view", view )
+                raise mh.SwitchError( "view", view )
         
         self.completed_changes = None
         self.completed_plugin = None
@@ -85,11 +98,6 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
     def update_title( self ):
         self.setWindowTitle( MENV.name + " - " + str( MENV.root ) )
         self.ui.LBL_FILENAME.setText( str( MENV.root ) )
-    
-    
-    def on_selection_changed( self ):
-        for form in self.iter_forms():
-            form.selection_changed()
     
     
     def command_completed( self, result: AsyncResult ) -> None:
@@ -149,7 +157,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
             form.close()
     
     
-    def show_form( self, form_class, *args ):
+    def show_form( self, form_class: Type[qt.QWidget], intent: Intent ):
         self.menu_handler.gui_actions.dismiss_startup_screen()
         
         if form_class.__name__ in self.mdi:
@@ -167,14 +175,14 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         
         form.show()
         
-        if isinstance(form, FrmBase):
-            form.on_apply_request(*args)
-            
+        if isinstance( form, FrmBase ):
+            form.on_apply_request( intent )
+        
         self.mdi[form_class.__name__] = form
         self.ui.MDI_AREA.setBackground( self.COLOUR_NOT_EMPTY )
     
     
-    @exqtSlot()
+    @qt.exqtSlot()
     def on_BTN_STATUS_clicked( self ) -> None:
         """
         Signal handler:
@@ -192,7 +200,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         ot = control.text()
         control.setText( menu.title() )
         control.parent().updateGeometry()
-        menu_helper.show_menu( self, menu )
+        qt.menu_helper.show_menu( self, menu )
         control.setText( ot )
     
     
