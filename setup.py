@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url = "https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.50",
+       version = "0.0.0.51",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "https://www.gnu.org/licenses/agpl-3.0.html",
@@ -15,10 +15,12 @@ setup( name = "groot",
                    "groot.utilities",
                    "groot_ex",
                    "groot_gui",
+                   "groot_gui.lego",
                    "groot_gui.forms",
                    "groot_gui.forms.designer",
                    "groot_gui.forms.resources",
                    "groot_gui.utilities",
+                   "groot_tests"
                    ],
        entry_points = { "console_scripts": ["groot = groot.__main__:main"] },
        install_requires = ["intermake",  # MJR, architecture
