@@ -204,7 +204,8 @@ class Wizard:
     
     def __fn12_make_subgraphs( self ):
         self.__line( "Subgraphs" )
-        workflow.s140_supertrees.create_supertrees( self.supertree )
+        algo = workflow.s140_supertrees.supertree_algorithms.get_algorithm( self.supertree )
+        workflow.s140_supertrees.create_supertrees( algo )
         
         if self.pause_minigraph:
             self.__pause( STAGES.SUBGRAPHS_11, (workflow.s140_supertrees.print_supertrees,) )
@@ -266,7 +267,8 @@ class Wizard:
         
         self.__result |= workflow.s055_outgroups.set_outgroups( ogs )
         
-        self.__result |= workflow.s080_tree.create_trees( self.tree )
+        algo = workflow.s080_tree.tree_algorithms.get_algorithm( self.tree )
+        self.__result |= workflow.s080_tree.create_trees( algo )
         
         if self.pause_tree:
             self.__pause( STAGES.TREES_6, (workflow.s080_tree.print_trees,) )
@@ -274,7 +276,8 @@ class Wizard:
     
     def __fn5_make_alignments( self ):
         self.__line( STAGES.ALIGNMENTS_5 )
-        self.__result |= workflow.s070_alignment.create_alignments( self.alignment )
+        algo = workflow.s070_alignment.alignment_algorithms.get_algorithm( self.alignment )
+        self.__result |= workflow.s070_alignment.create_alignments( algo )
         
         if self.pause_align:
             self.__pause( STAGES.ALIGNMENTS_5, (workflow.s070_alignment.print_alignments,) )
@@ -298,7 +301,8 @@ class Wizard:
     
     def __fn4b_make_domains( self ):
         self.__line( STAGES.DOMAINS_4 )
-        self.__result |= workflow.s060_userdomains.create_domains( "component" )
+        algo = workflow.s060_userdomains.domain_algorithms.get_algorithm( "component" )
+        self.__result |= workflow.s060_userdomains.create_domains( algo )
     
     
     def __fn3_import_data( self ):

@@ -20,11 +20,23 @@ Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi
 [](toc)
 
 
+List of mirrors
+---------------
+
+Groot is in current alpha stage development.
+The code available via git may not be fully tested.
+If you intend to use Groot, please use a verified release from Pypi (see [installation](#installation) below).
+
+* https://bitbucket.org/mjr129/groot
+* https://github.com/JMcInerneyLab/groot
+* https://github.com/mjr129/groot
+* https://pypi.org/project/groot
+
 Installation
 ------------
 
 ### Prerequisites ###
-Groot runs under Python 3.6 and should be installed using Pip.
+Groot runs under Python 3.6+ and should be installed using Pip.
 * In addition to Python, you will also need some phylogenetic tools to conduct the actual analysis.
 * Please download the the following, install, **and confirm that they work** from the command line before continuing to install Groot.
 
@@ -792,6 +804,6 @@ language    = python3
 author      = martin rusilowicz
 date        = 2017,2018
 keywords    = blast, genomics, genome, gene, nrgf, graphs, intermake
-host        = bitbucket,git,mcinerneylab-git,pypi
+host        = bitbucket,github,mcinerneylab-github,pypi,web
 type        = application,application-gui,application-cli
 ```

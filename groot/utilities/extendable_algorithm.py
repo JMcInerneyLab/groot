@@ -162,9 +162,14 @@ class AlgorithmCollection:
         return self.algorithms[name]
     
     
-    def get_algorithm( self, name, *args, **kwargs ) -> AbstractAlgorithm:
+    def get_algorithm( self, name : str, *args, **kwargs ) -> AbstractAlgorithm:
         """
-        Gets the `AbstractAlgorithm` which combines a function with any function-specific parameters.
+        Gets the `AbstractAlgorithm` which combines a registered function with any function-specific parameters.
+        
+        :param name:    Name of the function, registered with `register`. 
+        :param args:    Function specific parameters, i.e. any _additional_ arguments required on the function in order for it to match the :ivar:`delegate`.
+        :param kwargs:  As for `args`
+        :return: 
         """
         return self.Algorithm( self.get_function( name ), ArgsKwargs( *args, **kwargs ), name )
     

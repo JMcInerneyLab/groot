@@ -4,7 +4,7 @@ from mgraph import NodeStyle
 from groot.utilities import AlgorithmCollection
 
 
-@command( names = ["groot"], visibility = visibilities.ADVANCED )
+@command( names = ["groot", "dirse"], visibility = visibilities.ADVANCED )
 def cmd_groot():
     """
     Displays the application version.
