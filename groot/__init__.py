@@ -9,7 +9,7 @@ from groot.data.model_meta import _ComponentAsFasta, _ComponentAsGraph
 
 
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.51"
+__version__ = "0.0.0.52"
 
 #
 # Initialise Groot
