@@ -390,29 +390,54 @@ def create_wizard( new: Optional[bool] = None,
     
     This method is represented in the GUI by the wizard window.
     
-    :param pause_pregraphs:     Pause after stage. 
-    :param new:                 Create a new model? 
+    :param new:                 Create a new model?
+                                :values:`true→yes, false→no, none→ask` 
     :param name:                Name the model?
+                                You can specify a complete path or just a name.
+                                If no name (empty) is specified, then the model is not saved.
+                                :values:`empty→no name, none→ask`
     :param outgroups:           Outgroup accessions?
-    :param imports:             Import files into the model? 
-    :param tolerance:           Component identification tolerance? 
+                                :values:`none→ask`
+    :param imports:             Import files into the model?
+                                :values:`none→ask` 
+    :param tolerance:           Component identification tolerance?
+                                :values:`none→ask` 
     :param alignment:           Alignment method?
+                                :values:`empty→default, none→ask`
     :param supertree:           Supertree method? 
+                                :values:`empty→default,none→ask`
     :param tree:                Tree generation method?
+                                :values:`empty→default, none→ask`
     :param view:                View the final NRFG in Vis.js?
+                                :values:`true→yes, false→no, none→ask` 
     :param save:                Save file to disk? (requires `name`)
-    :param pause_components:    Pause after stage. 
-    :param pause_import:        Pause after stage. 
-    :param pause_align:         Pause after stage. 
-    :param pause_tree:          Pause after stage. 
-    :param pause_fusion:        Pause after stage. 
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_components:    Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_import:        Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_align:         Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_tree:          Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_fusion:        Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_splits:        Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_consensus:     Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_subset:        Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_minigraph:     Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_sew:           Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_clean:         Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     :param pause_check:         Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
+    :param pause_pregraphs:     Pause after stage.
+                                :values:`true→yes, false→no, none→ask` 
     """
     if new is None:
         new = (MCMD.question( "1/14. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")

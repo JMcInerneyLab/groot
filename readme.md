@@ -17,8 +17,6 @@ Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi
           \
 ```
 
-[](toc)
-
 
 List of mirrors
 ---------------
@@ -27,38 +25,47 @@ Groot is in current alpha stage development.
 The code available via git may not be fully tested.
 If you intend to use Groot, please use a verified release from Pypi (see [installation](#installation) below).
 
+Please report bugs to the Bitbucket page!
+
 * https://bitbucket.org/mjr129/groot
 * https://github.com/JMcInerneyLab/groot
 * https://github.com/mjr129/groot
 * https://pypi.org/project/groot
+
 
 Installation
 ------------
 
 ### Prerequisites ###
 Groot runs under Python 3.6+ and should be installed using Pip.
+
 * In addition to Python, you will also need some phylogenetic tools to conduct the actual analysis.
 * Please download the the following, install, **and confirm that they work** from the command line before continuing to install Groot.
 
 | Tool      | Purpose                | URL                                              |
 |-----------|------------------------|--------------------------------------------------|
-| Blast     | gene similarity        | https://blast.ncbi.nlm.nih.gov/Blast.cgi         |
-| Clann     | supertree inference    | http://mcinerneylab.com/software/clann/          |
-| Muscle    | gene alignment         | https://www.ebi.ac.uk/Tools/msa/muscle/          |
-| Paup      | phylogeny inference    | http://phylosolutions.com/paup-test/             |
-| Pip       | installation manager   | https://pip.pypa.io/en/stable/installing/        |
-| Python    | interpreter            | https://www.python.org/downloads/                |
-| Raxml     | phylogeny inference    | https://sco.h-its.org/exelixis/software.html     |
+| Blast     | Gene similarity        | https://blast.ncbi.nlm.nih.gov/Blast.cgi         |
+| Clann     | Supertree inference    | http://mcinerneylab.com/software/clann/          |
+| Muscle    | Gene alignment         | https://www.ebi.ac.uk/Tools/msa/muscle/          |
+| Paup      | Phylogeny inference    | http://phylosolutions.com/paup-test/             |
+| Pip       | Installation manager   | https://pip.pypa.io/en/stable/installing/        |
+| Python    | Interpreter            | https://www.python.org/downloads/                |
+| Raxml     | Phylogeny inference    | https://sco.h-its.org/exelixis/software.html     |
 
-Note: You can substitute all of these for your own preferred tools, or specify the data manually, but this list comprises a good "starter pack". 
+Note: You can substitute all of these for your own preferred tools, or specify the data manually, but this list comprises a good "starter pack".
 
-_Warning: For legacy reasons, MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, which was last updated in 2006. This isn't enough - you'll still need to install Python 3.6 to use Groot__
+**Make sure to place your binaries in your system `PATH` so that they can be accessed by Groot.**
+
+
+_Warning: For legacy reasons, MacOS and some Linux flavours come with an older version of Python 2.4 pre-installed, which was last updated in 2006. This isn't enough - you'll need to install Python 3.6 to use Groot__
 
 ### System requirements ###
 
-Groot isn't very fussy, it will even work from your Android phone, but if you want to use the GUI you'll need to be using a supported OS and desktop (Windows, Mac and Ubuntu+Kde or Ubuntu+Gnome are all good).
+Groot isn't very fussy, it will work from your Android phone, but if you want to use the GUI you'll need to be using a supported OS and desktop (Windows, Mac and Ubuntu+Kde or Ubuntu+Gnome are all good).
 
 ### Installing Groot ###
+
+#### Using Pip ####
 
 When all is ready, download Gʀᴏᴏᴛ using Pip, i.e. from the Windows Console...
 
@@ -72,13 +79,21 @@ $   pip install groot
 $   sudo pip install groot
 ```
 
+If you don't have administrator access, you can use `virtualenv`:
+
+```bash
+[bash]$         virtualenv grootling
+[bash]$         source grootling/bin/activate
+[grootling]$    pip install groot
+```
+
 After the install completes, test that you can actually run Groot:
 
 ```bash
 $   groot
 ```
 
-If Groot fails to start see the troubleshooting section on [Groot not found](#groot-not-found). 
+If Groot fails to start then your `PATH` is incorrectly configured. Use `python -m groot` instead, or see the troubleshooting section on [Groot not found](#groot-not-found). 
 
 
 ### Starting and stopping Groot ###
@@ -89,39 +104,40 @@ You should be able to start Gʀᴏᴏᴛ in its _Command Line Interactive_ (CLI)
 $   groot
 ```
 
-_...You can start Groot in _Graphical User Interface_ (GUI) mode by passing the `gui` argument:_
+Groot operates in a number of UI modes, CLI mode is a scripted mode that acts like passing arguments from the command line,
+for instance the following two scripts are the same:
+
+```bash
+[bash]$    groot
+[groot]$   echo "hello world"
+[groot]$   exit
+```
+
+```bash
+[bash]$   groot echo "hello world"
+```
+
+Perhaps more intuitively, you can tell Groot to use Python instead:
+
+```python
+[bash]$             groot pyi
+[python-groot]$     echo("hello world")
+[python-groot]$     exit()
+```
+
+You can start Groot in _Graphical User Interface_ (GUI) mode by passing the `gui` argument:
 
 ```bash
 $   groot gui
 ```
 
-You can also use Gʀᴏᴏᴛ in your own Python applications:
+Finally, you can also use Gʀᴏᴏᴛ in your own applications via the python `import` command:
 
 ```python
 $   import groot
 ```
 
-Or use Python's own interactive prompt (PYI):
-
-```python
-$   groot pyi
-```
-
-To exit Groot's command line (CLI), press `CTRL+C`,  or use the exit command:
-
-```bash
-$   exit
-```
-
-To exit Python (PYI) you'll need to add brackets:
-
-```python
-$   exit()
-```
-
-To exit the GUI, you can just close the window :)
-
-For advanced functionality, please see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
+For advanced functionality, see the [Iɴᴛᴇʀᴍᴀᴋᴇ documentation](https://bitbucket.org/mjr129/intermake).
 
 Tutorial
 --------
@@ -129,7 +145,7 @@ Tutorial
 ### Getting started ###
 
 Groot has a nice GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
-It's much easier to explain and we'll get to cover all the specific details.
+It's much easier to explain and we'll get to cover all the nice specifics.
 The workflow we'll be following looks like this:
 
 0. Load FASTA data
@@ -613,15 +629,23 @@ The following formats are thus used:
 * Networks: CSV edge table
 * Scripts: Python
 * Internal data: Pickle
+* Reports: HTML
 
 The Groot test suite
 --------------------
 
 Groot comes with the ability to generate random test cases.
 
-To create and run tests, use `groot create.test n`, where `n` specifies the test case (denoted by the expected number of components).
+The test suite is packaged separately, to load it, run the following commands from within Groot:
 
-All tests trees should be recoverable (mutations permitting) by Groot using the default settings, with the exclusion of the specific instances of test case 4, noted below.
+```bash
+import groot_tests
+use groot_tests
+```
+
+After loading the test suite, to create and run tests, use the `groot create.test n` command, where `n` specifies the test case identifier (representing the expected number of components).
+
+All tests case trees should be recoverable (mutations permitting) by Groot using the default settings, with the exclusion of the specific instances of test case 4, as noted below.
 
 ### Case 1: Single fusion ###
 ```
@@ -712,6 +736,33 @@ Groot has been coded for multiple platforms, however, one or more settings may n
     * Set _shared contexts_ **off**.
     * Turn the inbuilt browser **off**
 * Restart GROOT
+
+### Obtaining binaries ###
+
+Binaries are not available, installation [using Pip](#using-pip) is the recommended method.
+For deployment on systems without an internet connection, you can create your own binaries using [PyInstaller](https://www.pyinstaller.org/).
+
+```bash
+$   cd groot
+$   pyinstaller groot/__main__.py
+```
+
+### Issues with Paup ###
+
+> Until the official release of version 5.0 of PAUP*, you can download time-expiring test versions of PAUP* here
+>
+> http://phylosolutions.com/paup-test
+
+There are some major issues in using the Paup test versions of Paup from Groot:
+
+* Paup is being updated: changes to Paup's API frequently break Groot's interface to it.
+* Paup has programmed obsolescence: Groot cannot link to a known, working version of Paup. 
+* Paup does not report obsolescence errors in its return code: Groot cannot know whether your version is up to date.
+
+If you are using a test version of Paup then please make sure it is up to date.
+If this still doesn't work, submit Groot interface bugs on the Bitbucket web page.
+Until these issues are resolved with Paup, consider using a different phylogeny tool such as [Raxml](https://sco.h-its.org/exelixis/software.html).
+
 
 ### Multi-fusion sources ###
 
@@ -805,5 +856,5 @@ author      = martin rusilowicz
 date        = 2017,2018
 keywords    = blast, genomics, genome, gene, nrgf, graphs, intermake
 host        = bitbucket,github,mcinerneylab-github,pypi,web
-type        = application,application-gui,application-cli
+type        = application,application-gui,application-cli,library
 ```

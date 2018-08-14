@@ -3,7 +3,7 @@ from os import path
 from typing import Optional
 
 from groot.algorithms.gimmicks import wizard
-from intermake import MCMD, MENV, Theme, command
+from intermake import MCMD, MENV, Theme, command, visibilities
 from mhelper import EFileMode, Filename, MOptional, file_helper, io_helper
 
 from groot import constants
@@ -57,16 +57,33 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROO
     return EChanges.FILE_NAME
 
 
+@command( folder = constants.F_FILE, visibility = visibilities.ADVANCED )
+def export_json( file_name: Filename[EFileMode.WRITE, constants.EXT_JSON] ) -> EChanges:
+    """
+    Exports the entirety of the current model into a JSON file for reading by external programs.
+    
+    :param file_name:   Name of file to export to.
+    """
+    model = global_view.current_model()
+    io_helper.save_json( file_name, model )
+    return EChanges.NONE
+
+
 @command( names = ["file_load", "load"], folder = constants.F_FILE )
 def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     """
     Loads the model from a file
     
     :param file_name:   File to load.
-                        If you don't specify a path, the `$(DATA_FOLDER)sessions` folder will be assumed
-                        (If you'd like to use the current "working" directory, use the prefix `./`)
+                        If you don't specify a path, the following folders are attempted (in order):
+                        * The current working directory
+                        * `$(DATA_FOLDER)sessions`
     """
-    file_name = __fix_path( file_name )
+    
+    if path.isfile( file_name ):
+        file_name = path.abspath( file_name )
+    else:
+        file_name = __fix_path( file_name )
     
     try:
         model: Model = io_helper.load_binary( file_name, type_ = Model )

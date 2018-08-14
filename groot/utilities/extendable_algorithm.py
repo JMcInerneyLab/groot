@@ -98,6 +98,7 @@ class AlgorithmCollection:
         
         
         self.Algorithm = _AlgorithmType
+        self.Algorithm.__name__ = "_AlgorithmType_{}".format( name )
         self.delegate = delegate
         self.name = name
         self.default = None
@@ -162,7 +163,7 @@ class AlgorithmCollection:
         return self.algorithms[name]
     
     
-    def get_algorithm( self, name : str, *args, **kwargs ) -> AbstractAlgorithm:
+    def get_algorithm( self, name: str, *args, **kwargs ) -> AbstractAlgorithm:
         """
         Gets the `AbstractAlgorithm` which combines a registered function with any function-specific parameters.
         

@@ -365,6 +365,14 @@ class FusionCollection:
         return bool( self.events )
     
     
+    def __str__( self ):
+        return "{} events".format( len( self ) )
+    
+    
+    def __repr__( self ):
+        return "{}({})".format( type( self ).__name__, repr( self.events ) )
+    
+    
     @property
     def num_points( self ):
         return sum( sum( y.points.__len__() for y in x.formations ) for x in self )
