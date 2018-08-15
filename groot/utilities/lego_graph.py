@@ -138,6 +138,9 @@ def import_newick( newick: str, model: Model, root_ref: ByRef[MNode] = None, rec
     The format is expected to be the same as that produced by `export_newick`, but we make accommodations
     for additional information programs might have added, such as clade names and branch lengths.
     """
+    if not newick:
+        raise ValueError( "`import_newick` requires a valid `newick` string, «{}» is invalid.".format( newick ) )
+    
     # Read newick
     graph: MGraph = importing.import_newick( newick,
                                              root_ref = root_ref )

@@ -66,10 +66,11 @@ _T = Filename["r", ".csv"]
 
 
 @command( folder = constants.F_IMPORT )
-def import_gene_names( file: _T ):
+def import_gene_names( file: _T, header: bool = False ):
     """
     Loads in the displayed gene names from a file.
     
+    :param header:  Ignore first row?
     :param file:    Path to a CSV or TSV file with two columns: accessions, display name.
     """
     model = global_view.current_model()
@@ -77,6 +78,9 @@ def import_gene_names( file: _T ):
     tot = 0
     
     with open( file ) as in_:
+        if header:
+            next( in_ )
+        
         for row in in_:
             if "\t" in row:
                 accession, name = row.split( "\t", 1 )

@@ -1,6 +1,6 @@
 import inspect as inspect_
 import warnings
-from typing import Callable, Dict, Iterator, Sequence, Union, Tuple, Type, List, cast
+from typing import Callable, Dict, Iterator, Sequence, Union, Tuple, Type, List
 
 import intermake_qt
 import mhelper
@@ -478,6 +478,11 @@ class IntentHandlerCollection:
         
         self.SET_GENE_NAME = IntentHandler( name = "Set gene name",
                                             action = ShowArgs( groot.set_gene_name ),
+                                            icon = resources.create,
+                                            handles = { EIntent.CREATE: (groot.STAGES.FASTA_1,) } )
+        
+        self.IMPORT_GENE_NAMES = IntentHandler( name = "Import gene names",
+                                            action = ShowArgs( groot.import_gene_names ),
                                             icon = resources.create,
                                             handles = { EIntent.CREATE: (groot.STAGES.FASTA_1,) } )
         

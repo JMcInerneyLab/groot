@@ -411,7 +411,10 @@ class Gene( INode, IHasFasta, IVisualisable, INamed ):
     
     
     def find_major( self ):
-        return self.model.components.find_component_for_major_gene( self )
+        """
+        Gets the component for this gene, or `None` if no component.
+        """
+        return self.model.components.find_component_for_major_gene( self, default = None )
     
     
     def iter_minor( self ):

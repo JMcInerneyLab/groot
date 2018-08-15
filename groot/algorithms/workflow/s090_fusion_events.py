@@ -1,7 +1,7 @@
 """
 Deals with the model's fusion events and fusion points.
 """
-from typing import FrozenSet, List, Set, cast
+from typing import FrozenSet, List, Set, Iterator
 
 import itertools
 
@@ -209,7 +209,6 @@ def __find_fusion_points( fusion_event: Fusion,
     
     __LOG( "***** LOOKING FOR EVENT {} IN COMPONENT {} ***** ", fusion_event, component )
     
-    
     graph: MGraph = component.tree
     
     if fusion_event.component_out is component:
@@ -289,6 +288,24 @@ def __find_fusion_points( fusion_event: Fusion,
 
 
 class EdgeInfo:
+    """
+    Describes a fragment of a graph cut along an edge.
+    
+    :ivar edge:                The edge along which the graph was cut 
+    :ivar flip_edge:           Whether the `inside_nodes` represent the edge's right (destination) set
+    :ivar inside_nodes:        Nodes to one side of the edge 
+    :ivar outside_nodes:       Nodes to the other side of the edge
+    :ivar inside_request:      The set of nodes we want inside
+    :ivar outside_request:     The set of nodes we want outside
+    :ivar inside_count:        Length of `inside_nodes`
+    :ivar outside_count:       Length of `outside_nodes`
+    :ivar inside_incorrect:    Nodes in `inside_request` that appear in the `outside_nodes`
+    :ivar outside_incorrect:   Nodes in the `outside_request` that appear in the `inside_nodes`
+    :ivar internal_node:       Node to the designated "inside" of the edge
+    :ivar external_node:       Node to the designated "outside" of the edge
+    """
+    
+    
     def __init__( self,
                   edge: MEdge,
                   flip_edge: bool,
@@ -314,28 +331,37 @@ class EdgeInfo:
             self.external_node = edge.right
 
 
-def prepare_graph( graph: MGraph,
-                   inside_request: Set[MNode],
-                   outside_request: Set[MNode] ):
+def __cut_all_edges( graph: MGraph,
+                     inside_request: Set[MNode],
+                     outside_request: Set[MNode] ):
+    """
+    Cuts the graph along every edge, returning a list containing an `EdgeInfo` for each cut (see `EdgeInfo`).
+    """
     results = []
+    
+    if not graph.edges:
+        raise ValueError( "Cannot cut the graph because the graph has no edges." )
+    
     for edge in graph.edges:
-        assert isinstance( edge, MEdge )
         left_nodes, right_nodes = edge.cut_nodes()
+        # Each edge has two cuts, depending on which side is "inside" and which "outside"
         results.append( EdgeInfo( edge, False, left_nodes, right_nodes, inside_request, outside_request ) )
         results.append( EdgeInfo( edge, True, right_nodes, left_nodes, inside_request, outside_request ) )
+    
     return results
 
 
 def isolate( graph: MGraph,
              inside_request: Set[MNode],
              outside_request: Set[MNode],
-             debug_level: int = 0 ):
+             debug_level: int = 0
+             ) -> Iterator[EdgeInfo]:
     __LOG_ISOLATION.indent = debug_level
     __LOG_ISOLATION( "READY TO ISOLATE" )
     __LOG_ISOLATION( "*ISOLATE* INSIDE:  (n={}) {}", len( inside_request ), inside_request, sort = True )
     __LOG_ISOLATION( "*ISOLATE* OUTSIDE: (n={}) {}", len( outside_request ), outside_request, sort = True )
     
-    edges: List[EdgeInfo] = prepare_graph( graph, inside_request, outside_request )
+    edges: List[EdgeInfo] = __cut_all_edges( graph, inside_request, outside_request )
     
     __LOG_ISOLATION( "{} EDGES", len( edges ) )
     

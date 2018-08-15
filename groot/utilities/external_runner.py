@@ -1,5 +1,8 @@
 import os
 import shutil
+from uuid import uuid4
+
+from groot.data import global_view
 from intermake.engine import constants
 from intermake.engine.environment import MENV, MCMD
 from mhelper import file_helper
@@ -31,4 +34,9 @@ def run_in_temporary( function, *args, **kwargs ):
         raise
     finally:
         os.chdir( ".." )
-        shutil.rmtree( temp_folder_name )
+        if global_view.options().debug_external_tool:
+            nfn = temp_folder_name + "_" + str( uuid4() )[:4]
+            os.rename( temp_folder_name, nfn )
+            MCMD.warning( "The directory '{}' has not been deleted because of the `debug_external_tool` flag.".format( nfn ) )
+        else:
+            shutil.rmtree( temp_folder_name )

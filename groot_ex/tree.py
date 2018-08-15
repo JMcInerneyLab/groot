@@ -45,10 +45,16 @@ def tree_neighbor_joining( model: str, alignment: str ) -> str:
             tmp.write( x )
             tmp.write( "\n" )
         
+        
         # The return code seems to have no bearing on Paup's actual output, so ignore it.
         subprocess_helper.run_subprocess( ["paup", "-n", "in_file.paup"], collect = tmpc, no_err = True )
     
-    return file_helper.read_all_text( "out_file.nwk", details = "the expected output from paup" )
+    r = file_helper.read_all_text( "out_file.nwk", details = "the expected output from paup" )
+    
+    if not r:
+        raise ValueError( "Paup produced an empty file." )
+    
+    return r
 
 
 @tree_algorithms.register( "maximum_likelihood" )

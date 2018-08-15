@@ -97,7 +97,7 @@ class StageCollection:
                                    requires = (self._DATA_0,) )
         self.TREES_6 = Stage( "Trees",
                               icon = resources.black_tree,
-                              status = lambda m: (bool( x.tree ) for x in M( m ).components),
+                              status = lambda m: (x.tree is not None for x in M( m ).components),
                               headline = lambda m: "{} of {} components have a tree".format( M( m ).components.num_trees, M( m ).components.count ),
                               requires = (self.ALIGNMENTS_5,) )
         self.FUSIONS_7 = Stage( "Fusions",

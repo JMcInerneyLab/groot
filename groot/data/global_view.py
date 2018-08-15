@@ -54,7 +54,7 @@ def get_samples():
     Obtains the list of samples
     """
     sample_data_folder = get_sample_data_folder()
-    return file_helper.sub_dirs( sample_data_folder )
+    return file_helper.list_sub_dirs( sample_data_folder )
 
 
 def get_workspace_files() -> List[str]:
@@ -145,7 +145,8 @@ class GlobalOptions:
     :ivar lego_view_piano_roll:     Lego GUI setting - display gene piano rolls 
     :ivar lego_view_names:          Lego GUI setting - display gene names
     :ivar lego_view_positions:      Lego GUI setting - display domain start and end positions
-    :ivar lego_view_components:     Lego GUI setting - display domain components  
+    :ivar lego_view_components:     Lego GUI setting - display domain components
+    :ivar debug_external_tool:      Do not remove files created when invoking external tools.  
     """
     
     
@@ -166,6 +167,7 @@ class GlobalOptions:
         self.lego_view_names: TTristate = True
         self.lego_view_positions: TTristate = None
         self.lego_view_components: TTristate = None
+        self.debug_external_tool: bool = False
 
 
 __global_options = None
