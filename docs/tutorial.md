@@ -6,7 +6,7 @@ This tutorial concerns processing the sample "coleman" dataset in GROOT.
 Getting started
 ---------------
 
-Groot has a nice GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
+Groot has a pretty GUI wizard that will guide you through, but for this tutorial, we'll be using the CLI.
 It's much easier to explain and we'll get to cover all the nice specifics.
 The workflow we'll be following looks like this:
 
