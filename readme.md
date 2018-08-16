@@ -17,7 +17,7 @@ Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi
           \
 ```
 
-⚠️ THIS IS THE CODE REPOSITORY ⚠️ | FULL INFORMATION CAN BE FOUND AT http://software.rusilowicz.com/groot [](NO_WEB) 
+⚠️ THIS IS THE CODE REPOSITORY ⚠ <br/>FULL INFORMATION CAN BE FOUND AT http://software.rusilowicz.com/groot [](NO_WEB) 
 
 Help
 ----
