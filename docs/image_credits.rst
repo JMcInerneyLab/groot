@@ -1,3 +1,4 @@
+=============
 Image credits
 =============
 
@@ -11,4 +12,4 @@ Icons by:
 * Google
 * Smash Icons
 
-Available at [flaticon.com](http://www.flaticon.com).
+Available at http://www.flaticon.com .

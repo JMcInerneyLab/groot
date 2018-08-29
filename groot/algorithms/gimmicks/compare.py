@@ -4,15 +4,17 @@ from typing import Iterable, List, Set
 from groot import constants
 from intermake import MCMD, command
 from mgraph import AbstractQuartet, MNode, QuartetCollection, QuartetComparison, analysing
-from mhelper import SwitchError, ansi, array_helper, string_helper
+from mhelper import SwitchError, ansi, array_helper, string_helper, TIniData, TIniSection
 
 from groot.data import INamedGraph, Model, Report, Gene, global_view
 from groot.constants import EChanges
 from groot.utilities import lego_graph
 
+
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
 
-@command(folder=constants.F_CREATE)
+
+@command( folder = constants.F_CREATE )
 def create_comparison( left: INamedGraph, right: INamedGraph ) -> EChanges:
     """
     Compares two graphs.
@@ -32,13 +34,13 @@ def compare_graphs( calc_graph_: INamedGraph,
     """
     Compares graphs using quartets.
     
-    :param calc_graph_: The model graph. Data is ILeaf or None. 
-    :param orig_graph_: The source graph. Data is str.
-    :return: 
+    :param calc_graph_: The model graph. Data is `ILeaf` or `None`. 
+    :param orig_graph_: The source graph. Data is `str`.
+    :return:  A `Report` object with an `TIniData` as its `raw_data`. 
     """
     differences = []
     differences.append( "<html><body>" )
-    differences.append( "<h1>Results for comparison of graphs {} and {}</h1>".format( calc_graph_.name, orig_graph_.name ) )
+    differences.append( "<h1>Results for comparison of graphs {} and {}</h1>".format( calc_graph_, orig_graph_ ) )
     
     calc_graph = calc_graph_.graph
     orig_graph = orig_graph_.graph
@@ -46,78 +48,96 @@ def compare_graphs( calc_graph_: INamedGraph,
     if len( ccs ) != 1:
         raise ValueError( "The graph has more than 1 connected component ({}).".format( len( ccs ) ) )
     
-    calc_seq: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( calc_graph, lego_graph.is_sequence_node ) )
-    orig_seq: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( orig_graph, lego_graph.is_sequence_node ) )
+    calc_genes: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( calc_graph, lego_graph.is_sequence_node ) )
+    orig_genes: Set[object] = set( x.data for x in analysing.realise_node_predicate_as_set( orig_graph, lego_graph.is_sequence_node ) )
     
-    if not calc_seq:
-        raise ValueError( "The calculated graph contains no sequences." )
+    if not calc_genes:
+        raise ValueError( "The calculated graph contains no genes." )
     
-    if not orig_seq:
-        raise ValueError( "The original graph contains no sequences." )
+    if not orig_genes:
+        raise ValueError( "The original graph contains no genes." )
     
-    if calc_seq != orig_seq:
-        raise ValueError( "The calculated graph has a different sequence set to the original. Missing: {}; additional: {}.".format(
-                string_helper.format_array( orig_seq - calc_seq, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ),
-                string_helper.format_array( calc_seq - orig_seq, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ) ) )
+    if calc_genes != orig_genes:
+        raise ValueError( "The calculated graph has a different gene set to the original. Missing: {}; additional: {}.".format(
+                string_helper.format_array( orig_genes - calc_genes, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ),
+                string_helper.format_array( calc_genes - orig_genes, sort = True, format = lambda x: "{}:{}".format( type( x ).__name__, x ) ) ) )
     
     calc_quartets = __get_quartets_with_progress( calc_graph, "calculated" )
     orig_quartets = __get_quartets_with_progress( orig_graph, "original" )
     comparison: QuartetComparison = calc_quartets.compare( orig_quartets )
     
-    res = []
+    html = []
+    ini_data: TIniData = { }
     
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=2><b>QUARTETS</b></td></tr>" )
-    res.append( "<tr><td>total_quartets</td><td>{}</td></tr>".format( len( comparison ) ) )
-    res.append( "<tr><td>match_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.match ), len( comparison.all ) ) ) )
-    res.append( "<tr><td>mismatch_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.mismatch ), len( comparison.all ) ) ) )
-    if comparison.missing_in_left:
-        res.append( "<tr><td>new_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.missing_in_left ), len( comparison.all ) ) ) )
-    if comparison.missing_in_right:
-        res.append( "<tr><td>missing_quartets</td><td>{}</td></tr>".format( string_helper.percent( len( comparison.missing_in_right ), len( comparison.all ) ) ) )
-    res.append( "</table><br/>" )
+    # QUARTETS
+    html.append( '<table border=1 style="border-collapse: collapse;">' )
+    html.append( "<tr><td colspan=2><b>QUARTETS</b></td></tr>" )
+    ini_data["quartets"] = q = { }
+    __add_row( html, q, "total_quartets", len( comparison ) )
+    __add_row( html, q, "match_quartets", string_helper.percent( len( comparison.match ), len( comparison.all ) ) )
+    __add_row( html, q, "mismatch_quartets", string_helper.percent( len( comparison.mismatch ), len( comparison.all ) ) )
+    __add_row( html, q, "new_quartets", string_helper.percent( len( comparison.missing_in_left ), len( comparison.all ) ) )
+    __add_row( html, q, "missing_quartets", string_helper.percent( len( comparison.missing_in_right ), len( comparison.all ) ) )
     
-    __enumerate_2sequences( calc_seq, comparison, res, 1 )
-    __enumerate_2sequences( calc_seq, comparison, res, 2 )
-    __enumerate_2sequences( calc_seq, comparison, res, 3 )
+    # GENE COMBINATIONS
+    __enumerate_2genes( calc_genes, comparison, html, 1, ini_data )
+    __enumerate_2genes( calc_genes, comparison, html, 2, ini_data )
+    __enumerate_2genes( calc_genes, comparison, html, 3, ini_data )
     
     c = calc_quartets.get_unsorted_lookup()
     o = orig_quartets.get_unsorted_lookup()
-    __list_comp( comparison.match, "MATCHING", res, c, o )
-    __list_comp( comparison.mismatch, "MISMATCH", res, c, o )
+    __list_comp( comparison.match, "MATCHING", html, c, o, ini_data )
+    __list_comp( comparison.mismatch, "MISMATCH", html, c, o, ini_data )
     if comparison.missing_in_left:
-        __list_comp( comparison.missing_in_left, "MISSING IN LEFT", res, c, o )
+        __list_comp( comparison.missing_in_left, "MISSING IN LEFT", html, c, o, ini_data )
     if comparison.missing_in_right:
-        __list_comp( comparison.missing_in_right, "MISSING IN RIGHT", res, c, o )
+        __list_comp( comparison.missing_in_right, "MISSING IN RIGHT", html, c, o, ini_data )
     
     differences.append( "</body></html>" )
     
-    return Report( "{} -vs- {}".format( orig_graph_.name, calc_graph_.name ), "\n".join( res ) )
+    report = Report( "{} -vs- {}".format( orig_graph_, calc_graph_ ), "\n".join( html ) )
+    report.raw_data = ini_data
+    return report
 
 
-def __list_comp( comparison, t, res, c, o ):
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=6><b>{} QUARTETS</b></td></tr>".format( t ) )
+def __add_row( html, ini, name, value ):
+    assert name not in ini
+    html.append( "<tr><td>{}</td><td>{}</td></tr>".format( name, value ) )
+    ini[name] = value
+
+
+def __list_comp( comparison, name, html, calculated, original, ini: TIniData ):
+    html.append( '<table border=1 style="border-collapse: collapse;">' )
+    html.append( "<tr><td colspan=6><b>{} QUARTETS</b></td></tr>".format( name ) )
+    ini_sect: TIniSection = { }
+    ini[name.lower()] = ini_sect
+    
     for quartet in comparison:
-        calc = c[quartet.get_unsorted_key()]
-        orig = o[quartet.get_unsorted_key()]
-        res.append( "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format( *quartet.get_unsorted_key(), calc, orig ) )
-    res.append( "</table><br/>" )
+        calc = calculated[quartet.get_unsorted_key()]
+        orig = original[quartet.get_unsorted_key()]
+        html.append( "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format( *quartet.get_unsorted_key(), calc, orig ) )
+        ini_sect["{}_calculated".format( string_helper.format_array( quartet.get_unsorted_key() ) )] = str( calc )
+        ini_sect["{}_original".format( string_helper.format_array( quartet.get_unsorted_key() ) )] = str( orig )
+    
+    html.append( "</table><br/>" )
 
 
-def __enumerate_2sequences( calc_seq: Set[object],
-                            comparison: QuartetComparison,
-                            res: List[str],
-                            r: int
-                            ) -> None:
-    if array_helper.get_num_combinations( calc_seq, r ) > 100:
+def __enumerate_2genes( calc_seq: Set[object],
+                        comparison: QuartetComparison,
+                        html: List[str],
+                        n: int,
+                        ini_data: TIniData
+                        ) -> None:
+    if array_helper.get_num_combinations( calc_seq, n ) > 100:
         return
     
-    res.append( '<table border=1 style="border-collapse: collapse;">' )
-    res.append( "<tr><td colspan=5><b>BREAKDOWN FOR COMBINATIONS OF {}</b></td></tr>".format( r ) )
-    res.append( "<tr><td>total</td><td>hit</td><td>miss</td><td>missing in left</td><td>missing in right</td></tr>" )
+    html.append( '<table border=1 style="border-collapse: collapse;">' )
+    html.append( "<tr><td colspan=5><b>BREAKDOWN FOR COMBINATIONS OF {}</b></td></tr>".format( n ) )
+    html.append( "<tr><td>total</td><td>hit</td><td>miss</td><td>missing in left</td><td>missing in right</td></tr>" )
+    ini_sect: TIniSection = { }
+    ini_data["n_quartets_{}".format( n )] = ini_sect
     
-    for comb in sorted( itertools.combinations( calc_seq, r ), key = str ):  # type: Iterable[object]
+    for comb in sorted( itertools.combinations( calc_seq, n ), key = str ):  # type: Iterable[object]
         n_tot = []
         n_hit = []
         n_mis = []
@@ -144,22 +164,46 @@ def __enumerate_2sequences( calc_seq: Set[object],
         if not n_mis and not n_mil and not n_mir:
             continue
         
-        res.append( "<tr>" )
-        res.append( "<td>{}</td>".format( format( string_helper.format_array( comb ) ) ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_hit ), len( n_tot ) ) if n_hit else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mis ), len( n_tot ) ) if n_mis else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mil ), len( n_tot ) ) if n_mil else "" ) )
-        res.append( "<td>{}</td>".format( string_helper.percent( len( n_mir ), len( n_tot ) ) if n_mil else "" ) )
-        res.append( "</tr>" )
+        html.append( "<tr>" )
+        i = []
+        
+        # COMBINATION NAME
+        name = string_helper.format_array( comb )
+        html.append( "<td>{}</td>".format( name ) )
+        # HIT
+        txt = string_helper.percent( len( n_hit ), len( n_tot ) ) if n_hit else ""
+        html.append( "<td>{}</td>".format( txt ) )
+        i.append( txt )
+        # MISS
+        txt = string_helper.percent( len( n_mis ), len( n_tot ) ) if n_mis else ""
+        html.append( "<td>{}</td>".format( txt ) )
+        i.append( txt )
+        # MISSING IN LEFT
+        txt = string_helper.percent( len( n_mil ), len( n_tot ) ) if n_mil else ""
+        html.append( "<td>{}</td>".format( txt ) )
+        i.append( txt )
+        # MISSING IN RIGHT
+        txt = string_helper.percent( len( n_mir ), len( n_tot ) ) if n_mil else ""
+        html.append( "<td>{}</td>".format( txt ) )
+        i.append( txt )
+        
+        html.append( "</tr>" )
+        ini_sect[name] = "; ".join( str( x ) for x in i )
+        
+        # Write out full quartets (if < 10)
+        i = []
         
         if len( n_hit ) < len( n_mis ) < 10:
             for quartet in n_mis:
-                res.append( "<tr>" )
-                res.append( "<td></td>" )
-                res.append( "<td colspan=4>{}</td>".format( quartet ) )
-                res.append( "</tr>" )
+                html.append( "<tr>" )
+                html.append( "<td></td>" )
+                html.append( "<td colspan=4>{}</td>".format( quartet ) )
+                html.append( "</tr>" )
+                i.append( quartet )
+        
+        ini_sect[name + "_list"] = "; ".join( str( x ) for x in i )
     
-    res.append( "</table><br/>" )
+    html.append( "</table><br/>" )
 
 
 def __get_quartets_with_progress( graph, title ) -> QuartetCollection:
@@ -181,7 +225,7 @@ def __append_ev( out_list: List[str],
 
 class __NodeFilter:
     def __init__( self, model: Model, accessions: Iterable[str] ):
-        self.sequences = [model.genes[ accession ] for accession in accessions]
+        self.sequences = [model.genes[accession] for accession in accessions]
     
     
     def format( self, node: MNode ):

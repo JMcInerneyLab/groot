@@ -6,7 +6,6 @@ import groot
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.forms.frm_sample_browser import FrmSampleBrowser
 from groot_gui.forms.designer import frm_wizard_designer
-from groot_gui.utilities import gui_workflow
 from groot_gui.utilities.gui_workflow import handlers, EIntent
 from intermake.engine.environment import MENV
 from mhelper import array_helper, file_helper
@@ -154,7 +153,7 @@ class FrmWizard( FrmBase ):
             self.ui.LBL_WRN_ACTIVE.setVisible( True )
             self.ui.LBL_WRN_MODEL.setVisible( False )
             self.is_enabled = False
-        elif not m.get_status( groot.constants.STAGES._DATA_0 ).is_none:
+        elif not m.get_status( groot.constants.STAGES.SEQ_AND_SIM_ps ).is_none:
             self.ui.LBL_WRN_ACTIVE.setVisible( False )
             self.ui.LBL_WRN_MODEL.setVisible( True )
             self.is_enabled = False
@@ -186,19 +185,19 @@ class FrmWizard( FrmBase ):
                 tolerance = self.ui.SPN_COMPONENT_TOLERANCE.value(),
                 alignment = self.ui.CMB_ALIGNMENT_METHOD.currentText(),
                 tree = self.ui.CMB_TREE_METHOD.currentText(),
-                pause_align = self.ui.CHK_PAUSE_ALIGNMENTS.isChecked(),
-                pause_tree = self.ui.CHK_PAUSE_TREES.isChecked(),
-                pause_fusion = self.ui.CHK_PAUSE_FUSIONS.isChecked(),
-                pause_splits = self.ui.CHK_PAUSE_SPLITS.isChecked(),
-                pause_consensus = self.ui.CHK_PAUSE_CONSENSUS.isChecked(),
-                pause_subset = self.ui.CHK_PAUSE_SUBSETS.isChecked(),
-                pause_pregraphs = self.ui.CHK_PAUSE_PREGRAPHS.isChecked(),
-                pause_minigraph = self.ui.CHK_PAUSE_MINIGRAPHS.isChecked(),
-                pause_sew = self.ui.CHK_PAUSE_RAW_NRFG.isChecked(),
-                pause_clean = self.ui.CHK_PAUSE_CLEANED_NRFG.isChecked(),
-                pause_check = self.ui.CHK_PAUSE_CHECKED_NRFG.isChecked(),
-                pause_components = self.ui.CHK_PAUSE_COMPONENTS.isChecked(),
-                pause_import = self.ui.CHK_PAUSE_DATA.isChecked(),
+                pauses = { groot.constants.STAGES.ALIGNMENTS_7 if self.ui.CHK_PAUSE_ALIGNMENTS.isChecked() else None,
+                           groot.constants.STAGES.TREES_8 if self.ui.CHK_PAUSE_TREES.isChecked() else None,
+                           groot.constants.STASTAGES.FUSIONS_9 if self.ui.CHK_PAUSE_FUSIONS.isChecked() else None,
+                           groot.constants.STAGES.SPLITS_10 if self.ui.CHK_PAUSE_SPLITS.isChecked() else None,
+                           groot.constants.STAGES.CONSENSUS_11 if self.ui.CHK_PAUSE_CONSENSUS.isChecked() else None,
+                           groot.constants.STAGES.SUBSETS_12 if self.ui.CHK_PAUSE_SUBSETS.isChecked() else None,
+                           groot.constants.STAGES.PREGRAPHS_13 if self.ui.CHK_PAUSE_PREGRAPHS.isChecked() else None,
+                           groot.constants.STAGES.SUPERTREES_14 if self.ui.CHK_PAUSE_MINIGRAPHS.isChecked() else None,
+                           groot.constants.STAGES.FUSE_15 if self.ui.CHK_PAUSE_RAW_NRFG.isChecked() else None,
+                           groot.constants.STAGES.CLEAN_16 if self.ui.CHK_PAUSE_CLEANED_NRFG.isChecked() else None,
+                           groot.constants.STAGES.CHECKED_17 if self.ui.CHK_PAUSE_CHECKED_NRFG.isChecked() else None,
+                           groot.constants.STAGES.MAJOR_4 if self.ui.CHK_PAUSE_COMPONENTS.isChecked() else None,
+                           groot.constants.STAGES.SEQ_AND_SIM_ps if self.ui.CHK_PAUSE_DATA.isChecked() else None },
                 save = self.ui.CHK_SAVE.isChecked(),
                 view = False,
                 supertree = self.ui.CMB_SUPERTREE_METHOD.currentText(),
@@ -215,18 +214,18 @@ class FrmWizard( FrmBase ):
         self.ui.SPN_COMPONENT_TOLERANCE.setValue( w.tolerance )
         self.ui.CMB_ALIGNMENT_METHOD.setCurrentText( w.alignment )
         self.ui.CMB_TREE_METHOD.setCurrentText( w.alignment )
-        self.ui.CHK_PAUSE_ALIGNMENTS.setChecked( w.pause_align )
-        self.ui.CHK_PAUSE_TREES.setChecked( w.pause_tree )
-        self.ui.CHK_PAUSE_FUSIONS.setChecked( w.pause_fusion )
-        self.ui.CHK_PAUSE_COMPONENTS.setChecked( w.pause_components )
-        self.ui.CHK_PAUSE_DATA.setChecked( w.pause_import )
-        self.ui.CHK_PAUSE_SPLITS.setChecked( w.pause_splits )
-        self.ui.CHK_PAUSE_CONSENSUS.setChecked( w.pause_consensus )
-        self.ui.CHK_PAUSE_SUBSETS.setChecked( w.pause_subsets )
-        self.ui.CHK_PAUSE_MINIGRAPHS.setChecked( w.pause_minigraph )
-        self.ui.CHK_PAUSE_RAW_NRFG.setChecked( w.pause_sew )
-        self.ui.CHK_PAUSE_CLEANED_NRFG.setChecked( w.pause_clean )
-        self.ui.CHK_PAUSE_CHECKED_NRFG.setChecked( w.pause_check )
+        self.ui.CHK_PAUSE_ALIGNMENTS.setChecked   ( groot.constants.STAGES.ALIGNMENTS_7 in w.pauses )
+        self.ui.CHK_PAUSE_TREES.setChecked        ( groot.constants.STAGES.TREES_8 in w.pauses )
+        self.ui.CHK_PAUSE_FUSIONS.setChecked      ( groot.constants.STASTAGES.FUSIONS_9 in w.pauses )
+        self.ui.CHK_PAUSE_COMPONENTS.setChecked   ( groot.constants.STAGES.MAJOR_4 in w.pauses )
+        self.ui.CHK_PAUSE_DATA.setChecked         ( groot.constants.STAGES.SEQ_AND_SIM_ps in w.pauses )
+        self.ui.CHK_PAUSE_SPLITS.setChecked       ( groot.constants.STAGES.SPLITS_10 in w.pauses )
+        self.ui.CHK_PAUSE_CONSENSUS.setChecked    ( groot.constants.STAGES.CONSENSUS_11 in w.pauses )
+        self.ui.CHK_PAUSE_SUBSETS.setChecked      ( groot.constants.STAGES.PREGRAPHS_13 in w.pauses )
+        self.ui.CHK_PAUSE_MINIGRAPHS.setChecked   ( groot.constants.STAGES.SUPERTREES_14 in w.pauses )
+        self.ui.CHK_PAUSE_RAW_NRFG.setChecked     ( groot.constants.STAGES.FUSE_15 in w.pauses )
+        self.ui.CHK_PAUSE_CLEANED_NRFG.setChecked ( groot.constants.STAGES.CLEAN_16 in w.pauses )
+        self.ui.CHK_PAUSE_CHECKED_NRFG.setChecked ( groot.constants.STAGES.CHECKED_17 in w.pauses )
         self.ui.CHK_SAVE.setChecked( w.save )
         
         self.ui.TXT_OUTGROUPS.setText( ", ".join( w.outgroups ) )

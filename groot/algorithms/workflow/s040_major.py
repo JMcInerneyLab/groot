@@ -41,7 +41,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     :returns:           Nothing, the components are written to :ivar:`model.components`.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.MAJOR_3 ).assert_create()
+    model.get_status( STAGES.MAJOR_4 ).assert_create()
     
     model.components.clear()
     
@@ -139,7 +139,7 @@ def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
     :param components: Components to drop. If `None` then all components are dropped. 
     """
     model = global_view.current_model()
-    model.get_status( STAGES.MAJOR_3 ).assert_drop()
+    model.get_status( STAGES.MAJOR_4 ).assert_drop()
     
     previous_count = len( model.components )
     
@@ -164,7 +164,7 @@ def set_major( genes: List[Gene] ):
     """
     
     model = global_view.current_model()
-    model.get_status( STAGES.MAJOR_3 ).assert_set()
+    model.get_status( STAGES.MAJOR_4 ).assert_set()
     
     for gene in genes:
         if model.components.find_component_for_major_gene( gene, default = None ) is not None:

@@ -167,10 +167,10 @@ class FrmCreateTrees( FrmRunAlgorithm ):
     def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( groot.constants.STAGES.TREES_6 ).is_complete:
+        if model.get_status( groot.constants.STAGES.TREES_8 ).is_complete:
             return False, '<html><body>Trees already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body></html>'
         
-        if model.get_status( groot.constants.STAGES.ALIGNMENTS_5 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.ALIGNMENTS_7 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body></html>'
         
         if model.get_status( groot.constants.STAGES.OUTGROUPS_5b ).is_not_complete:
@@ -194,10 +194,10 @@ class FrmCreateAlignment( FrmRunAlgorithm ):
     def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( groot.constants.STAGES.ALIGNMENTS_5 ).is_complete:
+        if model.get_status( groot.constants.STAGES.ALIGNMENTS_7 ).is_complete:
             return False, '<html><body>Alignments already exist, you can <a href="action:view_alignments">view the alignments</a>, <a href="action:drop_alignments">remove them</a> or proceed to <a href="action:create_trees">creating the trees</a>.</body></html>'
         
-        if model.get_status( groot.constants.STAGES.MINOR_3 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.MINOR_5 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_major">create the components</a> before creating the alignments.</body></html>'
         
         return True, ""
@@ -218,10 +218,10 @@ class FrmCreateSubgraphs( FrmRunAlgorithm ):
     def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( groot.constants.STAGES.SUBGRAPHS_11 ).is_complete:
+        if model.get_status( groot.constants.STAGES.SUPERTREES_14 ).is_complete:
             return False, '<html><body>Subgraphs already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_subgraphs">remove them</a> or proceed to <a href="action:create_fused">creating the fused graph</a>.</body></html>'
         
-        if model.get_status( groot.constants.STAGES.SUBSETS_10 ).is_not_complete:
+        if model.get_status( groot.constants.STAGES.SUBSETS_12 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_subsets">create the components</a> before creating the subgraphs.</body></html>'
         
         return True, ""
@@ -242,7 +242,7 @@ class FrmCreateDomains( FrmRunAlgorithm ):
     def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( groot.constants.STAGES._DATA_0 ).is_none:
+        if model.get_status( groot.constants.STAGES.SEQ_AND_SIM_ps ).is_none:
             return False, '<html><body>You need to <a href="action:import_file">import some data</a> before creating the domains.</body></html>'
         
         return True, ""

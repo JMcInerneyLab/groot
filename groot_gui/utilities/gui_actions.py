@@ -193,7 +193,7 @@ class GuiActions:
     
     def show_help( self ):
         import webbrowser
-        webbrowser.open( "https://bitbucket.org/mjr129/groot" )
+        webbrowser.open( "http://software.rusilowicz.com/groot" )
     
     
     def show_my_help( self ):
@@ -238,7 +238,7 @@ class GuiActions:
         elif filter_index == 0:
             self.run( groot.import_genes, file_name )
         elif filter_index == 1:
-            self.run( groot.import_similarity, file_name )
+            self.run( groot.import_similarities, file_name )
         else:
             raise SwitchError( "filter_index", filter_index )
     

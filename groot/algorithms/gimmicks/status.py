@@ -41,3 +41,6 @@ def print_status() -> EChanges:
     
     MCMD.print( "".join( r ) )
     return EChanges.INFORMATION
+
+def print_model_history():
+    MCMD.print("")

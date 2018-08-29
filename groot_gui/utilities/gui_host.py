@@ -1,4 +1,6 @@
 from typing import cast
+
+import groot.data.config
 from intermake import RunHost
 from intermake_qt import BrowserHost
 
@@ -7,7 +9,7 @@ class LegoGuiHost( BrowserHost ):
     def on_run_host( self, args: RunHost ):
         from PyQt5.QtCore import QCoreApplication, Qt
         from groot.data import global_view
-        if global_view.options().share_opengl:
+        if groot.data.config.options().share_opengl:
             QCoreApplication.setAttribute( Qt.AA_ShareOpenGLContexts )
         
         super().on_run_host( args )

@@ -171,6 +171,7 @@ def _add_submenu( text: str,
     
     live_list.append( sub_menu )
     root.addMenu( sub_menu )
+    root.setIcon( sub_menu.icon() )
     return count
 
 
@@ -188,7 +189,10 @@ def _add_action( mode: type,
     act.setEnabled( e )
     if icon:
         act.setIcon( icon.icon() )
+        menu.setIcon( icon.icon() )
+    
     act.tag = element
     live_list.append( act )
     menu.addAction( act )
+    
     return bool( e )

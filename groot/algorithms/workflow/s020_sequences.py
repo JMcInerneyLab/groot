@@ -31,7 +31,7 @@ def import_genes( file_name: str ) -> EChanges:
     :param file_name:   File to import
     """
     model = global_view.current_model()
-    model.get_status( STAGES.FASTA_1 ).assert_import()
+    model.get_status( STAGES.SEQUENCES_2 ).assert_import()
     
     model.user_comments.append( "IMPORT_FASTA \"{}\"".format( file_name ) )
     
@@ -126,7 +126,7 @@ def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
     :param accessions:  Sequence accession(s)
     """
     model = global_view.current_model()
-    model.get_status( STAGES.FASTA_1 ).assert_set()
+    model.get_status( STAGES.SEQUENCES_2 ).assert_set()
     
     for i, accession in enumerate( accessions ):
         sequence = __add_new_gene( model, accession )
@@ -156,7 +156,7 @@ def drop_genes( genes: List[Gene] ) -> EChanges:
     model = global_view.current_model()
     
     # Delete the previous MAJOR components
-    has_major = model.get_status( STAGES.MAJOR_3 )
+    has_major = model.get_status( STAGES.MAJOR_4 )
     
     if has_major:
         from . import s040_major
@@ -174,10 +174,10 @@ def drop_genes( genes: List[Gene] ) -> EChanges:
             to_drop.add( edge )
     
     from . import s030_similarity
-    s030_similarity.drop_similarity( list( to_drop ) )
+    s030_similarity.drop_similarities( list( to_drop ) )
     
     # Assert the drop (this should pass now we have removed the components and edges!)
-    model.get_status( STAGES.FASTA_1 ).assert_drop()
+    model.get_status( STAGES.SEQUENCES_2 ).assert_drop()
     
     # Drop the genes
     for gene in genes:

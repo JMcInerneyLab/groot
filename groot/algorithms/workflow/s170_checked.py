@@ -20,7 +20,7 @@ def create_checked(  ):
     Requisites: `create_cleaned`
     """
     model=global_view.current_model()
-    model.get_status( constants.STAGES.CHECKED_14 ).assert_create()
+    model.get_status( constants.STAGES.CHECKED_17 ).assert_create()
     
     nrfg = model.fusion_graph_clean.graph
     title = "{} - NRFG report".format( model )
@@ -36,39 +36,42 @@ def create_checked(  ):
     
     # Basic checks
     if len( nrfg.nodes ) == 0:
-        warnings.append( "The NRFG is bad. It doesn't contain any nodes." )
+        warnings.append( "Code C1. The NRFG is bad. It doesn't contain any nodes." )
     
     if len( nrfg.edges ) == 0:
-        warnings.append( "The NRFG is bad. It doesn't contain any edges." )
+        warnings.append( "Code C2. The NRFG is bad. It doesn't contain any edges." )
     
     # NRFG should be connected
     ccs = analysing.find_connected_components( nrfg )
     
     if len( ccs ) != 1:
-        warnings.append( "The NRFG is bad. It contains more than one connected component. It contains {} components.".format( len( ccs ) ) )
+        warnings.append( "Code C3. The NRFG is bad. It contains more than one connected component. It contains {} components.".format( len( ccs ) ) )
     
     # Fusion node checks
     for node in nrfg:
         if lego_graph.is_fusion_like( node ):
             if node.num_parents != 2 and node.num_children != 1:
-                warnings.append( "Possible badly formed fusion at node «{}». This fusion has {} input and {} outputs, instead of the expected 2 inputs and 1 output.".format( node, node.num_parents, node.num_children ) )
+                warnings.append( "Code C4. Possible badly formed fusion at node «{}». This fusion has {} input and {} outputs, instead of the expected 2 inputs and 1 output.".format( node, node.num_parents, node.num_children ) )
         elif lego_graph.is_root( node ):
             if node.num_parents > 0:
-                warnings.append( "Possibly badly formed root at node «{}». This node has {} parents instead of the expected 0.".format( node, node.num_parents ) )
+                warnings.append( "Code C5. Possible badly formed root at node «{}». This node has {} parents instead of the expected 0.".format( node, node.num_parents ) )
         elif node.num_parents > 1:
-            warnings.append( "Possibly badly formed clade at node «{}». This node has {} parents instead of the expected 1.".format( node, node.num_parents ) )
+            warnings.append( "Code C6. Possible badly formed clade at node «{}». This node has {} parents instead of the expected 1.".format( node, node.num_parents ) )
         
         if lego_graph.is_sequence_node( node ):
             if node.num_children > 0:
-                warnings.append( "Possibly badly formed sequence at node «{}». This node has {} children instead of the expected 0.".format( node, node.num_parents ) )
+                warnings.append( "Code C7. Possibly badly formed sequence at node «{}». This node has {} children instead of the expected 0.".format( node, node.num_parents ) )
         elif lego_graph.is_clade( node ):
             if node.num_children <= 1:
-                warnings.append( "Possible redundant clade at node «{}». This node has {} children instead of 2 or more.".format( node, node.num_parents ) )
+                warnings.append( "Code C8. Possible redundant clade at node «{}». This node has {} children instead of 2 or more.".format( node, node.num_parents ) )
     
     # Format warnings
     r.append( "<br/>" )
     r.append( "<h2>Warnings and errors</h2>" )
     if warnings:
+        r.append( "Please see the Groot documentation for more details." )
+        
+        r.append( "<ol>" )
         for warning in warnings:
             r.append( "<li>{}</li>".format( warning ) )
         r.append( "</ol>" )
@@ -97,7 +100,7 @@ def drop_checked( ):
     Removes the check-NRFG report from the model.
     """
     model=global_view.current_model()
-    model.get_status( constants.STAGES.CHECKED_14 ).assert_drop()
+    model.get_status( constants.STAGES.CHECKED_17 ).assert_drop()
     
     model.report = None
     return EChanges.MODEL_DATA

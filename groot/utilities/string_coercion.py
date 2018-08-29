@@ -7,7 +7,7 @@ def setup():
     Sets up the `stringcoercion` library for use with Groot.
     
     `stringcoercion` is used by `intermake` to convert text (e.g. `"123"`, `yes`) entered in the CLI into Python values (e.g. `123`, `True`).
-    The `AbstractEnumCoercer`s are also used by `editorium` to display the list of options to the user (e.g. `yes`/`no`).
+    The `AbstractEnumCoercer`s are also used by `editorium` (the GUI) to display the list of options to the user (e.g. `yes`/`no`).
     """
     from typing import Iterable, cast, Type
     import re
@@ -22,7 +22,7 @@ def setup():
     
     class AlgorithmCoercer( sc.AbstractCoercer ):
         """
-        Algorithms referenced by their names, with parameters specified using semicolons.
+        Algorithms are referenced by their names, with parameters specified using semicolons.
         
         e.g. `dbscan`
         e.g. `kmeans;3`
@@ -173,7 +173,7 @@ def setup():
         
         
         def on_get_option_names( self, value: Gene ) -> Iterable[str]:
-            return value.display_name, value.name, value.index
+            return value.display_name, value.accession, value.legacy_accession, value.index
     
     
     class DomainCoercer( sc.AbstractEnumCoercer ):

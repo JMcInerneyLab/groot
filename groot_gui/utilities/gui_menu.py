@@ -4,12 +4,13 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QResizeEvent, QKeySequence
 from PyQt5.QtWidgets import QAction, QApplication, QLabel, QMainWindow, QMenu, QMenuBar, QSizePolicy, QWidgetAction, QGroupBox, QHBoxLayout, QFrame, QToolButton, QAbstractButton
 
+import groot.data.config
 from groot import constants
 from groot.constants import STAGES, Stage
 from mhelper import file_helper, ResourceIcon
 from groot_gui.utilities import gui_workflow
 from groot.data import global_view
-from groot.data.global_view import RecentFile
+from groot.data.config import RecentFile
 from groot_gui.utilities.gui_workflow import EIntent, IntentHandler, handlers
 from groot_gui.utilities.gui_actions import GuiActions
 from groot_gui.forms.resources import resources
@@ -248,10 +249,10 @@ class GuiMenu:
     
     
     def add_recent( self, menu: QMenu ):
-        if not global_view.options().recent_files:
+        if not groot.data.config.options().recent_files:
             menu.setEnabled( False )
         
-        for item in reversed( global_view.options().recent_files ):
+        for item in reversed( groot.data.config.options().recent_files ):
             if not isinstance( item, RecentFile ):
                 # Legacy data, discard
                 continue

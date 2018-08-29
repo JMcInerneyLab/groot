@@ -2,16 +2,19 @@ import os
 import shutil
 import uuid
 from os import path
+from typing import Optional
 
+import groot.data.sample_data
 from groot.algorithms.gimmicks import wizard, compare
 from groot.algorithms.workflow import s010_file, s080_tree, s070_alignment
-from intermake import MCMD, MENV, Theme, command, subprocess_helper, visibilities
-from mgraph import exporting, importing
-from mhelper import SwitchError, file_helper, io_helper
+from groot_tests.test_directory import TestDirectory
+from intermake import MCMD, Theme, command, subprocess_helper, visibilities
+from mgraph import importing
+from mhelper import SwitchError, file_helper, io_helper, OpeningWriter
 
 from groot import constants
 from groot.constants import EFormat, EChanges
-from groot.data import global_view, Gene, UserGraph, FixedUserGraph
+from groot.data import global_view, UserGraph, FixedUserGraph
 from groot.utilities import lego_graph
 
 
@@ -24,36 +27,17 @@ def list_tests() -> EChanges:
     Lists the available test cases.
     """
     MCMD.print( "TESTS:" )
-    for file in file_helper.list_dir( global_view.get_test_data_folder() ):
+    for file in file_helper.list_dir( TestDirectory.get_test_folder() ):
         MCMD.print( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     return EChanges.INFORMATION
 
 
-@command( visibility = visibilities.TEST, names = ("reload_test", "xrun_test") )
-def reload_test( name: str ) -> EChanges:
-    """
-    Loads the model created via `run_test`.
-    :param name:    Test name
-    """
-    test_case_folder = global_view.get_test_data_folder( name )
-    results_folder = MENV.local_data.local_folder( "test_cases_results" )
-    test_name = file_helper.get_filename( test_case_folder )
-    results_saved_file = path.join( results_folder, test_name + "_results_session.groot" )
-    
-    if not path.isfile( results_saved_file ):
-        raise ValueError( "Cannot load test because it has not yet been run." )
-    
-    return s010_file.file_load( results_saved_file )
-
-
 @command( visibility = visibilities.TEST )
-def run_test( name: str,
-              view: bool = False ) -> EChanges:
+def run_test( name: str ) -> EChanges:
     """
     Runs a test case and saves the results to the global results folder. 
     
-    :param view:       Pause to view NRFG.
     :param name:       A name or path to the test case.
                        If no full path is provided the "samples" folder will be assumed.
                        The test case folder must contain:
@@ -66,177 +50,149 @@ def run_test( name: str,
     """
     
     # Load sample file
-    test_case_folder = global_view.get_test_data_folder( name )
-    results_folder = MENV.local_data.local_folder( "test_cases_results" )
-    test_name = file_helper.get_filename( test_case_folder )
+    tdir = TestDirectory( name )
+    
+    # Define outputs
+    file_helper.create_directory( tdir.r_folder, overwrite = True )
     
     # Check the requisite files exist
-    test_tree_file = path.join( test_case_folder, "tree.tsv" )
-    test_ini_file = path.join( test_case_folder, "groot.ini" )
-    results_original_file = path.join( results_folder, test_name + "_original.tsv" )
-    results_compare_file = path.join( results_folder, test_name + "_results_summary.html" )
-    results_edges_file = path.join( results_folder, test_name + "_results_trees.tsv" )
-    results_nrfg_file = path.join( results_folder, test_name + "_results_nrfg.tsv" )
-    results_saved_file = path.join( results_folder, test_name + "_results_session.groot" )
-    results_saved_alignments = path.join( results_folder, test_name + "_results_alignments.fasta" )
-    results_newick_file = path.join( results_folder, test_name + "_results_nrfg_divided.nwk" )
-    results_sentinel = path.join( results_folder, test_name + "_results_sentinel.ini" )
+    if not path.isdir( tdir.t_folder ):
+        raise ValueError( "This is not a test case (it is not even a folder, «{}»).".format( tdir.t_folder ) )
     
-    all_files = [results_original_file,
-                 results_compare_file,
-                 results_edges_file,
-                 results_saved_file,
-                 results_saved_alignments,
-                 results_newick_file,
-                 results_sentinel]
+    if not path.isfile( tdir.t_tree ):
+        raise ValueError( "This is not a test case (it is missing the edge list file, «{}»).".format( tdir.t_tree ) )
+    
+    if not path.isfile( tdir.t_ini ):
+        raise ValueError( "This is not a test case (it is missing the INI file, «{}»).".format( tdir.t_ini ) )
     
     # Read the test specs
-    if not path.isdir( test_case_folder ):
-        raise ValueError( "This is not a test case (it is not even a folder, «{}»).".format( test_case_folder ) )
+    specs = io_helper.load_ini( tdir.t_ini )
     
-    if not path.isfile( test_tree_file ):
-        raise ValueError( "This is not a test case (it is missing the edge list file, «{}»).".format( test_tree_file ) )
+    if "groot_test" not in specs:
+        raise ValueError( "This is not a test case (it is missing the `groot_test` section from the INI file, «{}»).".format( tdir.t_ini ) )
     
-    if not path.isfile( test_ini_file ):
-        raise ValueError( "This is not a test case (it is missing the INI file, «{}»).".format( test_ini_file ) )
+    if not "groot_wizard" in specs:
+        raise ValueError( "This is not a test case (it is missing the «wizard» section from the INI «{}»).".format( tdir.t_ini ) )
     
-    keys = io_helper.load_ini( test_ini_file )
-    
-    if "groot_test" not in keys:
-        raise ValueError( "This is not a test case (it is missing the `groot_test` section from the INI file, «{}»).".format( test_ini_file ) )
-    
-    guid = keys["groot_test"]["guid"]
-    
-    wizard_params = keys["groot_wizard"]
+    wizard_params = specs["groot_wizard"]
     
     try:
         wiz_tol = int( wizard_params["tolerance"] )
         wiz_og = wizard_params["outgroups"].split( "," )
     except KeyError as ex:
-        raise ValueError( "This is not a test case (it is missing the «{}» setting from the «wizard» section of the INI «{}»).".format( ex, test_ini_file ) )
+        raise ValueError( "This is not a test case (it is missing the «{}» setting from the «wizard» section of the INI «{}»).".format( ex, tdir.t_ini ) )
     
-    # Remove obsolete results
-    if any( path.isfile( file ) for file in all_files ):
-        if path.isfile( results_sentinel ):
-            sentinel = io_helper.load_ini( results_sentinel )
-            old_guid = sentinel["groot_test"]["guid"]
-        else:
-            old_guid = None
-        
-        if old_guid is not guid:
-            # Delete old files
-            MCMD.progress( "Removing obsolete test results (the old test is no longer present under the same name)" )
-            for file in all_files:
-                if path.isfile( file ):
-                    MCMD.progress( "..." + file )
-                    os.remove( file )
-    
-    file_helper.write_all_text( results_sentinel, "[groot_test]\nguid={}\n".format( guid ) )
-    
-    if not "groot_wizard" in keys:
-        raise ValueError( "This is not a test case (it is missing the «wizard» section from the INI «{}»).".format( test_ini_file ) )
-    
-    # Copy the 
-    shutil.copy( test_tree_file, results_original_file )
+    # Copy the test files to the output folder
+    for file in file_helper.list_dir( tdir.t_folder ):
+        shutil.copy( file, file_helper.format_path( file, tdir.r_folder + "/input_{N}{E}" ) )
     
     # Create settings
     walkthrough = wizard.Wizard( new = False,
-                                 name = path.join( results_folder, test_name + ".groot" ),
-                                 imports = global_view.get_sample_contents( test_case_folder ),
-                                 pause_import = False,
-                                 pause_components = False,
-                                 pause_align = False,
-                                 pause_tree = False,
-                                 pause_fusion = False,
-                                 pause_splits = False,
-                                 pause_consensus = False,
-                                 pause_subset = False,
-                                 pause_pregraphs = False,
-                                 pause_minigraph = False,
-                                 pause_sew = False,
-                                 pause_clean = False,
-                                 pause_check = False,
+                                 name = tdir.r_model,
+                                 imports = groot.data.sample_data.get_sample_contents( tdir.t_folder ),
+                                 pauses = set(),
                                  tolerance = wiz_tol,
                                  outgroups = wiz_og,
                                  alignment = "",
-                                 tree = "neighbor_joining",
+                                 tree = "maximum_likelihood",  # "neighbor_joining",
                                  view = False,
                                  save = False,
                                  supertree = "clann" )
     
     try:
-        # Execute
+        # Execute the wizard (no pauses are set so this only requires 1 `step`)
         walkthrough.make_active()
         walkthrough.step()
         
         if not walkthrough.is_completed:
             raise ValueError( "Expected wizard to complete but it did not." )
         
-        # Save the original graph as part of the model 
-        test_tree_file_data = UserGraph( importing.import_edgelist( file_helper.read_all_text( test_tree_file ), delimiter = "\t" ), name = "original_graph" )
+        # Add the original graph to the Groot `Model` in case we debug
+        test_tree_file_data = UserGraph( importing.import_edgelist( file_helper.read_all_text( tdir.t_tree ), delimiter = "\t" ), name = "original_graph" )
         lego_graph.rectify_nodes( test_tree_file_data.graph, global_view.current_model() )
         global_view.current_model().user_graphs.append( FixedUserGraph( test_tree_file_data.graph, "original_graph" ) )
     finally:
-        # Save the final model
-        s010_file.file_save( results_saved_file )
+        # Save the final model regardless of whether the test succeeded
+        s010_file.file_save( tdir.r_model )
     
-    # Write the results
+    # Perform the comparison
     model = global_view.current_model()
-    file_helper.write_all_text( results_nrfg_file,
-                                exporting.export_edgelist( model.fusion_graph_clean.graph,
-                                                           fnode = lambda x: x.data.accession if isinstance( x.data, Gene ) else "CL{}".format( x.get_session_id() ),
-                                                           delimiter = "\t" ) )
-    
-    if view:
-        s080_tree.print_trees( test_tree_file_data, format = EFormat._HTML, file = "open" )
-        s080_tree.print_trees( model.fusion_graph_unclean, format = EFormat._HTML, file = "open" )
-        s080_tree.print_trees( model.fusion_graph_clean, format = EFormat._HTML, file = "open" )
-        
-        for component in model.components:
-            s080_tree.print_trees( component.named_tree_unrooted, format = EFormat._HTML, file = "open" )
-            s080_tree.print_trees( component.named_tree, format = EFormat._HTML, file = "open" )
-    
-    # Save extra data
-    s070_alignment.print_alignments( file = results_saved_alignments )
-    s080_tree.print_trees( model.fusion_graph_clean, format = EFormat.TSV, file = results_edges_file )
-    
-    # Read original graph
-    new_newicks = []
-    
     differences = compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
     
-    # Write results
-    file_helper.write_all_text( results_newick_file, new_newicks, newline = True )
-    file_helper.write_all_text( results_compare_file, differences.html, newline = True )
+    # Write the results---
     
-    if view:
-        os.system( "open \"" + results_compare_file + "\"" )
+    # ---Summary
+    io_helper.save_ini( tdir.r_summary, differences.raw_data )
     
-    # Add the report to the model
+    # ---Alignments
+    s070_alignment.print_alignments( file = tdir.r_alignments )
+    
+    # ---Differences
+    file_helper.write_all_text( tdir.r_comparison, differences.html, newline = True )
+    differences.name = "test_differences"
     global_view.current_model().user_reports.append( differences )
-    s010_file.file_save( results_saved_file )
     
-    MCMD.progress( "The test has completed, see «{}».".format( results_compare_file ) )
+    # ---Model
+    s010_file.file_save( tdir.r_model )
+    
+    # Done
+    MCMD.progress( "The test has completed, see «{}».".format( tdir.r_comparison ) )
     return EChanges.MODEL_OBJECT
+
+
+@command()
+def load_test( name: str ) -> EChanges:
+    """
+    Loads the model created via `run_test`.
+    :param name:    Test name
+    """
+    tdir = TestDirectory( name )
+    
+    if not path.isfile( tdir.r_model ):
+        raise ValueError( "Cannot load test because it has not yet been run." )
+    
+    return s010_file.file_load( tdir.r_model )
+
+
+@command()
+def view_test_results( name: Optional[str] = None ):
+    """
+    View the results of a particular test.
+    
+    :param name:    Name, or `None` to use the currently loaded model.
+    """
+    if name:
+        tdir = TestDirectory( name )
+        groot.file_load( tdir.r_model )
+    
+    model = groot.current_model()
+    
+    s080_tree.print_trees( model.user_graphs["original_graph"], format = EFormat._HTML, file = "open" )
+    s080_tree.print_trees( model.fusion_graph_unclean, format = EFormat._HTML, file = "open" )
+    s080_tree.print_trees( model.fusion_graph_clean, format = EFormat._HTML, file = "open" )
+    
+    for component in model.components:
+        s080_tree.print_trees( component.named_tree_unrooted, format = EFormat._HTML, file = "open" )
+        s080_tree.print_trees( component.named_tree, format = EFormat._HTML, file = "open" )
+    
+    report = model.user_reports["test_differences"].html
+    
+    with OpeningWriter() as view_report:
+        view_report.write( report )
 
 
 @command( visibility = visibilities.ADVANCED )
 def drop_tests():
     """
-    Deletes all test cases from the sample data folder.
+    Deletes *all* test cases and their results.
     """
-    dirs = file_helper.list_dir( global_view.get_test_data_folder() )
-    
-    for dir in dirs:
-        ini_file = path.join( dir, "groot.ini" )
-        if path.isfile( ini_file ):
-            if "groot_test" in io_helper.load_ini( ini_file ):
-                shutil.rmtree( dir )
-                MCMD.progress( "Removed: {}".format( dir ) )
+    for folder in TestDirectory.get_test_folder(), TestDirectory.get_results_folder():
+        shutil.rmtree( folder )
+        MCMD.progress( "Removed: {}".format( folder ) )
 
 
 @command( visibility = visibilities.ADVANCED )
-def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: bool = False, run: bool = True ) -> EChanges:
+def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: bool = True ) -> EChanges:
     """
     Creates a GROOT unit test in the sample data folder.
     
@@ -247,7 +203,6 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
     :param no_blast:    Perform no BLAST 
     :param size:        Clade size
     :param types:       Type(s) of test(s) to create.
-    :param view:        View the final tree
     :return: List of created test directories 
     """
     # noinspection PyPackageRequirements
@@ -261,7 +216,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
     if not types:
         raise ValueError( "Missing :param:`types`." )
     
-    folder: str = global_view.get_test_data_folder()
+    tdir = TestDirectory( None )
     
     for name in types:
         try:
@@ -394,9 +349,8 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
             
             Ж.apply()
             
-            out_folder = file_helper.sequential_file_name( file_helper.join( folder, name + "_*" ) )
-            file_helper.create_directory( out_folder )
-            os.chdir( out_folder )
+            file_helper.create_directory( tdir.t_folder )
+            os.chdir( tdir.t_folder )
             
             Ж.show( format = Ж.EGraphFormat.ASCII, file = "tree.txt" )
             Ж.show( format = Ж.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
@@ -427,7 +381,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, view: 
             return EChanges.INFORMATION
         
         if run:
-            return run_test( path_, view = view )
+            return run_test( tdir.t_name )
     
     return EChanges.INFORMATION
 

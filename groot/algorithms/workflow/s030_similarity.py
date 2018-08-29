@@ -37,7 +37,7 @@ similarity_algorithms = AlgorithmCollection( DAlgorithm, "Similarity" )
 
 
 @command( folder = constants.F_CREATE )
-def create_similarity( algorithm: similarity_algorithms.Algorithm, evalue: float = None, length: int = None ):
+def create_similarities( algorithm: similarity_algorithms.Algorithm, evalue: float = None, length: int = None ):
     """
     Create and imports similarity matrix created using the specified algorithm.
     
@@ -46,7 +46,7 @@ def create_similarity( algorithm: similarity_algorithms.Algorithm, evalue: float
     :param length:      length cutoff.
     """
     model: Model = global_view.current_model()
-    model.get_status( STAGES.BLAST_2 ).assert_create()
+    model.get_status( STAGES.SIMILARITIES_3 ).assert_create()
     
     input = model.genes.to_fasta()
     
@@ -63,7 +63,7 @@ def set_similarity( left: Domain, right: Domain ) -> EChanges:
     :param right:    Subsequence to create the edge to
     """
     model: Model = global_view.current_model()
-    model.get_status( STAGES.BLAST_2 ).assert_set()
+    model.get_status( STAGES.SIMILARITIES_3 ).assert_set()
     
     edge = Edge( left, right )
     left.gene.model.edges.add( edge )
@@ -72,7 +72,7 @@ def set_similarity( left: Domain, right: Domain ) -> EChanges:
 
 
 @command( folder = constants.F_IMPORT )
-def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
+def import_similarities( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
     """
     Imports a similarity matrix.
     If data already exists in the model, only lines referencing existing sequences are imported.
@@ -82,7 +82,7 @@ def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: O
     :return: 
     """
     model: Model = global_view.current_model()
-    model.get_status( STAGES.BLAST_2 ).assert_create()
+    model.get_status( STAGES.SIMILARITIES_3 ).assert_create()
     
     obtain_only = model._has_data()
     
@@ -94,7 +94,7 @@ def import_similarity( file_name: Filename[EFileMode.READ, EXT_BLAST], evalue: O
 
 
 @command( folder = constants.F_DROP )
-def drop_similarity( edges: Optional[List[Edge]] = None ):
+def drop_similarities( edges: Optional[List[Edge]] = None ):
     """
     Detaches the specified edges from the specified subsequences.
     
@@ -102,7 +102,7 @@ def drop_similarity( edges: Optional[List[Edge]] = None ):
                             If `None` then all edges are dropped.
     """
     model: Model = global_view.current_model()
-    model.get_status( STAGES.BLAST_2 ).assert_drop()
+    model.get_status( STAGES.SIMILARITIES_3 ).assert_drop()
     
     if edges is not None:
         for edge in edges:
@@ -111,8 +111,8 @@ def drop_similarity( edges: Optional[List[Edge]] = None ):
         model.edges = []
 
 
-@command( names = ["print_similarity", "similarity"], folder = constants.F_PRINT )
-def print_similarity( find: str = "" ) -> EChanges:
+@command( names = ["print_similarities", "similarities"], folder = constants.F_PRINT )
+def print_similarities( find: str = "" ) -> EChanges:
     """
     Prints model edges.
     

@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QMessageBox, QCheckBox, QGroupBox, QTreeWidgetItem
 from groot_gui.forms.designer.frm_view_options_designer import Ui_Dialog
 
-from groot.constants import EFormat, BROWSE_MODE
-from groot.data import global_view
-from groot.data.global_view import EStartupMode, GlobalOptions, EWindowMode
+import groot.data.config
+from groot.constants import EFormat, BROWSE_MODE, EStartupMode, EWindowMode
 from groot_gui.forms.frm_base import FrmBase
 from intermake import common_commands
 from intermake_qt.forms.frm_arguments import FrmArguments
@@ -104,7 +103,7 @@ class FrmViewOptions( FrmBase ):
         self.ignore_map = True
         
         # Global options
-        global_options: GlobalOptions = global_view.options()
+        global_options = groot.data.config.options()
         host_options = LegoGuiHost.get_settings()
         
         if not isinstance( host_options.enable_browser, int ):
@@ -197,8 +196,8 @@ class FrmViewOptions( FrmBase ):
         """
         Signal handler:
         """
-        global_view.options().recent_files.clear()
-        global_view.save_global_options()
+        groot.data.config.options().recent_files.clear()
+        groot.data.config.save_global_options()
         QMessageBox.information( self, self.windowTitle(), "Recent files list cleared." )
     
     

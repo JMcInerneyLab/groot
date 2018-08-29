@@ -1,7 +1,8 @@
 from typing import Dict, FrozenSet, Iterable, Iterator, List, Sequence, Tuple
 
+from groot import constants
 from groot.constants import Stage
-from groot.data.model_collections import ComponentCollection, EdgeCollection, FusionCollection, GeneCollection, UserDomainCollection, UserGraphCollection
+from groot.data.model_collections import ComponentCollection, EdgeCollection, FusionCollection, GeneCollection, UserDomainCollection, UserGraphCollection, UserReportCollection
 from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset, Gene, Formation
 from groot.data.model_interfaces import ESiteType
 from groot.data.model_meta import ModelStatus
@@ -38,13 +39,14 @@ class Model( IVisualisable ):
         
         # Metadata
         self.file_name = None
+        self.command_history: List[str] = []
         self.__seq_type = ESiteType.UNKNOWN
         self.lego_domain_positions: Dict[Tuple[int, int], Dict[str, object]] = { }
         
         # User-data
         self.user_domains = UserDomainCollection( self )
         self.user_graphs = UserGraphCollection( self )
-        self.user_reports: List[Report] = []
+        self.user_reports = UserReportCollection( self )
         self.user_comments = ["MODEL CREATED AT {}".format( string_helper.current_time() )]
     
     
@@ -127,19 +129,18 @@ class Model( IVisualisable ):
             return self.__seq_type
         
         s = ESiteType.UNKNOWN
+        one_dna = False
         
         for x in self.genes:
             if x.site_array:
                 for y in x.site_array:
-                    if y not in "GAC":
-                        if y == "T":
-                            if s == ESiteType.UNKNOWN:
-                                s = ESiteType.DNA
-                        elif y == "U":
-                            if s == ESiteType.UNKNOWN:
-                                s = ESiteType.RNA
-                        else:
-                            s = ESiteType.PROTEIN
+                    if y in constants.DNA_BASES:
+                        one_dna = True
+                    else:
+                        s = ESiteType.PROTEIN
+        
+        if one_dna and s == ESiteType.UNKNOWN:
+            s = ESiteType.DNA
         
         self.__seq_type = s
         
@@ -148,6 +149,13 @@ class Model( IVisualisable ):
     
     def _has_data( self ) -> bool:
         return bool( self.genes )
+    
+    
+    def iter_reports( self ):
+        if self.report:
+            yield self.report
+        
+        yield from self.user_reports
     
     
     def iter_graphs( self ):

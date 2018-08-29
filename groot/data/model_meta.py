@@ -1,8 +1,8 @@
 from typing import Optional
 
-from groot.constants import Stage, STAGES
+from groot.constants import Stage, STAGES, EComponentGraph
 from groot.data.exceptions import NotReadyError, InUseError
-from groot.data.model_interfaces import INamed, IHasFasta, INamedGraph
+from groot.data.model_interfaces import IHasFasta, INamedGraph
 from groot.data.model_core import Component
 from mgraph import MGraph
 
@@ -10,7 +10,7 @@ from mgraph import MGraph
 _LegoModel_ = "LegoModel"
 
 
-class _ComponentAsFasta( INamed, IHasFasta ):
+class _ComponentAsFasta( IHasFasta ):
     def __init__( self, component: Component, is_aligned: bool ):
         self.component = component
         self.is_aligned = is_aligned
@@ -24,30 +24,31 @@ class _ComponentAsFasta( INamed, IHasFasta ):
     
     
     def __str__( self ):
-        return self.name
-    
-    
-    def on_get_name( self ):
         return "{}::{}".format( self.component, "aligned" if self.is_aligned else "unaligned" )
 
 
 class _ComponentAsGraph( INamedGraph ):
     def on_get_graph( self ) -> Optional[MGraph]:
-        if self.unrooted:
+        if self.graph_type == EComponentGraph.UNROOTED:
+            return self.component.tree_unrooted
+        elif self.graph_type == EComponentGraph.UNMODIFIED:
             return self.component.tree_unrooted
         else:
             return self.component.tree
     
     
-    def on_get_name( self ) -> str:
-        return "{}_{}".format( self.component, "unrooted" if self.unrooted else "tree" )
+    def get_accid( self ) -> str:
+        if self.graph_type == EComponentGraph.UNROOTED:
+            return "{}_unrooted".format( self.component )
+        elif self.graph_type == EComponentGraph.UNMODIFIED:
+            return "{}_unmodified".format( self.component )
+        else:
+            return "{}_tree".format( self.component )
     
     
-    def __init__( self, component: "Component", unrooted = False ):
+    def __init__( self, component: "Component", graph: EComponentGraph ):
         self.component = component
-        self.unrooted = unrooted
-    
-    
+        self.graph_type = graph
     
     
     def to_fasta( self ):

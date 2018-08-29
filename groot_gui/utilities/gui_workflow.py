@@ -220,22 +220,22 @@ class IntentHandlerCollection:
                                         action = ShowForm( FrmWebtree ),
                                         icon = resources.text,
                                         key = "view_trees",
-                                        handles = { EIntent.VIEW   : (groot.STAGES.FASTA_1,
-                                                                      groot.STAGES.BLAST_2,
-                                                                      groot.STAGES.MAJOR_3,
-                                                                      groot.STAGES.MINOR_3,
-                                                                      groot.STAGES.DOMAINS_4,
-                                                                      groot.STAGES.ALIGNMENTS_5,
-                                                                      groot.STAGES.TREES_6,
-                                                                      groot.STAGES.FUSIONS_7,
-                                                                      groot.STAGES.SPLITS_8,
-                                                                      groot.STAGES.CONSENSUS_9,
-                                                                      groot.STAGES.SUBSETS_10,
-                                                                      groot.STAGES.PREGRAPHS_11,
-                                                                      groot.STAGES.SUBGRAPHS_11,
-                                                                      groot.STAGES.FUSED_12,
-                                                                      groot.STAGES.CLEANED_13,
-                                                                      groot.STAGES.CHECKED_14),
+                                        handles = { EIntent.VIEW   : (groot.STAGES.SEQUENCES_2,
+                                                                      groot.STAGES.SIMILARITIES_3,
+                                                                      groot.STAGES.MAJOR_4,
+                                                                      groot.STAGES.MINOR_5,
+                                                                      groot.STAGES.DOMAINS_6,
+                                                                      groot.STAGES.ALIGNMENTS_7,
+                                                                      groot.STAGES.TREES_8,
+                                                                      groot.STASTAGES.FUSIONS_9,
+                                                                      groot.STAGES.SPLITS_10,
+                                                                      groot.STAGES.CONSENSUS_11,
+                                                                      groot.STAGES.SUBSETS_12,
+                                                                      groot.STAGES.PREGRAPHS_13,
+                                                                      groot.STAGES.SUPERTREES_14,
+                                                                      groot.STAGES.FUSE_15,
+                                                                      groot.STAGES.CLEAN_16,
+                                                                      groot.STAGES.CHECKED_17),
                                                     EIntent.INSPECT: (object,) } )
         
         from groot_gui.forms.frm_lego import FrmLego
@@ -244,11 +244,11 @@ class IntentHandlerCollection:
                                         action = ShowForm( FrmLego ),
                                         icon = resources.lego,
                                         key = "view_lego",
-                                        handles = { EIntent.VIEW   : (groot.STAGES.FASTA_1,
-                                                                      groot.STAGES.BLAST_2,
-                                                                      groot.STAGES.MAJOR_3,
-                                                                      groot.STAGES.MINOR_3,
-                                                                      groot.STAGES.DOMAINS_4),
+                                        handles = { EIntent.VIEW   : (groot.STAGES.SEQUENCES_2,
+                                                                      groot.STAGES.SIMILARITIES_3,
+                                                                      groot.STAGES.MAJOR_4,
+                                                                      groot.STAGES.MINOR_5,
+                                                                      groot.STAGES.DOMAINS_6),
                                                     EIntent.INSPECT: (groot.Gene, groot.Domain, groot.Component, groot.Edge) } )
         
         from groot_gui.forms.frm_alignment import FrmAlignment
@@ -257,9 +257,9 @@ class IntentHandlerCollection:
                                              action = ShowForm( FrmAlignment ),
                                              icon = resources.align,
                                              key = "view_alignments",
-                                             handles = { EIntent.VIEW   : (groot.STAGES.FASTA_1,
-                                                                           groot.STAGES.MINOR_3,
-                                                                           groot.STAGES.ALIGNMENTS_5),
+                                             handles = { EIntent.VIEW   : (groot.STAGES.SEQUENCES_2,
+                                                                           groot.STAGES.MINOR_5,
+                                                                           groot.STAGES.ALIGNMENTS_7),
                                                          EIntent.INSPECT: (groot.IHasFasta,) } )
         
         from groot_gui.forms.frm_fusions import FrmFusions
@@ -267,17 +267,17 @@ class IntentHandlerCollection:
                                            abv = "Fusions",
                                            action = ShowForm( FrmFusions ),
                                            icon = resources.fusion,
-                                           handles = { EIntent.VIEW: (groot.STAGES.FUSIONS_7,) } )
+                                           handles = { EIntent.VIEW: (groot.STASTAGES.FUSIONS_9,) } )
         
         from groot_gui.forms.frm_view_splits import FrmViewSplits
         self.VIEW_SPLITS = IntentHandler( abv = "Splits",
                                           name = "Splits matrix",
                                           action = ShowForm( FrmViewSplits ),
                                           icon = resources.split,
-                                          handles = { EIntent.VIEW   : (groot.STAGES.FASTA_1,
-                                                                        groot.STAGES.MAJOR_3,
-                                                                        groot.STAGES.SPLITS_8,
-                                                                        groot.STAGES.CONSENSUS_9),
+                                          handles = { EIntent.VIEW   : (groot.STAGES.SEQUENCES_2,
+                                                                        groot.STAGES.MAJOR_4,
+                                                                        groot.STAGES.SPLITS_10,
+                                                                        groot.STAGES.CONSENSUS_11),
                                                       EIntent.INSPECT: (groot.Split, groot.Gene, groot.Component, groot.Fusion) } )
         
         from groot_gui.forms.frm_samples import FrmLoadFile
@@ -296,11 +296,11 @@ class IntentHandlerCollection:
                                          name = "Gene editor",
                                          action = ShowForm( FrmGenes ),
                                          icon = resources.genes,
-                                         handles = { EIntent.VIEW   : (groot.STAGES.FASTA_1,
-                                                                       groot.STAGES.MAJOR_3,
-                                                                       groot.STAGES.MAJOR_3,
-                                                                       groot.STAGES.MINOR_3,
-                                                                       groot.STAGES.DOMAINS_4),
+                                         handles = { EIntent.VIEW   : (groot.STAGES.SEQUENCES_2,
+                                                                       groot.STAGES.MAJOR_4,
+                                                                       groot.STAGES.MAJOR_4,
+                                                                       groot.STAGES.MINOR_5,
+                                                                       groot.STAGES.DOMAINS_6),
                                                      EIntent.INSPECT: (groot.Gene,) } )
         
         # Creating
@@ -308,27 +308,27 @@ class IntentHandlerCollection:
                                                  action = RunAction( GuiActions.import_file ),
                                                  icon = resources.create,
                                                  key = "import_file",
-                                                 handles = { EIntent.CREATE: (groot.STAGES.FASTA_1,
-                                                                              groot.STAGES.BLAST_2) } )
+                                                 handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,
+                                                                              groot.STAGES.SIMILARITIES_3) } )
         self.CREATE_MAJOR = IntentHandler( name = "Create major",
                                            action = ShowArgs( groot.create_major ),
                                            icon = resources.create,
                                            key = "create_major",
-                                           handles = { EIntent.CREATE: groot.STAGES.MAJOR_3 } )
+                                           handles = { EIntent.CREATE: groot.STAGES.MAJOR_4 } )
         
         self.CREATE_MINOR = IntentHandler( name = "Create minor",
                                            action = ShowArgs( groot.create_minor ),
                                            icon = resources.create,
-                                           handles = { EIntent.CREATE: groot.STAGES.MINOR_3 } )
+                                           handles = { EIntent.CREATE: groot.STAGES.MINOR_5 } )
         
         from groot_gui.forms.frm_run_algorithm import FrmCreateDomains
         self.CREATE_DOMAINS = IntentHandler( name = "Create domains",
                                              action = ShowForm( FrmCreateDomains ),
                                              icon = resources.create,
                                              key = "view_domains",
-                                             handles = { EIntent.VIEW   : (groot.STAGES.DOMAINS_4,),
-                                                         EIntent.CREATE : (groot.STAGES.DOMAINS_4,),
-                                                         EIntent.DROP   : (groot.STAGES.DOMAINS_4,),
+                                             handles = { EIntent.VIEW   : (groot.STAGES.DOMAINS_6,),
+                                                         EIntent.CREATE : (groot.STAGES.DOMAINS_6,),
+                                                         EIntent.DROP   : (groot.STAGES.DOMAINS_6,),
                                                          EIntent.INSPECT: (groot.domain_algorithms.Algorithm,) } )
         
         from groot_gui.forms.frm_run_algorithm import FrmCreateAlignment
@@ -336,140 +336,140 @@ class IntentHandlerCollection:
                                                 action = ShowForm( FrmCreateAlignment ),
                                                 icon = resources.create,
                                                 key = "create_alignments",
-                                                handles = { EIntent.CREATE: groot.STAGES.ALIGNMENTS_5 } )
+                                                handles = { EIntent.CREATE: groot.STAGES.ALIGNMENTS_7 } )
         
         from groot_gui.forms.frm_run_algorithm import FrmCreateTrees
         self.CREATE_TREES = IntentHandler( name = "Create trees",
                                            action = ShowForm( FrmCreateTrees ),
                                            icon = resources.create,
                                            key = "create_trees",
-                                           handles = { EIntent.CREATE: groot.STAGES.TREES_6 } )
+                                           handles = { EIntent.CREATE: groot.STAGES.TREES_8 } )
         
         self.CREATE_FUSIONS = IntentHandler( name = "Create fusions",
                                              action = ShowArgs( groot.create_fusions ),
                                              icon = resources.create,
                                              key = "create_fusions",
-                                             handles = { EIntent.CREATE: groot.STAGES.FUSIONS_7 } )
+                                             handles = { EIntent.CREATE: groot.STAGES.FUSIONS_9 } )
         
         self.CREATE_SPLITS = IntentHandler( name = "Create splits",
                                             action = ShowArgs( groot.create_splits ),
                                             icon = resources.create,
-                                            handles = { EIntent.CREATE: groot.STAGES.SPLITS_8 } )
+                                            handles = { EIntent.CREATE: groot.STAGES.SPLITS_10 } )
         
         self.CREATE_CONSENSUS = IntentHandler( name = "Create consensus",
                                                action = ShowArgs( groot.create_consensus ),
                                                icon = resources.create,
-                                               handles = { EIntent.CREATE: groot.STAGES.CONSENSUS_9 } )
+                                               handles = { EIntent.CREATE: groot.STAGES.CONSENSUS_11 } )
         
         self.CREATE_SUBSETS = IntentHandler( name = "Create subsets",
                                              action = ShowArgs( groot.create_subsets ),
                                              icon = resources.create,
                                              key = "create_subsets",
-                                             handles = { EIntent.CREATE: groot.STAGES.SUBSETS_10 } )
+                                             handles = { EIntent.CREATE: groot.STAGES.SUBSETS_12 } )
         
         self.CREATE_PREGRAPHS = IntentHandler( name = "Create pregraphs",
                                                action = ShowArgs( groot.create_pregraphs ),
                                                icon = resources.create,
-                                               handles = { EIntent.CREATE: groot.STAGES.PREGRAPHS_11 } )
+                                               handles = { EIntent.CREATE: groot.STAGES.PREGRAPHS_13 } )
         
         from groot_gui.forms.frm_run_algorithm import FrmCreateSubgraphs
         self.CREATE_SUBGRAPHS = IntentHandler( name = "Create subgraphs",
                                                action = ShowForm( FrmCreateSubgraphs ),
                                                icon = resources.create,
                                                key = "create_subgraphs",
-                                               handles = { EIntent.CREATE: groot.STAGES.SUBGRAPHS_11 } )
+                                               handles = { EIntent.CREATE: groot.STAGES.SUPERTREES_14 } )
         
         self.CREATE_FUSED = IntentHandler( name = "Create fused",
                                            action = ShowArgs( groot.create_fused ),
                                            icon = resources.create,
                                            key = "create_fused",
-                                           handles = { EIntent.CREATE: groot.STAGES.FUSED_12 } )
+                                           handles = { EIntent.CREATE: groot.STAGES.FUSE_15 } )
         
         self.CREATE_CLEANED = IntentHandler( name = "Create cleaned",
                                              action = ShowArgs( groot.create_cleaned ),
                                              icon = resources.create,
-                                             handles = { EIntent.CREATE: groot.STAGES.CLEANED_13 } )
+                                             handles = { EIntent.CREATE: groot.STAGES.CLEAN_16 } )
         
         self.CREATE_CHECKED = IntentHandler( name = "Create checked",
                                              action = ShowArgs( groot.create_checked ),
                                              icon = resources.create,
-                                             handles = { EIntent.CREATE: groot.STAGES.CHECKED_14 } )
+                                             handles = { EIntent.CREATE: groot.STAGES.CHECKED_17 } )
         
         # Dropping
         self.DROP_GENES = IntentHandler( name = "Drop genes",
                                          action = ShowArgs( groot.drop_genes ),
                                          icon = resources.remove,
-                                         handles = { EIntent.DROP: (groot.STAGES.FASTA_1,) },
+                                         handles = { EIntent.DROP: (groot.STAGES.SEQUENCES_2,) },
                                          key = "drop_genes" )
         
         self.DROP_MAJOR = IntentHandler( name = "Drop major",
                                          action = ShowArgs( groot.drop_components ),
                                          icon = resources.remove,
-                                         handles = { EIntent.DROP: groot.STAGES.MAJOR_3 } )
+                                         handles = { EIntent.DROP: groot.STAGES.MAJOR_4 } )
         
         self.DROP_MINOR = IntentHandler( name = "Drop minor",
                                          action = ShowArgs( groot.drop_components ),
                                          icon = resources.remove,
-                                         handles = { EIntent.DROP: groot.STAGES.MINOR_3 } )
+                                         handles = { EIntent.DROP: groot.STAGES.MINOR_5 } )
         
         self.DROP_ALIGNMENTS = IntentHandler( name = "Drop alignments",
                                               action = ShowArgs( groot.drop_alignment ),
                                               icon = resources.remove,
                                               key = "drop_alignments",
-                                              handles = { EIntent.DROP: groot.STAGES.ALIGNMENTS_5 } )
+                                              handles = { EIntent.DROP: groot.STAGES.ALIGNMENTS_7 } )
         
         self.DROP_TREES = IntentHandler( name = "Drop trees",
-                                         action = ShowArgs( groot.drop_tree ),
+                                         action = ShowArgs( groot.drop_trees ),
                                          icon = resources.remove,
                                          key = "drop_trees",
-                                         handles = { EIntent.DROP: groot.STAGES.TREES_6 } )
+                                         handles = { EIntent.DROP: groot.STAGES.TREES_8 } )
         
         self.DROP_FUSIONS = IntentHandler( name = "Drop fusions",
                                            action = ShowArgs( groot.drop_fusions ),
                                            icon = resources.remove,
-                                           handles = { EIntent.DROP: groot.STAGES.FUSIONS_7 } )
+                                           handles = { EIntent.DROP: groot.STASTAGES.FUSIONS_9 } )
         
         self.DROP_CANDIDATES = IntentHandler( name = "Drop splits",
                                               action = ShowArgs( groot.drop_splits ),
                                               icon = resources.remove,
-                                              handles = { EIntent.DROP: groot.STAGES.SPLITS_8 } )
+                                              handles = { EIntent.DROP: groot.STAGES.SPLITS_10 } )
         
         self.DROP_VIABLE = IntentHandler( name = "Drop consensus",
                                           action = ShowArgs( groot.drop_consensus ),
                                           icon = resources.remove,
-                                          handles = { EIntent.DROP: groot.STAGES.CONSENSUS_9 } )
+                                          handles = { EIntent.DROP: groot.STAGES.CONSENSUS_11 } )
         
         self.DROP_SUBSETS = IntentHandler( name = "Drop subsets",
                                            action = ShowArgs( groot.drop_subsets ),
                                            icon = resources.remove,
-                                           handles = { EIntent.DROP: groot.STAGES.SUBSETS_10 } )
+                                           handles = { EIntent.DROP: groot.STAGES.SUBSETS_12 } )
         
         self.DROP_PREGRAPHS = IntentHandler( name = "Drop pregraphs",
                                              action = ShowArgs( groot.drop_pregraphs ),
                                              icon = resources.remove,
                                              key = "drop_subgraphs",
-                                             handles = { EIntent.DROP: groot.STAGES.PREGRAPHS_11 } )
+                                             handles = { EIntent.DROP: groot.STAGES.PREGRAPHS_13 } )
         
         self.DROP_SUBGRAPHS = IntentHandler( name = "Drop subgraphs",
                                              action = ShowArgs( groot.drop_supertrees ),
                                              icon = resources.remove,
                                              key = "drop_subgraphs",
-                                             handles = { EIntent.DROP: groot.STAGES.SUBGRAPHS_11 } )
+                                             handles = { EIntent.DROP: groot.STAGES.SUPERTREES_14 } )
         
         self.DROP_FUSED = IntentHandler( name = "Drop fused",
                                          action = ShowArgs( groot.drop_fused ),
                                          icon = resources.remove,
-                                         handles = { EIntent.DROP: groot.STAGES.FUSED_12 } )
+                                         handles = { EIntent.DROP: groot.STAGES.FUSE_15 } )
         
         self.DROP_CLEANED = IntentHandler( name = "Drop cleaned",
                                            action = ShowArgs( groot.drop_cleaned ),
                                            icon = resources.remove,
-                                           handles = { EIntent.DROP: groot.STAGES.CLEANED_13 } )
+                                           handles = { EIntent.DROP: groot.STAGES.CLEAN_16 } )
         
         self.DROP_CHECKED = IntentHandler( name = "Drop checked",
                                            action = ShowArgs( groot.drop_checked ),
                                            icon = resources.remove,
-                                           handles = { EIntent.DROP: groot.STAGES.CHECKED_14 } )
+                                           handles = { EIntent.DROP: groot.STAGES.CHECKED_17 } )
         
         self.SET_OUTGROUPS = IntentHandler( name = "Set outgroups",
                                             action = ShowArgs( groot.set_outgroups ),
@@ -479,17 +479,17 @@ class IntentHandlerCollection:
         self.SET_GENE_NAME = IntentHandler( name = "Set gene name",
                                             action = ShowArgs( groot.set_gene_name ),
                                             icon = resources.create,
-                                            handles = { EIntent.CREATE: (groot.STAGES.FASTA_1,) } )
+                                            handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,) } )
         
         self.IMPORT_GENE_NAMES = IntentHandler( name = "Import gene names",
                                             action = ShowArgs( groot.import_gene_names ),
                                             icon = resources.create,
-                                            handles = { EIntent.CREATE: (groot.STAGES.FASTA_1,) } )
+                                            handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,) } )
         
         self.SET_MAJOR = IntentHandler( name = "Set major",
                                         action = ShowArgs( groot.set_major ),
                                         icon = resources.create,
-                                        handles = { EIntent.CREATE : (groot.STAGES.MAJOR_3,),
+                                        handles = { EIntent.CREATE : (groot.STAGES.MAJOR_4,),
                                                     EIntent.INSPECT: (groot.Gene, List[groot.Gene]) } )
         
         # Actions

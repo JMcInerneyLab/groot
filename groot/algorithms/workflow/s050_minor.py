@@ -35,7 +35,7 @@ def create_minor( tol: int ) -> EChanges:
     :param tol:         Tolerance on overlap, in sites.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.MINOR_3 ).assert_create()
+    model.get_status( STAGES.MINOR_5 ).assert_create()
     
     average_lengths = __get_average_component_lengths( model )
     
@@ -167,7 +167,7 @@ def drop_minor() -> EChanges:
     Drops minor component information from model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.MINOR_3 ).assert_drop()
+    model.get_status( STAGES.MINOR_5 ).assert_drop()
     
     for comp in model.components:
         comp.minor_domains = None
@@ -184,7 +184,7 @@ def set_minor( component: Component, subsequences: List[Domain] ) -> EChanges:
     :param subsequences:        Minor subsequences
     """
     model = global_view.current_model()
-    model.get_status( STAGES.MINOR_3 ).assert_set()
+    model.get_status( STAGES.MINOR_5 ).assert_set()
     
     if component.minor_domains:
         raise ValueError( "minor_domains for this component «{}» already exist.".format( component ) )

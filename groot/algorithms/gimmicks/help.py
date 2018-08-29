@@ -1,3 +1,4 @@
+from groot.data import config
 from intermake import MENV, MCMD, visibilities, Theme, command
 from mgraph import NodeStyle
 
@@ -8,8 +9,11 @@ from groot.utilities import AlgorithmCollection
 def cmd_groot():
     """
     Displays the application version.
+    
+    Also has the secondary affect of loading all the options from disk.
     """
     MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )
+    _ = config.options()
 
 
 def __print_help() -> str:

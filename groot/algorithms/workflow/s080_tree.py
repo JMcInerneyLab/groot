@@ -8,6 +8,7 @@ from groot.constants import EFormat, EChanges
 from groot.data import EPosition, ESiteType, INamedGraph, Component, Model, Gene, global_view
 from groot.utilities import AlgorithmCollection, cli_view_utils, external_runner, graph_viewing, lego_graph
 
+
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 DAlgorithm = Callable[[Model, str], str]
@@ -15,7 +16,8 @@ DAlgorithm = Callable[[Model, str], str]
 
 tree_algorithms = AlgorithmCollection( DAlgorithm, "Tree" )
 
-@command(folder = constants.F_CREATE)
+
+@command( folder = constants.F_CREATE )
 def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[List[Component]] = None ) -> None:
     """
     Creates a tree from the component.
@@ -26,37 +28,54 @@ def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[Lis
     
     :returns: Nothing, the tree is set as the component's `tree` field. 
     """
+    # Get the current model
     model = global_view.current_model()
-    model.get_status(constants.STAGES.TREES_6).assert_create()
     
-    components=  cli_view_utils.get_component_list( components )
-    assert all( x.alignment is not None for x in components )
-    before = sum( x.tree is not None for x in model.components )
+    # Get the site type
+    if model.site_type == ESiteType.DNA:
+        site_type = "n"
+    elif model.site_type == ESiteType.PROTEIN:
+        site_type = "p"
+    else:
+        raise SwitchError( "site_type", model.site_type )
     
+    # Get the components
+    components = cli_view_utils.get_component_list( components )
+    
+    # Assert that we are in a position to create the trees
+    model.get_status( constants.STAGES.TREES_8 ).assert_create()
+    assert all( x.alignment is not None for x in components ), "Cannot generate the tree because the alignment has not yet been specified."
+    assert all( x.tree is None for x in components ), "Cannot generate the tree because the tree has already been generated."
+    
+    # Iterate the components
     for component in MCMD.iterate( components, "Generating trees", text = True ):
-        if component.alignment is None:
-            raise ValueError( "Cannot generate the tree because the alignment has not yet been specified." )
-        
-        if component.model.site_type == ESiteType.DNA:
-            site_type = "n"
-        elif component.model.site_type == ESiteType.PROTEIN:
-            site_type = "p"
+        # Handle the edge cases for a tree of three or less
+        num_genes = len( component.minor_genes )
+        if num_genes <= 3:
+            if num_genes == 1:
+                newick = "({});"
+            elif num_genes == 2:
+                newick = "({},{});"
+            elif num_genes == 3:
+                newick = "(({},{}),{});"
+            else:
+                raise SwitchError( "num_genes", num_genes )
+            
+            newick = newick.format( *(x.legacy_accession for x in component.minor_genes) )
         else:
-            raise SwitchError( "component.model.site_type", component.model.site_type )
+            # Run the algorithm normally
+            newick = external_runner.run_in_temporary( algorithm, site_type, component.alignment )
         
-        # Read the result
-        newick = external_runner.run_in_temporary( algorithm, site_type, component.alignment )
-        component.tree_unrooted = lego_graph.import_newick( newick, component.model )
-        component.tree = component.tree_unrooted.copy()
-        component.tree_newick = newick
-        reposition_tree( component.tree )
+        # Set the tree on the component
+        set_tree( component, newick )
     
+    # Show the completion message
     after = sum( x.tree is not None for x in model.components )
-    MCMD.progress( "{} trees generated. {} of {} components have a tree ({}).".format( len( components ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
-    
+    MCMD.progress( "{} trees generated. {} of {} components have a tree.".format( len( components ), after, len( model.components ) ) )
     return EChanges.COMP_DATA
 
-@command(folder = constants.F_SET)
+
+@command( folder = constants.F_SET )
 def set_tree( component: Component, newick: str ) -> EChanges:
     """
     Sets a component tree manually.
@@ -68,16 +87,22 @@ def set_tree( component: Component, newick: str ) -> EChanges:
     """
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
-    
-    component.tree_unrooted = lego_graph.import_newick( newick, component.model )
-    component.tree = component.tree_unrooted.copy()
-    component.tree_newick = newick
-    reposition_all( global_view.current_model(), component )
+
+    _force_set_tree( component, newick )
     
     return EChanges.COMP_DATA
-    
-@command( names = ["drop_tree", "drop_trees"], folder = constants.F_DROP )
-def drop_tree( components: Optional[List[Component]] = None ) -> bool:
+
+
+def _force_set_tree( component, newick ):
+    component.tree_newick = newick
+    component.tree_unrooted = lego_graph.import_newick( newick, component.model )
+    component.tree = component.tree_unrooted.copy()
+    reposition_tree( component.tree )
+    component.tree_unmodified = component.tree.copy()
+
+
+@command( names = ["drop_trees", "drop_trees"], folder = constants.F_DROP )
+def drop_trees( components: Optional[List[Component]] = None ) -> bool:
     """
     Removes component tree(s).
     
@@ -87,7 +112,7 @@ def drop_tree( components: Optional[List[Component]] = None ) -> bool:
     count = 0
     
     for component in components:
-        if component.model.get_status( constants.STAGES.FUSIONS_7 ):
+        if component.model.get_status( constants.STASTAGES.FUSIONS_9 ):
             raise ValueError( "Refusing to drop the tree because fusions have already been recorded. Did you mean to drop the fusions first?" )
         
         if component.tree is not None:
@@ -100,7 +125,7 @@ def drop_tree( components: Optional[List[Component]] = None ) -> bool:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"], folder=constants.F_PRINT )
+@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"], folder = constants.F_PRINT )
 def print_trees( graph: Optional[INamedGraph] = None,
                  format: EFormat = EFormat.ASCII,
                  file: MOptional[Filename] = None,
@@ -137,7 +162,6 @@ def print_trees( graph: Optional[INamedGraph] = None,
         file_out.write( text + "\n" )
     
     return EChanges.INFORMATION
-
 
 
 def reposition_all( model: Model, component: Optional[Component] = None ) -> List[Component]:

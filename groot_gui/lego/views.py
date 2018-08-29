@@ -10,6 +10,7 @@ from PyQt5.QtGui import QBrush, QColor, QFontMetrics, QLinearGradient, QPainter,
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QStyleOptionGraphicsItem, QWidget
 
 import groot as gr
+import groot.data.config
 from groot_gui.lego.support import ColourBlock, DRAWING, LookupTable
 from mhelper import MEnum, array_helper, misc_helper, override, Event
 from mhelper_qt import Pens, qt_colour_helper
@@ -236,8 +237,8 @@ class DomainView( QGraphicsItem ):
     
     
     @property
-    def options( self ) -> gr.GlobalOptions:
-        return gr.global_view.options()
+    def options( self ) -> groot.data.config.GlobalOptions:
+        return groot.data.config.options()
     
     
     @property
@@ -628,7 +629,7 @@ class GeneView:
         """
         Paints the name of this gene.
         """
-        if not misc_helper.coalesce( gr.global_view.options().lego_view_names, any( x.is_selected for x in self.domain_views.values() ) ):
+        if not misc_helper.coalesce( groot.data.config.options().lego_view_names, any( x.is_selected for x in self.domain_views.values() ) ):
             return
         
         leftmost_domain = sorted( self.domain_views.values(), key = lambda xx: xx.pos().x() )[0]

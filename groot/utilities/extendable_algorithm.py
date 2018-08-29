@@ -2,10 +2,10 @@
 Dealing with extendable algorithms
 """
 import inspect
-from typing import Callable, Type, TypeVar
+from typing import Callable, Type, TypeVar, Union
 
-import mhelper
-from mhelper import ArgsKwargs, NotFoundError
+from intermake import subprocess_helper
+from mhelper import ArgsKwargs, NotFoundError, file_helper
 
 
 TDelegate = TypeVar( "TDelegate" )
@@ -185,3 +185,28 @@ class AlgorithmCollection:
     
     def __repr__( self ):
         return 'AlgorithmCollection(name = "{}", count = {})'.format( self.name, len( self.algorithms ) )
+
+
+def run_subprocess( *args, collect : bool = False, **kwargs ) -> Union[str, int]:
+    """
+    Runs a subprocess as for `intermake.subprocess_helper.run_subprocess`, however stdout/stderr is sent to a file.
+     
+    :param args:        Passed through to `intermake`
+    :param collect:     When `True` the contents of stdout/stderr are returned. When `False` the exit code is returned. 
+    :param kwargs:      Passed through to `intermake`
+    :return: 
+    """
+    
+    with open( "temp.io", "w" ) as tmp:
+        def tmpc( x ):
+            tmp.write( x )
+            tmp.write( "\n" )
+        
+        
+        # The return code seems to have no bearing on Paup's actual output, so ignore it.
+        exit_code = subprocess_helper.run_subprocess( *args, **kwargs, collect = tmpc )
+    
+    if collect:
+        return file_helper.read_all_text( "temp.io" )
+    else:
+        return exit_code

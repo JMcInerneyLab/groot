@@ -2,6 +2,8 @@ import sys
 from os import path
 from typing import Optional
 
+import groot.data.config
+import groot.data.sample_data
 from groot.algorithms.gimmicks import wizard
 from intermake import MCMD, MENV, Theme, command, visibilities
 from mhelper import EFileMode, Filename, MOptional, file_helper, io_helper
@@ -43,7 +45,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROO
     if not file_name:
         raise ValueError( "Cannot save because a filename has not been specified." )
     
-    global_view.remember_file( file_name )
+    groot.data.config.remember_file( file_name )
     
     sys.setrecursionlimit( 10000 )
     
@@ -93,7 +95,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     model.file_name = file_name
     
     global_view.set_model( model )
-    global_view.remember_file( file_name )
+    groot.data.config.remember_file( file_name )
     MCMD.progress( "Loaded model: {}".format( file_name ) )
     
     return EChanges.MODEL_OBJECT
@@ -110,7 +112,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
     :return: 
     """
     if name:
-        file_name = path.join( global_view.get_sample_data_folder(), name )
+        file_name = path.join( groot.data.sample_data.get_sample_data_folder(), name )
         
         if not path.isdir( file_name ):
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
@@ -122,10 +124,10 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
         
         return wizard.import_directory( file_name, filter = (wizard.EImportFilter.DATA | wizard.EImportFilter.SCRIPT) if not load else wizard.EImportFilter.DATA, query = query )
     else:
-        for sample_dir in global_view.get_samples():
+        for sample_dir in groot.data.sample_data.get_samples():
             MCMD.print( file_helper.get_filename( sample_dir ) )
         else:
-            MCMD.print( "No samples available. Please download and add sample data to `{}`.".format( global_view.get_sample_data_folder() ) )
+            MCMD.print( "No samples available. Please download and add sample data to `{}`.".format( groot.data.sample_data.get_sample_data_folder() ) )
         
         return EChanges.NONE
 
@@ -135,10 +137,10 @@ def file_load_last():
     """
     Loads the last file from the recent list.
     """
-    if not global_view.options().recent_files:
+    if not groot.data.config.options().recent_files:
         raise ValueError( "Cannot load the last session because there are no recent sessions." )
     
-    file_load( global_view.options().recent_files[-1].file_name )
+    file_load( groot.data.config.options().recent_files[-1].file_name )
 
 
 @command( names = ["file_recent", "recent"], folder = constants.F_FILE )
@@ -149,11 +151,11 @@ def file_recent():
     r = []
     
     r.append( "SESSIONS:" )
-    for file in global_view.get_workspace_files():
+    for file in groot.data.sample_data.get_workspace_files():
         r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     r.append( "\nRECENT:" )
-    for file in reversed( global_view.options().recent_files ):
+    for file in reversed( groot.data.config.options().recent_files ):
         r.append( file_helper.highlight_file_name_without_extension( file.file_name, Theme.BOLD, Theme.RESET ) )
     
     MCMD.information( "\n".join( r ) )

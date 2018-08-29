@@ -1,8 +1,8 @@
-from intermake import MCMD, AbstractCommand, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities
+from intermake import MCMD, AbstractCommand, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities, BasicCommand
 from mhelper import EFileMode, Filename, MFlags, file_helper, string_helper
-from typing import List, Optional, cast
+from typing import List, Optional, cast, Set
 
-from groot import Model, constants
+from groot import constants
 from groot.algorithms import workflow
 from groot.constants import EFormat, Stage, STAGES, EChanges
 from groot.data import global_view
@@ -37,19 +37,7 @@ class Wizard:
                   new: bool,
                   name: str,
                   imports: List[str],
-                  pause_import: bool,
-                  pause_components: bool,
-                  pause_align: bool,
-                  pause_tree: bool,
-                  pause_fusion: bool,
-                  pause_splits: bool,
-                  pause_consensus: bool,
-                  pause_subset: bool,
-                  pause_pregraphs: bool,
-                  pause_minigraph: bool,
-                  pause_sew: bool,
-                  pause_clean: bool,
-                  pause_check: bool,
+                  pauses: Set[Stage],
                   tolerance: int,
                   alignment: str,
                   tree: str,
@@ -65,19 +53,7 @@ class Wizard:
         self.new = new
         self.name = name
         self.imports = imports
-        self.pause_import = pause_import
-        self.pause_components = pause_components
-        self.pause_align = pause_align
-        self.pause_tree = pause_tree
-        self.pause_fusion = pause_fusion
-        self.pause_splits = pause_splits
-        self.pause_consensus = pause_consensus
-        self.pause_subsets = pause_subset
-        self.pause_minigraph = pause_minigraph
-        self.pause_pregraphs = pause_pregraphs
-        self.pause_sew = pause_sew
-        self.pause_clean = pause_clean
-        self.pause_check = pause_check
+        self.pauses = pauses
         self.tolerance = tolerance
         self.alignment = alignment
         self.tree = tree
@@ -100,18 +76,7 @@ class Wizard:
         r.append( "new               = {}".format( self.new ) )
         r.append( "name              = {}".format( self.name ) )
         r.append( "imports           = {}".format( self.imports ) )
-        r.append( "pause_import      = {}".format( self.pause_import ) )
-        r.append( "pause_components  = {}".format( self.pause_components ) )
-        r.append( "pause_align       = {}".format( self.pause_align ) )
-        r.append( "pause_tree        = {}".format( self.pause_tree ) )
-        r.append( "pause_fusion      = {}".format( self.pause_fusion ) )
-        r.append( "pause_splits      = {}".format( self.pause_splits ) )
-        r.append( "pause_consensus   = {}".format( self.pause_consensus ) )
-        r.append( "pause_subsets     = {}".format( self.pause_subsets ) )
-        r.append( "pause_minigraph   = {}".format( self.pause_minigraph ) )
-        r.append( "pause_sew         = {}".format( self.pause_sew ) )
-        r.append( "pause_clean       = {}".format( self.pause_clean ) )
-        r.append( "pause_check       = {}".format( self.pause_check ) )
+        r.append( "pauses            = {}".format( self.pauses ) )
         r.append( "tolerance         = {}".format( self.tolerance ) )
         r.append( "alignment         = {}".format( self.alignment ) )
         r.append( "tree              = {}".format( self.tree ) )
@@ -160,6 +125,12 @@ class Wizard:
     
     
     def step( self ) -> EChanges:
+        """
+        Steps the Wizard forward until the next requested `pause`.
+        If this completes the Wizard, `is_completed` will now return `True`.
+        
+        :return: Summary of changes made.
+        """
         if self.is_completed:
             raise ValueError( "The wizard has already completed." )
         
@@ -179,27 +150,27 @@ class Wizard:
     
     
     def __fn8_make_splits( self ):
-        self.__line( STAGES.SPLITS_8 )
+        self.__line( STAGES.SPLITS_10 )
         workflow.s100_splits.create_splits()
         
-        if self.pause_splits:
-            self.__pause( STAGES.SPLITS_8, (workflow.s100_splits.print_splits,) )
+        if STAGES.SPLITS_10 in self.pauses:
+            self.__pause( STAGES.SPLITS_10, (workflow.s100_splits.print_splits,) )
     
     
     def __fn9_make_consensus( self ):
-        self.__line( STAGES.CONSENSUS_9 )
+        self.__line( STAGES.CONSENSUS_11 )
         workflow.s110_consensus.create_consensus()
         
-        if self.pause_consensus:
-            self.__pause( STAGES.CONSENSUS_9, (workflow.s110_consensus.print_consensus,) )
+        if STAGES.CONSENSUS_11 in self.pauses:
+            self.__pause( STAGES.CONSENSUS_11, (workflow.s110_consensus.print_consensus,) )
     
     
     def __fn10_make_subsets( self ):
-        self.__line( STAGES.SUBSETS_10 )
+        self.__line( STAGES.SUBSETS_12 )
         workflow.s120_subsets.create_subsets()
         
-        if self.pause_subsets:
-            self.__pause( STAGES.SUBSETS_10, (workflow.s120_subsets.print_subsets,) )
+        if STAGES.SUBSETS_12 in self.pauses:
+            self.__pause( STAGES.SUBSETS_12, (workflow.s120_subsets.print_subsets,) )
     
     
     def __fn12_make_subgraphs( self ):
@@ -207,40 +178,40 @@ class Wizard:
         algo = workflow.s140_supertrees.supertree_algorithms.get_algorithm( self.supertree )
         workflow.s140_supertrees.create_supertrees( algo )
         
-        if self.pause_minigraph:
-            self.__pause( STAGES.SUBGRAPHS_11, (workflow.s140_supertrees.print_supertrees,) )
+        if STAGES.SUPERTREES_14 in self.pauses:
+            self.__pause( STAGES.SUPERTREES_14, (workflow.s140_supertrees.print_supertrees,) )
     
     
     def __fn11_make_pregraphs( self ):
         self.__line( "Pregraphs" )
         workflow.s130_pregraphs.create_pregraphs()
         
-        if self.pause_pregraphs:
-            self.__pause( STAGES.PREGRAPHS_11, (workflow.s130_pregraphs.print_pregraphs,) )
+        if STAGES.PREGRAPHS_13 in self.pauses:
+            self.__pause( STAGES.PREGRAPHS_13, (workflow.s130_pregraphs.print_pregraphs,) )
     
     
     def __fn13_make_fused( self ):
-        self.__line( STAGES.FUSED_12 )
+        self.__line( STAGES.FUSE_15 )
         workflow.s150_fuse.create_fused()
         
-        if self.pause_sew:
-            self.__pause( STAGES.FUSED_12, (workflow.s080_tree.print_trees,) )
+        if STAGES.FUSE_15 in self.pauses:
+            self.__pause( STAGES.FUSE_15, (workflow.s080_tree.print_trees,) )
     
     
     def __fn14_make_clean( self ):
-        self.__line( STAGES.CLEANED_13 )
+        self.__line( STAGES.CLEAN_16 )
         workflow.s160_clean.create_cleaned()
         
-        if self.pause_clean:
-            self.__pause( STAGES.CLEANED_13, (workflow.s080_tree.print_trees,) )
+        if STAGES.CLEAN_16 in self.pauses:
+            self.__pause( STAGES.CLEAN_16, (workflow.s080_tree.print_trees,) )
     
     
     def __fn15_make_checks( self ):
-        self.__line( STAGES.CHECKED_14 )
+        self.__line( STAGES.CHECKED_17 )
         workflow.s170_checked.create_checked()
         
-        if self.pause_check:
-            self.__pause( STAGES.CHECKED_14, (workflow.s080_tree,) )
+        if STAGES.CHECKED_17 in self.pauses:
+            self.__pause( STAGES.CHECKED_17, (workflow.s080_tree,) )
     
     
     def __fn16_view_nrfg( self ):
@@ -252,15 +223,15 @@ class Wizard:
     
     def __fn7_make_fusions( self ):
         # Make fusions
-        self.__line( STAGES.FUSIONS_7 )
+        self.__line( STASTAGES.FUSIONS_9 )
         self.__result |= workflow.s090_fusion_events.create_fusions()
         
-        if self.pause_fusion:
-            self.__pause( STAGES.FUSIONS_7, (workflow.s080_tree.print_trees, workflow.s090_fusion_events.print_fusions) )
+        if STASTAGES.FUSIONS_9 in self.pauses:
+            self.__pause( STASTAGES.FUSIONS_9, (workflow.s080_tree.print_trees, workflow.s090_fusion_events.print_fusions) )
     
     
     def __fn6_make_trees( self ):
-        self.__line( STAGES.TREES_6 )
+        self.__line( STAGES.TREES_8 )
         
         model = global_view.current_model()
         ogs = [model.genes[x] for x in self.outgroups]
@@ -270,48 +241,48 @@ class Wizard:
         algo = workflow.s080_tree.tree_algorithms.get_algorithm( self.tree )
         self.__result |= workflow.s080_tree.create_trees( algo )
         
-        if self.pause_tree:
-            self.__pause( STAGES.TREES_6, (workflow.s080_tree.print_trees,) )
+        if STAGES.TREES_8 in self.pauses:
+            self.__pause( STAGES.TREES_8, (workflow.s080_tree.print_trees,) )
     
     
     def __fn5_make_alignments( self ):
-        self.__line( STAGES.ALIGNMENTS_5 )
+        self.__line( STAGES.ALIGNMENTS_7 )
         algo = workflow.s070_alignment.alignment_algorithms.get_algorithm( self.alignment )
         self.__result |= workflow.s070_alignment.create_alignments( algo )
         
-        if self.pause_align:
-            self.__pause( STAGES.ALIGNMENTS_5, (workflow.s070_alignment.print_alignments,) )
+        if STAGES.ALIGNMENTS_7 in self.pauses:
+            self.__pause( STAGES.ALIGNMENTS_7, (workflow.s070_alignment.print_alignments,) )
     
     
     def __fn4_make_major( self ):
-        self.__line( STAGES.MAJOR_3 )
+        self.__line( STAGES.MAJOR_4 )
         self.__result |= workflow.s040_major.create_major( self.tolerance )
         
-        if self.pause_components:
-            self.__pause( STAGES.MAJOR_3, (workflow.s020_sequences.print_genes, workflow.s040_major.print_major) )
+        if STAGES.MAJOR_4 in self.pauses:
+            self.__pause( STAGES.MAJOR_4, (workflow.s020_sequences.print_genes, workflow.s040_major.print_major) )
     
     
     def __fn4_make_minor( self ):
-        self.__line( STAGES.MINOR_3 )
+        self.__line( STAGES.MINOR_5 )
         self.__result |= workflow.s050_minor.create_minor( self.tolerance )
         
-        if self.pause_components:
-            self.__pause( STAGES.MINOR_3, (workflow.s020_sequences.print_genes, workflow.s050_minor.print_minor) )
+        if STAGES.MINOR_5 in self.pauses:
+            self.__pause( STAGES.MINOR_5, (workflow.s020_sequences.print_genes, workflow.s050_minor.print_minor) )
     
     
     def __fn4b_make_domains( self ):
-        self.__line( STAGES.DOMAINS_4 )
+        self.__line( STAGES.DOMAINS_6 )
         algo = workflow.s060_userdomains.domain_algorithms.get_algorithm( "component" )
         self.__result |= workflow.s060_userdomains.create_domains( algo )
     
     
     def __fn3_import_data( self ):
-        self.__line( STAGES._DATA_0 )
+        self.__line( STAGES.SEQ_AND_SIM_ps )
         for import_ in self.imports:
             self.__result |= import_file( import_ )
         
-        if self.pause_import:
-            self.__pause( STAGES._DATA_0, (workflow.s020_sequences.print_genes,) )
+        if STAGES.SEQ_AND_SIM_ps in self.pauses:
+            self.__pause( STAGES.SEQ_AND_SIM_ps, (workflow.s020_sequences.print_genes,) )
     
     
     def __save_model( self ):
@@ -328,13 +299,23 @@ class Wizard:
     
     
     def make_active( self ) -> None:
+        """
+        Sets this `Wizard` object as the active (currently running) wizard.
+        This is called by the `create_wizard` command after constructing the wizard.
+        """
         Wizard.__active_walkthrough = self
         MCMD.progress( str( self ) )
-        MCMD.progress( "The wizard has been activated and is paused. Use the {}{}{} function to begin.".format( Theme.COMMAND_NAME, continue_wizard, Theme.RESET ) )
+        MCMD.progress( "The wizard has been activated and is paused. Use the {}{}{} function to begin.".format(
+                Theme.COMMAND_NAME,
+                BasicCommand.retrieve( continue_wizard ),
+                Theme.RESET ) )
     
     
     @staticmethod
-    def get_active() -> "Wizard":
+    def get_active() -> Optional["Wizard"]:
+        """
+        Gets the active `Wizard` object (which may be `None`).
+        """
         return Wizard.__active_walkthrough
     
     
@@ -368,19 +349,7 @@ def create_wizard( new: Optional[bool] = None,
                    tree: Optional[str] = None,
                    view: Optional[bool] = None,
                    save: Optional[bool] = None,
-                   pause_import: Optional[bool] = None,
-                   pause_components: Optional[bool] = None,
-                   pause_align: Optional[bool] = None,
-                   pause_tree: Optional[bool] = None,
-                   pause_fusion: Optional[bool] = None,
-                   pause_splits: Optional[bool] = None,
-                   pause_consensus: Optional[bool] = None,
-                   pause_subset: Optional[bool] = None,
-                   pause_pregraphs: Optional[bool] = None,
-                   pause_minigraph: Optional[bool] = None,
-                   pause_sew: Optional[bool] = None,
-                   pause_clean: Optional[bool] = None,
-                   pause_check: Optional[bool] = None ) -> None:
+                   pause: str = None ) -> None:
     """
     Sets up a workflow that you can activate in one go.
     
@@ -412,32 +381,8 @@ def create_wizard( new: Optional[bool] = None,
                                 :values:`true→yes, false→no, none→ask` 
     :param save:                Save file to disk? (requires `name`)
                                 :values:`true→yes, false→no, none→ask` 
-    :param pause_components:    Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_import:        Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_align:         Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_tree:          Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_fusion:        Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_splits:        Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_consensus:     Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_subset:        Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_minigraph:     Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_sew:           Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_clean:         Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_check:         Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
-    :param pause_pregraphs:     Pause after stage.
-                                :values:`true→yes, false→no, none→ask` 
+    :param pause:               Pause after stage default value.
+                                :values:`none→ask`
     """
     if new is None:
         new = (MCMD.question( "1/14. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")
@@ -494,44 +439,34 @@ def create_wizard( new: Optional[bool] = None,
     if supertree is None:
         supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( workflow.s140_supertrees.supertree_algorithms.keys ) + [""] )
     
-    if pause_import is None:
-        pause_import = question( "Do you wish the wizard to pause for you to review the imported data?" )
+    pauses = set()
     
-    if pause_components is None:
-        pause_components = question( "Do you wish the wizard to pause for you to review the components?" )
+    map = { "i": STAGES.SEQ_AND_SIM_ps,
+            "m": STAGES.MAJOR_4,
+            "d": STAGES.MINOR_5,
+            "a": STAGES.ALIGNMENTS_7,
+            "t": STAGES.TREES_8,
+            "f": STASTAGES.FUSIONS_9,
+            "S": STAGES.SPLITS_10,
+            "C": STAGES.CONSENSUS_11,
+            "e": STAGES.SUBSETS_12,
+            "p": STAGES.PREGRAPHS_13,
+            "s": STAGES.SUPERTREES_14,
+            "u": STAGES.FUSE_15,
+            "n": STAGES.CLEAN_16,
+            "c": STAGES.CHECKED_17 }
     
-    if pause_align is None:
-        pause_align = question( "Do you wish the wizard to pause for you to review the alignments?" )
+    if pause is None:
+        for k, v in map.items():
+            MCMD.information( "{} = {}".format( k, v ) )
+        
+        pause = question( "Enter pauses (as above):", options = ["*"] )
     
-    if pause_tree is None:
-        pause_tree = question( "Do you wish the wizard to pause for you to review the trees?" )
-    
-    if pause_fusion is None:
-        pause_fusion = question( "Do you wish the wizard to pause for you to review the fusions?" )
-    
-    if pause_splits is None:
-        pause_splits = question( "Do you wish the wizard to pause for you to review the candidate splits?" )
-    
-    if pause_consensus is None:
-        pause_consensus = question( "Do you wish the wizard to pause for you to review the consensus splits?" )
-    
-    if pause_subset is None:
-        pause_subset = question( "Do you wish the wizard to pause for you to review the subsets?" )
-    
-    if pause_pregraphs is None:
-        pause_pregraphs = question( "Do you wish the wizard to pause for you to review the pregraphs?" )
-    
-    if pause_minigraph is None:
-        pause_minigraph = question( "Do you wish the wizard to pause for you to review the subgraphs?" )
-    
-    if pause_sew is None:
-        pause_sew = question( "Do you wish the wizard to pause for you to review the uncleaned NRFG?" )
-    
-    if pause_clean is None:
-        pause_clean = question( "Do you wish the wizard to pause for you to review the cleaned NRFG?" )
-    
-    if pause_check is None:
-        pause_check = question( "Do you wish the wizard to pause for you to review the checks?" )
+    for c in pause:
+        if c in map:
+            pauses.add( map[c] )
+        else:
+            raise ValueError( "Unknown pause command: {} in {}".format( repr( c ), repr( pause ) ) )
     
     if view is None:
         view = question( "Do you wish the wizard to show you the final NRFG in Vis.js?" )
@@ -545,19 +480,7 @@ def create_wizard( new: Optional[bool] = None,
     walkthrough = Wizard( new = new,
                           name = name,
                           imports = imports,
-                          pause_import = pause_import,
-                          pause_components = pause_components,
-                          pause_align = pause_align,
-                          pause_tree = pause_tree,
-                          pause_fusion = pause_fusion,
-                          pause_splits = pause_splits,
-                          pause_consensus = pause_consensus,
-                          pause_subset = pause_subset,
-                          pause_pregraphs = pause_pregraphs,
-                          pause_minigraph = pause_minigraph,
-                          pause_sew = pause_sew,
-                          pause_clean = pause_clean,
-                          pause_check = pause_check,
+                          pauses = pause,
                           tolerance = tolerance,
                           alignment = alignment,
                           tree = tree,
@@ -593,8 +516,8 @@ def drop_wizard() -> EChanges:
     return EChanges.NONE
 
 
-def question( *args ):
-    return MCMD.question( *args )
+def question( *args, **kwargs ):
+    return MCMD.question( *args, **kwargs )
 
 
 @command( folder = constants.F_CREATE )
@@ -645,7 +568,7 @@ def import_file( file_name: Filename[EFileMode.READ],
     if filter.DATA:
         if ext == ".blast":
             if not query:
-                return workflow.s030_similarity.import_similarity( file_name )
+                return workflow.s030_similarity.import_similarities( file_name )
             else:
                 MCMD.print( "BLAST: «{}».".format( file_name ) )
                 return EChanges.INFORMATION

@@ -57,7 +57,6 @@ class FrmFusions( FrmBase ):
                 formation_item = qt.QTreeWidgetItem()
                 formation_item.setIcon( self.headers["name"], resources.black_fusion.icon() )
                 formation_item.setText( self.headers["name"], "FORMATION {}".format( formation ) )
-                formation_item.setText( self.headers["component"], "{}".format( formation.component ) )
                 
                 self.__add_array_item( formation_item, "Genes", formation.genes, intermake_qt.resources.list )
                 self.__add_array_item( formation_item, "Pertinent", formation.pertinent_inner, intermake_qt.resources.list )

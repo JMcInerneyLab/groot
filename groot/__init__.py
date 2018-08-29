@@ -40,19 +40,18 @@ from groot.data import Model, \
     EPosition, \
     ESiteType, \
     IHasFasta, \
-    INamed, \
     INamedGraph, \
     FastaError, \
     InUseError, \
     AlreadyError, \
     NotReadyError,\
     global_view, \
-    GlobalOptions, \
-    current_model
+    current_model, \
+    options
 
-from groot.utilities import AlgorithmCollection, AbstractAlgorithm
+from groot.utilities import AlgorithmCollection, AbstractAlgorithm, run_subprocess
 from groot import constants
-from groot.constants import STAGES, Stage, EChanges
+from groot.constants import STAGES, Stage, EChanges, EDomainNames, EFormat, EStartupMode, EWindowMode
 
 from groot.algorithms.gimmicks.compare import create_comparison, compare_graphs
 from groot.algorithms.gimmicks.miscellaneous import query_quartet, composite_search_fix, print_file
@@ -62,13 +61,13 @@ from groot.algorithms.gimmicks.wizard import Wizard, create_wizard, drop_wizard,
 
 from groot.algorithms.workflow.s010_file import file_load, file_load_last, file_new, file_save, file_sample, file_recent
 from groot.algorithms.workflow.s020_sequences import drop_genes, set_genes, import_genes, set_gene_name, import_gene_names
-from groot.algorithms.workflow.s030_similarity import create_similarity, drop_similarity, set_similarity, import_similarity, print_similarity
+from groot.algorithms.workflow.s030_similarity import create_similarities, drop_similarities, set_similarity, import_similarities, print_similarities
 from groot.algorithms.workflow.s040_major import create_major, drop_major, set_major, print_major
 from groot.algorithms.workflow.s050_minor import create_minor, drop_minor, print_minor
 from groot.algorithms.workflow.s055_outgroups import set_outgroups, print_outgroups
 from groot.algorithms.workflow.s060_userdomains import print_domains, create_domains, drop_domains, domain_algorithms
 from groot.algorithms.workflow.s070_alignment import print_alignments, create_alignments, drop_alignment, set_alignment, alignment_algorithms
-from groot.algorithms.workflow.s080_tree import print_trees, create_trees, set_tree, drop_tree, tree_algorithms
+from groot.algorithms.workflow.s080_tree import print_trees, create_trees, set_tree, drop_trees, tree_algorithms
 from groot.algorithms.workflow.s090_fusion_events import print_fusions, drop_fusions, create_fusions
 from groot.algorithms.workflow.s100_splits import print_splits, drop_splits, create_splits
 from groot.algorithms.workflow.s110_consensus import print_consensus, create_consensus, drop_consensus

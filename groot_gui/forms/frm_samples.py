@@ -4,11 +4,13 @@ from PyQt5.QtWidgets import QCommandLinkButton, QGridLayout, QPushButton, QLabel
 from groot_gui.forms.designer import frm_samples_designer
 from groot_gui.forms.resources import resources
 
+import groot.data.config
 import groot.data.global_view
 import groot
+import groot.data.sample_data
 from groot import constants
 from groot.data import global_view
-from groot.data.global_view import RecentFile
+from groot.data.config import RecentFile
 from groot_gui.forms.frm_base import FrmBase
 from mhelper import file_helper
 from mhelper_qt import exceptToGui, exqtSlot
@@ -63,9 +65,9 @@ class FrmSamples( FrmBase ):
             
         self.__controls.clear()
         
-        sample_dirs = global_view.get_samples()
-        recent_files = reversed( groot.data.global_view.options().recent_files )
-        workspace_files = groot.data.global_view.get_workspace_files()
+        sample_dirs = groot.data.sample_data.get_samples()
+        recent_files = reversed( groot.data.config.options().recent_files )
+        workspace_files = groot.data.sample_data.get_workspace_files()
         
         # SAMPLES
         for sample_dir in sample_dirs:
@@ -152,7 +154,7 @@ class FrmSamples( FrmBase ):
     
     def update_buttons( self ):
         if self.data_warn:
-            status = global_view.current_model().get_status( constants.STAGES._DATA_0 )
+            status = global_view.current_model().get_status( constants.STAGES.SEQ_AND_SIM_ps )
             
             for button in self.__controls:
                 button.setEnabled( status.is_none )

@@ -1,7 +1,7 @@
 from typing import List, Dict, Iterator, Iterable
 from mhelper import array_helper, NotFoundError, exception_helper, NOT_PROVIDED
 
-from groot.data.model_core import Domain, FixedUserGraph, Edge, Gene, Component, UserDomain, Fusion, Point, Formation
+from groot.data.model_core import Domain, FixedUserGraph, Edge, Gene, Component, UserDomain, Fusion, Point, Formation, Report
 
 
 _Model_ = "Model"
@@ -407,7 +407,7 @@ class FusionCollection:
 class UserGraphCollection:
     def __init__( self, model: _Model_ ):
         self.__model = model
-        self.__contents = []
+        self.__contents: List[FixedUserGraph] = []
     
     
     def __len__( self ):
@@ -418,8 +418,8 @@ class UserGraphCollection:
         exception_helper.assert_type( "graph", graph, FixedUserGraph )
         
         for graph2 in self.__model.iter_graphs():
-            if graph2.name == graph.name:
-                raise ValueError( "Your graph is called '{}' but there is already a graph with this name." )
+            if graph2.get_accid() == graph.get_accid():
+                raise ValueError( "Your graph has an ID of '{}' but there is already a graph with this ID." )
         
         self.__contents.append( graph )
     
@@ -433,4 +433,52 @@ class UserGraphCollection:
     
     
     def __str__( self ):
+        return "{} graphs".format( len( self ) )
+    
+    
+    def __getitem__( self, item ):
+        for graph in self:
+            if graph.get_accid() == item:
+                return graph
+        
+        raise KeyError( item )
+
+
+class UserReportCollection:
+    def __init__( self, model: _Model_ ) -> None:
+        self.__model = model
+        self.__contents = []
+    
+    
+    def __len__( self ) -> int:
+        return len( self.__contents )
+    
+    
+    def append( self, report: Report ):
+        exception_helper.assert_type( "report", report, Report )
+        
+        for report2 in self.__model.iter_reports():
+            if report2.name == report.name:
+                raise ValueError( "Your report is called '{}' but there is already a report with this name." )
+        
+        self.__contents.append( report )
+    
+    
+    def remove( self, report: Report ):
+        self.__contents.remove( report )
+    
+    
+    def __getitem__( self, item ):
+        for report in self:
+            if report.name == item:
+                return report
+        
+        raise KeyError( item )
+    
+    
+    def __iter__( self ) -> Iterator[Report]:
+        return iter( self.__contents )
+    
+    
+    def __str__( self ) -> str:
         return "{} graphs".format( len( self ) )

@@ -33,7 +33,7 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     model = global_view.current_model()
     __LOG_EVIDENCE.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ EVIDENCE ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
-    model.get_status( STAGES.CONSENSUS_9 ).assert_create()
+    model.get_status( STAGES.CONSENSUS_11 ).assert_create()
     
     __LOG_EVIDENCE( "BEGIN EVIDENCE ({} splits)".format( len( model.splits ) ) )
     viable_splits: Set[Split] = set()
@@ -104,7 +104,7 @@ def drop_consensus():
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.CONSENSUS_9 ).assert_drop()
+    model.get_status( STAGES.CONSENSUS_11 ).assert_drop()
     
     model.consensus = frozenset()
     

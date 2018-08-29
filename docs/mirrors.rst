@@ -1,9 +1,10 @@
+===============
 List of mirrors
 ===============
 
 Groot is in current alpha stage development.
 The code available via git may not be fully tested.
-If you intend to use Groot, please use a verified release from Pypi (see [installation](#installation) below).
+If you intend to use Groot, please use a verified release from Pypi (see `installation<installation.md>`_).
 
 Please report bugs to the Bitbucket page!
 

@@ -4,10 +4,9 @@ from typing import Callable, Iterable, Iterator, Tuple, cast
 from mhelper import MEnum, ResourceIcon, SwitchError, MFlags
 
 
-
-
-
 _Model_ = "Model"
+
+DNA_BASES = "GACT"
 
 
 class Stage:
@@ -50,107 +49,106 @@ class StageCollection:
         StageCollection.INSTANCE = self
         from groot import resources
         
-        self._FILE_0 = Stage( "File",
-                              status = lambda m: M( m ).file_name,
-                              headline = lambda m: M( m ).file_name,
-                              icon = resources.black_file,
-                              requires = () )
-        self._DATA_0 = Stage( "Data",
-                              icon = resources.black_gene,
-                              status = lambda m: itertools.chain( (bool( M( m ).edges ),), (bool( x.site_array ) for x in M( m ).genes) ),
-                              headline = lambda m: "{} of {} sequences with site data. {} edges".format( M( m ).genes.num_fasta, M( m ).genes.__len__(), M( m ).edges.__len__() ),
-                              requires = () )
-        self.FASTA_1 = Stage( "Fasta",
-                              icon = resources.black_gene,
-                              headline = lambda m: "{} of {} sequences with site data".format( M( m ).genes.num_fasta, M( m ).genes.__len__() ),
-                              requires = (),
-                              status = lambda m: [bool( x.site_array ) for x in M( m ).genes] )
-        self.BLAST_2 = Stage( "Blast",
-                              icon = resources.black_edge,
-                              status = lambda m: (bool( M( m ).edges ),),
-                              headline = lambda m: "{} edges".format( M( m ).edges.__len__() ),
-                              requires = () )
-        self.MAJOR_3 = Stage( "Major",
+        self.FILE_1 = Stage( "File",
+                             status = lambda m: M( m ).file_name,
+                             headline = lambda m: M( m ).file_name,
+                             icon = resources.black_file,
+                             requires = () )
+        self.SEQ_AND_SIM_ps = Stage( "Data",
+                                     icon = resources.black_gene,
+                                     status = lambda m: itertools.chain( (bool( M( m ).edges ),), (bool( x.site_array ) for x in M( m ).genes) ),
+                                     headline = lambda m: "{} of {} sequences with site data. {} edges".format( M( m ).genes.num_fasta, M( m ).genes.__len__(), M( m ).edges.__len__() ),
+                                     requires = () )
+        self.SEQUENCES_2 = Stage( "Fasta",
+                                  icon = resources.black_gene,
+                                  headline = lambda m: "{} of {} sequences with site data".format( M( m ).genes.num_fasta, M( m ).genes.__len__() ),
+                                  requires = (),
+                                  status = lambda m: [bool( x.site_array ) for x in M( m ).genes] )
+        self.SIMILARITIES_3 = Stage( "Blast",
+                                     icon = resources.black_edge,
+                                     status = lambda m: (bool( M( m ).edges ),),
+                                     headline = lambda m: "{} edges".format( M( m ).edges.__len__() ),
+                                     requires = () )
+        self.MAJOR_4 = Stage( "Major",
                               icon = resources.black_major,
                               status = lambda m: (M( m ).components.has_major_gene_got_component( x ) for x in M( m ).genes),
                               headline = lambda m: "{} sequences assigned to {} components".format( sum( 1 for x in M( m ).genes if M( m ).components.has_major_gene_got_component( x ) ), M( m ).components.count ),
-                              requires = (self.FASTA_1,) )
-        self.MINOR_3 = Stage( "Minor",
+                              requires = (self.SEQUENCES_2,) )
+        self.MINOR_5 = Stage( "Minor",
                               icon = resources.black_minor,
                               status = lambda m: (bool( x.minor_domains ) for x in M( m ).components),
                               headline = lambda m: "{} minor sequences".format( sum( (len( x.minor_domains ) if x.minor_domains else 0) for x in M( m ).components ) ),
-                              requires = (self.MAJOR_3,) )
-        self.DOMAINS_4 = Stage( "Domains",
+                              requires = (self.MAJOR_4,) )
+        self.DOMAINS_6 = Stage( "Domains",
                                 icon = resources.black_domain,
                                 status = lambda m: (bool( M( m ).user_domains ),),
                                 headline = lambda m: "{} domains".format( len( M( m ).user_domains ) ),
-                                requires = (self.FASTA_1,) )
-        self.ALIGNMENTS_5 = Stage( "Alignments",
+                                requires = (self.SEQUENCES_2,) )
+        self.ALIGNMENTS_7 = Stage( "Alignments",
                                    icon = resources.black_alignment,
                                    status = lambda m: (bool( x.alignment ) for x in M( m ).components),
                                    headline = lambda m: "{} of {} components aligned".format( M( m ).components.num_aligned, M( m ).components.count ),
-                                   requires = (self.MINOR_3,) )
-        self.OUTGROUPS_5b = Stage( "Outgroups",
+                                   requires = (self.MINOR_5,) )
+        self.OUTGROUPS_7b = Stage( "Outgroups",
                                    icon = resources.black_outgroup,
                                    status = lambda m: (any( x.is_positioned for x in M( m ).genes ),),
                                    headline = lambda m: "{} outgroups".format( sum( x.is_positioned for x in M( m ).genes ) ),
-                                   requires = (self._DATA_0,) )
-        self.TREES_6 = Stage( "Trees",
+                                   requires = (self.SEQ_AND_SIM_ps,) )
+        self.TREES_8 = Stage( "Trees",
                               icon = resources.black_tree,
                               status = lambda m: (x.tree is not None for x in M( m ).components),
                               headline = lambda m: "{} of {} components have a tree".format( M( m ).components.num_trees, M( m ).components.count ),
-                              requires = (self.ALIGNMENTS_5,) )
-        self.FUSIONS_7 = Stage( "Fusions",
+                              requires = (self.ALIGNMENTS_7,) )
+        self.FUSIONS_9 = Stage( "Fusions",
                                 icon = resources.black_fusion,
                                 status = lambda m: (bool( M( m ).fusions ),),
                                 headline = lambda m: "{} fusion events and {} fusion points".format( M( m ).fusions.__len__(), M( m ).fusions.num_points ) if M( m ).fusions else "(None)",
-                                requires = (self.TREES_6,) )
-        
-        self._POINTS_7b = Stage( "Points",
+                                requires = (self.TREES_8,) )
+        self._POINTS_9b = Stage( "Points",
                                  icon = resources.black_fusion,
                                  status = lambda m: (bool( M( m ).fusions ),),
                                  headline = lambda m: "",
-                                 requires = (self.TREES_6,) )
-        self.SPLITS_8 = Stage( "Splits",
-                               status = lambda m: (bool( M( m ).splits ),),
-                               icon = resources.black_split,
-                               headline = lambda m: "{} splits".format( M( m ).splits.__len__() ) if M( m ).splits else "(None)",
-                               requires = (self.FUSIONS_7,) )
-        self.CONSENSUS_9 = Stage( "Consensus",
-                                  icon = resources.black_consensus,
-                                  status = lambda m: (bool( M( m ).consensus ),),
-                                  headline = lambda m: "{} of {} splits are viable".format( M( m ).consensus.__len__(), M( m ).splits.__len__() ) if M( m ).consensus else "(None)",
-                                  requires = (self.SPLITS_8,) )
-        self.SUBSETS_10 = Stage( "Subsets",
+                                 requires = (self.TREES_8,) )
+        self.SPLITS_10 = Stage( "Splits",
+                                status = lambda m: (bool( M( m ).splits ),),
+                                icon = resources.black_split,
+                                headline = lambda m: "{} splits".format( M( m ).splits.__len__() ) if M( m ).splits else "(None)",
+                                requires = (self.FUSIONS_9,) )
+        self.CONSENSUS_11 = Stage( "Consensus",
+                                   icon = resources.black_consensus,
+                                   status = lambda m: (bool( M( m ).consensus ),),
+                                   headline = lambda m: "{} of {} splits are viable".format( M( m ).consensus.__len__(), M( m ).splits.__len__() ) if M( m ).consensus else "(None)",
+                                   requires = (self.SPLITS_10,) )
+        self.SUBSETS_12 = Stage( "Subsets",
                                  status = lambda m: (bool( M( m ).subsets ),),
                                  icon = resources.black_subset,
                                  headline = lambda m: "{} subsets".format( M( m ).subsets.__len__() ) if M( m ).subsets else "(None)",
-                                 requires = (self.CONSENSUS_9,) )
-        self.PREGRAPHS_11 = Stage( "Pregraphs",
+                                 requires = (self.FUSIONS_9,) )
+        self.PREGRAPHS_13 = Stage( "Pregraphs",
                                    status = lambda m: (bool( x.pregraphs ) for x in M( m ).subsets),
                                    icon = resources.black_pregraph,
                                    headline = lambda m: "{} pregraphs".format( sum( (len( x.pregraphs ) if x.pregraphs else 0) for x in M( m ).subsets ) ),
-                                   requires = (self.SUBSETS_10,) )
-        self.SUBGRAPHS_11 = Stage( "Subgraphs",
-                                   status = lambda m: (bool( M( m ).subgraphs ),),
-                                   icon = resources.black_subgraph,
-                                   headline = lambda m: "{} of {} subsets have a graph".format( M( m ).subgraphs.__len__(), M( m ).subsets.__len__() ) if M( m ).subgraphs else "(None)",
-                                   requires = (self.PREGRAPHS_11,) )
-        self.FUSED_12 = Stage( "Fused",
-                               status = lambda m: (bool( M( m ).fusion_graph_unclean ),),
-                               icon = resources.black_nrfg,
-                               headline = lambda m: "Subgraphs fused" if M( m ).fusion_graph_unclean else "(None)",
-                               requires = (self.SUBGRAPHS_11,) )
-        self.CLEANED_13 = Stage( "Cleaned",
-                                 icon = resources.black_clean,
-                                 status = lambda m: (bool( M( m ).fusion_graph_clean ),),
-                                 headline = lambda m: "NRFG clean" if M( m ).fusion_graph_clean else "(None)",
-                                 requires = (self.FUSED_12,) )
-        self.CHECKED_14 = Stage( "Checked",
+                                   requires = (self.SUBSETS_12,) )
+        self.SUPERTREES_14 = Stage( "Subgraphs",
+                                    status = lambda m: (bool( M( m ).subgraphs ),),
+                                    icon = resources.black_subgraph,
+                                    headline = lambda m: "{} of {} subsets have a graph".format( M( m ).subgraphs.__len__(), M( m ).subsets.__len__() ) if M( m ).subgraphs else "(None)",
+                                    requires = (self.PREGRAPHS_13,) )
+        self.FUSE_15 = Stage( "Fused",
+                              status = lambda m: (bool( M( m ).fusion_graph_unclean ),),
+                              icon = resources.black_nrfg,
+                              headline = lambda m: "Subgraphs fused" if M( m ).fusion_graph_unclean else "(None)",
+                              requires = (self.SUPERTREES_14,) )
+        self.CLEAN_16 = Stage( "Cleaned",
+                               icon = resources.black_clean,
+                               status = lambda m: (bool( M( m ).fusion_graph_clean ),),
+                               headline = lambda m: "NRFG clean" if M( m ).fusion_graph_clean else "(None)",
+                               requires = (self.FUSE_15,) )
+        self.CHECKED_17 = Stage( "Checked",
                                  icon = resources.black_check,
                                  status = lambda m: (bool( M( m ).report ),),
                                  headline = lambda m: "NRFG checked" if M( m ).report else "(None)",
-                                 requires = (self.CLEANED_13,) )
+                                 requires = (self.CLEAN_16,) )
     
     
     def __iter__( self ) -> Iterator[Stage]:
@@ -271,6 +269,97 @@ class EChanges( MFlags ):
 
 
 class BROWSE_MODE:
+    """
+    GUI only: Which browser to use. 
+    
+    :cvar SYSTEM:   Always use system browser
+    :cvar ASK:      Always ask
+    :cvar INBUILT:  Always use inbuilt browser (requires Qt web engine is installed)
+    """
     SYSTEM = 0
     ASK = 1
     INBUILT = 2
+
+
+class EStartupMode( MEnum ):
+    """
+    GUI only:  Which screen shows when the GUI starts.
+    """
+    STARTUP = 0
+    WORKFLOW = 1
+    SAMPLES = 2
+    NOTHING = 3
+
+
+class EWindowMode( MEnum ):
+    """
+    GUI only: How sub-windows are displayed.
+    
+    This was introduced because MDI/TDI cause problems on some platforms.
+    
+    :cvar BASIC:    Basic overlapping windows.
+    :cvar MDI:      Multiple document interface.
+    :cvar TDI:      Tabbed document interface.
+    """
+    BASIC = 0
+    MDI = 1
+    TDI = 2
+
+
+class EDomainNames( MEnum ):
+    """
+    How to display domain names.
+    
+    :cvar START_END:            Use the start and end positions
+    :cvar START_LENGTH:         Use the start and the length
+    :cvar START_END_LENGTH:     Use the start, end, and the length 
+    """
+    START_END = 1
+    START_LENGTH = 2
+    START_END_LENGTH = 3
+
+
+class EGeneNames( MEnum ):
+    """
+    How to display gene names.
+    
+    :cvar DISPLAY:    Use the user-designated display name
+    :cvar ACCESSION:  Always use the accession
+    :cvar LEGACY:     Always use the PHYLIP compatible generated ID
+    :cvar COMPONENT:  As `DISPLAY`, with the major component as a prefix. 
+    """
+    DISPLAY = 1
+    ACCESSION = 2
+    LEGACY = 3
+    COMPONENT = 4
+
+
+class EComponentGraph( MEnum ):
+    """
+    Selects which graph on a component to display.
+    """
+    UNROOTED = 1
+    UNMODIFIED = 2
+    ROOTED = 3
+
+
+class EFusionNames( MEnum ):
+    """
+    How to display fusion names.
+    
+    :cvar ACCID:    Unique accession-like ID
+    :cvar READABLE: Try and make a readable name (may not be unique)
+    """
+    ACCID = 1
+    READABLE = 2
+
+
+class EComponentNames( MEnum ):
+    """
+    How to display component names.
+    
+    :cvar ACCID: Unique accession-like ID
+    :cvar FIRST: Name after first gene in component
+    """
+    ACCID = 1
+    FIRST = 2

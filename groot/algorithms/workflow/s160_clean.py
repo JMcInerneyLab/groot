@@ -19,7 +19,7 @@ def create_cleaned():
     Requisites: `create_fused`
     """
     model = global_view.current_model()
-    model.get_status( STAGES.CLEANED_13 ).assert_create()
+    model.get_status( STAGES.CLEAN_16 ).assert_create()
     nrfg = model.fusion_graph_unclean.graph.copy()
     
     __remove_redundant_fusions( nrfg )
@@ -37,7 +37,7 @@ def drop_cleaned():
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.CLEANED_13 ).assert_drop()
+    model.get_status( STAGES.CLEAN_16 ).assert_drop()
     
     model.fusion_graph_clean = None
     return EChanges.MODEL_DATA

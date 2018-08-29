@@ -20,7 +20,7 @@ def create_pregraphs():
     Requisites: `create_subsets`
     """
     model = global_view.current_model()
-    model.get_status( STAGES.PREGRAPHS_11 ).assert_create()
+    model.get_status( STAGES.PREGRAPHS_13 ).assert_create()
     
     for subset in model.subsets:
         __subset_to_possible_graphs( subset )
@@ -35,7 +35,7 @@ def drop_pregraphs():
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.PREGRAPHS_11 ).assert_drop()
+    model.get_status( STAGES.PREGRAPHS_13 ).assert_drop()
     
     for subset in model.subsets:
         assert isinstance(subset, Subset)

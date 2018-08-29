@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QTreeWidgetItem, QDialogButtonBox
 from typing import Optional
 
-
+import groot.data.sample_data
 from mhelper import file_helper, get_basic_documentation
 from mhelper_qt import exceptToGui, exqtSlot, FrmGenericText
 from groot_gui.forms.designer import frm_sample_browser_designer
@@ -73,7 +73,7 @@ class FrmSampleBrowser( QDialog ):
     
     
     def update_files( self ):
-        for sample_dir in global_view.get_samples():
+        for sample_dir in groot.data.sample_data.get_samples():
             item = QTreeWidgetItem()
             item.setText( 0, file_helper.get_filename( sample_dir ) )
             item.setData( 0, Qt.UserRole, sample_dir )

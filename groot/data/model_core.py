@@ -3,7 +3,10 @@ import warnings
 from itertools import combinations, chain
 from typing import Tuple, Optional, List, Iterable, FrozenSet, cast, Any, Set
 
-from groot.data.model_interfaces import EPosition, INamed, IHasFasta, INamedGraph, INode
+import groot.constants
+from groot.constants import EComponentGraph
+import groot.data.config
+from groot.data.model_interfaces import EPosition, IHasFasta, INamedGraph, INode
 from groot import resources as groot_resources
 from intermake.engine.environment import MENV
 from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable, UiHint
@@ -222,7 +225,16 @@ class Domain( IHasFasta, IVisualisable ):
     
     @staticmethod
     def to_string( gene, start, end ) -> str:
-        return "{}[{}:{}({})]".format( gene.accession, start, end, end - start + 1 )
+        o = groot.data.config.options().domain_namer
+        
+        if o == groot.constants.EDomainNames.START_END:
+            return "{}[{}:{}]".format( gene, start, end )
+        elif o == groot.constants.EDomainNames.START_END_LENGTH:
+            return "{}[{}({})]".format( gene, start, end - start + 1 )
+        elif o == groot.constants.EDomainNames.START_LENGTH:
+            return "{}[{}:{}({})]".format( gene, start, end, end - start + 1 )
+        else:
+            raise SwitchError( "global_view.options().domain_namer", o )
     
     
     def __str__( self ) -> str:
@@ -293,7 +305,7 @@ class UserDomain( Domain ):
     pass
 
 
-class Gene( INode, IHasFasta, IVisualisable, INamed ):
+class Gene( INode, IHasFasta, IVisualisable ):
     """
     Protein (or DNA) gene sequence
     
@@ -406,11 +418,11 @@ class Gene( INode, IHasFasta, IVisualisable, INamed ):
                           "sites"       : self.site_array,
                           "domains"     : list( self.iter_userdomains() ),
                           "edges"       : list( self.iter_edges() ),
-                          "major"       :  self.find_major(),
+                          "major"       : self.find_major(),
                           "minor"       : list( self.iter_minor() ), }
     
     
-    def find_major( self ):
+    def find_major( self ) -> "Component":
         """
         Gets the component for this gene, or `None` if no component.
         """
@@ -425,12 +437,21 @@ class Gene( INode, IHasFasta, IVisualisable, INamed ):
         """
         OVERRIDE 
         """
-        if self.display_name:
-            return self.display_name
-        elif self.accession:
+        o = groot.data.config.options().gene_namer
+        
+        if o == groot.constants.EGeneNames.DISPLAY:
+            return self.display_name or self.accession
+        elif o == groot.constants.EGeneNames.ACCESSION:
             return self.accession
-        else:
-            return "G{}".format( self.index )
+        elif o == groot.constants.EGeneNames.LEGACY:
+            return self.legacy_accession
+        elif o == groot.constants.EGeneNames.COMPONENT:
+            comp = self.find_major()
+            
+            if comp:
+                return "{}/{}".format( comp.index, self.display_name or self.accession )
+            else:
+                return self.display_name or self.accession
     
     
     def __repr__( self ) -> str:
@@ -477,7 +498,7 @@ class UserGraph( INamedGraph ):
         return self.__graph
     
     
-    def on_get_name( self ) -> str:
+    def get_accid( self ) -> str:
         return self.__name
     
     
@@ -489,10 +510,10 @@ class UserGraph( INamedGraph ):
     
     
     def __str__( self ):
-        return self.name
+        return self.get_accid()
 
 
-class Component( INamed, IVisualisable ):
+class Component( IVisualisable ):
     """
     Stores information about a component of the (:class:`LegoModel`).
     
@@ -530,26 +551,47 @@ class Component( INamed, IVisualisable ):
         self.tree: MGraph = None
         self.tree_unrooted: MGraph = None
         self.tree_newick: str = None
+        self.tree_unmodified: MGraph = None
     
     
     def get_accid( self ):
         return "COM{}".format( self.index )
-        # for x in sorted( self.major_genes, key = cast( Any, str ) ):
-        #     return x.accession
+    
+    
+    def __str__( self ) -> str:
+        """
+        OVERRIDE 
+        """
+        o = groot.data.options().component_namer
+        
+        if o == groot.constants.EComponentNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EComponentNames.FIRST:
+            for x in sorted( self.major_genes, key = cast( Any, str ) ):
+                return str( x )
+        else:
+            raise SwitchError( "groot.data.options().component_namer", o )
     
     
     @property
     def named_tree( self ):
         if self.tree:
             from groot.data.model_meta import _ComponentAsGraph
-            return _ComponentAsGraph( self, False )
+            return _ComponentAsGraph( self, EComponentGraph.ROOTED )
     
     
     @property
     def named_tree_unrooted( self ):
         if self.tree_unrooted:
             from groot.data.model_meta import _ComponentAsGraph
-            return _ComponentAsGraph( self, True )
+            return _ComponentAsGraph( self, EComponentGraph.UNROOTED )
+    
+    
+    @property
+    def named_tree_unmodified( self ):
+        if self.tree_unrooted:
+            from groot.data.model_meta import _ComponentAsGraph
+            return _ComponentAsGraph( self, EComponentGraph.UNMODIFIED )
     
     
     @property
@@ -617,10 +659,6 @@ class Component( INamed, IVisualisable ):
         return self.tree
     
     
-    def on_get_name( self ):
-        return self.get_accid()
-    
-    
     def get_alignment_by_accession( self ) -> str:
         """
         Gets the `alignment` property, but translates gene IDs into accessions
@@ -645,13 +683,6 @@ class Component( INamed, IVisualisable ):
                           "tree_newick": self.tree_newick,
                           "incoming"   : self.incoming_components(),
                           "outgoing"   : self.outgoing_components() }
-    
-    
-    def __str__( self ) -> str:
-        """
-        OVERRIDE 
-        """
-        return self.name
     
     
     def incoming_components( self ) -> List["Component"]:
@@ -704,12 +735,19 @@ class FusionGraph( INamedGraph ):
         return self.__graph
     
     
-    def on_get_name( self ):
-        return str( self )
+    def get_accid( self ):
+        return "nrfg" if self.is_clean else "nrfg_unclean"
     
     
     def __str__( self ):
-        return "nrfg" if self.is_clean else "nrfg_unclean"
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "NRFG" if self.is_clean else "Unprocessed NRFG"
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
 
 
 class Subgraph( INamedGraph ):
@@ -731,15 +769,22 @@ class Subgraph( INamedGraph ):
         return self.__graph
     
     
-    def on_get_name( self ) -> str:
-        return str( self )
+    def get_accid( self ) -> str:
+        return "subgraph_{}".format( self.__subset.get_accid() )
     
     
     def __str__( self ):
-        return "subgraph_{}".format( self.__subset.get_accid() )
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "Supertree of {} trees ({} nodes)".format( len( self.__subset.pregraphs ), len( self.graph.nodes ) )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
 
 
-class Split( INamed, IVisualisable ):
+class Split( IVisualisable ):
     """
     Wraps a :class:`MSplit` making it Groot-friendly.
     """
@@ -754,12 +799,8 @@ class Split( INamed, IVisualisable ):
         self.evidence_unused: FrozenSet[Component] = None
     
     
-    def on_get_name( self ):
-        return "split_{}".format( self.index )
-    
-    
     def __str__( self ):
-        return self.name
+        return "split_{}".format( self.index )
     
     
     def on_get_vis_info( self, u: UiInfo ) -> None:
@@ -804,14 +845,11 @@ class Split( INamed, IVisualisable ):
                or self.split.inside.issubset( other.split.inside ) and self.split.outside.issubset( other.split.outside )
 
 
-class Report( INamed, IVisualisable ):
-    def __init__( self, title: str, html: str ):
-        self.title = title
+class Report( IVisualisable ):
+    def __init__( self, name: str, html: str, meta_data = None ):
+        self.name = name
         self.html = html
-    
-    
-    def on_get_name( self ):
-        return self.title
+        self.raw_data = meta_data
     
     
     def __str__( self ):
@@ -822,6 +860,7 @@ class Report( INamed, IVisualisable ):
         super().on_get_vis_info( u )
         u.hint = UiHint( colour = EColour.GREEN, icon = groot_resources.black_check )
         u.text = "(HTML report)"
+        u.properties += { "raw_data": self.raw_data }
 
 
 class Subset( IVisualisable ):
@@ -840,9 +879,9 @@ class Subset( IVisualisable ):
     def get_accid( self ):
         for x in sorted( self.contents, key = cast( Any, str ) ):
             if isinstance( x, Gene ):
-                return x.accession
+                return "subset_{}".format( x.accession )
         
-        return self.index
+        return "subset_{}".format( self.index )
     
     
     def __len__( self ):
@@ -850,7 +889,14 @@ class Subset( IVisualisable ):
     
     
     def __str__( self ):
-        return "subset_{}".format( self.get_accid() )
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "Set of {} genes".format( len( self.contents ) )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
     
     
     def get_details( self ):
@@ -863,7 +909,7 @@ class Subset( IVisualisable ):
         u.contents += lambda: self.contents
 
 
-class Fusion( INamed, IVisualisable ):
+class Fusion( IVisualisable ):
     """
     Describes a fusion event
     
@@ -895,7 +941,14 @@ class Fusion( INamed, IVisualisable ):
     
     
     def __str__( self ):
-        return self.name
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.component_out.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "Create {}".format( self.component_out )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
     
     
     def get_accid( self ):
@@ -912,10 +965,10 @@ class Fusion( INamed, IVisualisable ):
     
     
     def on_get_name( self ):
-        return "F." + str( self.get_accid() )
+        return "Create " + str( self.get_accid() )
 
 
-class Formation( INamed, IVisualisable, INode ):
+class Formation( IVisualisable, INode ):
     # Formats for finding and creating legacy accessions
     _LEGACY_IDENTIFIER = re.compile( "^GrtF([0-9]+)F([0-9]+)$" )
     _LEGACY_FORMAT = "GrtF{}F{}"
@@ -923,7 +976,6 @@ class Formation( INamed, IVisualisable, INode ):
     
     def __init__( self,
                   event: Fusion,
-                  component: Component,
                   genes: FrozenSet[INode],
                   index: int,
                   pertinent_inner: FrozenSet[INode] ):
@@ -931,8 +983,6 @@ class Formation( INamed, IVisualisable, INode ):
         CONSTRUCTOR
         
         :param event:               The fusion event to which this `Formation` belongs.
-        :param component:           The component we are _forming_.
-                                    In a correctly operating process, this should be the same as `event.component_out`.
         :param genes:               The total set of _output_ genes in the tree, formed _by_ the fusion event.
                                     i.e. those that are formed by this fusion event,
         :param index:               Index of this `Formation` within the `Fusion` event (arbitrary).
@@ -940,7 +990,6 @@ class Formation( INamed, IVisualisable, INode ):
                                     i.e. the intersection of `event.component_out` and `genes`.
         """
         self.event = event
-        self.component = component
         self.genes = genes
         self.pertinent_inner = pertinent_inner
         self.points: List[Point] = []
@@ -951,7 +1000,6 @@ class Formation( INamed, IVisualisable, INode ):
         super().on_get_vis_info( u )
         u.text = "{} points".format( len( self.points ) )
         u.properties += {
-            "component"      : self.component,
             "genes"          : self.genes,
             "pertinent_inner": self.pertinent_inner,
             "index"          : self.index,
@@ -959,11 +1007,18 @@ class Formation( INamed, IVisualisable, INode ):
     
     
     def get_accid( self ) -> str:
-        return str( self.index )
+        return "{}.{}".format( self.event, self.index )
     
     
     def __str__( self ):
-        return self.name
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "{} ({} genes)".format( self.event, len( self.pertinent_inner ) )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
     
     
     def on_get_name( self ):
@@ -989,7 +1044,7 @@ class Formation( INamed, IVisualisable, INode ):
         return bool( cls._LEGACY_IDENTIFIER.match( name ) )
 
 
-class Point( INamed, INode, IVisualisable ):
+class Point( INode, IVisualisable ):
     """
     Point of fusion.
     
@@ -1025,18 +1080,19 @@ class Point( INamed, INode, IVisualisable ):
         self.index = index
     
     
-    def on_get_name( self ):
+    def get_accid( self ):
         return "{}.{}".format( self.formation, self.point_component.get_accid() )
     
     
     def __str__( self ):
-        return self.name
-    
-    
-    @property
-    def component( self ):
-        warnings.warn( "`LegoPoint.component` is ambiguous. Use `LegoPoint.formation.event.component` or `LegoPoint.point_component` instead.", DeprecationWarning )
-        return self.formation.component
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "{} in {}".format( self.formation, self.point_component )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )
     
     
     @property
@@ -1107,19 +1163,26 @@ class FixedUserGraph( UserGraph ):
 
 
 class Pregraph( INamedGraph ):
-    def on_get_graph( self ) -> Optional[MGraph]:
-        return self.__graph
-    
-    
-    def on_get_name( self ):
-        return "pregraph_{}_in_{}".format( self.subset.get_accid(), self.component.get_accid() )
-    
-    
-    def __str__( self ):
-        return self.name
-    
-    
     def __init__( self, graph: MGraph, subset: Subset, component: Component ):
         self.__graph = graph
         self.subset = subset
         self.component = component
+    
+    
+    def on_get_graph( self ) -> Optional[MGraph]:
+        return self.__graph
+    
+    
+    def get_accid( self ):
+        return "pregraph_{}_in_{}".format( self.subset.get_accid(), self.component.get_accid() )
+    
+    
+    def __str__( self ):
+        o = groot.data.config.options().fusion_namer
+        
+        if o == groot.constants.EFusionNames.ACCID:
+            return self.get_accid()
+        elif o == groot.constants.EFusionNames.READABLE:
+            return "Pregraph for {} ({} nodes)".format( self.component, len( self.graph.nodes ) )
+        else:
+            raise SwitchError( "groot.data.config.options().fusion_namer", o )

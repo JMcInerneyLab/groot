@@ -6,6 +6,7 @@ from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QGraphicsScene, QGridLayout, QMenu, QSizePolicy, QAbstractButton
 from groot_gui.forms.designer import frm_lego_designer
 
+import groot.data.config
 import intermake
 import groot
 from groot_gui.forms.frm_base import FrmBaseWithSelection
@@ -59,7 +60,7 @@ class FrmLego( FrmBaseWithSelection ):
         layout.addWidget( v )
         
         # Open GL rendering
-        if groot.global_view.options().opengl:
+        if groot.data.config.options().opengl:
             v.setViewport( QGLWidget( QGLFormat( QGL.SampleBuffers ) ) )
         
         # Default (empty) scene

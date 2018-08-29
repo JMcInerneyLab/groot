@@ -28,7 +28,6 @@ from .model_interfaces import \
     EPosition, \
     ESiteType, \
     IHasFasta, \
-    INamed, \
     INamedGraph
 
 from .exceptions import \
@@ -39,6 +38,8 @@ from .exceptions import \
 
 from . import global_view
 
-from .global_view import current_model, GlobalOptions
+from .global_view import current_model
+
+from groot.data.config import options
 
 

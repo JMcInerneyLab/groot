@@ -14,6 +14,7 @@ from groot import constants
 from groot.data import INode, Component, Fusion, Model, Point, Gene, global_view
 from groot.data.model_core import Formation
 from groot.utilities import lego_graph
+from groot.algorithms.workflow import s080_tree
 
 
 __LOG = Logger( "fusion", False )
@@ -29,7 +30,7 @@ def create_fusions() -> EChanges:
     Requisites: `create_trees`
     """
     model = global_view.current_model()
-    model.get_status( constants.STAGES.FUSIONS_7 ).assert_create()
+    model.get_status( constants.STASTAGES.FUSIONS_9 ).assert_create()
     
     r: List[Fusion] = []
     
@@ -57,32 +58,15 @@ def drop_fusions() -> EChanges:
     """
     model = global_view.current_model()
     previous = len( model.fusions )
-    model.get_status( constants.STAGES.FUSIONS_7 ).assert_drop()
+    model.get_status( constants.STASTAGES.FUSIONS_9 ).assert_drop()
     
     removed_count = 0
     
     model.fusions.clear()
     
+    # Reset trees
     for component in model.components:
-        graph = component.tree
-        to_delete: List[MNode] = []
-        
-        for node in graph.get_nodes():
-            if isinstance( node.data, Point ):
-                if len( node.edges ) == 1:
-                    to_delete.append( node )
-                    continue
-                
-                assert len( node.edges ) == 2, len( node.edges )
-                
-                # Remove the old node
-                graph.add_edge( node.parent, node.child )
-                to_delete.append( node )
-        
-        for node in to_delete:
-            node.remove_node()
-        
-        removed_count += len( to_delete )
+        s080_tree.set_tree( component, component.tree )
     
     MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed_count ) )
     return EChanges.COMP_DATA
@@ -106,7 +90,7 @@ def print_fusions() -> EChanges:
         
         for point in event.points:
             results.append( "     -   name               {}".format( point ) )
-            results.append( "         component          {}".format( point.component ) )
+            results.append( "         point_component    {}".format( point.point_component ) )
             results.append( "         count              {}".format( point.count ) )
             results.append( "         outer sequences    {}".format( string_helper.format_array( point.outer_sequences ) ) )
             results.append( "         pertinent inner    {}".format( string_helper.format_array( point.pertinent_inner ) ) )
@@ -174,7 +158,7 @@ def __find_or_create_point( event: Fusion,
             break
     
     if formation is None:
-        formation = Formation( event, component, inner, len( event.formations ), pertinent_inner )
+        formation = Formation( event, inner, len( event.formations ), pertinent_inner )
         event.formations.append( formation )
     
     p = Point( formation, outer, component, len( formation.points ) )

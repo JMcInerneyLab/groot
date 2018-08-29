@@ -23,7 +23,7 @@ def create_fused():
     __LOG.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ SEW ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
     model = global_view.current_model()
-    model.get_status( STAGES.FUSED_12 ).assert_create()
+    model.get_status( STAGES.FUSE_15 ).assert_create()
     
     # First, we pull all of our subgraphs ("supertrees") into the nrfg
     nrfg: MGraph = MGraph()
@@ -82,7 +82,7 @@ def drop_fused( ):
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.FUSED_12 ).assert_drop()
+    model.get_status( STAGES.FUSE_15 ).assert_drop()
     
     model.fusion_graph_unclean = None
     return EChanges.MODEL_DATA

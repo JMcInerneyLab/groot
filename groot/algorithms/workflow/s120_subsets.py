@@ -18,7 +18,7 @@ def drop_subsets():
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.SUBSETS_10 ).assert_drop()
+    model.get_status( STAGES.SUBSETS_12 ).assert_drop()
     
     model.subsets = frozenset()
     
@@ -55,7 +55,7 @@ def create_subsets( no_super: bool = True ):
     model = global_view.current_model()
     
     # Check we are good to go
-    model.get_status( STAGES.SUBSETS_10 ).assert_create()
+    model.get_status( STAGES.SUBSETS_12 ).assert_create()
     
     # Define our output variables
     all_gene_sets: Set[FrozenSet[INode]] = set()

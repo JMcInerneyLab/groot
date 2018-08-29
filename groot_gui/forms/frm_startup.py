@@ -1,6 +1,9 @@
 from groot_gui.forms.designer import frm_startup_designer
+
+import groot.data.config
+import groot.data.sample_data
 from groot.data import global_view
-from groot.data.global_view import RecentFile
+from groot.data.config import RecentFile
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.utilities import gui_workflow
 from intermake.engine.environment import MENV
@@ -29,7 +32,7 @@ class FrmStartup( FrmBase ):
         
         r.append( "<h3>Recent files</h3><ul>" )
         
-        for file in reversed( global_view.options().recent_files ):
+        for file in reversed( groot.data.config.options().recent_files ):
             assert isinstance(file, RecentFile)
             r.append( '<li><a href="file_load:{}">{}</a></li>'.format( file.file_name, file_helper.get_filename_without_extension( file.file_name ) ) )
         
@@ -38,7 +41,7 @@ class FrmStartup( FrmBase ):
         
         r.append( "<h3>Sample data</h3><ul>" )
         
-        for file in global_view.get_samples():
+        for file in groot.data.sample_data.get_samples():
             r.append( '<li><a href="file_sample:{}">{}</a><li/>'.format( file, file_helper.get_filename_without_extension( file ) ) )
         
         r.append( '<li><a href="action:{}"><i>browse...</i></a></li>'.format( gui_workflow.handlers().VIEW_OPEN_FILE ) )

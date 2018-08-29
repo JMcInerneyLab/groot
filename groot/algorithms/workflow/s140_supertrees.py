@@ -45,7 +45,7 @@ def create_supertrees( algorithm: supertree_algorithms.Algorithm ) -> None:
     
     # Check we're ready to go
     model = global_view.current_model()
-    model.get_status( STAGES.SUBGRAPHS_11 ).assert_create()
+    model.get_status( STAGES.SUPERTREES_14 ).assert_create()
     
     # Create the subgraphs 
     subgraphs = []
@@ -87,7 +87,7 @@ def drop_supertrees() -> EChanges:
     Removes data from the model.
     """
     model = global_view.current_model()
-    model.get_status( STAGES.SUBGRAPHS_11 ).assert_drop()
+    model.get_status( STAGES.SUPERTREES_14 ).assert_drop()
     
     model.subgraphs = tuple()
     model.subgraphs_destinations = tuple()

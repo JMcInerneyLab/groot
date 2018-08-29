@@ -41,7 +41,7 @@ def create_splits(  ):
     model: Model   =global_view.current_model()
     
     # Status check
-    model.get_status( STAGES.SPLITS_8 ).assert_create()
+    model.get_status( STAGES.SPLITS_10 ).assert_create()
     
     all_splits: Dict[MSplit, Split] = { }
     
@@ -83,7 +83,7 @@ def drop_splits( ):
     Removes data from the model.
     """
     model: Model   =global_view.current_model()
-    model.get_status( STAGES.SPLITS_8 ).assert_drop()
+    model.get_status( STAGES.SPLITS_10 ).assert_drop()
     
     model.splits = frozenset()
     

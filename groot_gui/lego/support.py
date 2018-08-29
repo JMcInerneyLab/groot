@@ -166,10 +166,6 @@ class LookupTable:
             self.letter_size = DRAWING.NUCLEOTIDE_SIZE
             self.letter_order_table = DRAWING.DNA_ORDER_TABLE
             self.letter_colour_table = DRAWING.DNA_COLOUR_TABLE
-        elif type_ == ESiteType.RNA:
-            self.letter_size = DRAWING.NUCLEOTIDE_SIZE
-            self.letter_order_table = DRAWING.RNA_ORDER_TABLE
-            self.letter_colour_table = DRAWING.RNA_COLOUR_TABLE
         else:
             self.letter_size = DRAWING.PROTEIN_SIZE
             self.letter_order_table = DRAWING.PROTEIN_ORDER_TABLE

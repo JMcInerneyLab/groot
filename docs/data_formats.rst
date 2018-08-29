@@ -1,5 +1,6 @@
+==================
 Groot Data formats
-------------------
+==================
 
 Groot endeavours to use one, simple, popular, standard format for each data type.
 The following formats are thus used:

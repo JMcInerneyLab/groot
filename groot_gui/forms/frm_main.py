@@ -1,15 +1,15 @@
 import warnings
 from typing import Dict, Type
 
+import groot.data.config
 import mhelper as mh
 import mhelper_qt as qt
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMainWindow, QMdiArea, QMenu, QToolButton
 from groot import constants
-from groot.constants import EChanges
+from groot.constants import EChanges, EStartupMode, EWindowMode
 from groot.data import global_view
-from groot.data.global_view import EStartupMode, EWindowMode, GlobalOptions
 from groot_gui.forms.designer import frm_main_designer
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.utilities.gui_workflow import Intent, handlers, EIntent
@@ -61,7 +61,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         
         self.showMaximized()
         
-        global_options: GlobalOptions = global_view.options()
+        global_options = groot.data.config.options()
         self.mdi_mode = global_options.window_mode != EWindowMode.BASIC
         self.ui.FRA_FILE.setVisible( global_options.tool_file )
         self.ui.FRA_VISUALISERS.setVisible( global_options.tool_visualisers )
@@ -75,9 +75,9 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         self.menu_handler = GuiMenu( self )
         self.actions = self.menu_handler.gui_actions
         
-        view = global_view.options().startup_mode
+        view = groot.data.config.options().startup_mode
         
-        if global_view.current_model().get_status( constants.STAGES._DATA_0 ).is_none:
+        if global_view.current_model().get_status( constants.STAGES.SEQ_AND_SIM_ps ).is_none:
             if view == EStartupMode.STARTUP:
                 handlers().VIEW_STARTUP.execute( self, EIntent.DIRECT, None )
             elif view == EStartupMode.WORKFLOW:
