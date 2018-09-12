@@ -5,14 +5,15 @@ from mhelper import ComponentFinder, Logger, LogicError, string_helper
 from typing import List
 
 from groot.constants import STAGES, EChanges
-from groot.data import INode, Pregraph, Subset, global_view
+from groot.data import INode, Pregraph, Subset, global_view, NotReadyError
 from groot.utilities import lego_graph
 
 
 LOG = Logger( "pregraphs", False )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command(folder = constants.F_CREATE)
+
+@command( folder = constants.F_CREATE )
 def create_pregraphs():
     """
     Creates the pregraphs.
@@ -20,6 +21,12 @@ def create_pregraphs():
     Requisites: `create_subsets`
     """
     model = global_view.current_model()
+    
+    # Special case - if no subsets just stop now
+    if model.get_status( STAGES.PREGRAPHS_13 ).is_complete and len( model.subsets ) == 0:
+        MCMD.progress( "No subsets - nothing to do." )
+        return
+    
     model.get_status( STAGES.PREGRAPHS_13 ).assert_create()
     
     for subset in model.subsets:
@@ -29,7 +36,7 @@ def create_pregraphs():
     return EChanges.MODEL_DATA
 
 
-@command(folder = constants.F_DROP)
+@command( folder = constants.F_DROP )
 def drop_pregraphs():
     """
     Removes data from the model.
@@ -38,9 +45,9 @@ def drop_pregraphs():
     model.get_status( STAGES.PREGRAPHS_13 ).assert_drop()
     
     for subset in model.subsets:
-        assert isinstance(subset, Subset)
+        assert isinstance( subset, Subset )
         subset.pregraphs = None
-        
+    
     return EChanges.COMP_DATA
 
 

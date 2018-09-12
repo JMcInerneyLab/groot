@@ -1,12 +1,13 @@
 from typing import Callable, Iterable, List, cast, Dict
 
-import groot
+from groot import data
+from groot.utilities import AlgorithmCollection
 from groot_gui.lego import ModelView
 from groot_gui.lego.views import EdgeView, DomainView, GeneView
 
 
 DAlgorithm = Callable[[ModelView], None]
-position_algorithms = groot.AlgorithmCollection( DAlgorithm, "LegoPosition" )
+position_algorithms = AlgorithmCollection( DAlgorithm, "LegoPosition" )
 
 
 def leftmost_per_gene( domain_views: Iterable[DomainView], rightmost: bool = False ) -> List[DomainView]:
@@ -49,7 +50,7 @@ def make_extra_contiguous( model_view: ModelView, domain_views: List[DomainView]
     """
     Positions domains not in `domain_views` such that they are in-line with those in `domain_views`.
     """
-    domain_views: Dict[groot.Gene, DomainView] = { x.domain.gene: x for x in leftmost_per_gene( domain_views ) }
+    domain_views: Dict[data.Gene, DomainView] = { x.domain.gene: x for x in leftmost_per_gene( domain_views ) }
     
     for gene, view in domain_views.items():
         left = [x for x in model_view.domain_views.values() if x.domain.gene is gene and x.domain.start < view.domain.start]
@@ -67,7 +68,7 @@ def apply_position( model_view: ModelView, algorithm: position_algorithms.Algori
     model_view.save_all_states()
 
 
-def get_views( model_view: ModelView, domains: Iterable[groot.UserDomain] ) -> List[DomainView]:
+def get_views( model_view: ModelView, domains: Iterable[data.UserDomain] ) -> List[DomainView]:
     """
     Retrieves the list of `DomainView`s matching the list of `domains`.
     """

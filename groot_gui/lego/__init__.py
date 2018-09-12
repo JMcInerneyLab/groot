@@ -1,3 +1,7 @@
+"""
+This package handles the "lego diagram" presented in Groot's GUI (see `frm_lego.py`).
+"""
+
 from .support import \
     ColourBlock, \
     DRAWING, \

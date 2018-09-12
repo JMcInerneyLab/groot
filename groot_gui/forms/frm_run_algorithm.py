@@ -1,16 +1,16 @@
 from PyQt5.QtWidgets import QVBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QWidget
-from groot.utilities.extendable_algorithm import AlgorithmCollection
 from groot_gui.forms.designer import frm_run_algorithm_designer
 from typing import Tuple, Callable
 
+from groot import constants
 from groot_gui.forms.frm_base import FrmBase
-import groot
+from groot.utilities import AbstractAlgorithm, AlgorithmCollection
 import editorium
 import intermake
 from groot_gui.utilities.gui_workflow import Intent
 from mhelper import FunctionInspector, ArgValueCollection, NOT_PROVIDED
 import mhelper_qt as qt
-
+import groot
 
 class FrmRunAlgorithm( FrmBase ):
     """
@@ -55,8 +55,8 @@ class FrmRunAlgorithm( FrmBase ):
     
     def on_apply_request( self, intent: Intent ):
         if intent.is_inspect:
-            if isinstance( intent.target, groot.AbstractAlgorithm ):
-                algo: groot.AbstractAlgorithm = intent.target
+            if isinstance( intent.target, AbstractAlgorithm ):
+                algo: AbstractAlgorithm = intent.target
                 
                 for cb in self.radios:
                     assert isinstance( cb, QRadioButton )
@@ -120,7 +120,7 @@ class FrmRunAlgorithm( FrmBase ):
         raise NotImplementedError( "abstract" )
     
     
-    def run_algorithm( self, algorithm: groot.AbstractAlgorithm ):
+    def run_algorithm( self, algorithm: AbstractAlgorithm ):
         self.actions.run( self.command, algorithm ).listen( self.run_algorithm_completed )
     
     
@@ -139,7 +139,7 @@ class FrmRunAlgorithm( FrmBase ):
         self.editorium.commit()
         avc: ArgValueCollection = self.editorium.target
         
-        algorithm: groot.AbstractAlgorithm = self.algorithms.get_algorithm( algo_name, **avc.tokwargs() )
+        algorithm: AbstractAlgorithm = self.algorithms.get_algorithm( algo_name, **avc.tokwargs() )
         self.run_algorithm( algorithm )
     
     
@@ -167,13 +167,13 @@ class FrmCreateTrees( FrmRunAlgorithm ):
     def on_query_ready( self ):
         model = self.get_model()
         
-        if model.get_status( groot.constants.STAGES.TREES_8 ).is_complete:
+        if model.get_status( constants.STAGES.TREES_8 ).is_complete:
             return False, '<html><body>Trees already exist, you can <a href="action:view_trees">view the trees</a>, <a href="action:drop_trees">remove them</a> or proceed to <a href="action:create_fusions">finding the fusions</a>.</body></html>'
         
-        if model.get_status( groot.constants.STAGES.ALIGNMENTS_7 ).is_not_complete:
+        if model.get_status( constants.STAGES.ALIGNMENTS_7 ).is_not_complete:
             return False, '<html><body>You need to <a href="action:create_alignments">create the alignments</a> before creating the trees.</body></html>'
         
-        if model.get_status( groot.constants.STAGES.OUTGROUPS_5b ).is_not_complete:
+        if model.get_status( constants.STAGES.OUTGROUPS_7b ).is_not_complete:
             return True, '<html><body>You do not have any <a href="action:view_entities">outgroups</a> set, your trees will be unrooted!</body></html>'
         
         return True, ""

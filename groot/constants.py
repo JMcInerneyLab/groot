@@ -101,52 +101,52 @@ class StageCollection:
                               requires = (self.ALIGNMENTS_7,) )
         self.FUSIONS_9 = Stage( "Fusions",
                                 icon = resources.black_fusion,
-                                status = lambda m: (bool( M( m ).fusions ),),
+                                status = lambda m: (M( m ).fusions is not None,),
                                 headline = lambda m: "{} fusion events and {} fusion points".format( M( m ).fusions.__len__(), M( m ).fusions.num_points ) if M( m ).fusions else "(None)",
                                 requires = (self.TREES_8,) )
         self._POINTS_9b = Stage( "Points",
                                  icon = resources.black_fusion,
-                                 status = lambda m: (bool( M( m ).fusions ),),
+                                 status = lambda m: (M( m ).fusions is not None,),
                                  headline = lambda m: "",
                                  requires = (self.TREES_8,) )
         self.SPLITS_10 = Stage( "Splits",
-                                status = lambda m: (bool( M( m ).splits ),),
+                                status = lambda m: (M( m ).splits is not None,),
                                 icon = resources.black_split,
                                 headline = lambda m: "{} splits".format( M( m ).splits.__len__() ) if M( m ).splits else "(None)",
                                 requires = (self.FUSIONS_9,) )
         self.CONSENSUS_11 = Stage( "Consensus",
                                    icon = resources.black_consensus,
-                                   status = lambda m: (bool( M( m ).consensus ),),
+                                   status = lambda m: (M( m ).consensus is not None,),
                                    headline = lambda m: "{} of {} splits are viable".format( M( m ).consensus.__len__(), M( m ).splits.__len__() ) if M( m ).consensus else "(None)",
                                    requires = (self.SPLITS_10,) )
         self.SUBSETS_12 = Stage( "Subsets",
-                                 status = lambda m: (bool( M( m ).subsets ),),
+                                 status = lambda m: (M( m ).subsets is not None,),
                                  icon = resources.black_subset,
                                  headline = lambda m: "{} subsets".format( M( m ).subsets.__len__() ) if M( m ).subsets else "(None)",
                                  requires = (self.FUSIONS_9,) )
         self.PREGRAPHS_13 = Stage( "Pregraphs",
-                                   status = lambda m: (bool( x.pregraphs ) for x in M( m ).subsets),
+                                   status = lambda m: () if M( m ).subsets is None else (True,) if len( M( m ).subsets ) == 0 else ((x.pregraphs is not None) for x in M( m ).subsets),
                                    icon = resources.black_pregraph,
                                    headline = lambda m: "{} pregraphs".format( sum( (len( x.pregraphs ) if x.pregraphs else 0) for x in M( m ).subsets ) ),
                                    requires = (self.SUBSETS_12,) )
         self.SUPERTREES_14 = Stage( "Subgraphs",
-                                    status = lambda m: (bool( M( m ).subgraphs ),),
+                                    status = lambda m: (M( m ).subgraphs is not None,),
                                     icon = resources.black_subgraph,
                                     headline = lambda m: "{} of {} subsets have a graph".format( M( m ).subgraphs.__len__(), M( m ).subsets.__len__() ) if M( m ).subgraphs else "(None)",
                                     requires = (self.PREGRAPHS_13,) )
         self.FUSE_15 = Stage( "Fused",
-                              status = lambda m: (bool( M( m ).fusion_graph_unclean ),),
+                              status = lambda m: (M( m ).fusion_graph_unclean is not None,),
                               icon = resources.black_nrfg,
                               headline = lambda m: "Subgraphs fused" if M( m ).fusion_graph_unclean else "(None)",
                               requires = (self.SUPERTREES_14,) )
         self.CLEAN_16 = Stage( "Cleaned",
                                icon = resources.black_clean,
-                               status = lambda m: (bool( M( m ).fusion_graph_clean ),),
+                               status = lambda m: (M( m ).fusion_graph_clean is not None,),
                                headline = lambda m: "NRFG clean" if M( m ).fusion_graph_clean else "(None)",
                                requires = (self.FUSE_15,) )
         self.CHECKED_17 = Stage( "Checked",
                                  icon = resources.black_check,
-                                 status = lambda m: (bool( M( m ).report ),),
+                                 status = lambda m: (M( m ).report is not None,),
                                  headline = lambda m: "NRFG checked" if M( m ).report else "(None)",
                                  requires = (self.CLEAN_16,) )
     
@@ -171,15 +171,15 @@ class EFormat( MEnum ):
     Note some output formats only work for DAGs (trees).
     File extensions are listed, which control how the file is opened if the `open` file specifier is passed to the export functions.
     
-    :cvar NEWICK      : Newick format. DAG only. (.NWK)
-    :cvar ASCII       : Simple ASCII diagram. (.TXT)
-    :cvar ETE_GUI     : Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete. DAG only. (No output file)
-    :cvar ETE_ASCII   : ASCII, provided by Ete. Requires Ete. DAG only. (.TXT)
-    :cvar CSV         : Excel-type CSV with headers, suitable for Gephi. (.CSV)
-    :cvar VISJS       : Vis JS (.HTML)
-    :cvar TSV         : Tab separated value (.TSV)
-    :cvar SVG         : HTML formatted SVG graphic (.HTML)
-    :cvar CYJS        : Cytoscape JS (.HTML)
+    :cvar NEWICK:      Newick format. DAG only. (.NWK)
+    :cvar ASCII:       Simple ASCII diagram. (.TXT)
+    :cvar ETE_GUI:     Interactive diagram, provided by Ete. Is also available in CLI. Requires Ete. DAG only. (No output file)
+    :cvar ETE_ASCII:   ASCII, provided by Ete. Requires Ete. DAG only. (.TXT)
+    :cvar CSV:         Excel-type CSV with headers, suitable for Gephi. (.CSV)
+    :cvar VISJS:       Vis JS (.HTML)
+    :cvar TSV:         Tab separated value (.TSV)
+    :cvar SVG:         HTML formatted SVG graphic (.HTML)
+    :cvar CYJS:        Cytoscape JS (.HTML)
     """
     NEWICK = 1
     ASCII = 2

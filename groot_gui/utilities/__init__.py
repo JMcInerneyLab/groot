@@ -1,4 +1,5 @@
 """
+Miscellaneous utilities for Groot's GUI.
 We don't export anything from here since its mostly independent.
 """
 

@@ -8,7 +8,7 @@ import groot.data.sample_data
 from groot.algorithms.gimmicks import wizard, compare
 from groot.algorithms.workflow import s010_file, s080_tree, s070_alignment
 from groot_tests.test_directory import TestDirectory
-from intermake import MCMD, Theme, command, subprocess_helper, visibilities
+from intermake import MCMD, Theme, command, subprocess_helper
 from mgraph import importing
 from mhelper import SwitchError, file_helper, io_helper, OpeningWriter
 
@@ -21,19 +21,28 @@ from groot.utilities import lego_graph
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_TESTS
 
 
-@command( visibility = visibilities.TEST )
+@command()
 def list_tests() -> EChanges:
     """
     Lists the available test cases.
     """
     MCMD.print( "TESTS:" )
-    for file in file_helper.list_dir( TestDirectory.get_test_folder() ):
+    
+    for file in file_helper.list_sub_dirs( TestDirectory.get_test_folder() ):
         MCMD.print( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
     
     return EChanges.INFORMATION
 
 
-@command( visibility = visibilities.TEST )
+def print_test( name: str ) -> EChanges:
+    tdir = TestDirectory( file_helper.get_filename( name ) )
+    
+    MCMD.print( file_helper.read_all_text( tdir.t_ini ) )
+    
+    return EChanges.INFORMATION
+
+
+@command()
 def run_test( name: str ) -> EChanges:
     """
     Runs a test case and saves the results to the global results folder. 
@@ -118,6 +127,8 @@ def run_test( name: str ) -> EChanges:
     # Perform the comparison
     model = global_view.current_model()
     differences = compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
+    q = differences.raw_data["quartets"]["match_quartets"]
+    MCMD.print( "match_quartets: " + q )
     
     # Write the results---
     
@@ -181,7 +192,7 @@ def view_test_results( name: Optional[str] = None ):
         view_report.write( report )
 
 
-@command( visibility = visibilities.ADVANCED )
+@command()
 def drop_tests():
     """
     Deletes *all* test cases and their results.
@@ -191,7 +202,7 @@ def drop_tests():
         MCMD.progress( "Removed: {}".format( folder ) )
 
 
-@command( visibility = visibilities.ADVANCED )
+@command()
 def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: bool = True ) -> EChanges:
     """
     Creates a GROOT unit test in the sample data folder.
@@ -206,7 +217,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
     :return: List of created test directories 
     """
     # noinspection PyPackageRequirements
-    import faketree as Ж
+    import faketree as FAKE
     MCMD.print( "START" )
     r = []
     args_random_tree = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
@@ -218,16 +229,23 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
     
     tdir = TestDirectory( None )
     
-    for name in types:
+    for index, name in enumerate( types ):
+        MCMD.progress( "Test {} of {}".format( index + 1, len( types ) ) )
+        
         try:
-            Ж.new()
+            FAKE.new()
             # The SeqGen mutator has a weird problem where, given a root `(X,O)R` in which `R`
             # is set as a result of an earlier tree, `O` will be more similar to the leaves of
             # that earlier tree than to the leaves in X. For this reason we use a simple random
             # model and not SeqGen.
-            mutate_fn = Ж.random
+            mutate_fn = FAKE.random
             
-            if name == "1":
+            if name == "0":
+                # 0 no fusions
+                outgroups = FAKE.random_tree( ["A"], **args_random_tree )
+                a, = (x.parent for x in outgroups)
+                mutate_fn( [a], *mutate_args )
+            elif name == "1":
                 # 1 fusion point; 3 genes; 2 origins
                 #
                 # # Should be an acyclic 2-rooted tree:
@@ -240,17 +258,17 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 #
                 
                 # Trees
-                outgroups = Ж.random_tree( ["A", "B", "C"], **args_random_tree )
+                outgroups = FAKE.random_tree( ["A", "B", "C"], **args_random_tree )
                 a, b, c = (x.parent for x in outgroups)
                 __remove_outgroups( outgroups, 2 )
                 
                 mutate_fn( [a, b, c], *mutate_args )
                 
                 # Fusion point
-                fa = Ж.random_node( a, avoid = outgroups )
-                fb = Ж.random_node( b, avoid = outgroups )
-                Ж.branch( [fa, fb], c )
-                Ж.mk_composite( [c] )
+                fa = FAKE.random_node( a, avoid = outgroups )
+                fb = FAKE.random_node( b, avoid = outgroups )
+                FAKE.branch( [fa, fb], c )
+                FAKE.mk_composite( [c] )
             elif name == "4":
                 # 2 fusion points; 4 genes; 2 origins
                 # (Possibly the most difficult scenario because the result is cyclic)
@@ -267,19 +285,19 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 
                 
                 # Trees
-                outgroups = Ж.random_tree( ["A", "B", "C", "D"], **args_random_tree )
+                outgroups = FAKE.random_tree( ["A", "B", "C", "D"], **args_random_tree )
                 a, b, c, d = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d], *mutate_args )
                 __remove_outgroups( outgroups, 2, 3 )
                 
                 # Fusion points
-                fa1 = Ж.random_node( a, avoid = outgroups )
-                fb1 = Ж.random_node( b, avoid = outgroups )
-                fa2 = Ж.random_node( a, avoid = outgroups )
-                fb2 = Ж.random_node( b, avoid = outgroups )
-                Ж.branch( [fa1, fb1], c )
-                Ж.branch( [fa2, fb2], d )
-                Ж.mk_composite( [c, d] )
+                fa1 = FAKE.random_node( a, avoid = outgroups )
+                fb1 = FAKE.random_node( b, avoid = outgroups )
+                fa2 = FAKE.random_node( a, avoid = outgroups )
+                fb2 = FAKE.random_node( b, avoid = outgroups )
+                FAKE.branch( [fa1, fb1], c )
+                FAKE.branch( [fa2, fb2], d )
+                FAKE.mk_composite( [c, d] )
             
             elif name == "5":
                 # 2 fusion points; 5 genes; 3 origins
@@ -295,19 +313,19 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 #      D
                 
                 # Trees
-                outgroups = Ж.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
+                outgroups = FAKE.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
                 a, b, c, d, e = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d, e], *mutate_args )
                 __remove_outgroups( outgroups, 2, 4 )
                 
                 # Fusion points
-                fa = Ж.random_node( a, avoid = outgroups )
-                fb = Ж.random_node( b, avoid = outgroups )
-                fc = Ж.random_node( c, avoid = outgroups )
-                fd = Ж.random_node( d, avoid = outgroups )
-                Ж.branch( [fa, fb], c )
-                Ж.branch( [fc, fd], e )
-                Ж.mk_composite( [c, e] )
+                fa = FAKE.random_node( a, avoid = outgroups )
+                fb = FAKE.random_node( b, avoid = outgroups )
+                fc = FAKE.random_node( c, avoid = outgroups )
+                fd = FAKE.random_node( d, avoid = outgroups )
+                FAKE.branch( [fa, fb], c )
+                FAKE.branch( [fc, fd], e )
+                FAKE.mk_composite( [c, e] )
             elif name == "7":
                 # 3 fusion points; 7 genes; 4 origins
                 #
@@ -328,34 +346,34 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 
                 
                 # Trees
-                outgroups = Ж.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
+                outgroups = FAKE.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
                 a, b, c, d, e, f, g = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d, e, f, g], *mutate_args )
                 __remove_outgroups( outgroups, 2, 5, 6 )
                 
                 # Fusion points
-                fa = Ж.random_node( a, avoid = outgroups )
-                fb = Ж.random_node( b, avoid = outgroups )
-                fc = Ж.random_node( c, avoid = outgroups )
-                fd = Ж.random_node( d, avoid = outgroups )
-                fe = Ж.random_node( e, avoid = outgroups )
-                ff = Ж.random_node( f, avoid = outgroups )
-                Ж.branch( [fa, fb], c )
-                Ж.branch( [fd, fe], f )
-                Ж.branch( [fc, ff], g )
-                Ж.mk_composite( [c, f, g] )
+                fa = FAKE.random_node( a, avoid = outgroups )
+                fb = FAKE.random_node( b, avoid = outgroups )
+                fc = FAKE.random_node( c, avoid = outgroups )
+                fd = FAKE.random_node( d, avoid = outgroups )
+                fe = FAKE.random_node( e, avoid = outgroups )
+                ff = FAKE.random_node( f, avoid = outgroups )
+                FAKE.branch( [fa, fb], c )
+                FAKE.branch( [fd, fe], f )
+                FAKE.branch( [fc, ff], g )
+                FAKE.mk_composite( [c, f, g] )
             else:
                 raise SwitchError( "name", name )
             
-            Ж.apply()
+            FAKE.apply()
             
             file_helper.create_directory( tdir.t_folder )
             os.chdir( tdir.t_folder )
             
-            Ж.show( format = Ж.EGraphFormat.ASCII, file = "tree.txt" )
-            Ж.show( format = Ж.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
-            Ж.fasta( which = Ж.ESubset.ALL, file = "all.fasta.hidden" )
-            Ж.fasta( which = Ж.ESubset.LEAVES, file = "leaves.fasta" )
+            FAKE.show( format = FAKE.EGraphFormat.ASCII, file = "tree.txt" )
+            FAKE.show( format = FAKE.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
+            FAKE.fasta( which = FAKE.ESubset.ALL, file = "all.fasta.hidden" )
+            FAKE.fasta( which = FAKE.ESubset.LEAVES, file = "leaves.fasta" )
             
             if not no_blast:
                 blast = []
@@ -370,18 +388,26 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
             
             guid = uuid.uuid4()
             outgroups_str = ",".join( x.data.name for x in outgroups if x.parent.is_root )
-            file_helper.write_all_text( "groot.ini", "[groot_wizard]\ntolerance=50\noutgroups={}\n\n[groot_test]\nguid={}\n".format( outgroups_str, guid ) )
+            
+            file_helper.write_all_text( "groot.ini", ["[groot_wizard]",
+                                                      "tolerance=50",
+                                                      "outgroups={}".format( outgroups_str ),
+                                                      "",
+                                                      "[groot_test]",
+                                                      "name={}".format( name ),
+                                                      "size={}".format( size ),
+                                                      "guid={}".format( guid )] )
             
             path_ = path.abspath( "." )
             MCMD.print( "FINAL PATH: " + path_ )
             r.append( path_ )
         
-        except Ж.RandomChoiceError as ex:
+        except FAKE.RandomChoiceError as ex:
             MCMD.print( "FAILURE {}".format( ex ) )
             return EChanges.INFORMATION
         
         if run:
-            return run_test( tdir.t_name )
+            run_test( tdir.t_name )
     
     return EChanges.INFORMATION
 

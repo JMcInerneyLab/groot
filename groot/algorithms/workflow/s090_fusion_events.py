@@ -6,6 +6,7 @@ from typing import FrozenSet, List, Set, Iterator
 import itertools
 
 from groot.constants import EChanges
+from groot.data.model_collections import FusionCollection
 from intermake import MCMD, command
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, array_helper, string_helper
@@ -30,7 +31,7 @@ def create_fusions() -> EChanges:
     Requisites: `create_trees`
     """
     model = global_view.current_model()
-    model.get_status( constants.STASTAGES.FUSIONS_9 ).assert_create()
+    model.get_status( constants.STAGES.FUSIONS_9 ).assert_create()
     
     r: List[Fusion] = []
     
@@ -43,9 +44,7 @@ def create_fusions() -> EChanges:
         
         r.append( event )
     
-    for x in r:
-        model.fusions.add( x )
-    
+    model.fusions = FusionCollection( r )
     n = len( model.fusions )
     MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
     return EChanges.MODEL_DATA
@@ -58,7 +57,7 @@ def drop_fusions() -> EChanges:
     """
     model = global_view.current_model()
     previous = len( model.fusions )
-    model.get_status( constants.STASTAGES.FUSIONS_9 ).assert_drop()
+    model.get_status( constants.STAGES.FUSIONS_9 ).assert_drop()
     
     removed_count = 0
     

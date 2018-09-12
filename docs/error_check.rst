@@ -1,6 +1,8 @@
 ============================
 Groot automated NRFG checker
 ============================
+
+The following codes may be returned from the NRFG checker. 
     
 -----------------
 Code C1. No nodes
@@ -68,4 +70,4 @@ Code C8. Redundant clade
 
 ::
 
-    Code C8. Possible redundant clade at node «{}». This node has {} children instead of 2 or more.`
+    Code C8. Possible redundant clade at node «{}». This node has {} children instead of 2 or more.

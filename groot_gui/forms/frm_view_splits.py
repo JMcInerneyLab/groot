@@ -234,43 +234,44 @@ class FrmViewSplits( FrmBaseWithSelection ):
         accepted = 0
         rejected = 0
         
-        for split in model.splits:
-            if not self.check_filter( split ):
-                rejected += 1
-                continue
-            
-            accepted += 1
-            
-            assert isinstance( split, Split )
-            item = QTreeWidgetItem()
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "Inside" )
-            txt = string_helper.format_array( split.split.inside )
-            item.setText( col, txt )
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "Outside" )
-            txt = string_helper.format_array( split.split.outside )
-            item.setText( col, txt )
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "Components" )
-            txt = string_helper.format_array( split.components )
-            item.setText( col, txt )
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "For" )
-            txt = string_helper.format_array( split.evidence_for )
-            item.setText( col, txt )
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "Against" )
-            txt = string_helper.format_array( split.evidence_against )
-            item.setText( col, txt )
-            
-            col = qt.tree_helper.get_or_create_column( tvw, "Unused" )
-            txt = string_helper.format_array( split.evidence_unused )
-            item.setText( col, txt )
-            
-            qt.tree_helper.set_data( item, split )
-            
-            tvw.addTopLevelItem( item )
+        if model.splits:
+            for split in model.splits:
+                if not self.check_filter( split ):
+                    rejected += 1
+                    continue
+                
+                accepted += 1
+                
+                assert isinstance( split, Split )
+                item = QTreeWidgetItem()
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "Inside" )
+                txt = string_helper.format_array( split.split.inside )
+                item.setText( col, txt )
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "Outside" )
+                txt = string_helper.format_array( split.split.outside )
+                item.setText( col, txt )
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "Components" )
+                txt = string_helper.format_array( split.components )
+                item.setText( col, txt )
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "For" )
+                txt = string_helper.format_array( split.evidence_for )
+                item.setText( col, txt )
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "Against" )
+                txt = string_helper.format_array( split.evidence_against )
+                item.setText( col, txt )
+                
+                col = qt.tree_helper.get_or_create_column( tvw, "Unused" )
+                txt = string_helper.format_array( split.evidence_unused )
+                item.setText( col, txt )
+                
+                qt.tree_helper.set_data( item, split )
+                
+                tvw.addTopLevelItem( item )
         
         if rejected:
             self.ui.LBL_TITLE.setText( "{} splits, {} rejected due to filter".format( accepted, rejected ) )

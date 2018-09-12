@@ -91,7 +91,7 @@ However, if you know (or wish to pretend) that this is the case, you can specify
 letting Groot infer them.
 
 The second problematic case is the triangle (Figure 3), which is also a specific variant of Case 4 in which ``A1=A2`` and ``B1≠B2``.
-This scenario _initially_ looks like the spaceship (Figure 1).
+This scenario *initially* looks like the spaceship (Figure 1).
 However, things become apparent once Groot runs down to the NRFG stage, since the fusion will be malformed (Figure 4), with 3 origins,
 one output (``CD``) but only 2 input components (``A``, ``B``).
 At the present time, Groot doesn't remedy this situation automatically and you'll need to rectify the problem yourself.
@@ -158,9 +158,16 @@ Figure 3. The triangle
 Figure 4. The failed triangle
 
 .. ***** REFERENCES AND FURTHER RST MARKUP FOLLOW *****
-.. _using Pip: installation.md
-.. _official bitbucket page: https://bitbucket.org/mjr129/groot/issues
-.. _Intermake: https://www.bitbucket.org/mjr129/intermake
-.. _this StackOverflow post: https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+
 .. _PyInstaller: https://www.pyinstaller.org/
+
 .. _Raxml: https://sco.h-its.org/exelixis/software.html
+
+.. _using Pip: installation.md
+
+.. _official bitbucket page: https://bitbucket.org/mjr129/groot/issues
+
+.. _Intermake: https://www.bitbucket.org/mjr129/intermake
+
+.. _this StackOverflow post: https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+

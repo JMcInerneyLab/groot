@@ -35,7 +35,7 @@ class FrmFusions( FrmBase ):
         model = self.get_model()
         self.ui.TVW_MAIN.clear()
         
-        if len( model.fusions ) == 0:
+        if model.fusions is None:
             self.ui.LBL_MAIN.setText( "Fusions have not yet been generated" )
             return
         

@@ -351,6 +351,7 @@ Now you've done the tutorial, try using the GUI - it's a lot easier to check the
 
 
 .. ***** REFERENCES AND DOCUMENT MARKUP FOLLOW *****
+
 .. _`paper`: paper.md
 .. _`the installation guide`: installation.md
 .. _CLANN: http://mcinerneylab.com/software/clann/

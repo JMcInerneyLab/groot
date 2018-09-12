@@ -139,6 +139,9 @@ def _add_submenu( text: str,
     :param create_index:        Add an index page (overrides `ex`) 
     :return: 
     """
+    if elements is None:
+        elements = ()
+        
     if create_index:
         lst = sorted( elements, key = str )
         ne = []
@@ -155,6 +158,7 @@ def _add_submenu( text: str,
     sub_menu.setTitle( text )
     sub_menu.setStyleSheet( _MENU_CSS )
     count = 0
+    
     
     for element in elements:
         if element is None:

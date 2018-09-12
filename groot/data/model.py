@@ -26,13 +26,13 @@ class Model( IVisualisable ):
         self.genes = GeneCollection( self )
         self.edges = EdgeCollection( self )
         self.components = ComponentCollection( self )
-        self.fusions = FusionCollection()
-        self.splits: FrozenSet[Split] = frozenset()
-        self.consensus: FrozenSet[Split] = frozenset()
-        self.subsets: FrozenSet[Subset] = frozenset()
-        self.subgraphs: Sequence[Subgraph] = tuple()
-        self.subgraphs_sources: Sequence[int] = tuple()
-        self.subgraphs_destinations: Sequence[int] = tuple()
+        self.fusions: FusionCollection = None
+        self.splits: FrozenSet[Split] = None
+        self.consensus: FrozenSet[Split] = None
+        self.subsets: FrozenSet[Subset] = None
+        self.subgraphs: Sequence[Subgraph] = None
+        self.subgraphs_sources: Sequence[int] = None
+        self.subgraphs_destinations: Sequence[int] = None
         self.fusion_graph_unclean: FusionGraph = None
         self.fusion_graph_clean: FusionGraph = None
         self.report: Report = None
@@ -54,16 +54,18 @@ class Model( IVisualisable ):
         """
         Iterates through the model pregraphs.
         """
-        for subset in self.subsets:  # type: Subset
-            if subset.pregraphs is not None:
-                yield from subset.pregraphs
+        if self.subsets:
+            for subset in self.subsets:  # type: Subset
+                if subset.pregraphs is not None:
+                    yield from subset.pregraphs
     
     
     @property
     def fusion_points( self ) -> Iterator[Point]:
-        for event in self.fusions:
-            for formation in event.formations:
-                yield from formation.points
+        if self.fusions:
+            for event in self.fusions:
+                for formation in event.formations:
+                    yield from formation.points
     
     
     def get_status( self, stage: Stage ) -> ModelStatus:

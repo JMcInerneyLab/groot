@@ -227,7 +227,7 @@ class IntentHandlerCollection:
                                                                       groot.STAGES.DOMAINS_6,
                                                                       groot.STAGES.ALIGNMENTS_7,
                                                                       groot.STAGES.TREES_8,
-                                                                      groot.STASTAGES.FUSIONS_9,
+                                                                      groot.STAGES.FUSIONS_9,
                                                                       groot.STAGES.SPLITS_10,
                                                                       groot.STAGES.CONSENSUS_11,
                                                                       groot.STAGES.SUBSETS_12,
@@ -267,7 +267,7 @@ class IntentHandlerCollection:
                                            abv = "Fusions",
                                            action = ShowForm( FrmFusions ),
                                            icon = resources.fusion,
-                                           handles = { EIntent.VIEW: (groot.STASTAGES.FUSIONS_9,) } )
+                                           handles = { EIntent.VIEW: (groot.STAGES.FUSIONS_9,) } )
         
         from groot_gui.forms.frm_view_splits import FrmViewSplits
         self.VIEW_SPLITS = IntentHandler( abv = "Splits",
@@ -427,7 +427,7 @@ class IntentHandlerCollection:
         self.DROP_FUSIONS = IntentHandler( name = "Drop fusions",
                                            action = ShowArgs( groot.drop_fusions ),
                                            icon = resources.remove,
-                                           handles = { EIntent.DROP: groot.STASTAGES.FUSIONS_9 } )
+                                           handles = { EIntent.DROP: groot.STAGES.FUSIONS_9 } )
         
         self.DROP_CANDIDATES = IntentHandler( name = "Drop splits",
                                               action = ShowArgs( groot.drop_splits ),
@@ -474,7 +474,7 @@ class IntentHandlerCollection:
         self.SET_OUTGROUPS = IntentHandler( name = "Set outgroups",
                                             action = ShowArgs( groot.set_outgroups ),
                                             icon = resources.create,
-                                            handles = { EIntent.CREATE: (groot.STAGES.OUTGROUPS_5b,) } )
+                                            handles = { EIntent.CREATE: (groot.STAGES.OUTGROUPS_7b,) } )
         
         self.SET_GENE_NAME = IntentHandler( name = "Set gene name",
                                             action = ShowArgs( groot.set_gene_name ),

@@ -1,4 +1,4 @@
-from groot import constants
+from groot import constants, Report
 from groot.algorithms import workflow
 from groot.constants import EChanges
 from groot.data import global_view
@@ -133,6 +133,18 @@ def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -
     return EChanges.NONE
 
 
+@command()
+def print_report( report: Report, file: str = "stdout" ):
+    """
+    Prints a report.
+    
+    :param report:      What to print 
+    :param file:        Where to print to 
+    :return: 
+    """
+    with io_helper.open_write( file ) as out:
+        out.write( report.html )
+
 
 def __review( review, msg, fns, *, retry = True ):
     if not review:
@@ -163,5 +175,3 @@ def __review( review, msg, fns, *, retry = True ):
             common_commands.cmd_start_cli()
         elif switch == "abort":
             raise ValueError( "User cancelled." )
-
-

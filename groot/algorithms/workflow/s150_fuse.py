@@ -11,7 +11,8 @@ from groot.utilities import lego_graph
 __LOG = Logger( "nrfg.sew", False )
 __mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
-@command(folder = constants.F_CREATE)
+
+@command( folder = constants.F_CREATE )
 def create_fused():
     """
     Creates the NRFG (uncleaned).
@@ -24,6 +25,11 @@ def create_fused():
     
     model = global_view.current_model()
     model.get_status( STAGES.FUSE_15 ).assert_create()
+    
+    # There is a special case where there is no fusions
+    if len( model.fusions ) == 0 and len( model.components ) == 1:
+        model.fusion_graph_unclean = FusionGraph( model.components[0].tree.copy(), False )
+        return
     
     # First, we pull all of our subgraphs ("supertrees") into the nrfg
     nrfg: MGraph = MGraph()
@@ -76,8 +82,8 @@ def create_fused():
     return EChanges.MODEL_DATA
 
 
-@command(folder = constants.F_DROP)
-def drop_fused( ):
+@command( folder = constants.F_DROP )
+def drop_fused():
     """
     Removes data from the model.
     """

@@ -8,7 +8,7 @@ from groot_gui.forms.designer import frm_lego_designer
 
 import groot.data.config
 import intermake
-import groot
+from groot.utilities import AbstractAlgorithm, AlgorithmCollection
 from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.lego import InteractiveGraphicsView, ModelView, lay_colour, lay_position, lay_selection
 from groot_gui.utilities.gui_workflow import handlers, EIntent, Intent
@@ -162,7 +162,7 @@ class FrmLego( FrmBaseWithSelection ):
         self.show_intent_menu( lay_colour.apply_colour, lay_colour.colour_algorithms )
     
     
-    def show_intent_menu( self, apply_function: Callable[[ModelView, groot.AbstractAlgorithm], None], algo_collection: groot.AlgorithmCollection ) -> None:
+    def show_intent_menu( self, apply_function: Callable[[ModelView, AbstractAlgorithm], None], algo_collection: AlgorithmCollection ) -> None:
         """
         Shows a drop down menu listing the available algorithms, calling `apply_function` if the user makes a choice.
         """

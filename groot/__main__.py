@@ -1,3 +1,7 @@
+"""
+Defines Groot's entry point - `main`
+"""
+
 # noinspection PyUnresolvedReferences
 import groot
 import intermake

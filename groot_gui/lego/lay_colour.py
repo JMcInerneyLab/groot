@@ -3,14 +3,14 @@ from typing import Callable, cast
 
 from PyQt5.QtGui import QColor
 
-import groot
+from groot.utilities import AlgorithmCollection
 import mhelper_qt
 from groot_gui.lego import ColourBlock, DomainView, ModelView
 from mhelper import Sentinel, array_helper
 
 
 DAlgorithm = Callable[[DomainView], frozenset]
-colour_algorithms = groot.AlgorithmCollection( DAlgorithm, "LegoColour" )
+colour_algorithms = AlgorithmCollection( DAlgorithm, "LegoColour" )
 
 DEFAULT_COLOURS = ["#C00000", "#00C000", "#C0C000", "#0000C0", "#C000C0", "#00C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFC0"]
 """Default colours to use. After this runs out, random colours are used."""

@@ -35,43 +35,16 @@ QToolButton:pressed
 """
 
 
-class VisWrap:
-    """
-    Combines a `IntentHandler` and its `GuiActions` owner, allowing it to be executed asynchronously from the owner.
-    """
-    
-    
-    def __init__( self, owner: GuiActions, handler: IntentHandler ):
-        self.owner = owner
-        self.handler = handler
-    
-    
-    def execute( self, _: bool ) -> None:
-        self.handler.execute( self.owner.window, EIntent.DIRECT, None )
-
-
-class _RecentFileSlot:
-    def __init__( self, owner: GuiActions, file_name: str ):
-        self.owner = owner
-        self.file_name = file_name
-    
-    
-    def execute( self, _: bool ) -> None:
-        self.owner.load_file_from( self.file_name )
-
-
-class StageWrap:
-    def __init__( self, owner: GuiActions, stage: Stage ):
-        self.owner = owner
-        self.stage = stage
-    
-    
-    def execute( self, _: bool ) -> None:
-        self.owner.menu( self.stage )
-
 
 class GuiMenu:
+    """
+    Creates and manages the application's main menu bar.
+    """
+    
     def __init__( self, frm_main: QMainWindow ):
+        """
+        Creates the menu.
+        """
         from groot_gui.forms.frm_main import FrmMain
         assert isinstance( frm_main, FrmMain )
         ui = frm_main.ui
@@ -86,59 +59,59 @@ class GuiMenu:
         self.workflow_buttons = []
         self.gui_actions: GuiActions = GuiActions( self.frm_main, self.frm_main )
         
-        self.mnu_file = self.add_menu( ["File"], headline = lambda m: constants.STAGES._FILE_0.headline( m ) )
-        self.add_action( ["File", "New"], handler = vis.ACT_FILE_NEW, toolbar = ui.FRA_FILE )
-        self.add_action( ["File", "Open..."], handler = vis.VIEW_OPEN_FILE, toolbar = ui.FRA_FILE )
-        self.add_action( ["File", "Recent", "r"] )
-        self.add_action( ["File", "-"] )
-        self.add_action( ["File", "Save"], handler = vis.ACT_FILE_SAVE, toolbar = ui.FRA_FILE )
-        self.add_action( ["File", "Save &as..."], handler = vis.VIEW_SAVE_FILE )
-        self.add_action( ["File", "-"] )
-        self.add_action( ["File", "E&xit"], handler = vis.ACT_EXIT )
+        self.mnu_file = self.__add_menu( ["File"], headline = lambda m: constants.STAGES._FILE_0.headline( m ) )
+        self.__add_action( ["File", "New"], handler = vis.ACT_FILE_NEW, toolbar = ui.FRA_FILE )
+        self.__add_action( ["File", "Open..."], handler = vis.VIEW_OPEN_FILE, toolbar = ui.FRA_FILE )
+        self.__add_action( ["File", "Recent", "r"] )
+        self.__add_action( ["File", "-"] )
+        self.__add_action( ["File", "Save"], handler = vis.ACT_FILE_SAVE, toolbar = ui.FRA_FILE )
+        self.__add_action( ["File", "Save &as..."], handler = vis.VIEW_SAVE_FILE )
+        self.__add_action( ["File", "-"] )
+        self.__add_action( ["File", "E&xit"], handler = vis.ACT_EXIT )
         
         for stage in STAGES:
-            self.add_workflow( stage )
+            self.__add_workflow( stage )
         
-        self.mnu_windows = self.add_menu( ["Windows"] )
-        self.add_action( ["Windows", "&Workflow..."], handler = vis.VIEW_WORKFLOW, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "&Wizard..."], handler = vis.VIEW_WIZARD, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "&Preferences..."], handler = vis.VIEW_PREFERENCES, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "-"], toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Reports..."], handler = vis.VIEW_TEXT, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Lego..."], handler = vis.VIEW_LEGO, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Alignments..."], handler = vis.VIEW_ALIGNMENT, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Fusions..."], handler = vis.VIEW_FUSIONS, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Splits..."], handler = vis.VIEW_SPLITS, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Visualisers", "Genes..."], handler = vis.VIEW_GENES, toolbar = ui.FRA_VISUALISERS )
-        self.add_action( ["Windows", "Editors", "Trees..."], handler = vis.CREATE_TREES )
-        self.add_action( ["Windows", "Editors", "Alignment..."], handler = vis.CREATE_ALIGNMENTS )
-        self.add_action( ["Windows", "Editors", "Domains..."], handler = vis.CREATE_DOMAINS )
-        self.add_action( ["Windows", "Editors", "Subgraphs..."], handler = vis.CREATE_SUBGRAPHS )
-        self.add_action( ["Windows", "Others", "File open..."], handler = vis.VIEW_OPEN_FILE )
-        self.add_action( ["Windows", "Others", "File save..."], handler = vis.VIEW_SAVE_FILE )
-        self.add_action( ["Windows", "Others", "Startup..."], handler = vis.VIEW_STARTUP )
-        self.add_action( ["Windows", "Others", "Version..."], handler = vis.VIEW_ABOUT )
-        self.add_action( ["Windows", "Others", "Intermake..."], handler = vis.VIEW_INTERMAKE, shortcut = Qt.Key_F12 )
+        self.mnu_windows = self.__add_menu( ["Windows"] )
+        self.__add_action( ["Windows", "&Workflow..."], handler = vis.VIEW_WORKFLOW, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "&Wizard..."], handler = vis.VIEW_WIZARD, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "&Preferences..."], handler = vis.VIEW_PREFERENCES, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "-"], toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Reports..."], handler = vis.VIEW_TEXT, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Lego..."], handler = vis.VIEW_LEGO, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Alignments..."], handler = vis.VIEW_ALIGNMENT, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Fusions..."], handler = vis.VIEW_FUSIONS, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Splits..."], handler = vis.VIEW_SPLITS, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Visualisers", "Genes..."], handler = vis.VIEW_GENES, toolbar = ui.FRA_VISUALISERS )
+        self.__add_action( ["Windows", "Editors", "Trees..."], handler = vis.CREATE_TREES )
+        self.__add_action( ["Windows", "Editors", "Alignment..."], handler = vis.CREATE_ALIGNMENTS )
+        self.__add_action( ["Windows", "Editors", "Domains..."], handler = vis.CREATE_DOMAINS )
+        self.__add_action( ["Windows", "Editors", "Subgraphs..."], handler = vis.CREATE_SUBGRAPHS )
+        self.__add_action( ["Windows", "Others", "File open..."], handler = vis.VIEW_OPEN_FILE )
+        self.__add_action( ["Windows", "Others", "File save..."], handler = vis.VIEW_SAVE_FILE )
+        self.__add_action( ["Windows", "Others", "Startup..."], handler = vis.VIEW_STARTUP )
+        self.__add_action( ["Windows", "Others", "Version..."], handler = vis.VIEW_ABOUT )
+        self.__add_action( ["Windows", "Others", "Intermake..."], handler = vis.VIEW_INTERMAKE, shortcut = Qt.Key_F12 )
         
-        self.mnu_help = self.add_menu( ["Help"] )
-        self.add_action( ["Help", "&Usage..."], handler = vis.VIEW_MY_HELP )
-        self.add_action( ["Help", "&Readme (online)..."], handler = vis.VIEW_HELP )
-        self.add_action( ["Help", "&About..."], handler = vis.VIEW_ABOUT )
+        self.mnu_help = self.__add_menu( ["Help"] )
+        self.__add_action( ["Help", "&Usage..."], handler = vis.VIEW_MY_HELP )
+        self.__add_action( ["Help", "&Readme (online)..."], handler = vis.VIEW_HELP )
+        self.__add_action( ["Help", "&About..."], handler = vis.VIEW_ABOUT )
     
     
-    def add_workflow( self, stage: Stage ):
+    def __add_workflow( self, stage: Stage ):
         assert isinstance( stage, Stage ), stage
         
         path = ["Workflow", stage.name]
-        mnu = self.add_menu( path, headline = stage.headline )
+        mnu = self.__add_menu( path, headline = stage.headline )
         
-        self.add_workflow_menu( path + ["Create"], handlers().list_avail( EIntent.CREATE, stage ), icon = resources.create )
-        self.add_workflow_menu( path + ["Drop"], handlers().list_avail( EIntent.DROP, stage ), icon = resources.remove )
-        self.add_workflow_menu( path + ["View"], handlers().list_avail( EIntent.VIEW, stage ), icon = resources.view )
+        self.__add_workflow_menu( path + ["Create"], handlers().list_avail( EIntent.CREATE, stage ), icon = resources.create )
+        self.__add_workflow_menu( path + ["Drop"], handlers().list_avail( EIntent.DROP, stage ), icon = resources.remove )
+        self.__add_workflow_menu( path + ["View"], handlers().list_avail( EIntent.VIEW, stage ), icon = resources.view )
         
         self.stages[stage] = mnu
         
-        exe = StageWrap( self.gui_actions, stage )
+        exe = _ActStage( self.gui_actions, stage )
         self.keep_alive.append( exe )
         
         lay: QHBoxLayout = self.frm_main.ui.FRA_WORKFLOW.layout()
@@ -165,21 +138,21 @@ class GuiMenu:
                 button.setIcon( ResourceIcon( path ).icon() )
     
     
-    def add_workflow_menu( self, path, visualisers: Iterator[IntentHandler], icon: ResourceIcon ):
+    def __add_workflow_menu( self, path, visualisers: Iterator[IntentHandler], icon: ResourceIcon ):
         visualisers = list( visualisers )
         
         if len( visualisers ) == 0:
             return
         if len( visualisers ) == 1:
-            self.add_action( path, handler = visualisers[0], icon = icon )
+            self.__add_action( path, handler = visualisers[0], icon = icon )
         else:
-            self.add_menu( path, icon = icon )
+            self.__add_menu( path, icon = icon )
             
             for visualiser in visualisers:
-                self.add_action( path + [visualiser.name], handler = visualiser )
+                self.__add_action( path + [visualiser.name], handler = visualiser )
     
     
-    def add_action( self, texts: Sequence[str], handler: IntentHandler = None, icon: ResourceIcon = None, shortcut: int = None, toolbar: QGroupBox = None ):
+    def __add_action( self, texts: Sequence[str], handler: IntentHandler = None, icon: ResourceIcon = None, shortcut: int = None, toolbar: QGroupBox = None ):
         """
         Adds an action to the menu.
         
@@ -189,7 +162,7 @@ class GuiMenu:
         :param shortcut:        Shortcut key
         :param toolbar:         Toolbar to a shortcut button to
         """
-        menu = self.add_menu( texts[:-1] )
+        menu = self.__add_menu( texts[:-1] )
         final = texts[-1]
         
         if final == "-":
@@ -204,7 +177,7 @@ class GuiMenu:
                 lay.addWidget( fra )
             return
         elif final == "r":
-            self.add_recent( menu )
+            self.__add_recent( menu )
             return
         
         action = QAction()
@@ -217,7 +190,7 @@ class GuiMenu:
             if icon is None and handler.icon is not None:
                 action.setIcon( handler.icon.icon() )
             
-            exec_ = VisWrap( self.gui_actions, handler )
+            exec_ = _ActEnact( self.gui_actions, handler )
             action.triggered[bool].connect( exec_.execute )
             self.keep_alive.append( exec_ )
             action.TAG_visualiser = handler
@@ -248,7 +221,7 @@ class GuiMenu:
         return btn
     
     
-    def add_recent( self, menu: QMenu ):
+    def __add_recent( self, menu: QMenu ):
         if not groot.data.config.options().recent_files:
             menu.setEnabled( False )
         
@@ -259,7 +232,7 @@ class GuiMenu:
             
             action = QAction()
             action.setText( file_helper.get_filename_without_extension( item.file_name ) )
-            exec_ = _RecentFileSlot( self.gui_actions, item.file_name )
+            exec_ = _ActLoad( self.gui_actions, item.file_name )
             self.keep_alive.append( exec_ )
             action.triggered[bool].connect( exec_.execute )
             self.keep_alive.append( action )
@@ -267,7 +240,7 @@ class GuiMenu:
             menu.addAction( action )
     
     
-    def add_menu( self, texts, headline = None, icon: ResourceIcon = None ):
+    def __add_menu( self, texts, headline = None, icon: ResourceIcon = None ):
         menu_path = ""
         menu = self.menu_bar
         
@@ -347,3 +320,69 @@ class GuiMenu:
                 QApplication.instance().sendEvent( menu, re )
         
         menu.updateGeometry()
+
+
+class _ActEnact:
+    """
+    Bound to a menu item - provides an `execute` function that...
+    ...runs an action within a specific window.
+    """
+    
+    
+    def __init__( self, owner: GuiActions, handler: IntentHandler ):
+        """
+        :param owner:       Window  
+        :param handler:     Action 
+        """
+        self.owner = owner
+        self.handler = handler
+    
+    
+    def execute( self, _: bool ) -> None:
+        """
+        Executes the action in the prespecified window.
+        """
+        self.handler.execute( self.owner.window, EIntent.DIRECT, None )
+
+
+class _ActLoad:
+    """
+    Bound to a menu item - provides an `execute` function that...
+    ...open a specific file
+    """
+    def __init__( self, owner: GuiActions, file_name: str ):
+        """
+        :param owner:       Window  
+        :param file_name:   File to load 
+        """
+        self.owner = owner
+        self.file_name = file_name
+    
+    
+    def execute( self, _: bool ) -> None:
+        """
+        Executes the action (file-load) in the prespecified window.
+        """
+        self.owner.load_file_from( self.file_name )
+
+
+class _ActStage:
+    """
+    Bound to a menu item - provides an `execute` function that...
+    ...shows the menu for a specific stage.
+    """
+    
+    def __init__( self, owner: GuiActions, stage: Stage ):
+        """
+        :param owner:       Window  
+        :param stage:       Stage to show menu for 
+        """
+        self.owner = owner
+        self.stage = stage
+    
+    
+    def execute( self, _: bool ) -> None:
+        """
+        Executes the action (show-stage-menu) in the prespecified window.
+        """
+        self.owner.menu( self.stage )

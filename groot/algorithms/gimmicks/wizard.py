@@ -223,11 +223,11 @@ class Wizard:
     
     def __fn7_make_fusions( self ):
         # Make fusions
-        self.__line( STASTAGES.FUSIONS_9 )
+        self.__line( STAGES.FUSIONS_9 )
         self.__result |= workflow.s090_fusion_events.create_fusions()
         
-        if STASTAGES.FUSIONS_9 in self.pauses:
-            self.__pause( STASTAGES.FUSIONS_9, (workflow.s080_tree.print_trees, workflow.s090_fusion_events.print_fusions) )
+        if STAGES.FUSIONS_9 in self.pauses:
+            self.__pause( STAGES.FUSIONS_9, (workflow.s080_tree.print_trees, workflow.s090_fusion_events.print_fusions) )
     
     
     def __fn6_make_trees( self ):
@@ -446,7 +446,7 @@ def create_wizard( new: Optional[bool] = None,
             "d": STAGES.MINOR_5,
             "a": STAGES.ALIGNMENTS_7,
             "t": STAGES.TREES_8,
-            "f": STASTAGES.FUSIONS_9,
+            "f": STAGES.FUSIONS_9,
             "S": STAGES.SPLITS_10,
             "C": STAGES.CONSENSUS_11,
             "e": STAGES.SUBSETS_12,
@@ -500,6 +500,8 @@ def continue_wizard() -> EChanges:
     """
     if Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to continue." )
+    
+    MCMD.progress( "The wizard has been resumed." )
     
     return Wizard.get_active().step()
 

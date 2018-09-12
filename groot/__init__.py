@@ -1,23 +1,37 @@
 """
-Groot initialisation logic and API exports.
+This is Groot's main package.
+The API is exported here.
 """
 
 #
-# Meta-data
+# =============================================
+#                     GROOT                    
+# =============================================
 #
-from groot.data.model_meta import _ComponentAsFasta, _ComponentAsGraph
 
-
+#
+# ---------
+# Meta-data
+# ---------
+#
 __author__ = "Martin Rusilowicz"
 __version__ = "0.0.0.54"
 
 #
-# Initialise Groot
+# -----------------
+# Initialise Groot!
+# -----------------
 #
 from groot.application import GROOT_APP
 
 #
-# Export API
+# --------------
+# Export the API
+# --------------
+#
+
+#
+# These are all our `Model` classes: genes, graphs, etc,
 #
 from groot.data import Model, \
     Component, \
@@ -49,10 +63,19 @@ from groot.data import Model, \
     current_model, \
     options
 
-from groot.utilities import AlgorithmCollection, AbstractAlgorithm, run_subprocess
-from groot import constants
+#
+# `run_subprocess` is used from custom algorithms
+#
+from groot.utilities import run_subprocess
+
+#
+# These constants are used for various API calls
+#
 from groot.constants import STAGES, Stage, EChanges, EDomainNames, EFormat, EStartupMode, EWindowMode
 
+#
+# We now export all the @command decorated functions, as well as some other more direct helpers
+#
 from groot.algorithms.gimmicks.compare import create_comparison, compare_graphs
 from groot.algorithms.gimmicks.miscellaneous import query_quartet, composite_search_fix, print_file
 from groot.algorithms.gimmicks.status import print_status
@@ -78,9 +101,14 @@ from groot.algorithms.workflow.s150_fuse import create_fused, drop_fused
 from groot.algorithms.workflow.s160_clean import create_cleaned, drop_cleaned
 from groot.algorithms.workflow.s170_checked import create_checked, drop_checked
 
+#
+# ---------------------
+# Miscellaneous exports
+# ---------------------
+#
 
 #
-# Setup for use with Jupyter 
+# Reexport Intermake to allow use within Jupyter 
 #
 # noinspection PyUnresolvedReferences
 from intermake import run_jupyter

@@ -1,6 +1,6 @@
 """
 Sets up Intermake to run Groot.
-This is called by `groot.__init__`.
+This is called in `groot.__init__`.
 """
 import intermake
 from groot import constants
@@ -20,6 +20,9 @@ def __execute_command( result: intermake.AsyncResult ):
         model.command_history.append( "{}".format( result ) )
 
 
+#
+# Define our application
+#
 GROOT_APP = intermake.Environment( name = constants.APP_NAME,
                                    abv_name = "groot",
                                    version = "0.0.0.40" )

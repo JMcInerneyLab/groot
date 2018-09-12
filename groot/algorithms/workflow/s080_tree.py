@@ -112,7 +112,7 @@ def drop_trees( components: Optional[List[Component]] = None ) -> bool:
     count = 0
     
     for component in components:
-        if component.model.get_status( constants.STASTAGES.FUSIONS_9 ):
+        if component.model.get_status( constants.STAGES.FUSIONS_9 ):
             raise ValueError( "Refusing to drop the tree because fusions have already been recorded. Did you mean to drop the fusions first?" )
         
         if component.tree is not None:

@@ -341,28 +341,24 @@ class UserDomainCollection:
 
 
 class FusionCollection:
-    def __init__( self ):
-        self.events: List[Fusion] = []
-    
-    
-    def add( self, item: Fusion ):
-        self.events.append( item )
+    def __init__( self, items: List[Fusion] ):
+        self.__events: List[Fusion] = items
     
     
     def clear( self ):
-        self.events.clear()
+        self.__events.clear()
     
     
     def __len__( self ):
-        return len( self.events )
+        return len( self.__events )
     
     
     def __iter__( self ):
-        return iter( self.events )
+        return iter( self.__events )
     
     
     def __bool__( self ):
-        return bool( self.events )
+        return bool( self.__events )
     
     
     def __str__( self ):
@@ -370,7 +366,7 @@ class FusionCollection:
     
     
     def __repr__( self ):
-        return "{}({})".format( type( self ).__name__, repr( self.events ) )
+        return "{}({})".format( type( self ).__name__, repr( self.__events ) )
     
     
     @property

@@ -111,7 +111,7 @@ def __remove_redundant_clades( nrfg: MGraph ) -> None:
     Remove redundant clades (clades which aren't the root and have only two edges)
     """
     LOG( "Fixing redundant clades" )
-    safe = LoopDetector( nrfg.nodes.__len__() + 1, invert = True )
+    safe = LoopDetector( nrfg.nodes.__len__() + 10, invert = True )
     
     # Repeat until nothing more changes
     while safe():
@@ -143,7 +143,7 @@ def __remove_redundant_fusions( nrfg: MGraph ) -> None:
                                                                         
     """
     LOG( "Fixing redundant fusions" )
-    safe = LoopDetector( nrfg.nodes.__len__() + 1, invert = True )
+    safe = LoopDetector( nrfg.nodes.__len__() + 10, invert = True )
     
     # Repeat until nothing more changes
     while safe():

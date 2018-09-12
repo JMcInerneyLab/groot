@@ -108,7 +108,10 @@ class ModelStatus:
             required_status = self.model.get_status( required_stage )
             
             if required_status.is_not_complete:
-                raise NotReadyError( "Cannot create «{}» because the preceding stage «{}» is not complete. Perhaps you meant to complete that stage first?".format( self.stage, required_stage ) )
+                raise NotReadyError( "Cannot create «{}» because the preceding stage «{}» is not complete. "
+                                     "Perhaps you meant to complete that stage first?"
+                                     "".format( self.stage,
+                                                required_stage ) )
     
     
     @property

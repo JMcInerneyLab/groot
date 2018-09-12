@@ -1,11 +1,12 @@
 from typing import Callable, cast
 
-import groot
+from groot import data
+from groot.utilities import  AlgorithmCollection
 from groot_gui.lego import ModelView
 
 
 DAlgorithm = Callable[[ModelView], None]
-selection_algorithms = groot.AlgorithmCollection( DAlgorithm, "selection_algorithms" )
+selection_algorithms = AlgorithmCollection( DAlgorithm, "selection_algorithms" )
 
 
 def apply_select( model_view: ModelView, algorithm: selection_algorithms.Algorithm ):
@@ -13,15 +14,15 @@ def apply_select( model_view: ModelView, algorithm: selection_algorithms.Algorit
 
 
 def select_by_entity( model_view: ModelView, target: object ):
-    if isinstance( target, groot.Gene ):
-        predicate = (lambda x: cast( groot.UserDomain, x ).gene is target)
-    elif isinstance( target, groot.Domain ):
-        predicate = (lambda x: cast( groot.UserDomain, x ).has_overlap( cast( groot.Domain, target ) ))
-    elif isinstance( target, groot.Component ):
-        comp = cast( groot.Component, target )
+    if isinstance( target, data.Gene ):
+        predicate = (lambda x: cast( data.UserDomain, x ).gene is target)
+    elif isinstance( target, data.Domain ):
+        predicate = (lambda x: cast( data.UserDomain, x ).has_overlap( cast( data.Domain, target ) ))
+    elif isinstance( target, data.Component ):
+        comp = cast( data.Component, target )
         predicate = (lambda x: any( y.has_overlap( x ) for y in comp.minor_domains ))
-    elif isinstance( target, groot.Edge ):
-        edge = cast( groot.Edge, target )
+    elif isinstance( target, data.Edge ):
+        edge = cast( data.Edge, target )
         predicate = (lambda x: any( y.has_overlap( x ) for y in (edge.left, edge.right) ))
     else:
         return False

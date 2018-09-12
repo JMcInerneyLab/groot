@@ -187,7 +187,7 @@ class FrmWizard( FrmBase ):
                 tree = self.ui.CMB_TREE_METHOD.currentText(),
                 pauses = { groot.constants.STAGES.ALIGNMENTS_7 if self.ui.CHK_PAUSE_ALIGNMENTS.isChecked() else None,
                            groot.constants.STAGES.TREES_8 if self.ui.CHK_PAUSE_TREES.isChecked() else None,
-                           groot.constants.STASTAGES.FUSIONS_9 if self.ui.CHK_PAUSE_FUSIONS.isChecked() else None,
+                           groot.constants.STAGES.FUSIONS_9 if self.ui.CHK_PAUSE_FUSIONS.isChecked() else None,
                            groot.constants.STAGES.SPLITS_10 if self.ui.CHK_PAUSE_SPLITS.isChecked() else None,
                            groot.constants.STAGES.CONSENSUS_11 if self.ui.CHK_PAUSE_CONSENSUS.isChecked() else None,
                            groot.constants.STAGES.SUBSETS_12 if self.ui.CHK_PAUSE_SUBSETS.isChecked() else None,
@@ -216,7 +216,7 @@ class FrmWizard( FrmBase ):
         self.ui.CMB_TREE_METHOD.setCurrentText( w.alignment )
         self.ui.CHK_PAUSE_ALIGNMENTS.setChecked   ( groot.constants.STAGES.ALIGNMENTS_7 in w.pauses )
         self.ui.CHK_PAUSE_TREES.setChecked        ( groot.constants.STAGES.TREES_8 in w.pauses )
-        self.ui.CHK_PAUSE_FUSIONS.setChecked      ( groot.constants.STASTAGES.FUSIONS_9 in w.pauses )
+        self.ui.CHK_PAUSE_FUSIONS.setChecked      ( groot.constants.STAGES.FUSIONS_9 in w.pauses )
         self.ui.CHK_PAUSE_COMPONENTS.setChecked   ( groot.constants.STAGES.MAJOR_4 in w.pauses )
         self.ui.CHK_PAUSE_DATA.setChecked         ( groot.constants.STAGES.SEQ_AND_SIM_ps in w.pauses )
         self.ui.CHK_PAUSE_SPLITS.setChecked       ( groot.constants.STAGES.SPLITS_10 in w.pauses )
