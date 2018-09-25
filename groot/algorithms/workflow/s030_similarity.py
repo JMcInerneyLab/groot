@@ -187,7 +187,7 @@ def __import_blast_format_6( e_value_tol, file, file_title, length_tol, model, o
                 LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
                 __make_edge( model, query, subject )
     
-    print( "<verbose>Imported Blast from «{}».</verbose>".format( file_title ) )
+    pr.printx( "<verbose>Imported Blast from «{}».</verbose>".format( file_title ) )
 
 
 def __make_edge( model: Model, source: Domain, destination: Domain ) -> Edge:

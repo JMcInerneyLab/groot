@@ -6,7 +6,7 @@ Used for display, nothing to do with the model.
 from typing import Callable
 
 from groot import constants
-from intermake import Theme, command
+from intermake import Theme, command, pr
 from mhelper import ansi, string_helper
 
 from groot.data import Gene, global_view
@@ -41,7 +41,7 @@ def create_domains( algorithm: domain_algorithms.Algorithm ):
         for domain in algorithm( sequence ):
             model.user_domains.add( domain )
     
-    print( "<verbose>Domains created, there are now {} domains.</verbose>".format( len( model.user_domains ) ) )
+    pr.printx( "<verbose>Domains created, there are now {} domains.</verbose>".format( len( model.user_domains ) ) )
     
     return EChanges.DOMAINS
 

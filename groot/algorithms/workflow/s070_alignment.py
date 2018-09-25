@@ -39,7 +39,7 @@ def create_alignments( algorithm: alignment_algorithms.Algorithm, component: Opt
         component_.alignment = external_runner.run_in_temporary( algorithm, component_.model, fasta )
     
     after = sum( x.alignment is not None for x in model.components )
-    print( "<verbose>{} components aligned. {} of {} components have an alignment ({}).</verbose>".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
+    pr.printx( "<verbose>{} components aligned. {} of {} components have an alignment ({}).</verbose>".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return EChanges.COMP_DATA
 
@@ -73,7 +73,7 @@ def drop_alignment( component: Optional[List[Component]] = None ) -> EChanges:
         component_.alignment = None
         count += 1
     
-    print( "<verbose>{} alignments removed across {} components.</verbose>".format( count, len( to_do ) ) )
+    pr.printx( "<verbose>{} alignments removed across {} components.</verbose>".format( count, len( to_do ) ) )
     
     return EChanges.COMP_DATA
 

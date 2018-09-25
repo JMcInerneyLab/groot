@@ -178,7 +178,7 @@ def run_test( name: str ) -> EChanges:
     s010_file.file_save( tdir.r_model )
     
     # Done
-    print( "<verbose>The test has completed, see «{}».</verbose>".format( tdir.r_comparison ) )
+    pr.printx( "<verbose>The test has completed, see «{}».</verbose>".format( tdir.r_comparison ) )
     return EChanges.MODEL_OBJECT
 
 
@@ -230,7 +230,7 @@ def drop_tests():
     """
     for folder in TestDirectory.get_test_folder(), TestDirectory.get_results_folder():
         shutil.rmtree( folder )
-        print( "<verbose>Removed: {}</verbose>".format( folder ) )
+        pr.printx( "<verbose>Removed: {}</verbose>".format( folder ) )
 
 
 @command()

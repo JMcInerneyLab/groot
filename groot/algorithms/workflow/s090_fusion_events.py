@@ -7,7 +7,7 @@ import itertools
 
 from groot.constants import EChanges
 from groot.data.model_collections import FusionCollection
-from intermake import command
+from intermake import command, pr
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, array_helper, string_helper
 
@@ -46,7 +46,7 @@ def create_fusions() -> EChanges:
     
     model.fusions = FusionCollection( r )
     n = len( model.fusions )
-    print( "<verbose>{} {} detected</verbose>".format( n, "fusion" if n == 1 else "fusions" ) )
+    pr.printx( "<verbose>{} {} detected</verbose>".format( n, "fusion" if n == 1 else "fusions" ) )
     return EChanges.MODEL_DATA
 
 
@@ -67,7 +67,7 @@ def drop_fusions() -> EChanges:
     for component in model.components:
         s080_tree.set_tree( component, component.tree )
     
-    print( "<verbose>Removed {} fusion events and {} fusion points from the model.</verbose>".format( previous, removed_count ) )
+    pr.printx( "<verbose>Removed {} fusion events and {} fusion points from the model.</verbose>".format( previous, removed_count ) )
     return EChanges.COMP_DATA
 
 

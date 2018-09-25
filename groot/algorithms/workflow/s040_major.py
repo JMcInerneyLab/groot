@@ -125,7 +125,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
             warn( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ), UserWarning )
             break
     
-    print( "<verbose>{} components detected.</verbose>".format( len( model.components ) ) )
+    pr.printx( "<verbose>{} components detected.</verbose>".format( len( model.components ) ) )
     
     return EChanges.COMPONENTS
 
@@ -149,7 +149,7 @@ def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
         for component in components:
             model.components.remove( component )
     
-    print( "<verbose>{} components dropped</verbose>".format( previous_count - len( model.components ) ) )
+    pr.printx( "<verbose>{} components dropped</verbose>".format( previous_count - len( model.components ) ) )
     
     return EChanges.COMPONENTS
 

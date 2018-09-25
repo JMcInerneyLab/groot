@@ -22,7 +22,7 @@ def file_new() -> EChanges:
     Starts a new model
     """
     global_view.new_model()
-    print( "<verbose>New model instantiated.</verbose>" )
+    pr.printx( "<verbose>New model instantiated.</verbose>" )
     
     return EChanges.MODEL_OBJECT
 
@@ -53,7 +53,7 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROO
         io_helper.save_binary( file_name, model )
     
     model.file_name = file_name
-    print( "<verbose>Saved model to «{}»</verbose>".format( file_name ) )
+    pr.printx( "<verbose>Saved model to «{}»</verbose>".format( file_name ) )
     
     return EChanges.FILE_NAME
 
@@ -95,7 +95,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     
     global_view.set_model( model )
     groot.data.config.remember_file( file_name )
-    print( "<verbose>Loaded model: {}</verbose>".format( file_name ) )
+    pr.printx( "<verbose>Loaded model: {}</verbose>".format( file_name ) )
     
     return EChanges.MODEL_OBJECT
 
@@ -117,7 +117,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
         
         if not query:
-            print( "<verbose>Loading sample dataset «{}».</verbose>".format( file_name ) )
+            pr.printx( "<verbose>Loading sample dataset «{}».</verbose>".format( file_name ) )
         else:
             print( "Sample data: «{}».".format( file_name ) )
         

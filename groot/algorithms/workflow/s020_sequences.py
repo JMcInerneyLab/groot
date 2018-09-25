@@ -57,7 +57,7 @@ def import_genes( file_name: str ) -> EChanges:
                     idle_counter *= 2
                     idle = 0
     
-    print( "<verbose>Imported Fasta from «{}».</verbose>".format( file_name ) )
+    pr.printx( "<verbose>Imported Fasta from «{}».</verbose>".format( file_name ) )
     
     return EChanges.MODEL_ENTITIES
 
@@ -101,7 +101,7 @@ def import_gene_names( file: _T, header: bool = False ):
                 gene.display_name = name
                 tot += 1
     
-    print( "<verbose>{} genes renamed</verbose>".format( tot ) )
+    pr.printx( "<verbose>{} genes renamed</verbose>".format( tot ) )
 
 
 @command( folder = constants.F_SET )
@@ -136,7 +136,7 @@ def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
             sequence.site_array = site
             sequence.length = len( site )
         
-        print( "<verbose>Added: {} (n={})</verbose>".format( sequence, sequence.site_array.__len__() ) )
+        pr.printx( "<verbose>Added: {} (n={})</verbose>".format( sequence, sequence.site_array.__len__() ) )
     
     return EChanges.MODEL_ENTITIES
 

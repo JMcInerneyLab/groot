@@ -1,5 +1,5 @@
 from groot import constants
-from intermake import command
+from intermake import command, pr
 from mgraph import analysing
 from mhelper import ComponentFinder, Logger, LogicError, string_helper
 from typing import List
@@ -24,7 +24,7 @@ def create_pregraphs():
     
     # Special case - if no subsets just stop now
     if model.get_status( STAGES.PREGRAPHS_13 ).is_complete and len( model.subsets ) == 0:
-        print( "<verbose>No subsets - nothing to do.</verbose>" )
+        pr.printx( "<verbose>No subsets - nothing to do.</verbose>" )
         return
     
     model.get_status( STAGES.PREGRAPHS_13 ).assert_create()

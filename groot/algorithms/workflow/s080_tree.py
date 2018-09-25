@@ -71,7 +71,7 @@ def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[Lis
     
     # Show the completion message
     after = sum( x.tree is not None for x in model.components )
-    print( "<verbose>{} trees generated. {} of {} components have a tree.</verbose>".format( len( components ), after, len( model.components ) ) )
+    pr.printx( "<verbose>{} trees generated. {} of {} components have a tree.</verbose>".format( len( components ), after, len( model.components ) ) )
     return EChanges.COMP_DATA
 
 
@@ -121,7 +121,7 @@ def drop_trees( components: Optional[List[Component]] = None ) -> bool:
             component.tree_newick = None
             count += 1
     
-    print( "<verbose>{} trees removed across {} components.</verbose>".format( count, len( components ) ) )
+    pr.printx( "<verbose>{} trees removed across {} components.</verbose>".format( count, len( components ) ) )
     return EChanges.COMP_DATA
 
 
