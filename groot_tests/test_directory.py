@@ -22,15 +22,16 @@ class TestDirectory:
         self.r_summary = path.join( self.r_folder, "test_summary.ini" )
         self.r_model = path.join( self.r_folder, "session.groot" )
         self.r_alignments = path.join( self.r_folder, "alignments.fasta" )
+        self.rc_ini = path.join( self.r_folder, "input_groot.ini" )
     
     @staticmethod
     def get_test_folder():
-        return intermake.MCMD.environment.local_data.local_folder( "test_cases" )
+        return intermake.ImApplication.ACTIVE.local_data.local_folder( "test_cases" )
     
 
     @staticmethod
     def get_results_folder():
-        return intermake.MCMD.environment.local_data.local_folder( "test_cases_results" )
+        return intermake.ImApplication.ACTIVE.local_data.local_folder( "test_cases_results" )
 
 
     @staticmethod

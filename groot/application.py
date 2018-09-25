@@ -4,7 +4,6 @@ This is called in `groot.__init__`.
 """
 import intermake
 from groot import constants
-from intermake.hosts.base import ERunMode
 
 
 def __create_lego_gui_host():
@@ -23,10 +22,10 @@ def __execute_command( result: intermake.AsyncResult ):
 #
 # Define our application
 #
-GROOT_APP = intermake.Environment( name = constants.APP_NAME,
-                                   abv_name = "groot",
-                                   version = "0.0.0.40" )
-GROOT_APP.host_provider[ERunMode.GUI] = __create_lego_gui_host
+GROOT_APP = intermake.ImApplication( name = constants.APP_NAME,
+                                     abv_name = "groot",
+                                     version = "0.0.0.40" )
+GROOT_APP.host_provider[intermake.ERunMode.GUI] = __create_lego_gui_host
 GROOT_APP.after_command_hook.subscribe( __execute_command )
 
 from groot.utilities import string_coercion

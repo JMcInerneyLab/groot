@@ -1,11 +1,12 @@
 from groot import constants
-from intermake import command, MCMD, Theme
+from intermake import command, printx, pr
 
 from groot.constants import STAGES, EChanges
 from groot.data import global_view
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_EXTRA
+
 
 @command( names = ["print_status", "status"], highlight = True, folder = constants.F_PRINT )
 def print_status() -> EChanges:
@@ -14,33 +15,39 @@ def print_status() -> EChanges:
     :return: 
     """
     model = global_view.current_model()
-    r = []
     
-    r.append( Theme.HEADING + model.name + Theme.RESET + "\n" )
-    if model.file_name:
-        r.append( "File name:          {}\n".format( model.file_name ) )
-    else:
-        r.append( Theme.WARNING + "Not saved" + Theme.RESET + "\n" )
-    for stage in STAGES:
-        status = model.get_status( stage )
+    with pr.pr_section( model.name ):
+        r = []
+        r.append( "<table>" )
+        r.append( "<tr>" )
+        r.append( "<td>File name</td><td>{}</td>".format( model.file_name or "<warning>Model is not saved</warning>" ) )
+        r.append( "</tr>" )
         
-        r.append( ("{}. {}:".format( stage.index, stage.name )).ljust( 20 ) )
-        
-        if status.is_complete:
-            r.append( Theme.STATUS_YES + str( status ) + Theme.RESET )
-        else:
-            if status.is_partial:
-                r.append( Theme.STATUS_INTERMEDIATE + str( status ) + Theme.RESET )
-            else:
-                r.append( Theme.STATUS_NO + str( status ) + Theme.RESET )
+        for stage in STAGES:
+            status = model.get_status( stage )
             
-            if status.is_hot:
-                r.append( " - Consider running " + Theme.COMMAND_NAME + "create_" + MCMD.host.translate_name( stage.name ) + Theme.RESET )
+            r.append( "<tr>" )
+            r.append( "<td>{}</td>".format( ("{}. {}:".format( stage.index, stage.name )).ljust( 20 ) ) )
+            
+            if status.is_complete:
+                r.append( "<td><positive>{}</positive></td>".format( status ) )
+            else:
+                if status.is_hot:
+                    ex = " - Consider running <command>create_{}</command>".format( stage.name )
+                else:
+                    ex = ""
+                
+                if status.is_partial:
+                    r.append( "<td><neutral>{}</neutral>{}".format( status, ex ) )
+                else:
+                    r.append( "<td><negative>{}</negative>{}".format( status, ex ) )
+                
+                r.append( "</td>" )
+            
+            r.append( "</tr>" )
         
-        r.append( "\n" )
+        r.append( "</table>" )
+        
+        printx( "".join( r ) )
     
-    MCMD.print( "".join( r ) )
     return EChanges.INFORMATION
-
-def print_model_history():
-    MCMD.print("")

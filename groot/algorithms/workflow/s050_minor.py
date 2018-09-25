@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import Dict, Optional, Set, Tuple, List
 
 from groot import constants
-from intermake import MCMD, Table, command
+from intermake import Table, command
 from mhelper import Logger, array_helper, string_helper
 
 from groot.constants import STAGES, EChanges
@@ -16,7 +16,7 @@ from groot.data import Component, Edge, Model, Gene, Domain, global_view
 
 
 LOG_MINOR = Logger( "comp.minor", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_CREATE)
 def create_minor( tol: int ) -> EChanges:
@@ -242,7 +242,7 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
             
             message.add_row( comp, major_genes, minor_domains )
         
-        MCMD.print( message.to_string() )
+        print( message.to_string() )
     
     message = Table()
     
@@ -291,7 +291,7 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
             
             message.add_row( minor, comp, "AVG*{}".format( len( major_genes ) ), round( average_lengths[comp] ), round( start ), round( end ), round( end - start ) )
     
-    MCMD.print( message.to_string() )
+    print( message.to_string() )
     return EChanges.INFORMATION
 
 

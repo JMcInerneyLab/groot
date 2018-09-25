@@ -9,7 +9,7 @@ from typing import Callable, List, Optional
 import re
 
 from groot.algorithms.workflow.s020_sequences import _make_gene
-from intermake import MCMD, command
+from intermake import command
 from mhelper import EFileMode, Filename, Logger
 
 from groot import Edge, constants
@@ -19,7 +19,7 @@ from groot.utilities import AlgorithmCollection, external_runner
 
 
 LOG = Logger( "import/blast" )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 DAlgorithm = Callable[[str], str]
 """
@@ -51,8 +51,9 @@ def create_similarities( algorithm: similarity_algorithms.Algorithm, evalue: flo
     input = model.genes.to_fasta()
     
     output = external_runner.run_in_temporary( algorithm, input )
+    output = output.split( "\n" )
     
-    __import_blast_format_6( evalue, output, "untitled_blast_data", length, model, True )
+    __import_blast_format_6( evalue, output, "algorithm_output({})".format( algorithm ), length, model, True )
 
 
 @command( folder = constants.F_SET )
@@ -127,7 +128,7 @@ def print_similarities( find: str = "" ) -> EChanges:
     
     for edge in model.edges:
         if f.search( edge.left.sequence.accession ) or f.search( edge.right.sequence.accession ):
-            MCMD.print( str( edge ) )
+            print( str( edge ) )
     
     return EChanges.NONE
 
@@ -135,7 +136,7 @@ def print_similarities( find: str = "" ) -> EChanges:
 def __import_blast_format_6( e_value_tol, file, file_title, length_tol, model, obtain_only ):
     LOG( "IMPORT {} BLAST FROM '{}'", "MERGE" if obtain_only else "NEW", file_title )
     
-    for line in file:
+    for index, line in enumerate( file ):
         line = line.strip()
         
         if line and not line.startswith( "#" ) and not line.startswith( ";" ):
@@ -154,7 +155,7 @@ def __import_blast_format_6( e_value_tol, file, file_title, length_tol, model, o
             
             # Assertion
             if len( e ) != 12:
-                raise ValueError( "BLAST file '{}' should contain 12 values, but this line contains {}: {}".format( file_title, len( e ), line ) )
+                raise ValueError( "BLAST file '{}' should contain 12 values, but line #{} contains {}: {}".format( file_title, index + 1, len( e ), repr( line ) ) )
             
             query_accession = e[0]
             query_start = int( e[6] )
@@ -186,7 +187,7 @@ def __import_blast_format_6( e_value_tol, file, file_title, length_tol, model, o
                 LOG( "BLAST UPDATES AN EDGE THAT JOINS {} AND {}".format( query, subject ) )
                 __make_edge( model, query, subject )
     
-    MCMD.progress( "Imported Blast from «{}».".format( file_title ) )
+    print( "<verbose>Imported Blast from «{}».</verbose>".format( file_title ) )
 
 
 def __make_edge( model: Model, source: Domain, destination: Domain ) -> Edge:

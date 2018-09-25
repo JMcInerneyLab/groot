@@ -1,4 +1,4 @@
-from intermake import MCMD, command
+from intermake import command
 from mgraph import MGraph, MNode
 from mhelper import Logger, SwitchError, string_helper, FunctionInspector
 from typing import Callable, Iterable, Sequence, Union
@@ -11,7 +11,7 @@ from groot.utilities import AlgorithmCollection, lego_graph
 
 
 LOG = Logger( "possible_graphs", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 DAlgorithm = Callable[[Union[str, Subset]], Union[str, MGraph]]
 """
@@ -104,9 +104,9 @@ def print_supertrees() -> EChanges:
     model = global_view.current_model()
     
     for subgraph in model.subgraphs:
-        MCMD.information( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
+        print( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
     else:
-        MCMD.information( "The current model has no subgraphs." )
+        print( "The current model has no subgraphs." )
     
     return EChanges.INFORMATION
 

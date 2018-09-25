@@ -8,7 +8,7 @@ from groot.constants import EComponentGraph
 import groot.data.config
 from groot.data.model_interfaces import EPosition, IHasFasta, INamedGraph, INode
 from groot import resources as groot_resources
-from intermake.engine.environment import MENV
+from intermake.engine.environment import ImApplication
 from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable, UiHint
 from mgraph import MGraph, MSplit
 from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate, assert_type
@@ -327,7 +327,7 @@ class Gene( INode, IHasFasta, IVisualisable ):
         See class attributes for parameter descriptions.
         """
         if Gene.is_legacy_accession( accession ):
-            raise ValueError( "You have a gene with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using such names.".format( accession, MENV.name ) )
+            raise ValueError( "You have a gene with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using such names.".format( accession, ImApplication.ACTIVE.name ) )
         
         self.index: int = index
         self.accession: str = accession

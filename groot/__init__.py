@@ -15,7 +15,7 @@ The API is exported here.
 # ---------
 #
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.54"
+__version__ = "0.0.0.55"
 
 #
 # -----------------
@@ -84,7 +84,7 @@ from groot.algorithms.gimmicks.wizard import Wizard, create_wizard, drop_wizard,
 
 from groot.algorithms.workflow.s010_file import file_load, file_load_last, file_new, file_save, file_sample, file_recent
 from groot.algorithms.workflow.s020_sequences import drop_genes, set_genes, import_genes, set_gene_name, import_gene_names
-from groot.algorithms.workflow.s030_similarity import create_similarities, drop_similarities, set_similarity, import_similarities, print_similarities
+from groot.algorithms.workflow.s030_similarity import create_similarities, drop_similarities, set_similarity, import_similarities, print_similarities, similarity_algorithms
 from groot.algorithms.workflow.s040_major import create_major, drop_major, set_major, print_major
 from groot.algorithms.workflow.s050_minor import create_minor, drop_minor, print_minor
 from groot.algorithms.workflow.s055_outgroups import set_outgroups, print_outgroups

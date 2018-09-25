@@ -4,19 +4,19 @@ Components algorithms.
 The only one publicly exposed is `detect`, so start there.
 """
 from typing import List, Optional
+from warnings import warn
 
 from groot import constants
-from intermake import MCMD, Table, cli_helper, command
+from groot.constants import EChanges, STAGES
+from groot.data import Component, Edge, Gene, global_view
+from intermake import Table, command, pr
 from mhelper import ComponentFinder, Logger, string_helper
-
-from groot.constants import STAGES, EChanges
-from groot.data import Component, Gene, global_view, Edge
 
 
 LOG_MAJOR = Logger( "comp.major", False )
 LOG_MAJOR_V = Logger( "comp.major.v", False )
 LOG_GRAPH = Logger( "comp.graph", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_CREATE)
 def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
@@ -122,10 +122,10 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     for component in model.components:
         assert isinstance(component, Component)
         if len( component.major_genes ) == 1:
-            MCMD.warning( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ) )
+            warn( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ), UserWarning )
             break
     
-    MCMD.progress( "{} components detected.".format( len( model.components ) ) )
+    print( "<verbose>{} components detected.</verbose>".format( len( model.components ) ) )
     
     return EChanges.COMPONENTS
 
@@ -149,7 +149,7 @@ def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
         for component in components:
             model.components.remove( component )
     
-    MCMD.progress( "{} components dropped".format( previous_count - len( model.components ) ) )
+    print( "<verbose>{} components dropped</verbose>".format( previous_count - len( model.components ) ) )
     
     return EChanges.COMPONENTS
 
@@ -201,8 +201,8 @@ def print_major( verbose: bool = False ) -> EChanges:
     
     if verbose:
         for component in model.components:
-            MCMD.print( cli_helper.format_title( component ) )
-            MCMD.print( component.to_details() )
+            with pr.pr_section( component  ):
+                print( component.to_details() )
         
         return EChanges.INFORMATION
     
@@ -215,6 +215,6 @@ def print_major( verbose: bool = False ) -> EChanges:
     for component in model.components:
         message.add_row( component, ", ".join( x.accession for x in component.major_genes ) )
     
-    MCMD.print( message.to_string() )
+    print( message.to_string() )
     
     return EChanges.INFORMATION

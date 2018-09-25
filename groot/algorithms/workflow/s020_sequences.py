@@ -8,9 +8,9 @@ Search and Newick imports, that don't belong anywhere else.
 import warnings
 from typing import List, Optional, Set
 import re
-
+from warnings import warn
 from groot.constants import STAGES, EChanges
-from intermake import MCMD, command
+from intermake import command
 from mhelper import Logger, bio_helper, Filename
 
 from groot import Gene, Model, constants
@@ -19,7 +19,7 @@ from groot.utilities import cli_view_utils
 
 
 LOG = Logger( "import" )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 
 @command( folder = constants.F_IMPORT )
@@ -57,7 +57,7 @@ def import_genes( file_name: str ) -> EChanges:
                     idle_counter *= 2
                     idle = 0
     
-    MCMD.progress( "Imported Fasta from «{}».".format( file_name ) )
+    print( "<verbose>Imported Fasta from «{}».</verbose>".format( file_name ) )
     
     return EChanges.MODEL_ENTITIES
 
@@ -101,7 +101,7 @@ def import_gene_names( file: _T, header: bool = False ):
                 gene.display_name = name
                 tot += 1
     
-    MCMD.progress( "{} genes renamed".format( tot ) )
+    print( "<verbose>{} genes renamed</verbose>".format( tot ) )
 
 
 @command( folder = constants.F_SET )
@@ -136,7 +136,7 @@ def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
             sequence.site_array = site
             sequence.length = len( site )
         
-        MCMD.progress( "Added: {} (n={})".format( sequence, sequence.site_array.__len__() ) )
+        print( "<verbose>Added: {} (n={})</verbose>".format( sequence, sequence.site_array.__len__() ) )
     
     return EChanges.MODEL_ENTITIES
 
@@ -223,20 +223,20 @@ def print_genes( find: Optional[str] = None, targets: Optional[List[IHasFasta]] 
                 genes.append( s )
         
         if not genes:
-            MCMD.print( "No matching genes." )
+            print( "No matching genes." )
         else:
             for gene in genes:
-                MCMD.print( gene )
+                print( gene )
             
-            MCMD.print( "Found {} genes.".format( len( genes ) ) )
+            print( "Found {} genes.".format( len( genes ) ) )
         
         return EChanges.INFORMATION
     elif targets is not None:
         for target in targets:
             if isinstance( target, IHasFasta ):
-                MCMD.information( cli_view_utils.colour_fasta_ansi( target.to_fasta(), global_view.current_model().site_type ) )
+                print( cli_view_utils.colour_fasta_ansi( target.to_fasta(), global_view.current_model().site_type ) )
             else:
-                MCMD.warning( "Target «{}» does not have FASTA data.".format( target ) )
+                warn( "Target «{}» does not have FASTA data.".format( target ), UserWarning )
     
     return EChanges.INFORMATION
 

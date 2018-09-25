@@ -5,7 +5,7 @@ from typing import Optional
 import groot.data.config
 import groot.data.sample_data
 from groot.algorithms.gimmicks import wizard
-from intermake import MCMD, MENV, Theme, command, visibilities
+from intermake import ImApplication, Theme, command, visibilities, pr
 from mhelper import EFileMode, Filename, MOptional, file_helper, io_helper
 
 from groot import constants
@@ -14,7 +14,6 @@ from groot.data.model import Model
 from groot.constants import EChanges
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
 
 
 @command( names = ["file_new", "new"], folder = constants.F_FILE )
@@ -23,7 +22,7 @@ def file_new() -> EChanges:
     Starts a new model
     """
     global_view.new_model()
-    MCMD.progress( "New model instantiated." )
+    print( "<verbose>New model instantiated.</verbose>" )
     
     return EChanges.MODEL_OBJECT
 
@@ -49,12 +48,12 @@ def file_save( file_name: MOptional[Filename[EFileMode.WRITE, constants.EXT_GROO
     
     sys.setrecursionlimit( 10000 )
     
-    with MCMD.action( "Saving file to «{}»".format( file_name ) ):
+    with pr.pr_action( "Saving file to «{}»".format( file_name ) ):
         model.file_name = file_name
         io_helper.save_binary( file_name, model )
     
     model.file_name = file_name
-    MCMD.progress( "Saved model to «{}»".format( file_name ) )
+    print( "<verbose>Saved model to «{}»</verbose>".format( file_name ) )
     
     return EChanges.FILE_NAME
 
@@ -96,7 +95,7 @@ def file_load( file_name: Filename[EFileMode.READ] ) -> EChanges:
     
     global_view.set_model( model )
     groot.data.config.remember_file( file_name )
-    MCMD.progress( "Loaded model: {}".format( file_name ) )
+    print( "<verbose>Loaded model: {}</verbose>".format( file_name ) )
     
     return EChanges.MODEL_OBJECT
 
@@ -118,16 +117,16 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
         
         if not query:
-            MCMD.progress( "Loading sample dataset «{}».".format( file_name ) )
+            print( "<verbose>Loading sample dataset «{}».</verbose>".format( file_name ) )
         else:
-            MCMD.print( "Sample data: «{}».".format( file_name ) )
+            print( "Sample data: «{}».".format( file_name ) )
         
         return wizard.import_directory( file_name, filter = (wizard.EImportFilter.DATA | wizard.EImportFilter.SCRIPT) if not load else wizard.EImportFilter.DATA, query = query )
     else:
         for sample_dir in groot.data.sample_data.get_samples():
-            MCMD.print( file_helper.get_filename( sample_dir ) )
+            print( file_helper.get_filename( sample_dir ) )
         else:
-            MCMD.print( "No samples available. Please download and add sample data to `{}`.".format( groot.data.sample_data.get_sample_data_folder() ) )
+            print( "No samples available. Please download and add sample data to `{}`.".format( groot.data.sample_data.get_sample_data_folder() ) )
         
         return EChanges.NONE
 
@@ -158,7 +157,7 @@ def file_recent():
     for file in reversed( groot.data.config.options().recent_files ):
         r.append( file_helper.highlight_file_name_without_extension( file.file_name, Theme.BOLD, Theme.RESET ) )
     
-    MCMD.information( "\n".join( r ) )
+    print( "\n".join( r ) )
 
 
 def __fix_path( file_name: str ) -> str:
@@ -166,7 +165,7 @@ def __fix_path( file_name: str ) -> str:
     Adds the directory to the filename, if not specified.
     """
     if path.sep not in file_name:
-        file_name = path.join( MENV.local_data.local_folder( "sessions" ), file_name )
+        file_name = path.join( ImApplication.ACTIVE.local_data.local_folder( "sessions" ), file_name )
     
     if not file_helper.get_extension( file_name ):
         file_name += ".groot"

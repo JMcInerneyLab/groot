@@ -3,7 +3,7 @@ from os import path
 from typing import List
 
 from groot import constants
-from intermake.engine.environment import MCMD
+from intermake.engine.environment import ImApplication
 from mhelper import file_helper
 
 
@@ -32,7 +32,7 @@ def get_workspace_files() -> List[str]:
     """
     r = []
     
-    for file in os.listdir( path.join( MCMD.environment.local_data.get_workspace(), "sessions" ) ):
+    for file in os.listdir( path.join( ImApplication.ACTIVE.local_data.get_workspace(), "sessions" ) ):
         if file.lower().endswith( constants.BINARY_EXTENSION ):
             r.append( file )
     
@@ -46,7 +46,7 @@ def get_sample_data_folder( name: str = None ):
     PRIVATE
     Obtains the sample data folder
     """
-    sdf = MCMD.environment.local_data.local_folder( "sample_data" )
+    sdf = ImApplication.ACTIVE.local_data.local_folder( "sample_data" )
     
     if not name:
         return sdf

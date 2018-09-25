@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
 from groot import constants
-from intermake import MCMD, Theme, command
+from intermake import pr, Theme, command, AbstractHost
 from mhelper import io_helper, string_helper
 
 from groot.data import Component, Model, global_view
@@ -9,7 +9,7 @@ from groot.constants import EChanges
 from groot.utilities import cli_view_utils, external_runner
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 DAlgorithm = Callable[[Model, str], str]
 """A delegate for a function that takes a model and unaligned FASTA data, and produces an aligned result, in FASTA format."""
 
@@ -34,12 +34,12 @@ def create_alignments( algorithm: alignment_algorithms.Algorithm, component: Opt
     to_do = cli_view_utils.get_component_list( component )
     before = sum( x.alignment is not None for x in model.components )
     
-    for component_ in MCMD.iterate( to_do, "Aligning", text = True ):
+    for component_ in pr.pr_iterate( to_do, "Aligning" ):
         fasta = component_.get_unaligned_legacy_fasta()
         component_.alignment = external_runner.run_in_temporary( algorithm, component_.model, fasta )
     
     after = sum( x.alignment is not None for x in model.components )
-    MCMD.progress( "{} components aligned. {} of {} components have an alignment ({}).".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
+    print( "<verbose>{} components aligned. {} of {} components have an alignment ({}).</verbose>".format( len( to_do ), after, len( model.components ), string_helper.as_delta( after - before ) ) )
     
     return EChanges.COMP_DATA
 
@@ -73,7 +73,7 @@ def drop_alignment( component: Optional[List[Component]] = None ) -> EChanges:
         component_.alignment = None
         count += 1
     
-    MCMD.progress( "{} alignments removed across {} components.".format( count, len( to_do ) ) )
+    print( "<verbose>{} alignments removed across {} components.</verbose>".format( count, len( to_do ) ) )
     
     return EChanges.COMP_DATA
 
@@ -91,7 +91,7 @@ def print_alignments( component: Optional[List[Component]] = None, x = 1, n = 0,
     m = global_view.current_model()
     
     if not n:
-        n = MCMD.host.console_width - 5
+        n = AbstractHost.ACTIVE.console_width - 5
     
     r = []
     

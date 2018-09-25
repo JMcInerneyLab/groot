@@ -9,7 +9,7 @@ from groot.utilities import lego_graph
 
 
 __LOG = Logger( "nrfg.sew", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 
 @command( folder = constants.F_CREATE )

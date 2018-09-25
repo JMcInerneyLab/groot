@@ -8,7 +8,7 @@ import groot.data.sample_data
 from groot.algorithms.gimmicks import wizard, compare
 from groot.algorithms.workflow import s010_file, s080_tree, s070_alignment
 from groot_tests.test_directory import TestDirectory
-from intermake import MCMD, Theme, command, subprocess_helper
+from intermake import command, subprocess_helper, pr
 from mgraph import importing
 from mhelper import SwitchError, file_helper, io_helper, OpeningWriter
 
@@ -18,26 +18,57 @@ from groot.data import global_view, UserGraph, FixedUserGraph
 from groot.utilities import lego_graph
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_TESTS
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_TESTS
 
 
 @command()
-def list_tests() -> EChanges:
+def print_test( name: str = "" ) -> EChanges:
     """
     Lists the available test cases.
-    """
-    MCMD.print( "TESTS:" )
     
-    for file in file_helper.list_sub_dirs( TestDirectory.get_test_folder() ):
-        MCMD.print( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
+    :param name: Name of test to print. If `None` or empty all tests are printed. 
+    """
+    
+    r = []
+    
+    if name:
+        names = [name]
+    else:
+        names = [file_helper.get_filename( x ) for x in file_helper.list_sub_dirs( TestDirectory.get_test_folder() )]
+    
+    for name in pr.pr_iterate( names, "Parsing tests" ):
+        tdir = TestDirectory( name )
+        fp = name
+        
+        if not os.path.isfile( tdir.r_summary ):
+            r.append( (fp, None, None, None) )
+        else:
+            ini = io_helper.load_ini( tdir.rc_ini )
+            name = ini["groot_test"]["name"]
+            size = ini["groot_test"]["size"]
+            
+            ini = io_helper.load_ini( tdir.r_summary )
+            match = ini["quartets"]["match_quartets"].split( " " )[1].strip( "()" )
+            r.append( (fp, name, size, match) )
+    
+    with pr.pr_section( "Tests" ):
+        print( "{} {} {} {}".format( "File".ljust( 20 ), "Name".ljust( 10 ), "Size".ljust( 10 ), "Match".ljust( 10 ) ) )
+        
+        for fp, name, size, match in sorted( r, key = lambda x: str( x[1] ) ):
+            if name is None:
+                print( fp.ljust( 20 ) + " - Not run" )
+            else:
+                print( "{} {} {} {}".format( fp.ljust( 20 ), name.ljust( 10 ), size.ljust( 10 ), match.ljust( 10 ) ) )
     
     return EChanges.INFORMATION
 
 
-def print_test( name: str ) -> EChanges:
-    tdir = TestDirectory( file_helper.get_filename( name ) )
-    
-    MCMD.print( file_helper.read_all_text( tdir.t_ini ) )
+@command()
+def print_test_dir() -> EChanges:
+    """
+    Prints the test directory.
+    """
+    print( TestDirectory.get_test_folder() )
     
     return EChanges.INFORMATION
 
@@ -96,7 +127,7 @@ def run_test( name: str ) -> EChanges:
         shutil.copy( file, file_helper.format_path( file, tdir.r_folder + "/input_{N}{E}" ) )
     
     # Create settings
-    walkthrough = wizard.Wizard( new = False,
+    walkthrough = wizard.Wizard( new = True,
                                  name = tdir.r_model,
                                  imports = groot.data.sample_data.get_sample_contents( tdir.t_folder ),
                                  pauses = set(),
@@ -128,7 +159,7 @@ def run_test( name: str ) -> EChanges:
     model = global_view.current_model()
     differences = compare.compare_graphs( model.fusion_graph_clean, test_tree_file_data )
     q = differences.raw_data["quartets"]["match_quartets"]
-    MCMD.print( "match_quartets: " + q )
+    print( "match_quartets: " + q )
     
     # Write the results---
     
@@ -147,7 +178,7 @@ def run_test( name: str ) -> EChanges:
     s010_file.file_save( tdir.r_model )
     
     # Done
-    MCMD.progress( "The test has completed, see «{}».".format( tdir.r_comparison ) )
+    print( "<verbose>The test has completed, see «{}».</verbose>".format( tdir.r_comparison ) )
     return EChanges.MODEL_OBJECT
 
 
@@ -199,7 +230,7 @@ def drop_tests():
     """
     for folder in TestDirectory.get_test_folder(), TestDirectory.get_results_folder():
         shutil.rmtree( folder )
-        MCMD.progress( "Removed: {}".format( folder ) )
+        print( "<verbose>Removed: {}</verbose>".format( folder ) )
 
 
 @command()
@@ -218,7 +249,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
     """
     # noinspection PyPackageRequirements
     import faketree as FAKE
-    MCMD.print( "START" )
+    print( "START" )
     r = []
     args_random_tree = { "suffix": "1", "delimiter": "_", "size": size, "outgroup": True }
     # args_fn = "-d 0.2"
@@ -227,10 +258,10 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
     if not types:
         raise ValueError( "Missing :param:`types`." )
     
-    tdir = TestDirectory( None )
-    
     for index, name in enumerate( types ):
-        MCMD.progress( "Test {} of {}".format( index + 1, len( types ) ) )
+        tdir = TestDirectory( None )
+        
+        print( "Test {} of {}".format( index + 1, len( types ) ) )
         
         try:
             FAKE.new()
@@ -399,11 +430,11 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                                                       "guid={}".format( guid )] )
             
             path_ = path.abspath( "." )
-            MCMD.print( "FINAL PATH: " + path_ )
+            print( "FINAL PATH: " + path_ )
             r.append( path_ )
         
         except FAKE.RandomChoiceError as ex:
-            MCMD.print( "FAILURE {}".format( ex ) )
+            print( "FAILURE {}".format( ex ) )
             return EChanges.INFORMATION
         
         if run:

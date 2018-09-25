@@ -7,7 +7,7 @@ import itertools
 
 from groot.constants import EChanges
 from groot.data.model_collections import FusionCollection
-from intermake import MCMD, command
+from intermake import command
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, array_helper, string_helper
 
@@ -20,7 +20,7 @@ from groot.algorithms.workflow import s080_tree
 
 __LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 
 @command( folder = constants.F_CREATE )
@@ -46,7 +46,7 @@ def create_fusions() -> EChanges:
     
     model.fusions = FusionCollection( r )
     n = len( model.fusions )
-    MCMD.progress( "{} {} detected".format( n, "fusion" if n == 1 else "fusions" ) )
+    print( "<verbose>{} {} detected</verbose>".format( n, "fusion" if n == 1 else "fusions" ) )
     return EChanges.MODEL_DATA
 
 
@@ -67,7 +67,7 @@ def drop_fusions() -> EChanges:
     for component in model.components:
         s080_tree.set_tree( component, component.tree )
     
-    MCMD.progress( "Removed {} fusion events and {} fusion points from the model.".format( previous, removed_count ) )
+    print( "<verbose>Removed {} fusion events and {} fusion points from the model.</verbose>".format( previous, removed_count ) )
     return EChanges.COMP_DATA
 
 
@@ -99,7 +99,7 @@ def print_fusions() -> EChanges:
         
         results.append( "" )
     
-    MCMD.information( "\n".join( results ) )
+    print( "\n".join( results ) )
     
     return EChanges.INFORMATION
 

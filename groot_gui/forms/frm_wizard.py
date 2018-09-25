@@ -7,7 +7,7 @@ from groot_gui.forms.frm_base import FrmBase
 from groot_gui.forms.frm_sample_browser import FrmSampleBrowser
 from groot_gui.forms.designer import frm_wizard_designer
 from groot_gui.utilities.gui_workflow import handlers, EIntent
-from intermake.engine.environment import MENV
+from intermake.engine.environment import ImApplication
 from mhelper import array_helper, file_helper
 from mhelper_qt import exceptToGui, exqtSlot
 
@@ -243,7 +243,7 @@ class FrmWizard( FrmBase ):
         """
         Signal handler: Load wizard
         """
-        walkthroughs_: List[groot.Wizard] = MENV.local_data.store.retrieve( SETTINGS_KEY, [] )
+        walkthroughs_: List[groot.Wizard] = ImApplication.ACTIVE.local_data.store.retrieve( SETTINGS_KEY, [] )
         
         if not walkthroughs_:
             self.alert( "You don't have any saved walkthroughs." )
@@ -268,12 +268,12 @@ class FrmWizard( FrmBase ):
             self.alert( "You must name your wizard before saving it." )
             return
         
-        walkthroughs: List[groot.Wizard] = MENV.local_data.store.retrieve( SETTINGS_KEY, [] )
+        walkthroughs: List[groot.Wizard] = ImApplication.ACTIVE.local_data.store.retrieve( SETTINGS_KEY, [] )
         
         array_helper.remove_where( walkthroughs, lambda x: x.name == walkthrough.name )
         walkthroughs.append( walkthrough )
         
-        MENV.local_data.store.commit( SETTINGS_KEY )
+        ImApplication.ACTIVE.local_data.store.commit( SETTINGS_KEY )
     
     
     @exqtSlot()

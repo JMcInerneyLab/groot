@@ -187,7 +187,7 @@ class AlgorithmCollection:
         return 'AlgorithmCollection(name = "{}", count = {})'.format( self.name, len( self.algorithms ) )
 
 
-def run_subprocess( *args, collect : bool = False, **kwargs ) -> Union[str, int]:
+def run_subprocess( *args, collect: bool = False, **kwargs ) -> Union[str, int]:
     """
     Runs a subprocess as for `intermake.subprocess_helper.run_subprocess`, however stdout/stderr is sent to a file.
      

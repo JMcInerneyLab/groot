@@ -15,7 +15,7 @@ from groot.utilities import entity_to_html
 from groot_gui import LegoGuiHost
 from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.forms.frm_view_options import BROWSE_MODE
-from intermake import MENV, constants as im_constants
+from intermake import ImApplication, constants as im_constants
 from mhelper import OpeningWriter, SwitchError, file_helper, string_helper
 from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 
@@ -154,7 +154,7 @@ class FrmWebtree( FrmBaseWithSelection ):
     
     def __update_browser( self ):
         if self.is_browser:
-            file_name = path.join( MENV.local_data.local_folder( im_constants.FOLDER_TEMPORARY ), "groot_temp.html" )
+            file_name = path.join( ImApplication.ACTIVE.local_data.local_folder( im_constants.FOLDER_TEMPORARY ), "groot_temp.html" )
             file_helper.write_all_text( file_name, self.html )
             self.browser_ctrl.load( QUrl.fromLocalFile( file_name ) )  # nb. setHtml doesn't work with visjs, so we always need to use a temporary file
             self.ui.LBL_TITLE.setToolTip( self.browser_ctrl.url().toString() )

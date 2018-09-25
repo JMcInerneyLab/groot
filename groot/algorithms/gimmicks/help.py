@@ -1,5 +1,5 @@
 from groot.data import config
-from intermake import MENV, MCMD, visibilities, Theme, command
+from intermake import ImApplication, visibilities, Theme, command
 from mgraph import NodeStyle
 
 from groot.utilities import AlgorithmCollection
@@ -12,7 +12,7 @@ def cmd_groot():
     
     Also has the secondary affect of loading all the options from disk.
     """
-    MCMD.print( "I AM {}. VERSION {}.".format( MENV.name, MENV.version ) )
+    print( "I AM {}. VERSION {}.".format( ImApplication.ACTIVE.name, ImApplication.ACTIVE.version ) )
     _ = config.options()
 
 
@@ -23,7 +23,7 @@ def __print_help() -> str:
     return str( NodeStyle.replace_placeholders.__doc__ )
 
 
-MENV.help.add( "Tree node formatting", __print_help )
+ImApplication.LAST.help.add( "Tree node formatting", __print_help )
 
 
 def __algorithm_help():
@@ -46,4 +46,4 @@ def __algorithm_help():
     return "\n".join( r )
 
 
-MENV.help.add( "Algorithms", __algorithm_help )
+ImApplication.LAST.help.add( "Algorithms", __algorithm_help )

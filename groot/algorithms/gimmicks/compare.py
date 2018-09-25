@@ -2,16 +2,15 @@ import itertools
 from typing import Iterable, List, Set
 
 from groot import constants
-from intermake import MCMD, command
-from mgraph import AbstractQuartet, MNode, QuartetCollection, QuartetComparison, analysing
-from mhelper import SwitchError, ansi, array_helper, string_helper, TIniData, TIniSection
-
-from groot.data import INamedGraph, Model, Report, Gene, global_view
 from groot.constants import EChanges
+from groot.data import INamedGraph, Report, global_view
 from groot.utilities import lego_graph
+from intermake import command, pr
+from mgraph import AbstractQuartet, QuartetCollection, QuartetComparison, analysing
+from mhelper import SwitchError, TIniData, TIniSection, array_helper, string_helper
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_EXTRA
 
 
 @command( folder = constants.F_CREATE )
@@ -209,7 +208,7 @@ def __enumerate_2genes( calc_seq: Set[object],
 def __get_quartets_with_progress( graph, title ) -> QuartetCollection:
     r = []
     
-    for q in MCMD.iterate( analysing.iter_quartets( graph, lego_graph.is_sequence_node ), "Reducing '{}' to quartets".format( title ), count = analysing.get_num_quartets( graph, lego_graph.is_sequence_node ) ):
+    for q in pr.pr_iterate( analysing.iter_quartets( graph, lego_graph.is_sequence_node ), "Reducing '{}' to quartets".format( title ), count = analysing.get_num_quartets( graph, lego_graph.is_sequence_node ) ):
         r.append( q )
     
     return QuartetCollection( r )
@@ -221,42 +220,3 @@ def __append_ev( out_list: List[str],
                  ) -> None:
     for index, b_split in enumerate( the_set ):
         out_list.append( title + "_({}/{}) = {}".format( index + 1, len( the_set ), b_split.to_string() ) )
-
-
-class __NodeFilter:
-    def __init__( self, model: Model, accessions: Iterable[str] ):
-        self.sequences = [model.genes[accession] for accession in accessions]
-    
-    
-    def format( self, node: MNode ):
-        d = node.data
-        
-        if d is None:
-            t = "x"
-        else:
-            t = str( d )
-        
-        if d in self.sequences:
-            assert isinstance( d, Gene )
-            return ansi.FORE_GREEN + t + ansi.RESET
-        
-        for rel in node.relations:
-            if rel.data in self.sequences:
-                return ansi.FORE_YELLOW + t + ansi.RESET
-        
-        return ansi.FORE_RED + t + ansi.RESET
-    
-    
-    def query( self, node: MNode ):
-        if isinstance( node.data, Gene ):
-            return node.data in self.sequences
-        
-        for rel in node.relations:
-            if rel.data in self.sequences:
-                return True
-        
-        for rel in node.relations:
-            if isinstance( rel.data, Gene ) and rel.data not in self.sequences:
-                return False
-        
-        return True

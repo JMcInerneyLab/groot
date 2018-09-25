@@ -8,7 +8,7 @@ from mhelper import Logger, LoopDetector, SwitchError
 
 
 LOG = Logger( "clean", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 
 @command( folder = constants.F_CREATE )

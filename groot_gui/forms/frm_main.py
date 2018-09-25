@@ -13,8 +13,8 @@ from groot.data import global_view
 from groot_gui.forms.designer import frm_main_designer
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.utilities.gui_workflow import Intent, handlers, EIntent
-from intermake import AsyncResult
-from intermake.engine.environment import MCMD, MENV
+from intermake import AsyncResult, AbstractHost
+from intermake.engine.environment import ImApplication
 from intermake_qt import IGuiHostMainWindow, intermake_gui, resources
 
 
@@ -96,8 +96,8 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
     
     
     def update_title( self ):
-        self.setWindowTitle( MENV.name + " - " + str( MENV.root ) )
-        self.ui.LBL_FILENAME.setText( str( MENV.root ) )
+        self.setWindowTitle( ImApplication.ACTIVE.name + " - " + str( ImApplication.ACTIVE.root ) )
+        self.ui.LBL_FILENAME.setText( str( ImApplication.ACTIVE.root ) )
     
     
     def command_completed( self, result: AsyncResult ) -> None:
@@ -190,7 +190,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         from intermake_qt import FrmTreeView
         
         FrmTreeView.request( parent = self,
-                             root = MCMD.host.result_history,
+                             root = AbstractHost.ACTIVE.result_history,
                              message = "Results",
                              flat = True )
     

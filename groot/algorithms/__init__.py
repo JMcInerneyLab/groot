@@ -5,7 +5,7 @@ Groot's core logic.
 * Groot's workflow is linear, so the stages are named after the order in which they appear.
 * Note that despite this submodule's name, several algorithms are outsourced to user provided
   functions or external tools, which can be supplemented by providing a Groot extension:- see the `groot_ex` package.
-* These algorithms are able to report their progress through Intermake (`MCMD`).
+* These algorithms are able to report their progress through Intermake.
 * The `gimmicks` subpackage contains features not required for groot's core logic, but which may be useful to the user.
 """
 

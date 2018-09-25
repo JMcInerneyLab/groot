@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set, cast, Any
 
 from groot import constants
-from intermake import MCMD, command
+from intermake import command
 from mhelper import Logger, string_helper
 
 from groot.constants import STAGES, EChanges
@@ -10,7 +10,7 @@ from groot.data import INode, Fusion, Point, Gene, Subset, global_view
 
 
 __LOG = Logger( "nrfg.find", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_DROP)
 def drop_subsets():
@@ -134,6 +134,6 @@ def print_subsets() -> EChanges:
     
     for x in sorted( model.subsets, key = cast( Any, str ) ):
         assert isinstance( x, Subset )
-        MCMD.information( "{} - {} elements: {}".format( x, len( x ), string_helper.format_array( x.contents, sort = True, autorange = True ) ) )
+        print( "{} - {} elements: {}".format( x, len( x ), string_helper.format_array( x.contents, sort = True, autorange = True ) ) )
     
     return EChanges.INFORMATION

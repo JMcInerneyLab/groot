@@ -1,8 +1,8 @@
 from groot import constants
 from groot.data import INamedGraph, global_view, FixedUserGraph
-from intermake.commands.basic_command import command
+from intermake import command
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_EXTRA
 
 @command( folder=constants.F_IMPORT )
 def import_graph( graph: INamedGraph, name: str = "" ):

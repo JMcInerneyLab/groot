@@ -1,5 +1,7 @@
-from intermake import MCMD, AbstractCommand, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities, BasicCommand
-from mhelper import EFileMode, Filename, MFlags, file_helper, string_helper
+from warnings import warn
+
+from intermake import AbstractCommand, Theme, VisualisablePath, command, common_commands, console_explorer, visibilities, BasicCommand, pr, AbstractHost
+from mhelper import EFileMode, Filename, MFlags, file_helper, ManagedWith
 from typing import List, Optional, cast, Set
 
 from groot import constants
@@ -8,7 +10,7 @@ from groot.constants import EFormat, Stage, STAGES, EChanges
 from groot.data import global_view
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_EXTRA
 
 
 class EImportFilter( MFlags ):
@@ -95,24 +97,26 @@ class Wizard:
     
     def __pause( self, title: Stage, commands: tuple ) -> None:
         self.pause_reason = title
-        MCMD.progress( "Walkthrough has paused after {}{}{} due to user request.".format( Theme.BOLD, title, Theme.RESET ) )
-        MCMD.progress( "Use the following commands to review:" )
+        pr.pr_verbose( "Walkthrough has paused after {}{}{} due to user request.".format( Theme.BOLD, title, Theme.RESET ) )
+        pr.pr_verbose( "Use the following commands to review:" )
         for command in commands:
-            MCMD.progress( "* {}{}{}".format( Theme.COMMAND_NAME,
+            pr.pr_verbose( "* {}{}{}".format( Theme.COMMAND_NAME,
                                               cast( AbstractCommand, command ).display_name,
                                               Theme.RESET ) )
-        MCMD.progress( "Use the {}{}{} command to continue the wizard.".format( Theme.COMMAND_NAME,
+        pr.pr_verbose( "Use the {}{}{} command to continue the wizard.".format( Theme.COMMAND_NAME,
                                                                                 cast( AbstractCommand, continue_wizard ).display_name,
                                                                                 Theme.RESET ) )
         self.is_paused = True
     
     
-    def __line( self, title: object ):
+    def __start_line( self, title: object ):
         title = "WIZARD: " + str( title )
-        title = " ".join( title.upper() )
-        # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
-        MCMD.progress( string_helper.centre_align( " " + title + " ", MCMD.host.console_width, Theme.C.SHADE ) )
-        # MCMD.progress( Theme.C.SHADE * MENV.host.console_width )
+        pr.printx( '<section name="">'.format( title ) )
+        return ManagedWith( on_exit = self.__end_line )
+    
+    
+    def __end_line( self, _ : None ):
+        pr.printx( '</section>' )
     
     
     def get_stage_name( self ):
@@ -121,7 +125,7 @@ class Wizard:
     
     def stop( self ):
         Wizard.__active_walkthrough = None
-        MCMD.progress( "The active wizard has been deleted." )
+        pr.pr_verbose( "The active wizard has been deleted." )
     
     
     def step( self ) -> EChanges:
@@ -143,72 +147,72 @@ class Wizard:
             self.__save_model()
         
         if self.__stage == len( self.__stages ):
-            MCMD.progress( "The wizard is complete." )
+            pr.pr_verbose( "The wizard is complete." )
             self.is_completed = True
         
         return self.__result
     
     
     def __fn8_make_splits( self ):
-        self.__line( STAGES.SPLITS_10 )
-        workflow.s100_splits.create_splits()
+        with self.__start_line( STAGES.SPLITS_10 ):
+            workflow.s100_splits.create_splits()
         
         if STAGES.SPLITS_10 in self.pauses:
             self.__pause( STAGES.SPLITS_10, (workflow.s100_splits.print_splits,) )
     
     
     def __fn9_make_consensus( self ):
-        self.__line( STAGES.CONSENSUS_11 )
-        workflow.s110_consensus.create_consensus()
+        with self.__start_line( STAGES.CONSENSUS_11 ):
+            workflow.s110_consensus.create_consensus()
         
         if STAGES.CONSENSUS_11 in self.pauses:
             self.__pause( STAGES.CONSENSUS_11, (workflow.s110_consensus.print_consensus,) )
     
     
     def __fn10_make_subsets( self ):
-        self.__line( STAGES.SUBSETS_12 )
-        workflow.s120_subsets.create_subsets()
+        with self.__start_line( STAGES.SUBSETS_12 ):
+            workflow.s120_subsets.create_subsets()
         
         if STAGES.SUBSETS_12 in self.pauses:
             self.__pause( STAGES.SUBSETS_12, (workflow.s120_subsets.print_subsets,) )
     
     
     def __fn12_make_subgraphs( self ):
-        self.__line( "Subgraphs" )
-        algo = workflow.s140_supertrees.supertree_algorithms.get_algorithm( self.supertree )
-        workflow.s140_supertrees.create_supertrees( algo )
+        with self.__start_line( "Subgraphs" ):
+            algo = workflow.s140_supertrees.supertree_algorithms.get_algorithm( self.supertree )
+            workflow.s140_supertrees.create_supertrees( algo )
         
         if STAGES.SUPERTREES_14 in self.pauses:
             self.__pause( STAGES.SUPERTREES_14, (workflow.s140_supertrees.print_supertrees,) )
     
     
     def __fn11_make_pregraphs( self ):
-        self.__line( "Pregraphs" )
-        workflow.s130_pregraphs.create_pregraphs()
+        with self.__start_line( "Pregraphs" ):
+            workflow.s130_pregraphs.create_pregraphs()
         
         if STAGES.PREGRAPHS_13 in self.pauses:
             self.__pause( STAGES.PREGRAPHS_13, (workflow.s130_pregraphs.print_pregraphs,) )
     
     
     def __fn13_make_fused( self ):
-        self.__line( STAGES.FUSE_15 )
-        workflow.s150_fuse.create_fused()
+        with self.__start_line( STAGES.FUSE_15 ):
+            workflow.s150_fuse.create_fused()
         
         if STAGES.FUSE_15 in self.pauses:
             self.__pause( STAGES.FUSE_15, (workflow.s080_tree.print_trees,) )
     
     
     def __fn14_make_clean( self ):
-        self.__line( STAGES.CLEAN_16 )
-        workflow.s160_clean.create_cleaned()
+        with self.__start_line( STAGES.CLEAN_16 ):
+            workflow.s160_clean.create_cleaned()
         
         if STAGES.CLEAN_16 in self.pauses:
             self.__pause( STAGES.CLEAN_16, (workflow.s080_tree.print_trees,) )
     
     
     def __fn15_make_checks( self ):
-        self.__line( STAGES.CHECKED_17 )
-        workflow.s170_checked.create_checked()
+        with self.__start_line( STAGES.CHECKED_17 ):
+            workflow.s170_checked.create_checked()
         
         if STAGES.CHECKED_17 in self.pauses:
             self.__pause( STAGES.CHECKED_17, (workflow.s080_tree,) )
@@ -223,63 +227,62 @@ class Wizard:
     
     def __fn7_make_fusions( self ):
         # Make fusions
-        self.__line( STAGES.FUSIONS_9 )
-        self.__result |= workflow.s090_fusion_events.create_fusions()
+        with self.__start_line( STAGES.FUSIONS_9 ):
+            self.__result |= workflow.s090_fusion_events.create_fusions()
         
         if STAGES.FUSIONS_9 in self.pauses:
             self.__pause( STAGES.FUSIONS_9, (workflow.s080_tree.print_trees, workflow.s090_fusion_events.print_fusions) )
     
     
     def __fn6_make_trees( self ):
-        self.__line( STAGES.TREES_8 )
-        
-        model = global_view.current_model()
-        ogs = [model.genes[x] for x in self.outgroups]
-        
-        self.__result |= workflow.s055_outgroups.set_outgroups( ogs )
-        
-        algo = workflow.s080_tree.tree_algorithms.get_algorithm( self.tree )
-        self.__result |= workflow.s080_tree.create_trees( algo )
+        with self.__start_line( STAGES.TREES_8 ):
+            model = global_view.current_model()
+            ogs = [model.genes[x] for x in self.outgroups]
+            
+            self.__result |= workflow.s055_outgroups.set_outgroups( ogs )
+            
+            algo = workflow.s080_tree.tree_algorithms.get_algorithm( self.tree )
+            self.__result |= workflow.s080_tree.create_trees( algo )
         
         if STAGES.TREES_8 in self.pauses:
             self.__pause( STAGES.TREES_8, (workflow.s080_tree.print_trees,) )
     
     
     def __fn5_make_alignments( self ):
-        self.__line( STAGES.ALIGNMENTS_7 )
-        algo = workflow.s070_alignment.alignment_algorithms.get_algorithm( self.alignment )
-        self.__result |= workflow.s070_alignment.create_alignments( algo )
+        with self.__start_line( STAGES.ALIGNMENTS_7 ):
+            algo = workflow.s070_alignment.alignment_algorithms.get_algorithm( self.alignment )
+            self.__result |= workflow.s070_alignment.create_alignments( algo )
         
         if STAGES.ALIGNMENTS_7 in self.pauses:
             self.__pause( STAGES.ALIGNMENTS_7, (workflow.s070_alignment.print_alignments,) )
     
     
     def __fn4_make_major( self ):
-        self.__line( STAGES.MAJOR_4 )
-        self.__result |= workflow.s040_major.create_major( self.tolerance )
+        with self.__start_line( STAGES.MAJOR_4 ):
+            self.__result |= workflow.s040_major.create_major( self.tolerance )
         
         if STAGES.MAJOR_4 in self.pauses:
             self.__pause( STAGES.MAJOR_4, (workflow.s020_sequences.print_genes, workflow.s040_major.print_major) )
     
     
     def __fn4_make_minor( self ):
-        self.__line( STAGES.MINOR_5 )
-        self.__result |= workflow.s050_minor.create_minor( self.tolerance )
+        with self.__start_line( STAGES.MINOR_5 ):
+            self.__result |= workflow.s050_minor.create_minor( self.tolerance )
         
         if STAGES.MINOR_5 in self.pauses:
             self.__pause( STAGES.MINOR_5, (workflow.s020_sequences.print_genes, workflow.s050_minor.print_minor) )
     
     
     def __fn4b_make_domains( self ):
-        self.__line( STAGES.DOMAINS_6 )
-        algo = workflow.s060_userdomains.domain_algorithms.get_algorithm( "component" )
-        self.__result |= workflow.s060_userdomains.create_domains( algo )
+        with self.__start_line( STAGES.DOMAINS_6 ):
+            algo = workflow.s060_userdomains.domain_algorithms.get_algorithm( "component" )
+            self.__result |= workflow.s060_userdomains.create_domains( algo )
     
     
     def __fn3_import_data( self ):
-        self.__line( STAGES.SEQ_AND_SIM_ps )
-        for import_ in self.imports:
-            self.__result |= import_file( import_ )
+        with self.__start_line( STAGES.SEQ_AND_SIM_ps ):
+            for import_ in self.imports:
+                self.__result |= import_file( import_ )
         
         if STAGES.SEQ_AND_SIM_ps in self.pauses:
             self.__pause( STAGES.SEQ_AND_SIM_ps, (workflow.s020_sequences.print_genes,) )
@@ -287,15 +290,15 @@ class Wizard:
     
     def __save_model( self ):
         if self.save:
-            self.__line( STAGES._FILE_0 )
-            self.__result |= workflow.s010_file.file_save( self.name )
+            with self.__start_line( STAGES._FILE_0 ):
+                self.__result |= workflow.s010_file.file_save( self.name )
     
     
     def __fn1_new_model( self ):
         # Start a new model
-        self.__line( "New" )
-        if self.new:
-            self.__result |= workflow.s010_file.file_new()
+        with self.__start_line( "New" ):
+            if self.new:
+                self.__result |= workflow.s010_file.file_new()
     
     
     def make_active( self ) -> None:
@@ -304,8 +307,8 @@ class Wizard:
         This is called by the `create_wizard` command after constructing the wizard.
         """
         Wizard.__active_walkthrough = self
-        MCMD.progress( str( self ) )
-        MCMD.progress( "The wizard has been activated and is paused. Use the {}{}{} function to begin.".format(
+        pr.pr_verbose( "{}".format( str( self ) ) )
+        pr.pr_verbose( "The wizard has been activated and is paused. Use the {}{}{} function to begin.".format(
                 Theme.COMMAND_NAME,
                 BasicCommand.retrieve( continue_wizard ),
                 Theme.RESET ) )
@@ -385,20 +388,23 @@ def create_wizard( new: Optional[bool] = None,
                                 :values:`none→ask`
     """
     if new is None:
-        new = (MCMD.question( "1/14. Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] ) == "new")
+        x = pr.pr_question( "Are you starting a new model, or do you want to continue with your current data?", ["new", "continue"] )
+        new = (x == "new")
     
     if name is None:
-        name = MCMD.question( "Name your model.\nYou can specify a complete path or just a name.\nIf you don't enter a name, your won't have the option to save your file using the wizard, though you can still do so manually.", ["*"] )
+        name = pr.pr_question( "Name your model.\n"
+                         "You can specify a complete path or just a name.\n"
+                         "If you don't enter a name, your won't have the option to save your file using the wizard, though you can still do so manually." )
         
         if not name:
-            MCMD.warning( "Your file will not be saved by the wizard." )
+            warn( "Your file will not be saved by the wizard.", UserWarning )
     
     if imports is None:
         imports = []
         
         while True:
             ex = "\nEnter a blank line when you don't want to add any more files." if imports else ""
-            file_name = MCMD.question( "Enter file paths to import BLAST or FASTA files, one per line." + ex, ["*"] )
+            file_name = pr.pr_question( "Enter file paths to import BLAST or FASTA files, one per line." + ex )
             
             if file_name:
                 imports.append( file_name )
@@ -410,7 +416,7 @@ def create_wizard( new: Optional[bool] = None,
         
         while True:
             ex = "\nEnter a blank line when you don't want to add any more outgroups."
-            outgroup = MCMD.question( "Enter outgroup accessions, one per line." + ex, ["*"] )
+            outgroup = pr.pr_question( "Enter outgroup accessions, one per line." + ex )
             
             if outgroup:
                 outgroups.append( outgroup )
@@ -421,23 +427,23 @@ def create_wizard( new: Optional[bool] = None,
         success = False
         
         while not success:
-            tolerance_str = MCMD.question( "What tolerance do you want to use for the component identification?", ["*"] )
+            tolerance_str = pr.pr_question( "What tolerance do you want to use for the component identification?" )
             
             try:
                 tolerance = int( tolerance_str )
                 success = True
             except:
-                MCMD.print( "Something went wrong. Let's try that question again." )
+                pr.printx( "Something went wrong. Let's try that question again." )
                 success = False
     
     if alignment is None:
-        alignment = question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( workflow.s070_alignment.alignment_algorithms.keys ) + [""] )
+        alignment = pr.pr_question( "Which function do you want to use for the sequence alignment? Enter a blank line for the default.", list( workflow.s070_alignment.alignment_algorithms.keys ) + [""] )
     
     if tree is None:
-        tree = question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( workflow.s080_tree.tree_algorithms.keys ) + [""] )
+        tree = pr.pr_question( "Which function do you want to use for the tree generation? Enter a blank line for the default.", list( workflow.s080_tree.tree_algorithms.keys ) + [""] )
     
     if supertree is None:
-        supertree = question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( workflow.s140_supertrees.supertree_algorithms.keys ) + [""] )
+        supertree = pr.pr_question( "Which function do you want to use for the supertree generation? Enter a blank line for the default.", list( workflow.s140_supertrees.supertree_algorithms.keys ) + [""] )
     
     pauses = set()
     
@@ -458,9 +464,9 @@ def create_wizard( new: Optional[bool] = None,
     
     if pause is None:
         for k, v in map.items():
-            MCMD.information( "{} = {}".format( k, v ) )
+            pr.printx( "<key>{}</key> = <value>{}</value>".format( pr.escape( k),pr.escape( v) ) )
         
-        pause = question( "Enter pauses (as above):", options = ["*"] )
+        pause = pr.pr_question( "Enter pauses (as above):" )
     
     for c in pause:
         if c in map:
@@ -469,13 +475,13 @@ def create_wizard( new: Optional[bool] = None,
             raise ValueError( "Unknown pause command: {} in {}".format( repr( c ), repr( pause ) ) )
     
     if view is None:
-        view = question( "Do you wish the wizard to show you the final NRFG in Vis.js?" )
+        view = pr.pr_question( "Do you wish the wizard to show you the final NRFG in Vis.js?" )
     
     if save is None:
         if not name:
             save = False
         else:
-            save = question( "Save your model after each stage completes?" )
+            save = pr.pr_question( "Save your model after each stage completes?" )
     
     walkthrough = Wizard( new = new,
                           name = name,
@@ -490,7 +496,7 @@ def create_wizard( new: Optional[bool] = None,
                           supertree = supertree )
     
     walkthrough.make_active()
-    MCMD.progress( "The wizard has been created paused.\nYou can use the {} and {} commands to manage your wizard.".format( continue_wizard, drop_wizard ) )
+    pr.pr_verbose( "The wizard has been created paused.\nYou can use the {} and {} commands to manage your wizard.".format( continue_wizard, drop_wizard ) )
 
 
 @command( visibility = visibilities.ADVANCED, names = ["continue"] )
@@ -501,7 +507,7 @@ def continue_wizard() -> EChanges:
     if Wizard.get_active() is None:
         raise ValueError( "There is no active wizard to continue." )
     
-    MCMD.progress( "The wizard has been resumed." )
+    pr.pr_verbose( "The wizard has been resumed." )
     
     return Wizard.get_active().step()
 
@@ -516,10 +522,6 @@ def drop_wizard() -> EChanges:
     
     Wizard.get_active().stop()
     return EChanges.NONE
-
-
-def question( *args, **kwargs ):
-    return MCMD.question( *args, **kwargs )
 
 
 @command( folder = constants.F_CREATE )
@@ -539,7 +541,7 @@ def drop_components() -> EChanges:
     """
     count = workflow.s040_major.drop_major()
     
-    MCMD.progress( "Dropped all {} components from the model.".format( count ) )
+    pr.pr_verbose( "Dropped all {} components from the model.".format( count ) )
     
     return EChanges.COMPONENTS
 
@@ -562,8 +564,8 @@ def import_file( file_name: Filename[EFileMode.READ],
     :param file_name:               Name of file to import. 
     :param skip_bad_extensions:     When set, if the file has an extension we don't recognise, no error is raised. 
     :param filter:                  Specifies what kind of files we are allowed to import.
-    :param query:                   When set the kind of the file is printed to `MCMD` and the file is not imported. 
-    :return:                        Nothing is returned, the file data is incorporated into the model and messages are sent via `MCMD`.
+    :param query:                   When set the kind of the file is printed to `sys.stdout` and the file is not imported. 
+    :return:                        Nothing is returned, the file data is incorporated into the model and messages are sent via `sys.stdout`.
     """
     ext = file_helper.get_extension( file_name ).lower()
     
@@ -572,23 +574,23 @@ def import_file( file_name: Filename[EFileMode.READ],
             if not query:
                 return workflow.s030_similarity.import_similarities( file_name )
             else:
-                MCMD.print( "BLAST: «{}».".format( file_name ) )
+                pr.printx( "BLAST: <file>{}</file>.".format( pr.escape( file_name) ) )
                 return EChanges.INFORMATION
         elif ext in (".fasta", ".fa", ".faa"):
             if not query:
                 return workflow.s020_sequences.import_genes( file_name )
             else:
-                MCMD.print( "FASTA: «{}».".format( file_name ) )
+                pr.printx( "FASTA: <file>{}</file>.".format( pr.escape(file_name )) )
                 return EChanges.INFORMATION
     
     if filter.SCRIPT:
         if ext == ".imk":
             if not query:
-                MCMD.progress( "Run script «{}».".format( file_name ) )
+                pr.printx( "<verbose>Run script <file>{}</file>.</verbose>".format( pr.escape(file_name) ) )
                 common_commands.cmd_source( file_name )
                 return EChanges.MODEL_OBJECT
             else:
-                MCMD.print( "Script: «{}».".format( file_name ) )
+                pr.printx( "Script: <file>{}</file>.".format( pr.escape(file_name) ) )
                 return EChanges.INFORMATION
     
     if filter.MODEL:
@@ -596,7 +598,7 @@ def import_file( file_name: Filename[EFileMode.READ],
             if not query:
                 return workflow.s010_file.file_load( file_name )
             else:
-                MCMD.print( "Model: «{}».".format( file_name ) )
+                pr.printx( "Model: <file>{}</file>.".format( pr.escape(file_name) ) )
                 return EChanges.INFORMATION
     
     if skip_bad_extensions:
@@ -619,7 +621,7 @@ def import_directory( directory: str, query: bool = False, filter: EImportFilter
         if not query:
             workflow.s010_file.file_new()
         else:
-            MCMD.print( "Importing will start a new model." )
+            pr.printx( "Importing will start a new model." )
     
     model = global_view.current_model()
     contents = file_helper.list_dir( directory )
@@ -636,7 +638,7 @@ def import_directory( directory: str, query: bool = False, filter: EImportFilter
         return EChanges.NONE
     
     if reset:
-        if MCMD.host.is_cli:
+        if AbstractHost.ACTIVE.is_cli:
             console_explorer.re_cd( VisualisablePath.get_root() )
         
         return EChanges.MODEL_OBJECT

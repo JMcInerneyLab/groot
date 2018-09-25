@@ -1,5 +1,5 @@
 from groot import constants
-from intermake import MCMD, command
+from intermake import command
 from mhelper import Logger, LogicError, ansi_helper, string_helper
 from typing import Set
 
@@ -8,7 +8,7 @@ from groot.data import Split, global_view
 
 
 __LOG_EVIDENCE = Logger( "nrfg.evidence", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_CREATE)
 def create_consensus( cutoff: float = 0.5 ) -> EChanges:
@@ -120,6 +120,6 @@ def print_consensus() -> EChanges:
     model = global_view.current_model()
     
     for x in model.consensus:
-        MCMD.information( str( x ) )
+        print( str( x ) )
     
     return EChanges.INFORMATION

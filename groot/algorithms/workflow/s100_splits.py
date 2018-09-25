@@ -1,5 +1,5 @@
 from groot import Component, constants
-from intermake import MCMD, command
+from intermake import command
 from mgraph import MGraph, MSplit, exporting
 from mhelper import Logger
 from typing import Dict, Optional
@@ -10,7 +10,7 @@ from groot.utilities import lego_graph
 
 
 __LOG_SPLITS = Logger( "nrfg.splits", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_CREATE)
 def create_splits(  ):
@@ -104,9 +104,9 @@ def print_splits( component: Optional[Component] = None ) -> EChanges:
     
     if component:
         for x in component.splits:
-            MCMD.information( str( x ) )
+            print( str( x ) )
     else:
         for x in model.splits:
-            MCMD.information( str( x ) )
+            print( str( x ) )
     
     return EChanges.INFORMATION

@@ -1,10 +1,8 @@
 from groot import constants, Report
-from groot.algorithms import workflow
 from groot.constants import EChanges
-from groot.data import global_view
 from groot.data.model_interfaces import ESiteType, INamedGraph
 from groot.utilities import cli_view_utils
-from intermake import MCMD, command, common_commands, visibilities
+from intermake import command, visibilities, pr
 from mgraph import Quartet, analysing
 from mhelper import EFileMode, Filename, bio_helper, file_helper, io_helper
 
@@ -12,7 +10,7 @@ from mhelper import EFileMode, Filename, bio_helper, file_helper, io_helper
 _VIS = visibilities.GUI & visibilities.ADVANCED
 
 __EXT_FASTA = ".fasta"
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME_EXTRA
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_EXTRA
 
 
 @command( visibility = visibilities.ADVANCED )
@@ -43,15 +41,15 @@ def query_quartet( graph: INamedGraph, a: str, b: str, c: str, d: str ):
         r1t = "{}".format( r1 ).ljust( 10 )
         r2t = "{}".format( r2 ).ljust( 10 )
         
-        MCMD.print( str( q ) + ":" )
-        MCMD.print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l1t, YYYYYYYY = r1t ) )
-        MCMD.print( r"              \        /          " )
-        MCMD.print( r"               --------           " )
-        MCMD.print( r"              /        \          " )
-        MCMD.print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l2t, YYYYYYYY = r2t ) )
+        print( str( q ) + ":" )
+        print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l1t, YYYYYYYY = r1t ) )
+        print( r"              \        /          " )
+        print( r"               --------           " )
+        print( r"              /        \          " )
+        print( r"    {XXXXXXXX}          {YYYYYYYY}".format( XXXXXXXX = l2t, YYYYYYYY = r2t ) )
     else:
-        MCMD.print( str( q ) )
-        MCMD.print( r"    (unresolved)" )
+        print( str( q ) )
+        print( r"    (unresolved)" )
 
 
 # noinspection SpellCheckingInspection
@@ -76,7 +74,7 @@ def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFile
     
     lengths = { }
     
-    with MCMD.action( "Reading FASTA" ) as action:
+    with pr.pr_action( "Reading FASTA" ) as action:
         for accession, sequence in bio_helper.parse_fasta( file = fasta ):
             if " " in accession:
                 accession = accession.split( " ", 1 )[0]
@@ -84,11 +82,11 @@ def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFile
             lengths[accession] = len( sequence )
             action.increment()
     
-    MCMD.progress( "{} accessions".format( len( lengths ) ) )
+    pr.pr_verbose( "{} accessions".format( len( lengths ) ) )
     count = 0
     
     with io_helper.open_write( output ) as file_out:
-        with MCMD.action( "Processing" ) as action:
+        with pr.pr_action( "Processing" ) as action:
             with open( blast, "r" ) as file_in:
                 for row in file_in:
                     count += 1
@@ -117,7 +115,7 @@ def composite_search_fix( blast: Filename[EFileMode.READ], fasta: Filename[EFile
                     file_out.write( "\t".join( [qseqid, sseqid, evalue, pident, bitscore, qstart, qend, qlen, sstart, send, slen] ) )
                     file_out.write( "\n" )
     
-    MCMD.progress( "{} BLASTs".format( count ) )
+    pr.pr_verbose( "{} BLASTs".format( count ) )
 
 
 @command( visibility = visibilities.ADVANCED, folder = constants.F_PRINT )
@@ -128,7 +126,7 @@ def print_file( type: ESiteType, file: Filename[EFileMode.READ, __EXT_FASTA] ) -
     :param file: Path to FASTA file to display. 
     """
     text = file_helper.read_all_text( file )
-    MCMD.information( cli_view_utils.colour_fasta_ansi( text, type ) )
+    pr.pr_information( cli_view_utils.colour_fasta_ansi( text, type ) )
     
     return EChanges.NONE
 
@@ -146,32 +144,3 @@ def print_report( report: Report, file: str = "stdout" ):
         out.write( report.html )
 
 
-def __review( review, msg, fns, *, retry = True ):
-    if not review:
-        return
-    
-    MCMD.question( msg + ". Continue to show the results.", ["continue"] )
-    
-    for fn in fns:
-        fn()
-    
-    while True:
-        if retry:
-            msg = "Please review the results.\n* continue = continue the wizard\n* retry = retry this step\n* pause = Pause the wizard to inspect your data."
-            opts = ["continue", "retry", "pause", "abort"]
-        else:
-            msg = "Please review the results.\n* continue = continue the wizard\n* pause = Pause the wizard to inspect your data."
-            opts = ["continue", "pause", "abort"]
-        
-        switch = MCMD.question( msg, opts, default = "continue" )
-        
-        if switch == "continue":
-            if global_view.current_model().file_name:
-                workflow.s010_file.file_save()
-            return True
-        elif switch == "retry":
-            return False
-        elif switch == "pause":
-            common_commands.cmd_start_cli()
-        elif switch == "abort":
-            raise ValueError( "User cancelled." )

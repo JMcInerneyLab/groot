@@ -6,7 +6,8 @@ from groot.data.model_collections import ComponentCollection, EdgeCollection, Fu
 from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset, Gene, Formation
 from groot.data.model_interfaces import ESiteType
 from groot.data.model_meta import ModelStatus
-from intermake.engine.environment import IVisualisable, MCMD, UiInfo
+from intermake import IVisualisable, UiInfo, ImApplication, AbstractHost
+
 from mhelper import file_helper as FileHelper, string_helper, NOT_PROVIDED
 
 
@@ -99,8 +100,8 @@ class Model( IVisualisable ):
                         "subgraphs"             : self.subgraphs,
                         "subgraphs_sources"     : self.subgraphs_sources,
                         "subgraphs_destinations": self.subgraphs_destinations,
-                        "results"               : MCMD.host.result_history,
-                        "commands"              : MCMD.environment.commands.get_root_folder() }
+                        "results"               : AbstractHost.ACTIVE.result_history,
+                        "commands"              : ImApplication.ACTIVE.commands.get_root_folder() }
     
     
     def __str__( self ):
@@ -163,7 +164,10 @@ class Model( IVisualisable ):
     def iter_graphs( self ):
         yield from (x.named_tree for x in self.components if x.tree is not None)
         yield from (x.named_tree_unrooted for x in self.components if x.tree_unrooted is not None)
-        yield from self.subgraphs
+        
+        if self.subgraphs:
+            yield from self.subgraphs
+            
         if self.fusion_graph_unclean:
             yield self.fusion_graph_unclean
         if self.fusion_graph_clean:

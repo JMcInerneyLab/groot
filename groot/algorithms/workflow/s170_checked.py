@@ -10,7 +10,7 @@ from groot.utilities import lego_graph
 _TABLE = '<table border=1 style="border-collapse: collapse;">'
 _END_TABLE = "</table>"
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_CREATE)
 def create_checked(  ):

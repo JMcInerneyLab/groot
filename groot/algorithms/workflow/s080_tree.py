@@ -1,6 +1,6 @@
-from intermake import MCMD, command
+from intermake import pr, command
 from mgraph import MGraph
-from mhelper import Filename, MOptional, SwitchError, io_helper, string_helper
+from mhelper import Filename, MOptional, SwitchError, io_helper
 from typing import Callable, List, Optional
 
 from groot import constants
@@ -9,7 +9,7 @@ from groot.data import EPosition, ESiteType, INamedGraph, Component, Model, Gene
 from groot.utilities import AlgorithmCollection, cli_view_utils, external_runner, graph_viewing, lego_graph
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 DAlgorithm = Callable[[Model, str], str]
 """A delegate for a function that takes a model and aligned FASTA data, and produces a tree, in Newick format."""
@@ -48,7 +48,7 @@ def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[Lis
     assert all( x.tree is None for x in components ), "Cannot generate the tree because the tree has already been generated."
     
     # Iterate the components
-    for component in MCMD.iterate( components, "Generating trees", text = True ):
+    for component in pr.pr_iterate( components, "Generating trees" ):
         # Handle the edge cases for a tree of three or less
         num_genes = len( component.minor_genes )
         if num_genes <= 3:
@@ -71,7 +71,7 @@ def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[Lis
     
     # Show the completion message
     after = sum( x.tree is not None for x in model.components )
-    MCMD.progress( "{} trees generated. {} of {} components have a tree.".format( len( components ), after, len( model.components ) ) )
+    print( "<verbose>{} trees generated. {} of {} components have a tree.</verbose>".format( len( components ), after, len( model.components ) ) )
     return EChanges.COMP_DATA
 
 
@@ -121,7 +121,7 @@ def drop_trees( components: Optional[List[Component]] = None ) -> bool:
             component.tree_newick = None
             count += 1
     
-    MCMD.progress( "{} trees removed across {} components.".format( count, len( components ) ) )
+    print( "<verbose>{} trees removed across {} components.</verbose>".format( count, len( components ) ) )
     return EChanges.COMP_DATA
 
 
@@ -143,14 +143,14 @@ def print_trees( graph: Optional[INamedGraph] = None,
     model = global_view.current_model()
     
     if graph is None and file is None and format == EFormat.ASCII and fnode is None:
-        MCMD.print( "Available graphs:" )
+        print( "Available graphs:" )
         is_any = False
         for named_graph in model.iter_graphs():
             is_any = True
-            MCMD.print( type( named_graph ).__name__.ljust( 20 ) + named_graph.name )
+            print( type( named_graph ).__name__.ljust( 20 ) + named_graph.name )
         if not is_any:
-            MCMD.print( "(None available)" )
-        MCMD.print( "(arbitrary)".ljust( 20 ) + "(see `format_help`)" )
+            print( "(None available)" )
+        print( "(arbitrary)".ljust( 20 ) + "(see `format_help`)" )
         return EChanges.INFORMATION
     
     if graph is None:

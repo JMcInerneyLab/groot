@@ -1,11 +1,11 @@
 from typing import List, Optional
-from intermake import MCMD, command
+from intermake import command
 
 from groot import Gene, constants
 from groot.data import EPosition, global_view
 from groot.constants import EChanges
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 @command(folder = constants.F_SET)
 def set_outgroups( genes: List[Gene], position: Optional[bool] = None ) -> EChanges:
@@ -42,4 +42,4 @@ def print_outgroups():
     
     for gene in model.genes:
         if gene.position != EPosition.NONE:
-            MCMD.print( str( gene ) )
+            print( str( gene ) )

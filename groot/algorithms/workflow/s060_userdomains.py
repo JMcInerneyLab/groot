@@ -6,7 +6,7 @@ Used for display, nothing to do with the model.
 from typing import Callable
 
 from groot import constants
-from intermake import MCMD, Theme, command
+from intermake import Theme, command
 from mhelper import ansi, string_helper
 
 from groot.data import Gene, global_view
@@ -15,7 +15,7 @@ from groot.utilities import cli_view_utils
 from groot.utilities.extendable_algorithm import AlgorithmCollection
 
 
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 DAlgorithm = Callable[[Gene], str]
 """A delegate for a function that takes a sequence and an arbitrary parameter, and produces an list of domains."""
 
@@ -41,7 +41,7 @@ def create_domains( algorithm: domain_algorithms.Algorithm ):
         for domain in algorithm( sequence ):
             model.user_domains.add( domain )
     
-    MCMD.progress( "Domains created, there are now {} domains.".format( len( model.user_domains ) ) )
+    print( "<verbose>Domains created, there are now {} domains.</verbose>".format( len( model.user_domains ) ) )
     
     return EChanges.DOMAINS
 
@@ -110,7 +110,7 @@ def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
         
         r.append( "\n" )
     
-    MCMD.information( "".join( r ) )
+    print( "".join( r ) )
     return EChanges.INFORMATION
 
 

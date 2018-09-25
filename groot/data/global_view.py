@@ -1,4 +1,4 @@
-from intermake import MCMD, ConsoleHost, VisualisablePath
+from intermake import AbstractHost, ConsoleHost, VisualisablePath
 from mhelper import exception_helper
 from groot.data.model import Model
 
@@ -21,8 +21,8 @@ def set_model( model: Model ):
     __model = model
     GROOT_APP.root = model
     
-    if isinstance( MCMD.host, ConsoleHost ):
-        MCMD.host.browser_path = VisualisablePath.get_root()
+    if isinstance( AbstractHost.ACTIVE, ConsoleHost ):
+        AbstractHost.ACTIVE.browser_path = VisualisablePath.get_root()
     
     return __model
 

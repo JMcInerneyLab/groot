@@ -1,16 +1,16 @@
 from groot import constants
-from intermake import MCMD, command
+from intermake import command
 from mgraph import analysing
 from mhelper import ComponentFinder, Logger, LogicError, string_helper
 from typing import List
 
 from groot.constants import STAGES, EChanges
-from groot.data import INode, Pregraph, Subset, global_view, NotReadyError
+from groot.data import INode, Pregraph, Subset, global_view
 from groot.utilities import lego_graph
 
 
 LOG = Logger( "pregraphs", False )
-__mcmd_folder_name__ = constants.MCMD_FOLDER_NAME
+__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME
 
 
 @command( folder = constants.F_CREATE )
@@ -24,7 +24,7 @@ def create_pregraphs():
     
     # Special case - if no subsets just stop now
     if model.get_status( STAGES.PREGRAPHS_13 ).is_complete and len( model.subsets ) == 0:
-        MCMD.progress( "No subsets - nothing to do." )
+        print( "<verbose>No subsets - nothing to do.</verbose>" )
         return
     
     model.get_status( STAGES.PREGRAPHS_13 ).assert_create()
@@ -59,9 +59,9 @@ def print_pregraphs() -> EChanges:
     model = global_view.current_model()
     
     for subgraph in model.iter_pregraphs():
-        MCMD.information( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
+        print( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
     else:
-        MCMD.information( "The current model has no subgraphs." )
+        print( "The current model has no subgraphs." )
     
     return EChanges.INFORMATION
 

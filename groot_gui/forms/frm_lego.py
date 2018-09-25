@@ -13,7 +13,6 @@ from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.lego import InteractiveGraphicsView, ModelView, lay_colour, lay_position, lay_selection
 from groot_gui.utilities.gui_workflow import handlers, EIntent, Intent
 from groot_gui.utilities.selection import show_selection_menu
-from intermake.engine.environment import MCMD
 from mhelper import array_helper, FunctionInspector, ignore
 import mhelper_qt as qt
 
@@ -171,7 +170,7 @@ class FrmLego( FrmBaseWithSelection ):
         
         for key, value in algo_collection.items():
             act = QAction()
-            act.setText( MCMD.host.translate_name( key ) )
+            act.setText( intermake.AbstractHost.ACTIVE.translate_name( key ) )
             act.setToolTip( value.__doc__ )
             map[act] = key
             menu.addAction( act )
