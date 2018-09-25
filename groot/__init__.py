@@ -15,7 +15,7 @@ The API is exported here.
 # ---------
 #
 __author__ = "Martin Rusilowicz"
-__version__ = "0.0.0.55"
+__version__ = "0.0.0.56"
 
 #
 # -----------------
