@@ -1,72 +1,126 @@
-===============
-Extending Groot
-===============
+================================================================================
+                                Extending Groot                                 
+================================================================================
 
---------------------------
-Creating extension modules
---------------------------
+This tutorial shows you how to incorporate your own extensions into Groot.
 
-You can incorporate your own extensions into Groot.
+.. note::
 
-Algorithms should be written into a Python package or module.
+    * *Algorithms* control how Groot performs a *particular operation*
+        * The ``groot_ex`` package contains the default set of *algorithms*.
+    * *Commands* control what *operations are available*
+        * The ``groot.commands`` package contains the default set of *commands*
+     
+    You can use the code from these packages as templates for your own extensions!
 
-Inside your modules, register Groot algorithms using the ``@xyz.register`` decorators:::
+.. _`Creating algorithms`:
 
-    from groot import tree_algorithms
+--------------------------------------------------------------------------------
+                              Creating algorithms                               
+--------------------------------------------------------------------------------
+
+Algorithms form the collection of options the user has when, for instance,
+calculating the similarity matrix. For instance the following command::
+
+    groot create_similarities blastp
     
-    @tree_algorithms.register()
-    def my_algorithm( . . . )
-        . . .
-
-The ``groot_ex`` package contains the default set of algorithms, you can use this as a template for your own.
-
-Commands can also be added to Groot's CLI through Intermake:::
-
-    from intermake import command
+Specifies use of the ``blastp`` algorithm to create the similarity matrix.
     
-    @command()
-    def my_command( . . . ):
-        . . .
+Your own algorithms should be written into a Python package.
 
-The Groot core commands can be found in the main ``groot`` package, inside the ``extensions`` subfolder.
-See the Intermake documentation for more details.
+For this tutorial, we'll add the complementary ``blastn`` algorithm to Groot.
 
------------------------
-Registering the modules
------------------------
+Start by creating the basic package structure::
 
-Once created, you need to register your package with Groot.
-From the BASH command line:::
+    mkdir my_extension
+    cd my_extension
+    mkdir my_extension
 
-    groot import my_algorithms +persist
+Now create your package script ``__init__.py`` using your favourite editor, :t:`vim`::
 
-This says:
+    vim __init__.py
 
-* Start ``groot``, ``import`` the module ``my_algorithms`` and ``+persist`` this setting for the next time I start Groot.
+Add the following to the file::
 
-
--------------------------
-Modifying the source code
--------------------------
-
-The Gʀᴏᴏᴛ source code is fully documented inline.
-
-It is arranged into a simple MVC-like architecture:
-
-* The model:
-    * The dynamic model (`data`):
-        * Sequences
-        * Subsequences
-        * Edges
-        * Components
-        * etc. 
-    * The static model (`algorithms/`):
-        * Tree algorithms
-        * Alignment algorithms
-        * Supertree algorithms
-        * etc. 
-* The controller (`extensions`)
-* The view:
-    * CLI (Iɴᴛᴇʀᴍᴀᴋᴇ library)
-    * GUI (`frontends/gui`)
+    import groot
+    import mhelper
     
+    @groot.similarity_algorithms.register( "blastn" )
+    def blastp( fasta: str ) -> str:
+        file_helper.write_all_text( "fasta.fasta", fasta )
+        groot.subprocess_helper.run_subprocess( ["blastn", "-query", "fasta.fasta", "-subject", "fasta.fasta", "-outfmt", "6", "-out", "blast.blast"] )
+        return file_helper.read_all_text( "blast.blast" )
+
+Exit :t:`vim`, remembering to save your file.
+Navigate back to the main folder and create the ``setup.py`` for your package::
+
+    cd ..
+    vim setup.py
+
+Specify the following::
+
+    from distutils.core import setup
+
+    setup( name = "my_extension",
+           packages = ["my_extension"],
+           python_requires = ">=3.6",
+           install_requires = ["groot", "mhelper"]
+           )
+           
+Exit :t:`vim`. Your package's directory structure should now look like this::
+
+    ...
+     |
+     |- my_extension
+        |- my_extension
+        |   |- __init__.py
+        |- setup.py
+
+Install your package using ``pip``::
+
+    sudo pip install -e .
+    
+Import your package into Groot::
+
+    groot import my_extension +persist
+    
+That's it! You should be able to see your new algorithm in Groot::
+
+    groot help algorithms
+    
+And use it::
+
+    groot create_similarities blastn
+
+
+--------------------------------------------------------------------------------
+                               Creating commands                                
+--------------------------------------------------------------------------------
+
+Commands can also be added to Groot's CLI.
+
+For this tutorial we'll add a command that shows the current filename.
+
+Follow the same process as for `Creating algorithms`_ above, but replace your ``__init__.py`` with this::
+
+    import intermake
+    import groot
+    
+    @intermake.command()
+    def print_file_name():
+        print( groot.current_model().file_name )
+
+After registering with Groot you can use your command like so::
+
+    groot print_file_name
+
+
+--------------------------------------------------------------------------------
+                           Modifying the source code                            
+--------------------------------------------------------------------------------
+
+The Groot source code is fully documented and annotated for use with help and autocomplete in your favourite IDE.
+
+The main Groot logic is contained in `groot.commands` and Groot's data classes
+are contained in `groot.data`. Groot's entry point can be found in ``__main__.py``.
+

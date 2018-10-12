@@ -26,12 +26,12 @@ class TestDirectory:
     
     @staticmethod
     def get_test_folder():
-        return intermake.ImApplication.ACTIVE.local_data.local_folder( "test_cases" )
+        return intermake.Controller.ACTIVE.app.local_data.local_folder( "test_cases" )
     
 
     @staticmethod
     def get_results_folder():
-        return intermake.ImApplication.ACTIVE.local_data.local_folder( "test_cases_results" )
+        return intermake.Controller.ACTIVE.app.local_data.local_folder( "test_cases_results" )
 
 
     @staticmethod

@@ -1,7 +1,7 @@
 Groot
 =====
 
-Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
+Groot uses genomic data to produce an [N-Rooted Fusion Graph](https://doi.org/10.1093/molbev/mst228).
 
 ```
 \         /       /
@@ -18,3 +18,5 @@ Gʀᴏᴏᴛ uses genomic data to produce an [N-Rooted Fusion Graph](https://doi
 ```
 
 **Full documentation can be found [here](http://software.rusilowicz.com/groot).**
+
+Groot is licensed under the [GNU AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html).

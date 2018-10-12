@@ -5,7 +5,7 @@ import groot.data.config
 from groot.constants import EFormat, BROWSE_MODE, EStartupMode, EWindowMode
 from groot_gui.forms.frm_base import FrmBase
 from intermake import common_commands
-from intermake_qt.forms.frm_arguments import FrmArguments
+
 from mhelper_qt import exqtSlot
 
 
@@ -95,7 +95,7 @@ class FrmViewOptions( FrmBase ):
     
     
     def map( self, write ):
-        from groot_gui import LegoGuiHost
+        from groot_gui import LegoGuiController
         
         if self.ignore_map:
             return
@@ -104,10 +104,10 @@ class FrmViewOptions( FrmBase ):
         
         # Global options
         global_options = groot.data.config.options()
-        host_options = LegoGuiHost.get_settings()
+        gui_options = LegoGuiController.get_settings()
         
-        if not isinstance( host_options.enable_browser, int ):
-            host_options.enable_browser = BROWSE_MODE.ASK if host_options.enable_browser else BROWSE_MODE.SYSTEM
+        if not isinstance( gui_options.enable_browser, int ):
+            gui_options.enable_browser = BROWSE_MODE.ASK if gui_options.enable_browser else BROWSE_MODE.SYSTEM
         
         self.__map_check( write, global_options, "tool_file", self.ui.CHKTOOL_FILE, self.actions.frm_main.ui.FRA_FILE )
         
@@ -119,7 +119,7 @@ class FrmViewOptions( FrmBase ):
         
         self.__map_check( write, global_options, "share_opengl", self.ui.CHK_SHARE_CONTEXTS )
         
-        self.__map( write, host_options, "enable_browser", { BROWSE_MODE.ASK    : self.ui.RAD_TREE_ASK,
+        self.__map( write, gui_options, "enable_browser", { BROWSE_MODE.ASK    : self.ui.RAD_TREE_ASK,
                                                              BROWSE_MODE.INBUILT: self.ui.RAD_TREE_INBUILT,
                                                              BROWSE_MODE.SYSTEM : self.ui.RAD_TREE_SYSTEM } )
         
@@ -206,4 +206,4 @@ class FrmViewOptions( FrmBase ):
         """
         Signal handler:
         """
-        FrmArguments.request( self, common_commands.cmd_local_data )
+        self.show_command( common_commands.cmd_local_data )

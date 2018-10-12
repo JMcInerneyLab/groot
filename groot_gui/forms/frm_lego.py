@@ -170,7 +170,7 @@ class FrmLego( FrmBaseWithSelection ):
         
         for key, value in algo_collection.items():
             act = QAction()
-            act.setText( intermake.AbstractHost.ACTIVE.translate_name( key ) )
+            act.setText( intermake.Controller.ACTIVE.translate_name( key ) )
             act.setToolTip( value.__doc__ )
             map[act] = key
             menu.addAction( act )

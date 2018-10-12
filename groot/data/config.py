@@ -2,7 +2,7 @@ import time
 from typing import List
 
 from groot.constants import EFormat, EStartupMode, EWindowMode, EDomainNames, EGeneNames, EFusionNames, EComponentNames
-from intermake.engine.environment import ImApplication
+from intermake.engine.abstract_controller import Controller
 from mhelper import TTristate, array_helper
 
 
@@ -76,7 +76,7 @@ def options() -> GlobalOptions:
     global __global_options
     
     if __global_options is None:
-        __global_options = ImApplication.ACTIVE.local_data.store.bind( "lego-options", GlobalOptions() )
+        __global_options = Controller.ACTIVE.app.local_data.store.bind( "lego-options", GlobalOptions() )
     
     return __global_options
 
@@ -104,4 +104,4 @@ def remember_file( file_name: str ) -> None:
 
 
 def save_global_options():
-    ImApplication.ACTIVE.local_data.store.commit( __global_options )
+    Controller.ACTIVE.app.local_data.store.commit( __global_options )

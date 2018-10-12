@@ -7,14 +7,21 @@ import groot.constants
 from groot.constants import EComponentGraph
 import groot.data.config
 from groot.data.model_interfaces import EPosition, IHasFasta, INamedGraph, INode
-from groot import resources as groot_resources
-from intermake.engine.environment import ImApplication
-from intermake.visualisables.visualisable import UiInfo, EColour, IVisualisable, UiHint
+from intermake import Controller
 from mgraph import MGraph, MSplit
 from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate, assert_type
 
 
 _Model_ = "Model"
+
+
+class HasTable:
+    def tabulate( self ):
+        return self.on_tabulate()
+    
+    
+    def on_tabulate( self ):
+        pass
 
 
 class Edge( IHasFasta ):
@@ -138,7 +145,7 @@ class Edge( IHasFasta ):
         return self.side( item, opposite = True )
 
 
-class Domain( IHasFasta, IVisualisable ):
+class Domain( IHasFasta, HasTable ):
     """
     IMMUTABLE
     
@@ -209,18 +216,16 @@ class Domain( IHasFasta, IVisualisable ):
         return Domain( self.gene, start, end )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
+    def on_tabulate( self ):
         """
         OVERRIDE 
         """
-        super().on_get_vis_info( u )
-        u.hint = u.Hints.FOLDER
-        u.text = "{} sites".format( self.length )
-        u.properties += { "gene"  : self.gene,
-                          "start" : self.start,
-                          "end"   : self.end,
-                          "length": self.length,
-                          "sites" : self.site_array }
+        return { "num_sites": self.length,
+                 "gene"     : self.gene,
+                 "start"    : self.start,
+                 "end"      : self.end,
+                 "length"   : self.length,
+                 "sites"    : self.site_array }
     
     
     @staticmethod
@@ -305,7 +310,7 @@ class UserDomain( Domain ):
     pass
 
 
-class Gene( INode, IHasFasta, IVisualisable ):
+class Gene( INode, IHasFasta, HasTable ):
     """
     Protein (or DNA) gene sequence
     
@@ -327,7 +332,7 @@ class Gene( INode, IHasFasta, IVisualisable ):
         See class attributes for parameter descriptions.
         """
         if Gene.is_legacy_accession( accession ):
-            raise ValueError( "You have a gene with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using such names.".format( accession, ImApplication.ACTIVE.name ) )
+            raise ValueError( "You have a gene with an accession «{}», but {} has reserved that name for compatibility with legacy Phylip format files. Avoid using such names.".format( accession, Controller.ACTIVE.app.name ) )
         
         self.index: int = index
         self.accession: str = accession
@@ -402,24 +407,21 @@ class Gene( INode, IHasFasta, IVisualisable ):
         return Domain( self, 1, self.length )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
+    def on_tabulate( self ):
         """
         OVERRIDE 
         """
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.BLUE, icon = groot_resources.black_gene )
-        u.value = "{} sites".format( self.length )
-        u.properties += { "id"          : self.legacy_accession,
-                          "display_name": self.display_name,
-                          "length"      : self.length,
-                          "accession"   : self.accession,
-                          "position"    : self.position,
-                          "num_sites"   : len( self.site_array ) if self.site_array else "?",
-                          "sites"       : self.site_array,
-                          "domains"     : list( self.iter_userdomains() ),
-                          "edges"       : list( self.iter_edges() ),
-                          "major"       : self.find_major(),
-                          "minor"       : list( self.iter_minor() ), }
+        return { "id"          : self.legacy_accession,
+                 "display_name": self.display_name,
+                 "length"      : self.length,
+                 "accession"   : self.accession,
+                 "position"    : self.position,
+                 "num_sites"   : len( self.site_array ) if self.site_array else "?",
+                 "sites"       : self.site_array,
+                 "domains"     : list( self.iter_userdomains() ),
+                 "edges"       : list( self.iter_edges() ),
+                 "major"       : self.find_major(),
+                 "minor"       : list( self.iter_minor() ), }
     
     
     def find_major( self ) -> "Component":
@@ -513,7 +515,7 @@ class UserGraph( INamedGraph ):
         return self.get_accid()
 
 
-class Component( IVisualisable ):
+class Component( HasTable ):
     """
     Stores information about a component of the (:class:`LegoModel`).
     
@@ -667,22 +669,17 @@ class Component( IVisualisable ):
             return self.alignment
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        """
-        OVERRIDE
-        """
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.RED, icon = groot_resources.black_major )
-        u.value = "{} genes".format( array_helper.count( self.major_genes ) )
-        u.properties += { "index"      : self.index,
-                          "major"      : self.major_genes,
-                          "minor_s"    : self.minor_genes,
-                          "minor_ss"   : self.minor_domains,
-                          "alignment"  : self.alignment,
-                          "tree"       : self.tree,
-                          "tree_newick": self.tree_newick,
-                          "incoming"   : self.incoming_components(),
-                          "outgoing"   : self.outgoing_components() }
+    def on_tabulate( self ):
+        return { "index"      : self.index,
+                 "num_genes"  : array_helper.count( self.major_genes ),
+                 "major"      : self.major_genes,
+                 "minor_s"    : self.minor_genes,
+                 "minor_ss"   : self.minor_domains,
+                 "alignment"  : self.alignment,
+                 "tree"       : self.tree,
+                 "tree_newick": self.tree_newick,
+                 "incoming"   : self.incoming_components(),
+                 "outgoing"   : self.outgoing_components() }
     
     
     def incoming_components( self ) -> List["Component"]:
@@ -784,7 +781,7 @@ class Subgraph( INamedGraph ):
             raise SwitchError( "groot.data.config.options().fusion_namer", o )
 
 
-class Split( IVisualisable ):
+class Split( HasTable ):
     """
     Wraps a :class:`MSplit` making it Groot-friendly.
     """
@@ -803,16 +800,13 @@ class Split( IVisualisable ):
         return "split_{}".format( self.index )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.CYAN, icon = groot_resources.black_split )
-        u.text = self.split.to_string()
-        u.properties += { "inside"          : self.split.inside,
-                          "outside"         : self.split.outside,
-                          "components"      : self.components,
-                          "evidence_for"    : self.evidence_for,
-                          "evidence_against": self.evidence_against,
-                          "evidence_unused" : self.evidence_unused }
+    def on_tabulate( self ):
+        return { "inside"          : self.split.inside,
+                 "outside"         : self.split.outside,
+                 "components"      : self.components,
+                 "evidence_for"    : self.evidence_for,
+                 "evidence_against": self.evidence_against,
+                 "evidence_unused" : self.evidence_unused }
     
     
     def __eq__( self, other ):
@@ -845,7 +839,7 @@ class Split( IVisualisable ):
                or self.split.inside.issubset( other.split.inside ) and self.split.outside.issubset( other.split.outside )
 
 
-class Report( IVisualisable ):
+class Report( HasTable ):
     def __init__( self, name: str, html: str, meta_data = None ):
         self.name = name
         self.html = html
@@ -856,14 +850,11 @@ class Report( IVisualisable ):
         return self.name
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.GREEN, icon = groot_resources.black_check )
-        u.text = "(HTML report)"
-        u.properties += { "raw_data": self.raw_data }
+    def on_tabulate( self ):
+        return { "raw_data": self.raw_data }
 
 
-class Subset( IVisualisable ):
+class Subset( HasTable ):
     """
     Represents a subset of leaf nodes (see `ILeaf`).
     """
@@ -903,13 +894,11 @@ class Subset( IVisualisable ):
         return string_helper.format_array( self.contents )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.CYAN, icon = groot_resources.black_subset )
-        u.contents += lambda: self.contents
+    def on_tabulate( self ):
+        return { "contents": self.contents }
 
 
-class Fusion( IVisualisable ):
+class Fusion( HasTable ):
     """
     Describes a fusion event
     
@@ -955,20 +944,18 @@ class Fusion( IVisualisable ):
         return self.component_out.get_accid()
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.RED, icon = groot_resources.black_fusion )
-        u.text = self.long_name
-        u.properties += { "index"        : self.index,
-                          "components_in": self.components_in,
-                          "component_out": self.component_out }
+    def on_tabulate( self ):
+        return { "text"         : self.long_name,
+                 "index"        : self.index,
+                 "components_in": self.components_in,
+                 "component_out": self.component_out }
     
     
     def on_get_name( self ):
         return "Create " + str( self.get_accid() )
 
 
-class Formation( IVisualisable, INode ):
+class Formation( HasTable, INode ):
     # Formats for finding and creating legacy accessions
     _LEGACY_IDENTIFIER = re.compile( "^GrtF([0-9]+)F([0-9]+)$" )
     _LEGACY_FORMAT = "GrtF{}F{}"
@@ -996,14 +983,12 @@ class Formation( IVisualisable, INode ):
         self.index = index
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.text = "{} points".format( len( self.points ) )
-        u.properties += {
-            "genes"          : self.genes,
-            "pertinent_inner": self.pertinent_inner,
-            "index"          : self.index,
-            "points"         : self.points }
+    def on_tabulate( self ):
+        return { "num_points"     : len( self.points ),
+                 "genes"          : self.genes,
+                 "pertinent_inner": self.pertinent_inner,
+                 "index"          : self.index,
+                 "points"         : self.points }
     
     
     def get_accid( self ) -> str:
@@ -1044,7 +1029,7 @@ class Formation( IVisualisable, INode ):
         return bool( cls._LEGACY_IDENTIFIER.match( name ) )
 
 
-class Point( INode, IVisualisable ):
+class Point( INode, HasTable ):
     """
     Point of fusion.
     
@@ -1132,14 +1117,11 @@ class Point( INode, IVisualisable ):
         return bool( cls._LEGACY_IDENTIFIER.match( name ) )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        super().on_get_vis_info( u )
-        u.hint = UiHint( colour = EColour.MAGENTA, icon = groot_resources.black_fusion )
-        u.text = "{} genes".format( len( self.formation.genes ) )
-        u.properties += {
-            "outer_genes"    : self.outer_genes,
-            "pertinent_outer": self.pertinent_outer,
-            "index"          : self.index }
+    def on_tabulate( self ):
+        return { "num_genes"      : len( self.formation.genes ),
+                 "outer_genes"    : self.outer_genes,
+                 "pertinent_outer": self.pertinent_outer,
+                 "index"          : self.index }
     
     
     @property

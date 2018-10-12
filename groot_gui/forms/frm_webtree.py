@@ -12,10 +12,10 @@ from groot_gui.forms.designer import frm_webtree_designer
 
 from groot import Model
 from groot.utilities import entity_to_html
-from groot_gui import LegoGuiHost
+from groot_gui import LegoGuiController
 from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.forms.frm_view_options import BROWSE_MODE
-from intermake import ImApplication, constants as im_constants
+from intermake import Controller, constants as im_constants
 from mhelper import OpeningWriter, SwitchError, file_helper, string_helper
 from mhelper_qt import exceptToGui, exqtSlot, qt_gui_helper
 
@@ -53,7 +53,7 @@ class FrmWebtree( FrmBaseWithSelection ):
         self.add_select_button( self.ui.FRA_TOOLBAR )
         
         # Enable our browser?
-        switch = LegoGuiHost.get_settings().enable_browser
+        switch = LegoGuiController.get_settings().enable_browser
         
         if switch == BROWSE_MODE.ASK:
             pass
@@ -62,7 +62,7 @@ class FrmWebtree( FrmBaseWithSelection ):
         elif switch == BROWSE_MODE.SYSTEM:
             self.ui.BTN_BROWSE_HERE.setVisible( False )
         else:
-            raise SwitchError( "LegoGuiHost.get_settings().enable_browser", switch )
+            raise SwitchError( "LegoGuiController.get_settings().enable_browser", switch )
         
         # Show the selection
         self.update_page()
@@ -154,7 +154,7 @@ class FrmWebtree( FrmBaseWithSelection ):
     
     def __update_browser( self ):
         if self.is_browser:
-            file_name = path.join( ImApplication.ACTIVE.local_data.local_folder( im_constants.FOLDER_TEMPORARY ), "groot_temp.html" )
+            file_name = path.join( Controller.ACTIVE.app.local_data.local_folder( im_constants.FOLDER_TEMPORARY ), "groot_temp.html" )
             file_helper.write_all_text( file_name, self.html )
             self.browser_ctrl.load( QUrl.fromLocalFile( file_name ) )  # nb. setHtml doesn't work with visjs, so we always need to use a temporary file
             self.ui.LBL_TITLE.setToolTip( self.browser_ctrl.url().toString() )

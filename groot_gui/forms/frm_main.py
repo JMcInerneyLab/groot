@@ -13,12 +13,11 @@ from groot.data import global_view
 from groot_gui.forms.designer import frm_main_designer
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.utilities.gui_workflow import Intent, handlers, EIntent
-from intermake import AsyncResult, AbstractHost
-from intermake.engine.environment import ImApplication
-from intermake_qt import IGuiHostMainWindow, intermake_gui, resources
+from intermake import Result, Controller
+import intermake_qt
 
 
-class FrmMain( QMainWindow, IGuiHostMainWindow ):
+class FrmMain( QMainWindow, intermake_qt.IGuiMainWindow ):
     """
     This is Groot's main window; one window to control them all.
     
@@ -54,8 +53,8 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         
         self.mdi: Dict[str, FrmBase] = { }
         
-        self.COLOUR_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea[style="empty"].background', "#E0E0E0" ) )
-        self.COLOUR_NOT_EMPTY = QColor( intermake_gui.parse_style_sheet().get( 'QMdiArea.background', "#E0E0E0" ) )
+        self.COLOUR_EMPTY = QColor( intermake_qt.parse_style_sheet().get( 'QMdiArea[style="empty"].background', "#E0E0E0" ) )
+        self.COLOUR_NOT_EMPTY = QColor( intermake_qt.parse_style_sheet().get( 'QMdiArea.background', "#E0E0E0" ) )
         
         self.ui.MDI_AREA.setBackground( self.COLOUR_EMPTY )
         
@@ -96,21 +95,21 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
     
     
     def update_title( self ):
-        self.setWindowTitle( ImApplication.ACTIVE.name + " - " + str( ImApplication.ACTIVE.root ) )
-        self.ui.LBL_FILENAME.setText( str( ImApplication.ACTIVE.root ) )
+        self.setWindowTitle( Controller.ACTIVE.app.name + " - " + str( global_view.current_model() ) )
+        self.ui.LBL_FILENAME.setText( str( global_view.current_model() ) )
     
     
-    def command_completed( self, result: AsyncResult ) -> None:
+    def command_completed( self, result: Result ) -> None:
         self.update_title()
         self.menu_handler.gui_actions.dismiss_startup_screen()
         self.menu_handler.update_buttons()
         
         if result.is_error:
-            self.ui.LBL_STATUS.setText( "OPERATION FAILED TO COMPLETE: " + result.title )
-            self.ui.BTN_STATUS.setIcon( resources.failure.icon() )
+            self.ui.LBL_STATUS.setText( "OPERATION FAILED TO COMPLETE: " + result.command.name )
+            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.failure.icon() )
         elif result.is_success and isinstance( result.result, EChanges ):
-            self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.title )
-            self.ui.BTN_STATUS.setIcon( resources.success.icon() )
+            self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.command.name )
+            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.success.icon() )
             self.completed_changes = result.result
             self.completed_plugin = result.command
             for form in self.iter_forms():
@@ -119,7 +118,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
             self.completed_plugin = None
         else:
             self.ui.LBL_STATUS.setText( "EXTERNAL OPERATION COMPLETED: " + str( result ) )
-            self.ui.BTN_STATUS.setIcon( resources.success.icon() )
+            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.success.icon() )
     
     
     def iter_forms( self ):
@@ -187,12 +186,7 @@ class FrmMain( QMainWindow, IGuiHostMainWindow ):
         """
         Signal handler:
         """
-        from intermake_qt import FrmTreeView
-        
-        FrmTreeView.request( parent = self,
-                             root = AbstractHost.ACTIVE.result_history,
-                             message = "Results",
-                             flat = True )
+        pass
     
     
     def __show_menu( self, menu: QMenu ):

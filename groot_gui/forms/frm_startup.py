@@ -5,7 +5,7 @@ import groot.data.sample_data
 from groot.data.config import RecentFile
 from groot_gui.forms.frm_base import FrmBase
 from groot_gui.utilities import gui_workflow
-from intermake.engine.environment import ImApplication
+from intermake.engine.environment import Controller
 from mhelper import file_helper
 from mhelper_qt import exceptToGui
 
@@ -26,7 +26,7 @@ class FrmStartup( FrmBase ):
         
         txt = self.ui.LBL_FIRST_MESSAGE.text()
         
-        txt = txt.replace( "$(VERSION)", ImApplication.ACTIVE.version )
+        txt = txt.replace( "$(VERSION)", Controller.ACTIVE.app.version )
         r = []
         
         r.append( "<h3>Recent files</h3><ul>" )

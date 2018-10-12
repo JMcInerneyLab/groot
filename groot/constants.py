@@ -6,6 +6,7 @@ from mhelper import MEnum, ResourceIcon, SwitchError, MFlags
 
 _Model_ = "Model"
 
+# noinspection SpellCheckingInspection
 DNA_BASES = "GACT"
 
 
@@ -73,7 +74,7 @@ class StageCollection:
                               icon = resources.black_major,
                               status = lambda m: (M( m ).components.has_major_gene_got_component( x ) for x in M( m ).genes),
                               headline = lambda m: "{} sequences assigned to {} components".format( sum( 1 for x in M( m ).genes if M( m ).components.has_major_gene_got_component( x ) ), M( m ).components.count ),
-                              requires = (self.SEQUENCES_2,) )
+                              requires = (self.SEQUENCES_2, self.SIMILARITIES_3) )
         self.MINOR_5 = Stage( "Minor",
                               icon = resources.black_minor,
                               status = lambda m: (bool( x.minor_domains ) for x in M( m ).components),
@@ -219,25 +220,27 @@ class EFormat( MEnum ):
             raise SwitchError( "self", self )
 
 
-BINARY_EXTENSION = ".groot"
-DIALOGUE_FILTER = "Genomic n-rooted fusion graph (*.groot)"
-DIALOGUE_FILTER_FASTA = "FASTA (*.fasta)"
-DIALOGUE_FILTER_NEWICK = "Newick tree (*.newick)"
-APP_NAME = "GROOT"
-COMPONENT_PREFIX = "c:"
-EXT_GROOT = ".groot"
+APP_NAME = "Groot"
+
+#
+# File extensions
+#
+EXT_MODEL = ".{}".format( APP_NAME.lower() )
 EXT_JSON = ".json"
 EXT_FASTA = ".fasta"
 EXT_BLAST = ".blast"
-INTERMAKE_FOLDER_NAME = "GROOT"
-INTERMAKE_FOLDER_NAME_EXTRA = "GROOT-EXTRA"
-INTERMAKE_FOLDER_NAME_TESTS = "GROOT-TESTS"
-F_CREATE = "GROOT-CREATE"
-F_DROP = "GROOT-DROP"
-F_PRINT = "GROOT-PRINT"
-F_SET = "GROOT-SET"
-F_IMPORT = "GROOT-IMPORT"
-F_FILE = "GROOT-FILE"
+
+#
+# Folder names
+#
+F_EXTRA = "{}-EXTRA".format( APP_NAME.upper() )
+F_TESTS = "{}-TESTS".format( APP_NAME.upper() )
+F_CREATE = "{}-CREATE".format( APP_NAME.upper() )
+F_DROP = "{}-DROP".format( APP_NAME.upper() )
+F_PRINT = "{}-PRINT".format( APP_NAME.upper() )
+F_SET = "{}-SET".format( APP_NAME.upper() )
+F_IMPORT = "{}-IMPORT".format( APP_NAME.upper() )
+F_FILE = "{}-FILE".format( APP_NAME.upper() )
 
 
 class EChanges( MFlags ):

@@ -6,16 +6,15 @@ Groot miscellaneous features
 Changing the way entities are displayed
 ---------------------------------------
 
-Advanced GROOT options can be accessed via Intermake's ``local`` command.
+Advanced GROOT options can be accessed via the ``local`` command in the command line / CLI.
 
-For instance, to change Fusion names to be more human readable issue:::
+For instance, to change Fusion names to be more human readable, from the command line run::
 
-    local lego-options/fusion_namer=READABLE
+    groot local lego-options/fusion_namer=READABLE
 
+For a complete list of options issue::
 
-This will need to be performed in the CLI or PYI; you can return to the GUI afterwards.
-
-
+    groot local
 
 
 

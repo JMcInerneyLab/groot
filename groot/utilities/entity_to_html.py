@@ -4,10 +4,10 @@ Converts Lego entities to HTML.
 from typing import List
 
 import groot.data.config
-import intermake_qt
+
 from mhelper_qt import qt_gui_helper
 
-from groot.data import Model, IHasFasta, INamedGraph, Report, global_view
+from groot.data import Model, IHasFasta, INamedGraph, Report
 from groot.utilities import cli_view_utils, graph_viewing
 
 
@@ -35,6 +35,7 @@ def render( item, model: Model ):
     
     # Anything with metadata
     else:
+        import intermake_qt
         html.append( intermake_qt.visualisation.visualisable_to_html( item, header = False ) )
     
     html.append( "</body></html>" )

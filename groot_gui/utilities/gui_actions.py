@@ -11,6 +11,7 @@ from groot_gui.utilities.gui_workflow import EIntent, IntentHandler, handlers
 from mhelper import ArgsKwargs, SwitchError, get_basic_documentation
 from mhelper_qt import FrmGenericText, menu_helper, qt_gui_helper
 
+DIALOGUE_FILTER = "Genomic n-rooted fusion graph (*.groot)"
 
 class GuiActions:
     def __init__( self, frm_main, window ):
@@ -61,7 +62,7 @@ class GuiActions:
         self.frm_main.close()
     
     
-    def run( self, command: intermake.AbstractCommand, *args, **kwargs ) -> intermake.AsyncResult:
+    def run( self, command: intermake.Command, *args, **kwargs ) -> intermake.Result:
         """
         Runs an Intermake command asynchronously.
         """
@@ -83,15 +84,6 @@ class GuiActions:
         self.run( groot.file_save, file_name )
     
     
-    def request( self, plugin: intermake.AbstractCommand, *args, **kwargs ) -> Optional[intermake.AsyncResult]:
-        """
-        Runs an Intermake command after showing the user the arguments request form.
-        """
-        warnings.warn("Deprecated, use `Intent`.", DeprecationWarning)
-        if args is None:
-            args = ()
-        
-        return intermake_qt.FrmArguments.request( self.window, plugin, defaults = ArgsKwargs( *args, **kwargs ) )  # --> self.plugin_completed
     
     
     def show_status_message( self, text: str ) -> None:
@@ -149,8 +141,8 @@ class GuiActions:
     
     
     def show_intermake( self ) -> None:
-        from intermake_qt import FrmTreeView
-        FrmTreeView.request( self.window, root = intermake.VisualisablePath.get_root(), flat = True )
+        from intermake_qt import FrmIntermakeMain
+        FrmIntermakeMain.request( self.window )
     
     
     def __get_selection_form( self ) -> Any:
@@ -171,7 +163,7 @@ class GuiActions:
     
     
     def browse_open( self ):
-        file_name = qt_gui_helper.browse_open( self.window, groot.constants.DIALOGUE_FILTER )
+        file_name = qt_gui_helper.browse_open( self.window, DIALOGUE_FILTER )
         
         if file_name:
             self.run( groot.file_load, file_name )
@@ -244,7 +236,7 @@ class GuiActions:
     
     
     def browse_save( self ):
-        file_name = qt_gui_helper.browse_save( self.window, groot.constants.DIALOGUE_FILTER )
+        file_name = qt_gui_helper.browse_save( self.window, DIALOGUE_FILTER )
         
         if file_name:
             self.run( groot.file_save, file_name )

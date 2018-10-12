@@ -17,7 +17,7 @@ def run_in_temporary( function, *args, **kwargs ):
     # Create and switch to temporary folder
     #
     id = uuid4()
-    temp_folder_name = os.path.join( intermake.ImApplication.ACTIVE.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "temporary_{}".format( id ) )
+    temp_folder_name = os.path.join( intermake.Controller.ACTIVE.app.local_data.local_folder( intermake.constants.FOLDER_TEMPORARY ), "temporary_{}".format( id ) )
     
     if os.path.exists( temp_folder_name ):
         shutil.rmtree( temp_folder_name )

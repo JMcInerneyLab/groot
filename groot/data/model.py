@@ -3,15 +3,16 @@ from typing import Dict, FrozenSet, Iterable, Iterator, List, Sequence, Tuple
 from groot import constants
 from groot.constants import Stage
 from groot.data.model_collections import ComponentCollection, EdgeCollection, FusionCollection, GeneCollection, UserDomainCollection, UserGraphCollection, UserReportCollection
-from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset, Gene, Formation
+from groot.data.model_core import FusionGraph, Point, Pregraph, Report, Split, Subgraph, Subset, Gene, Formation, HasTable
 from groot.data.model_interfaces import ESiteType
 from groot.data.model_meta import ModelStatus
-from intermake import IVisualisable, UiInfo, ImApplication, AbstractHost
+from intermake import Controller
 
 from mhelper import file_helper as FileHelper, string_helper, NOT_PROVIDED
 
 
-class Model( IVisualisable ):
+
+class Model( HasTable ):
     """
     The model used by Groot.
     """
@@ -77,22 +78,20 @@ class Model( IVisualisable ):
         return any( x.tree for x in self.components )
     
     
-    def on_get_vis_info( self, u: UiInfo ) -> None:
-        u.text = "{} sequences".format( len( self.genes ) )
-        u.hint = u.Hints.FOLDER
-        u.contents += { "graphs"                : list( self.iter_graphs() ),
-                        "sequences"             : self.genes,
-                        "components"            : self.components,
-                        "edges"                 : self.edges,
-                        "comments"              : self.user_comments,
-                        "site_type"             : self.site_type,
-                        "file_name"             : self.file_name,
-                        "fusions"               : self.fusions,
-                        "user_domains"          : self.user_domains,
-                        "user_graphs"           : self.user_graphs,
-                        "splits"                : self.splits,
-                        "consensus"             : self.consensus,
-                        "fusion_graph_unclean"  : self.fusion_graph_unclean,
+    def on_tabulate( self ):
+        return { "graphs"                : list( self.iter_graphs() ),
+                 "sequences"             : self.genes,
+                 "components"            : self.components,
+                 "edges"                 : self.edges,
+                 "comments"              : self.user_comments,
+                 "site_type"             : self.site_type,
+                 "file_name"             : self.file_name,
+                 "fusions"               : self.fusions,
+                 "user_domains"          : self.user_domains,
+                 "user_graphs"           : self.user_graphs,
+                 "splits"                : self.splits,
+                 "consensus"             : self.consensus,
+                 "fusion_graph_unclean"  : self.fusion_graph_unclean,
                         "fusion_graph_clean"    : self.fusion_graph_clean,
                         "report"                : self.report,
                         "subsets"               : self.subsets,
@@ -100,8 +99,8 @@ class Model( IVisualisable ):
                         "subgraphs"             : self.subgraphs,
                         "subgraphs_sources"     : self.subgraphs_sources,
                         "subgraphs_destinations": self.subgraphs_destinations,
-                        "results"               : AbstractHost.ACTIVE.result_history,
-                        "commands"              : ImApplication.ACTIVE.commands.get_root_folder() }
+                        "results"               : Controller.ACTIVE.result_history,
+                        "commands"              : Controller.ACTIVE.app.commands.get_root_folder() }
     
     
     def __str__( self ):

@@ -270,7 +270,7 @@ class FrmGenes( FrmBase ):
         intermake.acquire( next_cmd, parent = self ).run( **next_args ).listen( self.on_run_queue )
     
     
-    def on_run_queue( self, result: intermake.AsyncResult ):
+    def on_run_queue( self, result: intermake.Result ):
         if result.is_success:
             self.run_queue()
         else:
@@ -310,7 +310,7 @@ class FrmGenes( FrmBase ):
     
     
     def on_mnu_rename( self ):
-        intermake_qt.FrmArguments.request( self, groot.import_gene_names )
+        self.show_command( groot.import_gene_names )
     
     
     def on_mnu_help( self ):

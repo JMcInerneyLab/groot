@@ -1,18 +1,11 @@
 """
-Defines Groot's entry point - `main`
+The entry point.
 """
-
-# noinspection PyUnresolvedReferences
-import groot
-import intermake
 
 
 def main():
-    """
-    Entry point.
-    We just start Intermake, which has already been configured to use Groot by `groot.__init__`.
-    """
-    intermake.start()
+    import groot
+    groot.Application.INSTANCE.start()
 
 
 if __name__ == "__main__":

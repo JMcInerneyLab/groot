@@ -1,11 +1,11 @@
-import inspect as inspect_
 import warnings
-from typing import Callable, Dict, Iterator, Sequence, Union, Tuple, Type, List
+from typing import Callable, Dict, Iterator, Sequence, Union, Tuple, Type, List, cast
 
-import intermake_qt
+import intermake
 import mhelper
 from PyQt5.QtWidgets import QWidget
 import groot
+import mhelper.mannotation.predefined_inspectors
 from intermake import BasicCommand
 from mhelper import MEnum, ResourceIcon, AnnotationInspector
 from groot_gui.forms.resources import resources
@@ -16,22 +16,14 @@ TWorkflows = Union[groot.Stage, Sequence[groot.Stage]]
 
 class EIntent( MEnum ):
     """
-    Intents
+    The modes of an `Intent` (something the user wishes to do).
+    The response is usually a list of suitable actions for that intent.
     
-    :cvar DIRECT             :  The caller has requested that this handler be shown directly.
-                                * When issuing the intent, the `target` is caller-recipient specific.
-                                    * For `ShowForm` is is ignored
-                                    * For `ShowArgs` it may be a set of default arguments (`ArgsKwargs`).
-                                    * For `RunAction` it may be a set of parameters (`ArgsKwargs`).  
-                                * It is implicit that this intent is capable of being handled
-    :cvar VIEW               :  Intent to view stage.
-                                * When issuing the intent, the `target` is the `EStage`.
-                                * When specifying the intent is capable of being handled, the `dict` `value` is an `EStage` or a `Sequence` of handled `EStage`s.
-    :cvar CREATE             :  Intent to create stage. As for `VIEW`,
-    :cvar DROP               :  Intent to drop stage. As for `VIEW`,
-    :cvar INSPECT            :  Intent to inspect object.
-                                * When issuing the intent, the `target` is the object to inspect. 
-                                * When specifying the intent is capable of being handled, the `dict` `value` is the `type` of object.
+    :cvar DIRECT             :  Intent to perform an action (not really an intent - we know what the action is already).
+    :cvar VIEW               :  Intent to view a stage of the workflow .
+    :cvar CREATE             :  Intent to progress a stage into the workflow.
+    :cvar DROP               :  Intent to remove a stage from the workflow.
+    :cvar INSPECT            :  Intent to inspect an object.
     """
     DIRECT = 0
     VIEW = 1
@@ -42,9 +34,8 @@ class EIntent( MEnum ):
 
 class Intent:
     """
-    An `Intent` defines something the GUI wants to do (but now how it will do it). 
+    An `Intent` defines something the user wants to do. 
     """
-    
     
     def __init__( self, parent: QWidget, type: EIntent, target: object ):
         self.parent = parent
@@ -80,33 +71,35 @@ class IAction:
 
 class IntentHandler:
     """
-    Defines something that can handle a GUI intent.
+    Defines something that can handle an `Intent`.
     """
     
     
     def __init__( self, *, abv: str = None, name: str, action: IAction, handles: Dict[EIntent, Sequence[object]] = None, icon: ResourceIcon = None, key: str = None ):
         """
-        :param name:        Mandatory. Display name of the handler.
-                            This is displayed to the user if there is more than one handler to choose from for a particular intent.
-        :param action:      Mandatory. Action to take to commence this handler.
-                            This must be:
-                            * A `FrmBase` derived class
-                                * The handler will show the form (if not already shown) and call its `on_apply_request` method. 
-                            * An `AbstractCommand` OR a `Function` bound to one.
-                                * The handler will show the execute request dialogue (`intermake.FrmArguments`) to prompt the user for parameters and optionally launch the command
-                            * A `Callable`
-                                * The handler will call the callable with no parameters
-        :param handles:     Optional. What this `IntentHandler` is capable of handling.
+        :param name:        Mandatory.  Display name.
+                                        
+        :param action:      Mandatory.  Action to take.
+                                        This must be:
+                                        * A `FrmBase` derived class
+                                            * The handler will show the form and call its `on_apply_request` method 
+                                        * An `Command` OR a `Function` bound to one.
+                                            * The handler will request arguments before proceeding
+                                        * A `Callable`
+                                            * The handler will call the callable with no parameters
+                                            
+        :param handles:     Optional.   What this `IntentHandler` is actually capable of handling.
                                         A dict of:
-                                            K: Intent
-                                            V: Sequence of values for this intent
-        :param icon:        Optional. Icon for this intent. Purpose as for `name`. 
-        :param key:         Optional. The intent key is used to launch the intent directly, without considering other handlers.
+                                            K : EIntent          = Intent
+                                            V : Sequence[object] = Sequence of values for this intent.
+                                                                   The type of object depends on `K` - for
+                                                                   VIEW/CREATE/DROP these are stages, while for INSPECT
+                                                                   they are the types capable of being inspected.
+        :param icon:        Optional.   Display icon.
+         
+        :param key:         Optional.   Arbitrary key is used to refer to the intent.
         """
         action.on_register( self )
-        
-        if inspect_.isfunction( action ):
-            action = BasicCommand.retrieve( action, action )
         
         if handles is None:
             handles = { }
@@ -173,17 +166,18 @@ class ShowForm( IAction ):
 
 
 class ShowArgs( IAction ):
-    def __init__( self, cmd: Callable ):
-        self.plg: BasicCommand = BasicCommand.retrieve( cmd )
+    def __init__( self, function: Callable ):
+        self.command: BasicCommand = BasicCommand.retrieve( function )
     
     
     def call( self, intent: Intent ) -> None:
         if intent.type == EIntent.DIRECT:
-            argskwargs = mhelper.assert_type_or_none( "intent.target", intent.target, mhelper.ArgsKwargs )
+            argskwargs: mhelper.ArgsKwargs = mhelper.assert_type_or_none( "intent.target", intent.target, mhelper.mannotation.predefined_inspectors.ArgsKwargs )
         else:
-            argskwargs = None
+            argskwargs = mhelper.ArgsKwargs()
         
-        intermake_qt.FrmArguments.request( intent.parent, self.plg, defaults = argskwargs )
+        # TODO: Use the controller directly
+        intermake.acquire( self.command, window = intent.parent, confirm = True ).run( *argskwargs.args, **argskwargs.kwargs )
 
 
 class RunAction( IAction ):
@@ -192,8 +186,8 @@ class RunAction( IAction ):
     
     
     def call( self, intent: Intent ) -> None:
-        if intent.type == EIntent.DIRECT and intent.target: # Deprecated?
-            argskwargs: mhelper.ArgsKwargs = mhelper.assert_type_or_none( "intent.target", intent.target, mhelper.ArgsKwargs )
+        if intent.type == EIntent.DIRECT and intent.target:  # Deprecated?
+            argskwargs: mhelper.mannotation.predefined_inspectors.ArgsKwargs = mhelper.assert_type_or_none( "intent.target", intent.target, mhelper.mannotation.predefined_inspectors.ArgsKwargs )
             self.func( intent.parent.actions, *argskwargs.args, **argskwargs.kwargs )
         else:
             self.func( intent.parent.actions )
@@ -482,9 +476,9 @@ class IntentHandlerCollection:
                                             handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,) } )
         
         self.IMPORT_GENE_NAMES = IntentHandler( name = "Import gene names",
-                                            action = ShowArgs( groot.import_gene_names ),
-                                            icon = resources.create,
-                                            handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,) } )
+                                                action = ShowArgs( groot.import_gene_names ),
+                                                icon = resources.create,
+                                                handles = { EIntent.CREATE: (groot.STAGES.SEQUENCES_2,) } )
         
         self.SET_MAJOR = IntentHandler( name = "Set major",
                                         action = ShowArgs( groot.set_major ),
@@ -603,13 +597,13 @@ class IntentHandlerCollection:
             if not isinstance( target, type ):
                 target = type( target )
             
-            for visualiser in handlers():
-                if any( AnnotationInspector( target ).is_direct_subclass_of( x ) for x in visualiser.handles[intent] ):
-                    r.append( visualiser )
+            for handler in handlers():
+                if any( AnnotationInspector( target ).is_direct_subclass_of( cast(type, x) ) for x in handler.handles[intent] ):
+                    r.append( handler )
         else:
-            for visualiser in handlers():
-                if target in visualiser.handles[intent]:
-                    r.append( visualiser )
+            for handler in handlers():
+                if target in handler.handles[intent]:
+                    r.append( handler )
         
         return r
 

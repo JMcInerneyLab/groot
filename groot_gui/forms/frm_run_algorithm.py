@@ -26,7 +26,7 @@ class FrmRunAlgorithm( FrmBase ):
                   parent: QWidget,
                   title_text: str,
                   algorithms: AlgorithmCollection,
-                  plugin: intermake.AbstractCommand ):
+                  plugin: intermake.Command ):
         """
         CONSTRUCTOR
         """
@@ -37,7 +37,7 @@ class FrmRunAlgorithm( FrmBase ):
         self.ui.LBL_TITLE.setText( "Create " + title_text.lower() )
         self.radios = []
         self.algorithms = algorithms
-        self.command: intermake.AbstractCommand = plugin
+        self.command: intermake.Command = plugin
         
         self.__layout = QVBoxLayout()
         self.ui.FRA_MAIN.setLayout( self.__layout )
@@ -124,7 +124,7 @@ class FrmRunAlgorithm( FrmBase ):
         self.actions.run( self.command, algorithm ).listen( self.run_algorithm_completed )
     
     
-    def run_algorithm_completed( self, result: intermake.AsyncResult ):
+    def run_algorithm_completed( self, result: intermake.Result ):
         if result.is_success:
             self.actions.close_window()
     

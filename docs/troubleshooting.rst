@@ -1,29 +1,21 @@
-===============================================================
-                     Troubleshooting Groot                     
-===============================================================
+====================================================================================================
+                                       Troubleshooting Groot                                        
+====================================================================================================
 
-* Please report all bugs on the `official bitbucket page`_.
-* Please also see the Intermake_ documentation for handling technical issues.
+.. attention::
 
+    * Please see the Intermake_ troubleshooting guide for general issues
+    * Please report all bugs on the `official bitbucket page`_.
 
----------------
-Groot not found
----------------
+.. contents:: Table of contents
 
-If you see the Groot command prompt that's great, it works, but if you get a message like ``groot not found`` then
-Python probably doesn't have its PATH configured correctly.
-You might be able to start Groot using ``python -m groot``, but it's probably best to consult the Python documentation
-at this time and fix the issue before continuing.
-You probably need to add the Python binaries to your path, using a command something like:::
+----------------------------------------------------------------------------------------------------
+                                           Using the GUI                                            
+----------------------------------------------------------------------------------------------------
 
-    export PATH=$PATH:/opt/local/Library/Frameworks/Python.framework/Versions/3.6/bin
-
-Check out `this StackOverflow post`_ as a starting point.
-
-
-----------------------------------------------
-Screen goes black, images or windows disappear
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Screen goes black, images or windows disappear                           
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Groot has been coded for multiple platforms, however, one or more settings may need changing for your particular platform. 
 
@@ -34,21 +26,17 @@ Groot has been coded for multiple platforms, however, one or more settings may n
     * Turn the inbuilt browser **off**
 * Restart GROOT
 
-------------------
-Obtaining binaries
-------------------
+    
+----------------------------------------------------------------------------------------------------
+                                       Running the algorithms                                       
+----------------------------------------------------------------------------------------------------
 
-Binaries are not available, installation `using Pip`_ is the recommended method.
-For deployment on systems without an internet connection, you can create your own binaries using PyInstaller_.::
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Issues with Paup                                          
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    $   cd groot
-    $   pyinstaller groot/__main__.py
-
-----------------
-Issues with Paup
-----------------
-
-    Until the official release of version 5.0 of PAUP*, you can download time-expiring test versions of PAUP* here
+    Until the official release of version 5.0 of PAUP, you can download time-expiring test versions
+    of PAUP here
     --http://phylosolutions.com/paup-test
 
 There are some major issues in using the Paup test versions of Paup from Groot:
@@ -62,9 +50,9 @@ If this still doesn't work, submit Groot interface bugs on the Bitbucket web pag
 Until these issues are resolved with Paup, consider using a different phylogeny tool such as Raxml_.
 
 
---------------------
-Multi-fusion sources
---------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling multi-fusion sources                                        
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Groot is able to detect and handle the following cases:
 
@@ -78,9 +66,9 @@ It is currently *unable* to detect:
 Groot may still be able to deal with this circumstance, providing you guide it in the direction by specifying the fusion event manually.
 
 
-------------------------------
-The spaceship and the triangle
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling the spaceship and the triangle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are a couple of cases that Groot will suffer from.
 
@@ -159,15 +147,11 @@ Figure 4. The failed triangle
 
 .. ***** REFERENCES AND FURTHER RST MARKUP FOLLOW *****
 
-.. _PyInstaller: https://www.pyinstaller.org/
+.. _extending: extending.rst
 
 .. _Raxml: https://sco.h-its.org/exelixis/software.html
-
-.. _using Pip: installation.md
 
 .. _official bitbucket page: https://bitbucket.org/mjr129/groot/issues
 
 .. _Intermake: https://www.bitbucket.org/mjr129/intermake
-
-.. _this StackOverflow post: https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 

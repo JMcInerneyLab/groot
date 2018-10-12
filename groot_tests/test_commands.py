@@ -1,27 +1,25 @@
 import os
+import os.path
 import shutil
 import uuid
-from os import path
-from typing import Optional
+import intermake
+import mgraph
 
-import groot.data.sample_data
-from groot.algorithms.gimmicks import wizard, compare
-from groot.algorithms.workflow import s010_file, s080_tree, s070_alignment
-from groot_tests.test_directory import TestDirectory
-from intermake import command, subprocess_helper, pr
-from mgraph import importing
+from typing import Optional
 from mhelper import SwitchError, file_helper, io_helper, OpeningWriter
 
-from groot import constants
+from groot.commands.gimmicks import wizard, compare
+from groot.commands.workflow import s010_file, s080_tree, s070_alignment
+from groot_tests.test_directory import TestDirectory
 from groot.constants import EFormat, EChanges
-from groot.data import global_view, UserGraph, FixedUserGraph
+from groot.data import global_view, UserGraph, FixedUserGraph, sample_data
 from groot.utilities import lego_graph
 
 
-__mcmd_folder_name__ = constants.INTERMAKE_FOLDER_NAME_TESTS
 
 
-@command()
+
+@intermake.command()
 def print_test( name: str = "" ) -> EChanges:
     """
     Lists the available test cases.
@@ -36,7 +34,7 @@ def print_test( name: str = "" ) -> EChanges:
     else:
         names = [file_helper.get_filename( x ) for x in file_helper.list_sub_dirs( TestDirectory.get_test_folder() )]
     
-    for name in pr.pr_iterate( names, "Parsing tests" ):
+    for name in intermake.pr.pr_iterate( names, "Parsing tests" ):
         tdir = TestDirectory( name )
         fp = name
         
@@ -47,11 +45,11 @@ def print_test( name: str = "" ) -> EChanges:
             name = ini["groot_test"]["name"]
             size = ini["groot_test"]["size"]
             
-            ini = io_helper.load_ini( tdir.r_summary )
+            ini = io_helper.load_ini( tdir.r_summary, stop = ("quartets" , "match_quartets") )
             match = ini["quartets"]["match_quartets"].split( " " )[1].strip( "()" )
             r.append( (fp, name, size, match) )
     
-    with pr.pr_section( "Tests" ):
+    with intermake.pr.pr_section( "Tests" ):
         print( "{} {} {} {}".format( "File".ljust( 20 ), "Name".ljust( 10 ), "Size".ljust( 10 ), "Match".ljust( 10 ) ) )
         
         for fp, name, size, match in sorted( r, key = lambda x: str( x[1] ) ):
@@ -63,7 +61,7 @@ def print_test( name: str = "" ) -> EChanges:
     return EChanges.INFORMATION
 
 
-@command()
+@intermake.command()
 def print_test_dir() -> EChanges:
     """
     Prints the test directory.
@@ -73,7 +71,7 @@ def print_test_dir() -> EChanges:
     return EChanges.INFORMATION
 
 
-@command()
+@intermake.command()
 def run_test( name: str ) -> EChanges:
     """
     Runs a test case and saves the results to the global results folder. 
@@ -96,13 +94,13 @@ def run_test( name: str ) -> EChanges:
     file_helper.create_directory( tdir.r_folder, overwrite = True )
     
     # Check the requisite files exist
-    if not path.isdir( tdir.t_folder ):
+    if not os.path.isdir( tdir.t_folder ):
         raise ValueError( "This is not a test case (it is not even a folder, «{}»).".format( tdir.t_folder ) )
     
-    if not path.isfile( tdir.t_tree ):
+    if not os.path.isfile( tdir.t_tree ):
         raise ValueError( "This is not a test case (it is missing the edge list file, «{}»).".format( tdir.t_tree ) )
     
-    if not path.isfile( tdir.t_ini ):
+    if not os.path.isfile( tdir.t_ini ):
         raise ValueError( "This is not a test case (it is missing the INI file, «{}»).".format( tdir.t_ini ) )
     
     # Read the test specs
@@ -129,7 +127,7 @@ def run_test( name: str ) -> EChanges:
     # Create settings
     walkthrough = wizard.Wizard( new = True,
                                  name = tdir.r_model,
-                                 imports = groot.data.sample_data.get_sample_contents( tdir.t_folder ),
+                                 imports = sample_data.get_sample_contents( tdir.t_folder ),
                                  pauses = set(),
                                  tolerance = wiz_tol,
                                  outgroups = wiz_og,
@@ -148,7 +146,7 @@ def run_test( name: str ) -> EChanges:
             raise ValueError( "Expected wizard to complete but it did not." )
         
         # Add the original graph to the Groot `Model` in case we debug
-        test_tree_file_data = UserGraph( importing.import_edgelist( file_helper.read_all_text( tdir.t_tree ), delimiter = "\t" ), name = "original_graph" )
+        test_tree_file_data = UserGraph( mgraph.importing.import_edgelist( file_helper.read_all_text( tdir.t_tree ), delimiter = "\t" ), name = "original_graph" )
         lego_graph.rectify_nodes( test_tree_file_data.graph, global_view.current_model() )
         global_view.current_model().user_graphs.append( FixedUserGraph( test_tree_file_data.graph, "original_graph" ) )
     finally:
@@ -178,11 +176,11 @@ def run_test( name: str ) -> EChanges:
     s010_file.file_save( tdir.r_model )
     
     # Done
-    pr.printx( "<verbose>The test has completed, see «{}».</verbose>".format( tdir.r_comparison ) )
+    intermake.pr.printx( "<verbose>The test has completed, see «{}».</verbose>".format( tdir.r_comparison ) )
     return EChanges.MODEL_OBJECT
 
 
-@command()
+@intermake.command()
 def load_test( name: str ) -> EChanges:
     """
     Loads the model created via `run_test`.
@@ -190,13 +188,13 @@ def load_test( name: str ) -> EChanges:
     """
     tdir = TestDirectory( name )
     
-    if not path.isfile( tdir.r_model ):
+    if not os.path.isfile( tdir.r_model ):
         raise ValueError( "Cannot load test because it has not yet been run." )
     
     return s010_file.file_load( tdir.r_model )
 
 
-@command()
+@intermake.command()
 def view_test_results( name: Optional[str] = None ):
     """
     View the results of a particular test.
@@ -205,9 +203,9 @@ def view_test_results( name: Optional[str] = None ):
     """
     if name:
         tdir = TestDirectory( name )
-        groot.file_load( tdir.r_model )
+        s010_file.file_load( tdir.r_model )
     
-    model = groot.current_model()
+    model = global_view.current_model()
     
     s080_tree.print_trees( model.user_graphs["original_graph"], format = EFormat._HTML, file = "open" )
     s080_tree.print_trees( model.fusion_graph_unclean, format = EFormat._HTML, file = "open" )
@@ -223,17 +221,17 @@ def view_test_results( name: Optional[str] = None ):
         view_report.write( report )
 
 
-@command()
+@intermake.command()
 def drop_tests():
     """
     Deletes *all* test cases and their results.
     """
     for folder in TestDirectory.get_test_folder(), TestDirectory.get_results_folder():
         shutil.rmtree( folder )
-        pr.printx( "<verbose>Removed: {}</verbose>".format( folder ) )
+        intermake.pr.printx( "<verbose>Removed: {}</verbose>".format( folder ) )
 
 
-@command()
+@intermake.command()
 def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: bool = True ) -> EChanges:
     """
     Creates a GROOT unit test in the sample data folder.
@@ -264,16 +262,16 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
         print( "Test {} of {}".format( index + 1, len( types ) ) )
         
         try:
-            FAKE.new()
+            FAKE.cmd_new()
             # The SeqGen mutator has a weird problem where, given a root `(X,O)R` in which `R`
             # is set as a result of an earlier tree, `O` will be more similar to the leaves of
             # that earlier tree than to the leaves in X. For this reason we use a simple random
             # model and not SeqGen.
-            mutate_fn = FAKE.random
+            mutate_fn = FAKE.cmd_random
             
             if name == "0":
                 # 0 no fusions
-                outgroups = FAKE.random_tree( ["A"], **args_random_tree )
+                outgroups = FAKE.cmd_random_tree( ["A"], **args_random_tree )
                 a, = (x.parent for x in outgroups)
                 mutate_fn( [a], *mutate_args )
             elif name == "1":
@@ -289,17 +287,17 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 #
                 
                 # Trees
-                outgroups = FAKE.random_tree( ["A", "B", "C"], **args_random_tree )
+                outgroups = FAKE.cmd_random_tree( ["A", "B", "C"], **args_random_tree )
                 a, b, c = (x.parent for x in outgroups)
                 __remove_outgroups( outgroups, 2 )
                 
                 mutate_fn( [a, b, c], *mutate_args )
                 
                 # Fusion point
-                fa = FAKE.random_node( a, avoid = outgroups )
-                fb = FAKE.random_node( b, avoid = outgroups )
-                FAKE.branch( [fa, fb], c )
-                FAKE.mk_composite( [c] )
+                fa = FAKE.cmd_random_node( a, avoid = outgroups )
+                fb = FAKE.cmd_random_node( b, avoid = outgroups )
+                FAKE.cmd_branch( [fa, fb], c )
+                FAKE.cmd_mk_composite( [c] )
             elif name == "4":
                 # 2 fusion points; 4 genes; 2 origins
                 # (Possibly the most difficult scenario because the result is cyclic)
@@ -316,19 +314,19 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 
                 
                 # Trees
-                outgroups = FAKE.random_tree( ["A", "B", "C", "D"], **args_random_tree )
+                outgroups = FAKE.cmd_random_tree( ["A", "B", "C", "D"], **args_random_tree )
                 a, b, c, d = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d], *mutate_args )
                 __remove_outgroups( outgroups, 2, 3 )
                 
                 # Fusion points
-                fa1 = FAKE.random_node( a, avoid = outgroups )
-                fb1 = FAKE.random_node( b, avoid = outgroups )
-                fa2 = FAKE.random_node( a, avoid = outgroups )
-                fb2 = FAKE.random_node( b, avoid = outgroups )
-                FAKE.branch( [fa1, fb1], c )
-                FAKE.branch( [fa2, fb2], d )
-                FAKE.mk_composite( [c, d] )
+                fa1 = FAKE.cmd_random_node( a, avoid = outgroups )
+                fb1 = FAKE.cmd_random_node( b, avoid = outgroups )
+                fa2 = FAKE.cmd_random_node( a, avoid = outgroups )
+                fb2 = FAKE.cmd_random_node( b, avoid = outgroups )
+                FAKE.cmd_branch( [fa1, fb1], c )
+                FAKE.cmd_branch( [fa2, fb2], d )
+                FAKE.cmd_mk_composite( [c, d] )
             
             elif name == "5":
                 # 2 fusion points; 5 genes; 3 origins
@@ -344,19 +342,19 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 #      D
                 
                 # Trees
-                outgroups = FAKE.random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
+                outgroups = FAKE.cmd_random_tree( ["A", "B", "C", "D", "E"], **args_random_tree )
                 a, b, c, d, e = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d, e], *mutate_args )
                 __remove_outgroups( outgroups, 2, 4 )
                 
                 # Fusion points
-                fa = FAKE.random_node( a, avoid = outgroups )
-                fb = FAKE.random_node( b, avoid = outgroups )
-                fc = FAKE.random_node( c, avoid = outgroups )
-                fd = FAKE.random_node( d, avoid = outgroups )
-                FAKE.branch( [fa, fb], c )
-                FAKE.branch( [fc, fd], e )
-                FAKE.mk_composite( [c, e] )
+                fa = FAKE.cmd_random_node( a, avoid = outgroups )
+                fb = FAKE.cmd_random_node( b, avoid = outgroups )
+                fc = FAKE.cmd_random_node( c, avoid = outgroups )
+                fd = FAKE.cmd_random_node( d, avoid = outgroups )
+                FAKE.cmd_branch( [fa, fb], c )
+                FAKE.cmd_branch( [fc, fd], e )
+                FAKE.cmd_mk_composite( [c, e] )
             elif name == "7":
                 # 3 fusion points; 7 genes; 4 origins
                 #
@@ -377,39 +375,39 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                 
                 
                 # Trees
-                outgroups = FAKE.random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
+                outgroups = FAKE.cmd_random_tree( ["A", "B", "C", "D", "E", "F", "G"], **args_random_tree )
                 a, b, c, d, e, f, g = (x.parent for x in outgroups)
                 mutate_fn( [a, b, c, d, e, f, g], *mutate_args )
                 __remove_outgroups( outgroups, 2, 5, 6 )
                 
                 # Fusion points
-                fa = FAKE.random_node( a, avoid = outgroups )
-                fb = FAKE.random_node( b, avoid = outgroups )
-                fc = FAKE.random_node( c, avoid = outgroups )
-                fd = FAKE.random_node( d, avoid = outgroups )
-                fe = FAKE.random_node( e, avoid = outgroups )
-                ff = FAKE.random_node( f, avoid = outgroups )
-                FAKE.branch( [fa, fb], c )
-                FAKE.branch( [fd, fe], f )
-                FAKE.branch( [fc, ff], g )
-                FAKE.mk_composite( [c, f, g] )
+                fa = FAKE.cmd_random_node( a, avoid = outgroups )
+                fb = FAKE.cmd_random_node( b, avoid = outgroups )
+                fc = FAKE.cmd_random_node( c, avoid = outgroups )
+                fd = FAKE.cmd_random_node( d, avoid = outgroups )
+                fe = FAKE.cmd_random_node( e, avoid = outgroups )
+                ff = FAKE.cmd_random_node( f, avoid = outgroups )
+                FAKE.cmd_branch( [fa, fb], c )
+                FAKE.cmd_branch( [fd, fe], f )
+                FAKE.cmd_branch( [fc, ff], g )
+                FAKE.cmd_mk_composite( [c, f, g] )
             else:
                 raise SwitchError( "name", name )
             
-            FAKE.apply()
+            FAKE.cmd_generate()
             
             file_helper.create_directory( tdir.t_folder )
             os.chdir( tdir.t_folder )
             
-            FAKE.show( format = FAKE.EGraphFormat.ASCII, file = "tree.txt" )
-            FAKE.show( format = FAKE.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
-            FAKE.fasta( which = FAKE.ESubset.ALL, file = "all.fasta.hidden" )
-            FAKE.fasta( which = FAKE.ESubset.LEAVES, file = "leaves.fasta" )
+            FAKE.cmd_show( format = mgraph.EGraphFormat.ASCII, file = "tree.txt" )
+            FAKE.cmd_show( format = mgraph.EGraphFormat.TSV, file = "tree.tsv", name = True, mutator = False, sequence = False, length = False )
+            FAKE.cmd_fasta( which = FAKE.ESubset.ALL, file = "all.fasta.hidden" )
+            FAKE.cmd_fasta( which = FAKE.ESubset.LEAVES, file = "leaves.fasta" )
             
             if not no_blast:
                 blast = []
                 # noinspection SpellCheckingInspection
-                subprocess_helper.run_subprocess( ["blastp",
+                intermake.subprocess_helper.run_subprocess( ["blastp",
                                                    "-subject", "leaves.fasta",
                                                    "-query", "leaves.fasta",
                                                    "-outfmt", "6"],
@@ -429,7 +427,7 @@ def create_test( types: str = "1", no_blast: bool = False, size: int = 2, run: b
                                                       "size={}".format( size ),
                                                       "guid={}".format( guid )] )
             
-            path_ = path.abspath( "." )
+            path_ = os.path.abspath( "." )
             print( "FINAL PATH: " + path_ )
             r.append( path_ )
         
@@ -451,7 +449,7 @@ def __remove_outgroups( outgroups, *args ):
     for x in args:
         assert outgroups[x].num_children == 0
     
-    faketree.remove( [outgroups[x] for x in args] )
+    faketree.cmd_remove( [outgroups[x] for x in args] )
     
     for x in sorted( args, reverse = True ):
         del outgroups[x]

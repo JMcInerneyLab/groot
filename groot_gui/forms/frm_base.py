@@ -20,7 +20,7 @@ class FrmBase( QDialog ):
     """
     This is the base class for Groot dialogues.
     
-    Its main functions are to construct `self.actions` and define `on_apply_request` and `on_command_completed`. 
+    Its main functions are to construct `self.actions` and define `on_apply_request` and `on_executed`. 
     """
     handler_info: IntentHandler = None
     
@@ -66,7 +66,7 @@ class FrmBase( QDialog ):
         The derived class should implement this function to respond to the command.
         
         ¡¡¡Overriding this is now obsolete!!!
-        Intermake now allows the callback to be hooked via `AsyncResult.listen`
+        Intermake now allows the callback to be hooked via `Result.listen`
         """
         self.refresh_data()
     
