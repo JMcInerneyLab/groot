@@ -1,19 +1,17 @@
 import itertools
-from typing import Iterable, List, Set
+from typing import Iterable, List, Set, cast, Callable
 
 from groot import constants
+from groot.application import app
 from groot.constants import EChanges
 from groot.data import INamedGraph, Report, global_view
 from groot.utilities import lego_graph
-from intermake import command, pr
+from intermake import pr
 from mgraph import AbstractQuartet, QuartetCollection, QuartetComparison, analysing
 from mhelper import SwitchError, TIniData, TIniSection, array_helper, string_helper
 
 
-
-
-
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_comparison( left: INamedGraph, right: INamedGraph ) -> EChanges:
     """
     Compares two graphs.
@@ -136,7 +134,7 @@ def __enumerate_2genes( calc_seq: Set[object],
     ini_sect: TIniSection = { }
     ini_data["n_quartets_{}".format( n )] = ini_sect
     
-    for comb in sorted( itertools.combinations( calc_seq, n ), key = str ):  # type: Iterable[object]
+    for comb in sorted( itertools.combinations( calc_seq, n ), key = cast( Callable, str ) ):  # type: Iterable[object]
         n_tot = []
         n_hit = []
         n_mis = []

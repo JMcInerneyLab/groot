@@ -4,14 +4,14 @@ Imports or creates the BLAST data.
 More generically called the "similarity matrix" or "edge" data, we allow the user to load an existing file or run their own algorithm.
 BLAST is the default algorithm and this invocation can be found in the `groot_ex` project. 
 """
+from intermake import pr
 from typing import Callable, List, Optional
+from mhelper import EFileMode, isFilename, Logger
 
 import re
 
 from groot.commands.workflow.s020_sequences import _make_gene
-from intermake import command, pr
-from mhelper import EFileMode, isFilename, Logger
-
+from groot.application import app
 from groot import Edge, constants
 from groot.constants import EXT_BLAST, STAGES, EChanges
 from groot.data import Model, Domain, global_view
@@ -35,7 +35,7 @@ Output:
 similarity_algorithms = AlgorithmCollection( DAlgorithm, "Similarity" )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_similarities( algorithm: similarity_algorithms.Algorithm, evalue: float = None, length: int = None ):
     """
     Create and imports similarity matrix created using the specified algorithm.
@@ -55,7 +55,7 @@ def create_similarities( algorithm: similarity_algorithms.Algorithm, evalue: flo
     __import_blast_format_6( evalue, output, "algorithm_output({})".format( algorithm ), length, model, True )
 
 
-@command( folder = constants.F_SET )
+@app.command( folder = constants.F_SET )
 def set_similarity( left: Domain, right: Domain ) -> EChanges:
     """
     Adds a new edge to the model.
@@ -71,7 +71,7 @@ def set_similarity( left: Domain, right: Domain ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command( folder = constants.F_IMPORT )
+@app.command( folder = constants.F_IMPORT )
 def import_similarities( file_name: isFilename[EFileMode.READ, EXT_BLAST], evalue: Optional[float] = 1e-10, length: Optional[int] = None ) -> EChanges:
     """
     Imports a similarity matrix.
@@ -93,7 +93,7 @@ def import_similarities( file_name: isFilename[EFileMode.READ, EXT_BLAST], evalu
     return EChanges.MODEL_ENTITIES
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_similarities( edges: Optional[List[Edge]] = None ):
     """
     Detaches the specified edges from the specified subsequences.
@@ -111,7 +111,7 @@ def drop_similarities( edges: Optional[List[Edge]] = None ):
         model.edges = []
 
 
-@command( names = ["print_similarities", "similarities"], folder = constants.F_PRINT )
+@app.command( names = ["print_similarities", "similarities"], folder = constants.F_PRINT )
 def print_similarities( find: str = "" ) -> EChanges:
     """
     Prints model edges.

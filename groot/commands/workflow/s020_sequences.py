@@ -5,23 +5,24 @@ Generally just FASTA is imported here, but we also have the generic `import_file
 and `import_directory`, as well as some miscellaneous imports such as Composite
 Search and Newick imports, that don't belong anywhere else. 
 """
-import warnings
 from typing import List, Optional, Set
-import re
-from warnings import warn
-from groot.constants import STAGES, EChanges
-from intermake import command, pr
+from intermake import pr
 from mhelper import Logger, bio_helper, isFilename
 
-from groot import Gene, Model, constants
-from groot.data import IHasFasta, global_view
+import warnings
+import re
+
+from groot import constants
+from groot.constants import STAGES, EChanges
+from groot.application import app
+from groot.data import IHasFasta, global_view, Gene, Model
 from groot.utilities import cli_view_utils
 
 
 LOG = Logger( "import" )
 
 
-@command( folder = constants.F_IMPORT )
+@app.command( folder = constants.F_IMPORT )
 def import_genes( file_name: str ) -> EChanges:
     """
     Imports a FASTA file into your model.
@@ -64,7 +65,7 @@ def import_genes( file_name: str ) -> EChanges:
 _T = isFilename["r", ".csv"]
 
 
-@command( folder = constants.F_IMPORT )
+@app.command( folder = constants.F_IMPORT )
 def import_gene_names( file: _T, header: bool = False ):
     """
     Loads in the displayed gene names from a file.
@@ -103,7 +104,7 @@ def import_gene_names( file: _T, header: bool = False ):
     pr.printx( "<verbose>{} genes renamed</verbose>".format( tot ) )
 
 
-@command( folder = constants.F_SET )
+@app.command( folder = constants.F_SET )
 def set_gene_name( gene: Gene, name: str ) -> EChanges:
     """
     Changes the display name of the gene (_not_ the accession).
@@ -114,7 +115,7 @@ def set_gene_name( gene: Gene, name: str ) -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_SET )
+@app.command( folder = constants.F_SET )
 def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
     """
     Adds a new sequence to the model
@@ -140,7 +141,7 @@ def set_genes( accessions: List[str], sites: Optional[List[str]] ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_genes( genes: List[Gene] ) -> EChanges:
     """
     Removes one or more sequences from the model.
@@ -198,7 +199,7 @@ def drop_genes( genes: List[Gene] ) -> EChanges:
     return EChanges.MODEL_ENTITIES
 
 
-@command( folder = constants.F_PRINT )
+@app.command( folder = constants.F_PRINT )
 def print_genes( find: Optional[str] = None, targets: Optional[List[IHasFasta]] = None ) -> EChanges:
     """
     List sequences or presents their FASTA data.
@@ -235,7 +236,7 @@ def print_genes( find: Optional[str] = None, targets: Optional[List[IHasFasta]] 
             if isinstance( target, IHasFasta ):
                 print( cli_view_utils.colour_fasta_ansi( target.to_fasta(), global_view.current_model().site_type ) )
             else:
-                warn( "Target «{}» does not have FASTA data.".format( target ), UserWarning )
+                warnings.warn( "Target «{}» does not have FASTA data.".format( target ), UserWarning )
     
     return EChanges.INFORMATION
 

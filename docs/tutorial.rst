@@ -1,5 +1,5 @@
 ====================================================================================================
-                                        |app_name| Tutorial                                         
+                                           Groot Tutorial                                           
 ====================================================================================================
 
 This tutorial concerns processing the sample "coleman" dataset in |app_name|.
@@ -117,7 +117,7 @@ of providing a tutorial, we will be importing the data manually.
 
 .. note::
 
-    |Groot| has several Wizards, which can perform the whole or part of the workflow for you. Use
+    |app_name| has several Wizards, which can perform the whole or part of the workflow for you. Use
     :func:`cmdlist` for more details. 
 
 Unless you can remember where Pip installed the files to earlier, you can find out where the sample
@@ -366,7 +366,7 @@ progressing smoothly and you can view the trees and reports inline!
 
 .. ***** REFERENCES AND DOCUMENT MARKUP FOLLOW *****
 
-.. |app_name| replace:: :t:`Groot`
+.. |app_name| replace:: `Groot`:t:
 .. _`paper`: paper.md
 .. _`the installation guide`: installation.md
 .. _CLANN: http://mcinerneylab.com/software/clann/
@@ -374,4 +374,3 @@ progressing smoothly and you can view the trees and reports inline!
 .. _PAUP: http://evomics.org/resources/software/molecular-evolution-software/paup/
 .. _`Intermake documentation`: http://software.rusilowicz.com/intermake
 .. default_highlight:: bash
- 

@@ -2,16 +2,16 @@
 Deals with the model's fusion events and fusion points.
 """
 from typing import FrozenSet, List, Set, Iterator
-
-import itertools
-
-from groot.constants import EChanges
-from groot.data.model_collections import FusionCollection
-from intermake import command, pr
+from intermake import  pr
 from mgraph import MEdge, MGraph, MNode
 from mhelper import Logger, array_helper, string_helper
 
+import itertools
+
 from groot import constants
+from groot.constants import EChanges
+from groot.data.model_collections import FusionCollection
+from groot.application import app
 from groot.data import INode, Component, Fusion, Model, Point, Gene, global_view
 from groot.data.model_core import Formation
 from groot.utilities import lego_graph
@@ -22,7 +22,7 @@ __LOG = Logger( "fusion", False )
 __LOG_ISOLATION = Logger( "isolation", False )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_fusions() -> EChanges:
     """
     Finds the fusion points in the model.
@@ -49,7 +49,7 @@ def create_fusions() -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_fusions() -> EChanges:
     """
     Removes all fusion points from the model.
@@ -70,7 +70,7 @@ def drop_fusions() -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_fusions", "fusions"], folder = constants.F_PRINT )
+@app.command( names = ["print_fusions", "fusions"], folder = constants.F_PRINT )
 def print_fusions() -> EChanges:
     """
     Prints model fusions.

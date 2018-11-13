@@ -4,7 +4,7 @@ from groot_gui.forms.designer.frm_view_options_designer import Ui_Dialog
 import groot.data.config
 from groot.constants import EFormat, BROWSE_MODE, EStartupMode, EWindowMode
 from groot_gui.forms.frm_base import FrmBase
-from intermake import common_commands
+from intermake import commands
 
 from mhelper_qt import exqtSlot
 
@@ -16,7 +16,7 @@ class FrmViewOptions( FrmBase ):
     """
     Groot's application-wide settings can be configured from this screen.
     
-    The CLI/Python interactive equivalent of this screen is the `local` command.
+    The CLI/Python interactive equivalent of this screen is the `settings` command.
     The Python script equivalent is the `groot.global_view.options()` object.
     """
     
@@ -206,4 +206,4 @@ class FrmViewOptions( FrmBase ):
         """
         Signal handler:
         """
-        self.show_command( common_commands.cmd_local_data )
+        self.show_command( commands.configure )

@@ -1,16 +1,17 @@
+from mgraph import MGraph, MNode, analysing
+from mhelper import Logger, LoopDetector, SwitchError
+
 from groot.constants import STAGES, EChanges
 from groot.data import EPosition, FusionGraph, Formation, Point, Gene, global_view
 from groot.utilities import lego_graph
 from groot import constants
-from intermake import command
-from mgraph import MGraph, MNode, analysing
-from mhelper import Logger, LoopDetector, SwitchError
+from groot.application import app
 
 
 LOG = Logger( "clean", False )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_cleaned():
     """
     Cleans the NRFG.
@@ -30,7 +31,7 @@ def create_cleaned():
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_cleaned():
     """
     Removes data from the model.

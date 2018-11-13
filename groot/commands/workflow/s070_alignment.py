@@ -1,13 +1,14 @@
 from typing import Callable, List, Optional
-
-from groot import constants
-from intermake import pr, Theme, command, Controller
+from intermake import pr, Controller
 from mhelper import io_helper, string_helper
 
+from groot import constants
+from groot.application import app
 from groot.data import Component, Model, global_view
 from groot.constants import EChanges
 from groot.utilities import cli_view_utils, external_runner
 from groot.utilities.extendable_algorithm import AlgorithmCollection
+
 
 DAlgorithm = Callable[[Model, str], str]
 """A delegate for a function that takes a model and unaligned FASTA data, and produces an aligned result, in FASTA format."""
@@ -15,7 +16,7 @@ DAlgorithm = Callable[[Model, str], str]
 alignment_algorithms = AlgorithmCollection( DAlgorithm, "Alignment" )
 
 
-@command(folder = constants.F_CREATE)
+@app.command( folder = constants.F_CREATE )
 def create_alignments( algorithm: alignment_algorithms.Algorithm, component: Optional[List[Component]] = None ) -> EChanges:
     """
     Aligns the component.
@@ -44,7 +45,7 @@ def create_alignments( algorithm: alignment_algorithms.Algorithm, component: Opt
     return EChanges.COMP_DATA
 
 
-@command(folder = constants.F_SET)
+@app.command( folder = constants.F_SET )
 def set_alignment( component: Component, alignment: str ) -> EChanges:
     """
     Sets a component tree manually.
@@ -60,7 +61,7 @@ def set_alignment( component: Component, alignment: str ) -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command(folder = constants.F_DROP)
+@app.command( folder = constants.F_DROP )
 def drop_alignment( component: Optional[List[Component]] = None ) -> EChanges:
     """
     Removes the alignment data from the component.
@@ -79,10 +80,11 @@ def drop_alignment( component: Optional[List[Component]] = None ) -> EChanges:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_alignments", "alignments"], folder=constants.F_PRINT )
+@app.command( names = ["print_alignments", "alignments"], folder = constants.F_PRINT )
 def print_alignments( component: Optional[List[Component]] = None, x = 1, n = 0, file: str = "" ) -> EChanges:
     """
     Prints the alignment for a component.
+    
     :param file:        File to write to. See `file_write_help`. If this is empty then colours and headings are also printed. 
     :param component:   Component to print alignment for. If not specified prints all alignments.
     :param x:           Starting index (where 1 is the first site).
@@ -97,18 +99,22 @@ def print_alignments( component: Optional[List[Component]] = None, x = 1, n = 0,
     r = []
     
     colour = not file
+    sec = colour or len( to_do ) > 1
     
     for component_ in to_do:
-        if colour or len( to_do ) > 1:
-            return "\n" + Theme.TITLE + "---------- COMPONENT {} ----------".format( component_ ) + Theme.RESET
+        if sec:
+            r.append( "<section name='Component {}'>".format( pr.escape( component_ ) ) )
         
         if component_.alignment is None:
             raise ValueError( "No alignment is available for this component. Did you remember to run `align` first?" )
         else:
             if colour:
-                r.append( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m, x, n ) )
+                r.append( cli_view_utils.colour_fasta_ansi( component_.alignment, m.site_type, m, x, n ) )  # TODO: Should provide XML element defining the style instead of formatting within this function
             else:
                 r.append( component_.alignment )
+        
+        if sec:
+            r.append( "</section>" )
     
     with io_helper.open_write( file ) as file_out:
         file_out.write( "\n".join( r ) + "\n" )

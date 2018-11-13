@@ -40,7 +40,7 @@ def supertree_groot( subset_src: Subset ) -> MGraph:
     
     __LOG_CREATE.pause( "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ CREATE GRAPHS FOR POINTS ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒" )
     
-    exception_helper.assert_type( "subset_src", subset_src, Subset )
+    exception_helper.safe_cast( "subset_src", subset_src, Subset )
     
     subset = subset_src.contents
     __LOG_CREATE.pause( "***** LEAF SET {} *****", subset )

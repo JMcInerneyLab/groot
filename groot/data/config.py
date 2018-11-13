@@ -15,6 +15,10 @@ class RecentFile:
     def __init__( self, file_name ):
         self.file_name = file_name
         self.time = time.time()
+    
+    
+    def __repr__( self ):
+        return repr( self.file_name )
 
 
 class GlobalOptions:
@@ -76,7 +80,7 @@ def options() -> GlobalOptions:
     global __global_options
     
     if __global_options is None:
-        __global_options = Controller.ACTIVE.app.local_data.store.bind( "lego-options", GlobalOptions() )
+        __global_options = Controller.ACTIVE.app.local_data.store.bind( "lego_options", GlobalOptions() )
     
     return __global_options
 

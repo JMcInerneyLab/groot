@@ -48,7 +48,7 @@ Add the following to the file::
     @groot.similarity_algorithms.register( "blastn" )
     def blastp( fasta: str ) -> str:
         file_helper.write_all_text( "fasta.fasta", fasta )
-        groot.subprocess_helper.run_subprocess( ["blastn", "-query", "fasta.fasta", "-subject", "fasta.fasta", "-outfmt", "6", "-out", "blast.blast"] )
+        groot.subprocess_helper.execute( ["blastn", "-query", "fasta.fasta", "-subject", "fasta.fasta", "-outfmt", "6", "-out", "blast.blast"] )
         return file_helper.read_all_text( "blast.blast" )
 
 Exit :t:`vim`, remembering to save your file.

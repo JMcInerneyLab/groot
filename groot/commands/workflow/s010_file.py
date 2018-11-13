@@ -1,22 +1,19 @@
-import sys
 from os import path
 from typing import Optional
-
-import groot.data.config
-import groot.data.sample_data
-from groot.commands.gimmicks import wizard
-from intermake import Controller, Theme, command, visibilities, pr
+from intermake import Controller, visibilities, pr
 from mhelper import EFileMode, isFilename, isOptional, file_helper, io_helper
 
+import sys
+
 from groot import constants
-from groot.data import global_view
+from groot.commands.gimmicks import wizard
+from groot.data import global_view, config, sample_data
 from groot.data.model import Model
 from groot.constants import EChanges
+from groot.application import app
 
 
-
-
-@command( names = ["file_new", "new"], folder = constants.F_FILE )
+@app.command( names = ["file_new", "new"], folder = constants.F_FILE )
 def file_new() -> EChanges:
     """
     Starts a new model
@@ -27,7 +24,7 @@ def file_new() -> EChanges:
     return EChanges.MODEL_OBJECT
 
 
-@command( names = ["file_save", "save"], folder = constants.F_FILE )
+@app.command( names = ["file_save", "save"], folder = constants.F_FILE )
 def file_save( file_name: isOptional[isFilename[EFileMode.WRITE, constants.EXT_MODEL]] = None ) -> EChanges:
     """
     Saves the model
@@ -44,7 +41,7 @@ def file_save( file_name: isOptional[isFilename[EFileMode.WRITE, constants.EXT_M
     if not file_name:
         raise ValueError( "Cannot save because a filename has not been specified." )
     
-    groot.data.config.remember_file( file_name )
+    config.remember_file( file_name )
     
     sys.setrecursionlimit( 10000 )
     
@@ -53,13 +50,13 @@ def file_save( file_name: isOptional[isFilename[EFileMode.WRITE, constants.EXT_M
         io_helper.save_binary( file_name, model )
     
     model.file_name = file_name
-    pr.printx( "<verbose>Saved model to <file>{}</file></verbose>",file_name ) 
+    pr.printx( "<verbose>Saved model to <file>{}</file></verbose>", file_name )
     
     return EChanges.FILE_NAME
 
 
-@command( folder = constants.F_FILE, visibility = visibilities.ADVANCED )
-def cmd_export_json( file_name: isFilename[EFileMode.WRITE, constants.EXT_JSON] ) -> EChanges:
+@app.command( folder = constants.F_FILE, visibility = visibilities.ADVANCED )
+def export_json( file_name: isFilename[EFileMode.WRITE, constants.EXT_JSON] ) -> EChanges:
     """
     Exports the entirety of the current model into a JSON file for reading by external programs.
     
@@ -70,7 +67,7 @@ def cmd_export_json( file_name: isFilename[EFileMode.WRITE, constants.EXT_JSON] 
     return EChanges.NONE
 
 
-@command( names = ["file_load", "load"], folder = constants.F_FILE )
+@app.command( names = ["file_load", "load"], folder = constants.F_FILE )
 def file_load( file_name: isFilename[EFileMode.READ] ) -> EChanges:
     """
     Loads the model from a file
@@ -94,13 +91,13 @@ def file_load( file_name: isFilename[EFileMode.READ] ) -> EChanges:
     model.file_name = file_name
     
     global_view.set_model( model )
-    groot.data.config.remember_file( file_name )
+    config.remember_file( file_name )
     pr.printx( "<verbose>Loaded model: {}</verbose>".format( file_name ) )
     
     return EChanges.MODEL_OBJECT
 
 
-@command( names = ["file_sample", "sample", "samples"], folder = constants.F_FILE )
+@app.command( names = ["file_sample", "sample", "samples"], folder = constants.F_FILE )
 def file_sample( name: Optional[str] = None, query: bool = False, load: bool = False ) -> EChanges:
     """
     Lists the available samples, or loads the specified sample.
@@ -111,7 +108,7 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
     :return: 
     """
     if name:
-        file_name = path.join( groot.data.sample_data.get_sample_data_folder(), name )
+        file_name = path.join( sample_data.get_sample_data_folder(), name )
         
         if not path.isdir( file_name ):
             raise ValueError( "'{}' is not a valid sample directory.".format( name ) )
@@ -123,26 +120,26 @@ def file_sample( name: Optional[str] = None, query: bool = False, load: bool = F
         
         return wizard.import_directory( file_name, filter = (wizard.EImportFilter.DATA | wizard.EImportFilter.SCRIPT) if not load else wizard.EImportFilter.DATA, query = query )
     else:
-        for sample_dir in groot.data.sample_data.get_samples():
+        for sample_dir in sample_data.get_samples():
             print( file_helper.get_filename( sample_dir ) )
         else:
-            print( "No samples available. Please download and add sample data to `{}`.".format( groot.data.sample_data.get_sample_data_folder() ) )
+            print( "No samples available. Please download and add sample data to `{}`.".format( sample_data.get_sample_data_folder() ) )
         
         return EChanges.NONE
 
 
-@command( names = ("file_load_last", "last"), folder = constants.F_FILE )
+@app.command( names = ("file_load_last", "last"), folder = constants.F_FILE )
 def file_load_last():
     """
     Loads the last file from the recent list.
     """
-    if not groot.data.config.options().recent_files:
+    if not config.options().recent_files:
         raise ValueError( "Cannot load the last session because there are no recent sessions." )
     
-    file_load( groot.data.config.options().recent_files[-1].file_name )
+    file_load( config.options().recent_files[-1].file_name )
 
 
-@command( names = ["file_recent", "recent"], folder = constants.F_FILE )
+@app.command( names = ["file_recent", "recent"], folder = constants.F_FILE )
 def file_recent():
     """
     Prints the contents of the `sessions` folder
@@ -150,12 +147,12 @@ def file_recent():
     r = []
     
     r.append( "SESSIONS:" )
-    for file in groot.data.sample_data.get_workspace_files():
-        r.append( file_helper.highlight_file_name_without_extension( file, Theme.BOLD, Theme.RESET ) )
+    for file in sample_data.get_workspace_files():
+        r.append( pr.fmt_file( file ) )
     
     r.append( "\nRECENT:" )
-    for file in reversed( groot.data.config.options().recent_files ):
-        r.append( file_helper.highlight_file_name_without_extension( file.file_name, Theme.BOLD, Theme.RESET ) )
+    for file in reversed( config.options().recent_files ):
+        r.append( pr.fmt_file( file ) )
     
     print( "\n".join( r ) )
 

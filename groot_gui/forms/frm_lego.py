@@ -6,8 +6,10 @@ from PyQt5.QtOpenGL import QGL, QGLFormat, QGLWidget
 from PyQt5.QtWidgets import QAction, QGraphicsScene, QGridLayout, QMenu, QSizePolicy, QAbstractButton
 from groot_gui.forms.designer import frm_lego_designer
 
-import groot.data.config
 import intermake
+import intermake_qt
+
+import groot.data.config
 from groot.utilities import AbstractAlgorithm, AlgorithmCollection
 from groot_gui.forms.frm_base import FrmBaseWithSelection
 from groot_gui.lego import InteractiveGraphicsView, ModelView, lay_colour, lay_position, lay_selection
@@ -170,7 +172,7 @@ class FrmLego( FrmBaseWithSelection ):
         
         for key, value in algo_collection.items():
             act = QAction()
-            act.setText( intermake.Controller.ACTIVE.translate_name( key ) )
+            act.setText( intermake_qt.get_nice_name( key ) )
             act.setToolTip( value.__doc__ )
             map[act] = key
             menu.addAction( act )

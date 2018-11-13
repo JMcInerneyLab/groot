@@ -14,7 +14,7 @@ def current_model() -> Model:
 
 
 def set_model( model: Model ):
-    exception_helper.assert_type( "model", model, Model )
+    exception_helper.safe_cast( "model", model, Model )
     global __model
     __model = model
     return __model

@@ -1,10 +1,11 @@
 from warnings import warn
 
-from intermake import Command, Theme, command, common_commands, visibilities, BasicCommand, pr
+from intermake import Command, Theme, commands, visibilities, BasicCommand, pr
 from mhelper import EFileMode, isFilename, MFlags, file_helper, ManagedWith
 from typing import List, Optional, cast, Set
 
 from groot import constants
+from groot.application import app
 from groot.commands import workflow
 from groot.constants import EFormat, Stage, STAGES, EChanges
 from groot.data import global_view
@@ -340,7 +341,7 @@ class Wizard:
                 __fn16_view_nrfg]
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_wizard( new: Optional[bool] = None,
                    name: Optional[str] = None,
                    imports: Optional[List[str]] = None,
@@ -498,7 +499,7 @@ def create_wizard( new: Optional[bool] = None,
     pr.pr_verbose( "The wizard has been created paused.\nYou can use the {} and {} commands to manage your wizard.".format( continue_wizard, drop_wizard ) )
 
 
-@command( visibility = visibilities.ADVANCED, names = ["continue"], folder = constants.F_EXTRA )
+@app.command( visibility = visibilities.ADVANCED, names = ["continue"], folder = constants.F_EXTRA )
 def continue_wizard() -> EChanges:
     """
     Continues the wizard after it was paused.
@@ -511,7 +512,7 @@ def continue_wizard() -> EChanges:
     return Wizard.get_active().step()
 
 
-@command( visibility = visibilities.ADVANCED, names = ["stop"], folder = constants.F_DROP )
+@app.command( visibility = visibilities.ADVANCED, names = ["stop"], folder = constants.F_DROP )
 def drop_wizard() -> EChanges:
     """
     Stops a wizard.
@@ -523,7 +524,7 @@ def drop_wizard() -> EChanges:
     return EChanges.NONE
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_components( tol: int = 0 ):
     """
     Executes `create_major` then `create_minor`.
@@ -533,7 +534,7 @@ def create_components( tol: int = 0 ):
             workflow.s050_minor.create_minor( tol ))
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_components() -> EChanges:
     """
     Removes all the components from the model.
@@ -545,7 +546,7 @@ def drop_components() -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command( folder = constants.F_IMPORT )
+@app.command( folder = constants.F_IMPORT )
 def import_file( file_name: isFilename[EFileMode.READ],
                  skip_bad_extensions: bool = False,
                  filter: EImportFilter = EImportFilter.DATA,
@@ -586,7 +587,7 @@ def import_file( file_name: isFilename[EFileMode.READ],
         if ext == ".imk":
             if not query:
                 pr.printx( "<verbose>Run script <file>{}</file>.</verbose>".format( pr.escape(file_name) ) )
-                common_commands.cmd_source( file_name )
+                commands.execute_cli_text( file_name )
                 return EChanges.MODEL_OBJECT
             else:
                 pr.printx( "Script: <file>{}</file>.".format( pr.escape(file_name) ) )
@@ -606,7 +607,7 @@ def import_file( file_name: isFilename[EFileMode.READ],
     raise ValueError( "Cannot import the file '{}' because I don't recognise the extension '{}'.".format( file_name, ext ) )
 
 
-@command( folder = constants.F_IMPORT )
+@app.command( folder = constants.F_IMPORT )
 def import_directory( directory: str, query: bool = False, filter: EImportFilter = (EImportFilter.DATA | EImportFilter.SCRIPT), reset: bool = True ) -> EChanges:
     """
     Imports all importable files from a specified directory

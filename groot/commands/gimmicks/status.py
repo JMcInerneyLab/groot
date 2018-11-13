@@ -1,6 +1,7 @@
 from groot import constants
-from intermake import command, printx, pr
+from intermake import pr
 
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import global_view
 
@@ -8,7 +9,7 @@ from groot.data import global_view
 
 
 
-@command( names = ["print_status", "status"], highlight = True, folder = constants.F_PRINT )
+@app.command( names = ["status"], highlight = True, folder = constants.F_PRINT )
 def print_status() -> EChanges:
     """
     Prints the status of the model. 
@@ -45,6 +46,6 @@ def print_status() -> EChanges:
         
         r.append( "</table>" )
         
-        printx( "".join( r ) )
+        pr.printx( "".join( r ) )
     
     return EChanges.INFORMATION

@@ -1,13 +1,13 @@
-from intermake import pr, command
+from intermake import pr
 from mgraph import MGraph
 from mhelper import isFilename, isOptional, SwitchError, io_helper
 from typing import Callable, List, Optional
 
 from groot import constants
+from groot.application import app
 from groot.constants import EFormat, EChanges
 from groot.data import EPosition, ESiteType, INamedGraph, Component, Model, Gene, global_view
 from groot.utilities import AlgorithmCollection, cli_view_utils, external_runner, graph_viewing, lego_graph
-
 
 
 DAlgorithm = Callable[[Model, str], str]
@@ -16,7 +16,7 @@ DAlgorithm = Callable[[Model, str], str]
 tree_algorithms = AlgorithmCollection( DAlgorithm, "Tree" )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[List[Component]] = None ) -> None:
     """
     Creates a tree from the component.
@@ -74,7 +74,7 @@ def create_trees( algorithm: tree_algorithms.Algorithm, components: Optional[Lis
     return EChanges.COMP_DATA
 
 
-@command( folder = constants.F_SET )
+@app.command( folder = constants.F_SET )
 def set_tree( component: Component, newick: str ) -> EChanges:
     """
     Sets a component tree manually.
@@ -86,7 +86,7 @@ def set_tree( component: Component, newick: str ) -> EChanges:
     """
     if component.tree:
         raise ValueError( "This component already has an tree. Did you mean to drop the existing tree first?" )
-
+    
     _force_set_tree( component, newick )
     
     return EChanges.COMP_DATA
@@ -100,7 +100,7 @@ def _force_set_tree( component, newick ):
     component.tree_unmodified = component.tree.copy()
 
 
-@command( names = ["drop_trees", "drop_trees"], folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_trees( components: Optional[List[Component]] = None ) -> bool:
     """
     Removes component tree(s).
@@ -124,7 +124,7 @@ def drop_trees( components: Optional[List[Component]] = None ) -> bool:
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_trees", "print_graphs", "trees", "graphs", "print"], folder = constants.F_PRINT )
+@app.command( folder = constants.F_PRINT )
 def print_trees( graph: Optional[INamedGraph] = None,
                  format: EFormat = EFormat.ASCII,
                  file: isOptional[isFilename] = None,

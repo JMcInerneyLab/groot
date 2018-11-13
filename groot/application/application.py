@@ -2,7 +2,6 @@
 Sets up Intermake to run Groot.
 This is called in `groot.__init__`.
 """
-import typing
 import intermake
 
 from groot import constants
@@ -38,10 +37,10 @@ class Application( intermake.Application ):
     
     def on_create_controller( self, mode: str ):
         if mode in (intermake.EImRunMode.ARG, intermake.EImRunMode.CLI, intermake.EImRunMode.PYI, intermake.EImRunMode.PYS, intermake.EImRunMode.JUP):
-            r = _GrootConsoleController.get_default( mode )
+            r = _GrootConsoleController( self, mode )
         elif mode == intermake.EImRunMode.GUI:
             import groot_gui
-            r = groot_gui.LegoGuiController()
+            r = groot_gui.LegoGuiController( self, mode )
         else:
             r = super().on_create_controller( mode )
         
@@ -53,7 +52,5 @@ class Application( intermake.Application ):
 #
 # Define our application
 #
-Application.INSTANCE = Application( name = constants.APP_NAME,
-                                    abv_name = "groot",
+Application.INSTANCE = Application( name = "groot",
                                     version = "0.0.0.40" )
-

@@ -4,11 +4,11 @@ Algorithms for user-domains
 Used for display, nothing to do with the model.
 """
 from typing import Callable
-
-from groot import constants
-from intermake import Theme, command, pr
+from intermake import pr
 from mhelper import ansi, string_helper
 
+from groot import constants
+from groot.application import app
 from groot.data import Gene, global_view
 from groot.constants import EChanges
 from groot.utilities import cli_view_utils
@@ -21,7 +21,7 @@ DAlgorithm = Callable[[Gene], str]
 domain_algorithms = AlgorithmCollection( DAlgorithm, "Domain" )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_domains( algorithm: domain_algorithms.Algorithm ):
     """
     Creates the domains.
@@ -45,7 +45,7 @@ def create_domains( algorithm: domain_algorithms.Algorithm ):
     return EChanges.DOMAINS
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_domains():
     """
     Removes the user-domains from the model.
@@ -54,7 +54,7 @@ def drop_domains():
     model.user_domains.clear()
 
 
-@command( names = ["print_domains", "domains"], folder = constants.F_PRINT )
+@app.command( names = ["print_domains", "domains"], folder = constants.F_PRINT )
 def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
     """
     Prints the genes (highlighting components).
@@ -105,7 +105,7 @@ def print_domains( algorithm: domain_algorithms.Algorithm ) -> EChanges:
                           ansi.NORMAL +
                           string_helper.centre_align( name, size ) )
             
-            r.append( Theme.RESET + "\n" )
+            r.append( "\n" )
         
         r.append( "\n" )
     

@@ -7,7 +7,7 @@
     * Please see the Intermake_ troubleshooting guide for general issues
     * Please report all bugs on the `official bitbucket page`_.
 
-.. contents:: Table of contents
+.. contents::
 
 ----------------------------------------------------------------------------------------------------
                                            Using the GUI                                            
@@ -17,14 +17,15 @@
 Screen goes black, images or windows disappear                           
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Groot has been coded for multiple platforms, however, one or more settings may need changing for your particular platform. 
+`Groot`:t: has been coded for multiple platforms, however, one or more settings may need changing
+for your particular platform. 
 
 * In the GUI, go to *Windows* -> *Preferences* and change the following settings:
     * Set the *MDI mode* to **basic**.
     * Set *OpenGL* **off**
     * Set *shared contexts* **off**.
     * Turn the inbuilt browser **off**
-* Restart GROOT
+* Restart `Groot`:t:
 
     
 ----------------------------------------------------------------------------------------------------
@@ -35,19 +36,19 @@ Groot has been coded for multiple platforms, however, one or more settings may n
 Issues with Paup                                          
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Until the official release of version 5.0 of PAUP, you can download time-expiring test versions
-    of PAUP here
+    Until the official release of version 5.0 of `Paup`:t:, you can download time-expiring test versions
+    of `Paup`:t: here
     --http://phylosolutions.com/paup-test
 
-There are some major issues in using the Paup test versions of Paup from Groot:
+There are some major issues in using the `Paup`:t: test versions of Paup from `Groot`:t::
 
-* Paup is being updated: changes to Paup's API frequently break Groot's interface to it.
-* Paup test versions have programmed obsolescence: Groot cannot link to a known, working version of Paup. 
-* Paup does not report obsolescence errors in its return code: Groot cannot know whether your version is up to date.
+* Paup is being updated: changes to `Paup`:t:'s API frequently break `Groot`:t:'s interface to it.
+* Paup test versions have programmed obsolescence: `Groot`:t: cannot link to a known, working version of Paup. 
+* Paup does not report obsolescence errors in its return code: `Groot`:t: cannot know whether your version is up to date.
 
-If you are using a test version of Paup then please make sure it is up to date.
-If this still doesn't work, submit Groot interface bugs on the Bitbucket web page.
-Until these issues are resolved with Paup, consider using a different phylogeny tool such as Raxml_.
+If you are using a test version of `Paup`:t: then please make sure it is up to date.
+If this still doesn't work, submit `Groot`:t: interface bugs on the Bitbucket web page.
+Until these issues are resolved with `Paup`:t:, consider using a different phylogeny tool such as Raxml_.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,10 +149,7 @@ Figure 4. The failed triangle
 .. ***** REFERENCES AND FURTHER RST MARKUP FOLLOW *****
 
 .. _extending: extending.rst
-
 .. _Raxml: https://sco.h-its.org/exelixis/software.html
-
 .. _official bitbucket page: https://bitbucket.org/mjr129/groot/issues
-
 .. _Intermake: https://www.bitbucket.org/mjr129/intermake
 

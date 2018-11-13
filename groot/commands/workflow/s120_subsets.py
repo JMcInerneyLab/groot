@@ -1,17 +1,16 @@
 from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set, cast, Any
-
-from groot import constants
-from intermake import command
 from mhelper import Logger, string_helper
 
+from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import INode, Fusion, Point, Gene, Subset, global_view
 
 
 __LOG = Logger( "nrfg.find", False )
 
-@command(folder = constants.F_DROP)
+@app.command(folder = constants.F_DROP)
 def drop_subsets():
     """
     Removes data from the model.
@@ -24,7 +23,7 @@ def drop_subsets():
     return EChanges.COMP_DATA
 
 
-@command(folder = constants.F_CREATE)
+@app.command(folder = constants.F_CREATE)
 def create_subsets( no_super: bool = True ):
     """
     Creates leaf subsets.
@@ -124,7 +123,7 @@ def create_subsets( no_super: bool = True ):
     return EChanges.MODEL_DATA
 
 
-@command( names = ["print_subsets", "subsets"], folder=constants.F_PRINT )
+@app.command( names = ["print_subsets", "subsets"], folder=constants.F_PRINT )
 def print_subsets() -> EChanges:
     """
     Prints NRFG subsets.

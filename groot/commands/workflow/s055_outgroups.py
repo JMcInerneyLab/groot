@@ -1,12 +1,12 @@
 from typing import List, Optional
-from intermake import command
 
+from groot.application import app
 from groot import Gene, constants
 from groot.data import EPosition, global_view
 from groot.constants import EChanges
 
 
-@command(folder = constants.F_SET)
+@app.command(folder = constants.F_SET)
 def set_outgroups( genes: List[Gene], position: Optional[bool] = None ) -> EChanges:
     """
     Defines or displays the position of a gene in the graph.
@@ -32,7 +32,7 @@ def set_outgroups( genes: List[Gene], position: Optional[bool] = None ) -> EChan
     return EChanges.INFORMATION
 
 
-@command(folder = constants.F_PRINT)
+@app.command(folder = constants.F_PRINT)
 def print_outgroups():
     """
     Prints the outgroups.

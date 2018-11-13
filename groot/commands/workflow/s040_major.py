@@ -4,20 +4,22 @@ Components algorithms.
 The only one publicly exposed is `detect`, so start there.
 """
 from typing import List, Optional
-from warnings import warn
+from intermake import pr
+from mhelper import ComponentFinder, Logger, string_helper
 
+import warnings
+
+from groot.application import app
 from groot import constants
 from groot.constants import EChanges, STAGES
 from groot.data import Component, Edge, Gene, global_view
-from intermake import Table, command, pr
-from mhelper import ComponentFinder, Logger, string_helper
-
 
 LOG_MAJOR = Logger( "comp.major", False )
 LOG_MAJOR_V = Logger( "comp.major.v", False )
 LOG_GRAPH = Logger( "comp.graph", False )
 
-@command(folder = constants.F_CREATE)
+
+@app.command( folder = constants.F_CREATE )
 def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     """
     Detects model components.
@@ -70,7 +72,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
         LOG_MAJOR( "Sequence {} contains {} edges.", sequence_alpha, len( alpha_edges ) )
         
         for edge in alpha_edges:
-            assert isinstance(edge, Edge)
+            assert isinstance( edge, Edge )
             source_difference = abs( edge.left.length - edge.left.gene.length )
             destination_difference = abs( edge.right.length - edge.right.gene.length )
             total_difference = abs( edge.left.gene.length - edge.right.gene.length )
@@ -119,9 +121,9 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     
     # An assertion
     for component in model.components:
-        assert isinstance(component, Component)
+        assert isinstance( component, Component )
         if len( component.major_genes ) == 1:
-            warn( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ), UserWarning )
+            warnings.warn( "There are components with just one sequence in them. Maybe you meant to use a tolerance higher than {}?".format( tol ), UserWarning )
             break
     
     pr.printx( "<verbose>{} components detected.</verbose>".format( len( model.components ) ) )
@@ -129,7 +131,7 @@ def create_major( tol: int = 0, debug: bool = False ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command(folder = constants.F_DROP)
+@app.command( folder = constants.F_DROP )
 def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
     """
     Drops all components from the model.
@@ -153,7 +155,7 @@ def drop_major( components: Optional[List[Component]] = None ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command(folder = constants.F_SET)
+@app.command( folder = constants.F_SET )
 def set_major( genes: List[Gene] ):
     """
     Creates a major component (manually). 
@@ -176,7 +178,7 @@ def set_major( genes: List[Gene] ):
     return EChanges.COMPONENTS
 
 
-@command( names = ["print_major", "major", "print_components", "components"], folder=constants.F_PRINT )
+@app.command( names = ["print_major", "major", "print_components", "components"], folder = constants.F_PRINT )
 def print_major( verbose: bool = False ) -> EChanges:
     """
     Prints the major components.
@@ -200,20 +202,18 @@ def print_major( verbose: bool = False ) -> EChanges:
     
     if verbose:
         for component in model.components:
-            with pr.pr_section( component  ):
+            with pr.pr_section( component ):
                 print( component.to_details() )
         
         return EChanges.INFORMATION
     
-    message = Table()
-    
-    message.add_title( "major elements of components" )
-    message.add_row( "component", "major elements" )
-    message.add_hline()
+    rows = []
+    rows.append( ["component", "major elements"] )
     
     for component in model.components:
-        message.add_row( component, ", ".join( x.accession for x in component.major_genes ) )
+        rows.append( [component, ", ".join( x.accession for x in component.major_genes )] )
     
-    print( message.to_string() )
+    with pr.pr_section( "major elements of components" ):
+        pr.pr_table( rows )
     
     return EChanges.INFORMATION

@@ -19,6 +19,7 @@ def get_sample_contents( name: str ) -> List[str]:
 def get_samples():
     """
     INTERNAL
+    
     Obtains the list of samples
     """
     sample_data_folder = get_sample_data_folder()
@@ -28,6 +29,7 @@ def get_samples():
 def get_workspace_files() -> List[str]:
     """
     INTERNAL
+    
     Obtains the list of workspace files
     """
     r = []
@@ -39,11 +41,10 @@ def get_workspace_files() -> List[str]:
     return r
 
 
-
-
 def get_sample_data_folder( name: str = None ):
     """
     PRIVATE
+    
     Obtains the sample data folder
     """
     sdf = Controller.ACTIVE.app.local_data.local_folder( "sample_data" )

@@ -1,9 +1,10 @@
-from groot import constants
-from intermake import command, pr
+from intermake import pr
 from mgraph import analysing
 from mhelper import ComponentFinder, Logger, LogicError, string_helper
 from typing import List
 
+from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import INode, Pregraph, Subset, global_view
 from groot.utilities import lego_graph
@@ -12,7 +13,7 @@ from groot.utilities import lego_graph
 LOG = Logger( "pregraphs", False )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_pregraphs():
     """
     Creates the pregraphs.
@@ -35,7 +36,7 @@ def create_pregraphs():
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_pregraphs():
     """
     Removes data from the model.
@@ -50,7 +51,7 @@ def drop_pregraphs():
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_pregraphs", "pregraphs"], folder = constants.F_PRINT )
+@app.command( names = ["print_pregraphs", "pregraphs"], folder = constants.F_PRINT )
 def print_pregraphs() -> EChanges:
     """
     Prints the names of the NRFG subgraphs.
@@ -59,7 +60,7 @@ def print_pregraphs() -> EChanges:
     model = global_view.current_model()
     
     for subgraph in model.iter_pregraphs():
-        print( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
+        print( "{} = {}".format( str(subgraph), lego_graph.export_newick( subgraph.graph ) ) )
     else:
         print( "The current model has no subgraphs." )
     

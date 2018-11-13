@@ -220,7 +220,7 @@ class EFormat( MEnum ):
             raise SwitchError( "self", self )
 
 
-APP_NAME = "Groot"
+APP_NAME = "Groot" 
 
 #
 # File extensions

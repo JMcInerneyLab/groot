@@ -3,21 +3,23 @@ Components algorithms.
 
 The only one publicly exposed is `detect`, so start there.
 """
-import warnings
 from collections import defaultdict
 from typing import Dict, Optional, Set, Tuple, List
-
-from groot import constants
-from intermake import Table, command
+from intermake import pr
 from mhelper import Logger, array_helper, string_helper
 
+import warnings
+
+from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import Component, Edge, Model, Gene, Domain, global_view
 
 
 LOG_MINOR = Logger( "comp.minor", False )
 
-@command(folder = constants.F_CREATE)
+
+@app.command( folder = constants.F_CREATE )
 def create_minor( tol: int ) -> EChanges:
     """
     Finds the subsequence components, here termed the "minor" elements.
@@ -160,7 +162,7 @@ def create_minor( tol: int ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command(folder = constants.F_DROP)
+@app.command( folder = constants.F_DROP )
 def drop_minor() -> EChanges:
     """
     Drops minor component information from model.
@@ -174,7 +176,7 @@ def drop_minor() -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command(folder = constants.F_SET)
+@app.command( folder = constants.F_SET )
 def set_minor( component: Component, subsequences: List[Domain] ) -> EChanges:
     """
     Sets the minor subsequences of the component.
@@ -193,7 +195,7 @@ def set_minor( component: Component, subsequences: List[Domain] ) -> EChanges:
     return EChanges.COMPONENTS
 
 
-@command( names = ["print_minor", "print_interlinks", "interlinks"], folder=constants.F_PRINT )
+@app.command( names = ["print_minor", "print_interlinks", "interlinks"], folder = constants.F_PRINT )
 def print_minor( component: Optional[Component] = None, verbose: bool = False ) -> EChanges:
     """
     Prints the edges between the component subsequences.
@@ -220,15 +222,9 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
         raise ValueError( "Cannot print components because components have not been calculated." )
     
     if verbose:
-        message = Table()
+        rows = []
         
-        if component:
-            message.add_title( component )
-        else:
-            message.add_title( "all components" )
-        
-        message.add_row( "component", "origins", "destinations" )
-        message.add_hline()
+        rows.append( ["component", "origins", "destinations"] )
         
         for comp in model.components:
             assert isinstance( comp, Component )
@@ -239,21 +235,20 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
             major_genes = string_helper.format_array( comp.major_genes, join = "\n" )
             minor_domains = string_helper.format_array( comp.minor_domains, join = "\n" )
             
-            message.add_row( comp, major_genes, minor_domains )
+            rows.append( [comp, major_genes, minor_domains] )
         
-        print( message.to_string() )
-    
-    message = Table()
+        with pr.pr_section( "all components" ):
+            pr.pr_table( rows )
     
     if component:
-        message.add_title( component )
+        title = str( component )
     else:
-        message.add_title( "all components" )
+        title = "all components"
     
     average_lengths = __get_average_component_lengths( model )
     
-    message.add_row( "source", "destination", "sequence", "seq-length", "start", "end", "edge-length" )
-    message.add_hline()
+    rows = []
+    rows.append( ["source", "destination", "sequence", "seq-length", "start", "end", "edge-length"] )
     
     for comp in model.components:
         if component is not None and component is not comp:
@@ -278,7 +273,7 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
                     end += subsequences[-1].end
                     
                     if component is not None:
-                        message.add_row( minor, comp, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start )
+                        rows.append( [minor, comp, sequence.accession, sequence.length, subsequences[0].start, subsequences[-1].end, subsequences[-1].end - subsequences[0].start] )
                 else:
                     failed = True
             
@@ -288,9 +283,10 @@ def print_minor( component: Optional[Component] = None, verbose: bool = False ) 
             start /= len( major_genes )
             end /= len( major_genes )
             
-            message.add_row( minor, comp, "AVG*{}".format( len( major_genes ) ), round( average_lengths[comp] ), round( start ), round( end ), round( end - start ) )
+            rows.append( [minor, comp, "AVG*{}".format( len( major_genes ) ), round( average_lengths[comp] ), round( start ), round( end ), round( end - start )] )
     
-    print( message.to_string() )
+    with pr.pr_section( title ):
+        pr.pr_table( rows )
     return EChanges.INFORMATION
 
 

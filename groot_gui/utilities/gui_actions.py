@@ -141,8 +141,7 @@ class GuiActions:
     
     
     def show_intermake( self ) -> None:
-        from intermake_qt import FrmIntermakeMain
-        FrmIntermakeMain.request( self.window )
+        intermake_qt.show_basic_window(self.window)
     
     
     def __get_selection_form( self ) -> Any:

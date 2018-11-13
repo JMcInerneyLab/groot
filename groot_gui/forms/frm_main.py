@@ -1,13 +1,14 @@
 import warnings
-from typing import Dict, Type
+from typing import Dict, Type, cast
 
 import groot.data.config
+import intermake_qt.utilities.interfaces
 import mhelper as mh
 import mhelper_qt as qt
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMainWindow, QMdiArea, QMenu, QToolButton
-from groot import constants
+from groot import constants, resources
 from groot.constants import EChanges, EStartupMode, EWindowMode
 from groot.data import global_view
 from groot_gui.forms.designer import frm_main_designer
@@ -17,7 +18,7 @@ from intermake import Result, Controller
 import intermake_qt
 
 
-class FrmMain( QMainWindow, intermake_qt.IGuiMainWindow ):
+class FrmMain( QMainWindow, intermake_qt.utilities.interfaces.IGuiMainWindow ):
     """
     This is Groot's main window; one window to control them all.
     
@@ -51,10 +52,12 @@ class FrmMain( QMainWindow, intermake_qt.IGuiMainWindow ):
         self.ui.setupUi( self )
         self.setWindowTitle( "Lego Model Creator" )
         
+        controller : intermake_qt.GuiController = cast(intermake_qt.GuiController, Controller.ACTIVE)
+        
         self.mdi: Dict[str, FrmBase] = { }
         
-        self.COLOUR_EMPTY = QColor( intermake_qt.parse_style_sheet().get( 'QMdiArea[style="empty"].background', "#E0E0E0" ) )
-        self.COLOUR_NOT_EMPTY = QColor( intermake_qt.parse_style_sheet().get( 'QMdiArea.background', "#E0E0E0" ) )
+        self.COLOUR_EMPTY = QColor( controller.style_sheet_parsed.get( 'QMdiArea[style="empty"].background', "#E0E0E0" ) )
+        self.COLOUR_NOT_EMPTY = QColor( controller.style_sheet_parsed.get( 'QMdiArea.background', "#E0E0E0" ) )
         
         self.ui.MDI_AREA.setBackground( self.COLOUR_EMPTY )
         
@@ -106,10 +109,10 @@ class FrmMain( QMainWindow, intermake_qt.IGuiMainWindow ):
         
         if result.is_error:
             self.ui.LBL_STATUS.setText( "OPERATION FAILED TO COMPLETE: " + result.command.name )
-            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.failure.icon() )
+            self.ui.BTN_STATUS.setIcon( resources.remove.icon() )
         elif result.is_success and isinstance( result.result, EChanges ):
             self.ui.LBL_STATUS.setText( "GROOT OPERATION COMPLETED: " + result.command.name )
-            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.success.icon() )
+            self.ui.BTN_STATUS.setIcon( resources.accept.icon() )
             self.completed_changes = result.result
             self.completed_plugin = result.command
             for form in self.iter_forms():
@@ -118,7 +121,7 @@ class FrmMain( QMainWindow, intermake_qt.IGuiMainWindow ):
             self.completed_plugin = None
         else:
             self.ui.LBL_STATUS.setText( "EXTERNAL OPERATION COMPLETED: " + str( result ) )
-            self.ui.BTN_STATUS.setIcon( intermake_qt.resources.success.icon() )
+            self.ui.BTN_STATUS.setIcon( resources.accept.icon() )
     
     
     def iter_forms( self ):

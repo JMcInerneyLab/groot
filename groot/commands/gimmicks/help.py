@@ -1,13 +1,14 @@
 from groot.data import config
-from intermake import Controller, visibilities, Theme, command, Application
+from intermake import Controller, visibilities, Application, pr
 from mgraph import NodeStyle
 
+from groot.application import app
 from groot import constants
 from groot.utilities import AlgorithmCollection
 
 
-@command( names = ["groot", "dirse"], visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
-def cmd_groot():
+@app.command( visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
+def groot():
     """
     Displays the application version.
     
@@ -34,12 +35,12 @@ def __algorithm_help():
     r = []
     for collection in AlgorithmCollection.ALL:
         r.append( "" )
-        r.append( Theme.TITLE + "========== " + collection.name + " ==========" + Theme.RESET )
+        r.append( pr.fmt_section_start( collection.name ) )
         
         for name, function in collection:
             if name != "default":
-                r.append( "    " + Theme.COMMAND_NAME + name + Theme.RESET )
-                r.append( "    " + (function.__doc__ or "").strip() )
+                r.append( pr.fmt_code( name ) )
+                r.append( pr.fmt_rst( function.__doc__ ) )
                 r.append( "" )
         
         r.append( "" )
@@ -47,4 +48,4 @@ def __algorithm_help():
     return "\n".join( r )
 
 
-Application.LAST.help.add( "algorithms", "List of available algorithms", __algorithm_help )
+Application.LAST.help.add( "algorithms", "List of available algorithms", __algorithm_help, format = "html" )

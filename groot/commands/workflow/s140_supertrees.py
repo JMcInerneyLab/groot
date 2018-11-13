@@ -1,13 +1,12 @@
-from intermake import command
 from mgraph import MGraph, MNode
 from mhelper import Logger, SwitchError, string_helper, FunctionInspector
 from typing import Callable, Iterable, Sequence, Union
 
-import groot.utilities.external_runner
 from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import INamedGraph, Formation, Point, Pregraph, Subset, Subgraph, global_view, Gene
-from groot.utilities import AlgorithmCollection, lego_graph
+from groot.utilities import AlgorithmCollection, lego_graph, external_runner
 
 
 LOG = Logger( "possible_graphs", False )
@@ -31,7 +30,7 @@ Uses Pep-484 to indicate which input is required, otherwise the default will be 
 supertree_algorithms = AlgorithmCollection( DAlgorithm, "Supertree" )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_supertrees( algorithm: supertree_algorithms.Algorithm ) -> None:
     """
     Creates the supertrees/subgraphs for the model.
@@ -80,7 +79,7 @@ def create_supertrees( algorithm: supertree_algorithms.Algorithm ) -> None:
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_supertrees() -> EChanges:
     """
     Removes data from the model.
@@ -95,7 +94,7 @@ def drop_supertrees() -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command( names = ["print_supertrees", "supertrees"], folder = constants.F_PRINT )
+@app.command( names = ["print_supertrees", "supertrees"], folder = constants.F_PRINT )
 def print_supertrees() -> EChanges:
     """
     Prints the names of the NRFG subgraphs.
@@ -104,7 +103,7 @@ def print_supertrees() -> EChanges:
     model = global_view.current_model()
     
     for subgraph in model.subgraphs:
-        print( "{} = {}".format( subgraph.name, lego_graph.export_newick( subgraph.graph ) ) )
+        print( "{} = {}".format( str(subgraph), lego_graph.export_newick( subgraph.graph ) ) )
     else:
         print( "The current model has no subgraphs." )
     
@@ -138,7 +137,7 @@ def __create_supertree( algorithm: supertree_algorithms.Algorithm, subset: Subse
         input = "\n".join( input_lines ) + "\n"
     
     # Run the algorithm!
-    output = groot.utilities.external_runner.run_in_temporary( algorithm, input )
+    output = external_runner.run_in_temporary( algorithm, input )
     
     # We allow two types of result
     # - `MGraph` objects

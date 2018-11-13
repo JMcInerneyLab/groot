@@ -1,10 +1,11 @@
+from groot.application import app
 from groot import constants
 from groot.data import INamedGraph, global_view, FixedUserGraph
-from intermake import command
 
 
 
-@command( folder=constants.F_IMPORT )
+
+@app.command( folder=constants.F_IMPORT )
 def import_graph( graph: INamedGraph, name: str = "" ):
     """
     Imports a graph or tree as a user-graph.
@@ -23,7 +24,7 @@ def import_graph( graph: INamedGraph, name: str = "" ):
 
 
 
-@command( folder=constants.F_DROP )
+@app.command( folder=constants.F_DROP )
 def drop_graph( graph: INamedGraph ):
     """
     Removes a graph created with `import_graph`.

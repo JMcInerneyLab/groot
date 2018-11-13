@@ -42,4 +42,4 @@ from .global_view import current_model
 
 from groot.data.config import options
 
-
+from . import sample_data

@@ -1,15 +1,15 @@
-from groot import constants
-from intermake import command
 from mhelper import Logger, LogicError, ansi_helper, string_helper
 from typing import Set
 
+from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import Split, global_view
 
 
 __LOG_EVIDENCE = Logger( "nrfg.evidence", False )
 
-@command(folder = constants.F_CREATE)
+@app.command(folder = constants.F_CREATE)
 def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     """
     Filters the candidate splits.
@@ -97,7 +97,7 @@ def create_consensus( cutoff: float = 0.5 ) -> EChanges:
     return EChanges.MODEL_DATA
 
 
-@command(folder = constants.F_DROP)
+@app.command(folder = constants.F_DROP)
 def drop_consensus():
     """
     Removes data from the model.
@@ -110,7 +110,7 @@ def drop_consensus():
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_consensus", "consensus"], folder=constants.F_PRINT )
+@app.command( names = ["print_consensus", "consensus"], folder=constants.F_PRINT )
 def print_consensus() -> EChanges:
     """
     Prints NRFG viable splits.

@@ -9,7 +9,7 @@ import groot.data.config
 from groot.data.model_interfaces import EPosition, IHasFasta, INamedGraph, INode
 from intermake import Controller
 from mgraph import MGraph, MSplit
-from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate, assert_type
+from mhelper import SwitchError, NotFoundError, string_helper, bio_helper, array_helper, TTristate, safe_cast
 
 
 _Model_ = "Model"
@@ -908,8 +908,8 @@ class Fusion( HasTable ):
     
     
     def __init__( self, index: int, components_in: Tuple[Component, ...], component_out: Component ) -> None:
-        assert_type( "components_in", components_in, tuple )
-        assert_type( "component_out", component_out, Component )
+        safe_cast( "components_in", components_in, tuple )
+        safe_cast( "component_out", component_out, Component )
         
         self.index: int = index
         self.components_in: Tuple[Component] = components_in

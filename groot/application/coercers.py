@@ -1,10 +1,9 @@
+from mhelper import NotFoundError, ArgsKwargs, FunctionInspector, exception_helper
+from typing import Union, Iterable, cast, Type
+
 import re
-import os.path
 import stringcoercion
 import mgraph
-
-from mhelper import NotFoundError, ArgsKwargs, FunctionInspector, file_helper, exception_helper
-from typing import Union, Iterable, cast, Type
 
 from groot.data import global_view, Component, INamedGraph, UserGraph, Domain, Gene
 from groot.utilities import AbstractAlgorithm, AlgorithmCollection
@@ -51,22 +50,8 @@ class AlgorithmCoercer( stringcoercion.AbstractCoercer ):
 
 class MGraphCoercer( stringcoercion.AbstractEnumCoercer ):
     """
-    **Graphs and trees** are referenced by one of the following:
-
-    ================ ============== ==========================================================================================================================================
-    What             Internal       How to specify
-    ================ ============== ==========================================================================================================================================
-    Graph in model   INamedGraph    The name of a graph in the current model (you can get a list of graph names via `cd /graphs ; ls`)
-    Graph on disk    str            The name of a file 
-    Compact edgelist str            File extension is `.edg` OR argument is prefixed `compact:` or `file-compact:` OR argument/file contains `pipe`
-    TSV              str            ''                `.tsv` OR ''                   `tsv:`     or `file-tsv:`     OR ''                     `newline` and `tab`
-    CSV              str            ''                `.csv` OR ''                   `csv:`     or `file-csv:`     OR ''                     `newline` and not `tab` 
-    Newick           str            ''                `.nwk` OR ''                   `newick:`  or `file-newick:`  OR ''                     none of the above
-    ================ ============== ==========================================================================================================================================
-        
-    .. note::
-     
-        You can be explicit by prefixing your string with `newick:` `compact:` `csv:` `tsv:` `file:` `file-newick:` `file-compact:` `file-csv:` `file-tsv:`
+    **Graphs and trees** can be referenced as the name of the object containing the graph, or as
+    a format suitable for passing into `mgraph.importing.import_string` (newick, edge list, etc.)
     """
     
     
@@ -106,52 +91,8 @@ class MGraphCoercer( stringcoercion.AbstractEnumCoercer ):
     
     
     def on_convert_user_option( self, info: stringcoercion.CoercionInfo ) -> object:
-        txt = info.source
-        prefixes = "newick", "compact", "csv", "tsv", "file", "file-newick", "file-compact", "file-csv", "file-tsv"
-        prefix, filename = txt.split( ":", 1 )
-        is_file = None
-        
-        for prefix_ in prefixes:
-            if txt.startswith( prefix_ + ":" ):
-                prefix = prefix_
-                txt = txt[len( prefix_ ) + 1:]
-                
-                if prefix == "file":
-                    is_file = True
-                    prefix = None
-                elif prefix.startswith( "file-" ):
-                    is_file = True
-                    prefix = prefix[5:]
-                
-                break
-        
-        if is_file is True or (is_file is None and os.path.isfile( txt )):
-            if prefix is None:
-                ext = file_helper.get_extension( txt )
-                if ext in (".nwk", ".new", ".newick"):
-                    prefix = "newick"
-                elif ext == ".tsv":
-                    prefix = "tsv"
-                elif ext == ".edg":
-                    prefix = "compact"
-                elif ext == ".csv":
-                    prefix = "csv"
-            
-            txt = file_helper.read_all_text( txt )
-        
-        if prefix == "compact" or (prefix is None and "|" in txt):
-            r = mgraph.importing.import_compact( txt )
-        elif prefix in ("csv", "tsv") or (prefix is None and "\n" in txt):
-            if prefix == "tsv" or (prefix is None and "\t" in txt):
-                r = mgraph.importing.import_edgelist( txt, delimiter = "\t" )
-            else:
-                assert prefix is None or prefix == "csv"
-                r = mgraph.importing.import_edgelist( txt )
-        else:
-            assert prefix is None or prefix == "newick"
-            r = mgraph.importing.import_newick( txt )
-        
-        return self.on_convert_option( info, UserGraph( r ) )
+        g = mgraph.importing.import_string( info.source )
+        return self.on_convert_option( info, UserGraph( g ) )
 
 
 class GeneCoercer( stringcoercion.AbstractEnumCoercer ):

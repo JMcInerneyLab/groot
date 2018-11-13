@@ -411,7 +411,7 @@ class UserGraphCollection:
     
     
     def append( self, graph: FixedUserGraph ):
-        exception_helper.assert_type( "graph", graph, FixedUserGraph )
+        exception_helper.safe_cast( "graph", graph, FixedUserGraph )
         
         for graph2 in self.__model.iter_graphs():
             if graph2.get_accid() == graph.get_accid():
@@ -451,7 +451,7 @@ class UserReportCollection:
     
     
     def append( self, report: Report ):
-        exception_helper.assert_type( "report", report, Report )
+        exception_helper.safe_cast( "report", report, Report )
         
         for report2 in self.__model.iter_reports():
             if report2.name == report.name:

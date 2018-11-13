@@ -1,8 +1,8 @@
-from groot import constants
-from intermake import command
 from mgraph import MGraph
 from mhelper import Logger, array_helper, string_helper
 
+from groot import constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import FusionGraph, Formation, global_view
 from groot.utilities import lego_graph
@@ -11,7 +11,7 @@ from groot.utilities import lego_graph
 __LOG = Logger( "nrfg.sew", False )
 
 
-@command( folder = constants.F_CREATE )
+@app.command( folder = constants.F_CREATE )
 def create_fused():
     """
     Creates the NRFG (uncleaned).
@@ -81,7 +81,7 @@ def create_fused():
     return EChanges.MODEL_DATA
 
 
-@command( folder = constants.F_DROP )
+@app.command( folder = constants.F_DROP )
 def drop_fused():
     """
     Removes data from the model.

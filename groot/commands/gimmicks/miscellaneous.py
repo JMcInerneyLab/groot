@@ -2,17 +2,17 @@ from groot import constants, Report
 from groot.constants import EChanges
 from groot.data.model_interfaces import ESiteType, INamedGraph
 from groot.utilities import cli_view_utils
-from intermake import command, visibilities, pr
+from intermake import visibilities, pr
 from mgraph import Quartet, analysing
 from mhelper import EFileMode, isFilename, bio_helper, file_helper, io_helper
+from groot.application import app
 
 
-_VIS = visibilities.GUI & visibilities.ADVANCED
 
 __EXT_FASTA = ".fasta"
 
 
-@command( visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
+@app.command( visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
 def query_quartet( graph: INamedGraph, a: str, b: str, c: str, d: str ):
     """
     Displays what a particular quartet looks like for a particular graph.
@@ -52,7 +52,7 @@ def query_quartet( graph: INamedGraph, a: str, b: str, c: str, d: str ):
 
 
 # noinspection SpellCheckingInspection
-@command( visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
+@app.command( visibility = visibilities.ADVANCED, folder = constants.F_EXTRA )
 def composite_search_fix( blast: isFilename[EFileMode.READ], fasta: isFilename[EFileMode.READ], output: isFilename[EFileMode.OUTPUT] ):
     """
     Converts standard BLAST format 6 TSV to `Composite search` formatted BLAST. 
@@ -117,7 +117,7 @@ def composite_search_fix( blast: isFilename[EFileMode.READ], fasta: isFilename[E
     pr.pr_verbose( "{} BLASTs".format( count ) )
 
 
-@command( visibility = visibilities.ADVANCED, folder = constants.F_PRINT )
+@app.command( visibility = visibilities.ADVANCED, folder = constants.F_PRINT )
 def print_file( type: ESiteType, file: isFilename[EFileMode.READ, __EXT_FASTA] ) -> EChanges:
     """
     Prints a FASTA file in colour
@@ -130,7 +130,7 @@ def print_file( type: ESiteType, file: isFilename[EFileMode.READ, __EXT_FASTA] )
     return EChanges.NONE
 
 
-@command(folder = constants.F_PRINT)
+@app.command(folder = constants.F_PRINT)
 def print_report( report: Report, file: str = "stdout" ):
     """
     Prints a report.

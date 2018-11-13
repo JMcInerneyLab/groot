@@ -1,7 +1,7 @@
-from intermake import command
 from mgraph import analysing
 
 from groot import constants
+from groot.application import app
 from groot.data import Report, global_view
 from groot.constants import EChanges
 from groot.utilities import lego_graph
@@ -11,7 +11,7 @@ _TABLE = '<table border=1 style="border-collapse: collapse;">'
 _END_TABLE = "</table>"
 
 
-@command(folder = constants.F_CREATE)
+@app.command(folder = constants.F_CREATE)
 def create_checked(  ):
     """
     Checks the NRFG.
@@ -93,7 +93,7 @@ def create_checked(  ):
     model.report = Report( "NRFG report", "\n".join( r ) )
     return EChanges.MODEL_DATA
 
-@command(folder = constants.F_DROP)
+@app.command(folder = constants.F_DROP)
 def drop_checked( ):
     """
     Removes the check-NRFG report from the model.

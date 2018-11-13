@@ -1,9 +1,9 @@
-from groot import Component, constants
-from intermake import command
 from mgraph import MGraph, MSplit, exporting
 from mhelper import Logger
 from typing import Dict, Optional
 
+from groot import Component, constants
+from groot.application import app
 from groot.constants import STAGES, EChanges
 from groot.data import INode, Model, Split, global_view
 from groot.utilities import lego_graph
@@ -11,7 +11,7 @@ from groot.utilities import lego_graph
 
 __LOG_SPLITS = Logger( "nrfg.splits", False )
 
-@command(folder = constants.F_CREATE)
+@app.command(folder = constants.F_CREATE)
 def create_splits(  ):
     """
     Creates the candidate splits.
@@ -76,7 +76,7 @@ def create_splits(  ):
     
     return EChanges.MODEL_DATA
     
-@command(folder = constants.F_DROP)
+@app.command(folder = constants.F_DROP)
 def drop_splits( ):
     """
     Removes data from the model.
@@ -93,7 +93,7 @@ def drop_splits( ):
     return EChanges.COMP_DATA
 
 
-@command( names = ["print_splits", "splits"], folder=constants.F_PRINT )
+@app.command( names = ["print_splits", "splits"], folder=constants.F_PRINT )
 def print_splits( component: Optional[Component] = None ) -> EChanges:
     """
     Prints NRFG candidate splits.
