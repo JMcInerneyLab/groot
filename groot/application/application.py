@@ -53,4 +53,4 @@ class Application( intermake.Application ):
 # Define our application
 #
 Application.INSTANCE = Application( name = "groot",
-                                    version = "0.0.0.40" )
+                                    version = "0.0.0.60" )
