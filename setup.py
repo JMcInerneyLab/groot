@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup( name = "groot",
        url = "https://bitbucket.org/mjr129/groot",
-       version = "0.0.0.60",
+       version = "0.0.0.61",
        description = "Generate N-rooted fusion graphs from genomic data.",
        author = "Martin Rusilowicz",
        license = "https://www.gnu.org/licenses/agpl-3.0.html",
@@ -64,7 +64,7 @@ setup( name = "groot",
         
         
                "License :: OSI Approved :: GNU Affero General Public License v3",
-               "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)"
+               "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         
                "Natural Language :: English",
                "Programming Language :: Python :: 3.6",
